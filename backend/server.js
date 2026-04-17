@@ -4,13 +4,43 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js');
+const os = require('os');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
 
-app.use(express.json());
+// ========================================
+// 🔌 SOCKET.IO CON CORS PER VPS
+// ========================================
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  transports: ["websocket", "polling"],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+});
+
+// Esporta io per usarlo nelle route
+app.set("io", io);
+
+// ========================================
+// 📦 MIDDLEWARE
+// ========================================
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Log delle richieste API (utile per debug)
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path} da ${req.ip}`);
+  }
+  next();
+});
 
 const DB_PATH = path.join(__dirname, 'db', 'gestionale.db');
 let db;
@@ -180,7 +210,6 @@ function seedData() {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // GENERAZIONE AUTOMATICA SCADENZARIO
-// genera SEMPRE tutti i periodi dell'anno in base al tipo di scadenza
 // ═══════════════════════════════════════════════════════════════════════════
 function generaScadenzarioInterno(id_cliente, anno) {
   const cliente = queryOne(`SELECT * FROM clienti WHERE id=?`, [id_cliente]);
@@ -194,7 +223,6 @@ function generaScadenzarioInterno(id_cliente, anno) {
     return categorieAttive.includes(a.categoria);
   });
 
-  // Cancella solo righe con stato da_fare (non tocca completati/in_corso)
   runQuery(`DELETE FROM adempimenti_cliente WHERE id_cliente=? AND anno=? AND stato='da_fare'`, [id_cliente, anno]);
 
   let totaleGenerati = 0;
@@ -230,7 +258,6 @@ function generaScadenzarioInterno(id_cliente, anno) {
         }
       }
     } else {
-      // annuale
       const exists = queryOne(`SELECT id FROM adempimenti_cliente WHERE id_cliente=? AND id_adempimento=? AND anno=? AND mese IS NULL AND trimestre IS NULL AND semestre IS NULL`, [id_cliente, a.id, anno]);
       if (!exists) {
         runQuery(`INSERT INTO adempimenti_cliente (id_cliente, id_adempimento, anno, stato) VALUES (?,?,?,?)`,
@@ -243,7 +270,6 @@ function generaScadenzarioInterno(id_cliente, anno) {
   return totaleGenerati;
 }
 
-// Genera per TUTTI i clienti attivi — usata quando si crea un nuovo adempimento
 function generaAdempimentoPerTutti(id_adempimento, anno) {
   const adempimento = queryOne(`SELECT * FROM adempimenti WHERE id=?`, [id_adempimento]);
   if (!adempimento) return 0;
@@ -294,11 +320,70 @@ function generaAdempimentoPerTutti(id_adempimento, anno) {
   return totale;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// SOCKET.IO
-// ═══════════════════════════════════════════════════════════════════════════
+// ========================================
+// 🌍 FUNZIONI PER OTTENERE IP
+// ========================================
+function getLocalIP() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+}
+
+async function getPublicIP() {
+  try {
+    const https = require('https');
+    return new Promise((resolve, reject) => {
+      https.get('https://api.ipify.org?format=json', (res) => {
+        let data = '';
+        res.on('data', (chunk) => data += chunk);
+        res.on('end', () => {
+          try {
+            const ip = JSON.parse(data).ip;
+            resolve(ip);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }).on('error', reject);
+    });
+  } catch (error) {
+    console.error('⚠️ Impossibile recuperare IP pubblico:', error.message);
+    return null;
+  }
+}
+
+// ========================================
+// 🏥 HEALTH CHECK
+// ========================================
+app.get('/api/health', async (req, res) => {
+  const publicIP = await getPublicIP();
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    socketConnections: io.engine.clientsCount,
+    publicIP: publicIP,
+    port: PORT,
+    dbSize: fs.existsSync(DB_PATH) ? fs.statSync(DB_PATH).size : 0
+  });
+});
+
+// ========================================
+// 🔌 GESTIONE CONNESSIONI SOCKET.IO
+// ========================================
 io.on('connection', (socket) => {
-  console.log(`🔌 Client connesso: ${socket.id}`);
+  console.log(`✅ Client connesso: ${socket.id} da ${socket.handshake.address}`);
+
+  socket.emit('connected', {
+    message: 'Connesso al server',
+    timestamp: new Date().toISOString()
+  });
 
   socket.on('get:tipologie', () => {
     try {
@@ -408,7 +493,6 @@ io.on('connection', (socket) => {
         [data.codice, data.nome, data.descrizione || null, data.categoria, data.scadenza_tipo]);
       const newId = queryOne(`SELECT last_insert_rowid() as id`).id;
 
-      // Genera automaticamente per tutti i clienti per l'anno corrente e successivo
       const annoCorrente = new Date().getFullYear();
       let totaleRighe = 0;
       for (let anno = annoCorrente; anno <= annoCorrente + 1; anno++) {
@@ -487,7 +571,6 @@ io.on('connection', (socket) => {
 
   socket.on('genera:scadenzario', ({ id_cliente, anno }) => {
     try {
-      // Per rigenerare, cancella TUTTI i da_fare e reinserisce
       runQuery(`DELETE FROM adempimenti_cliente WHERE id_cliente=? AND anno=? AND stato='da_fare'`, [id_cliente, anno]);
       const nAdp = generaScadenzarioInterno(id_cliente, anno);
       const cliente = queryOne(`SELECT nome FROM clienti WHERE id=?`, [id_cliente]);
@@ -542,7 +625,6 @@ io.on('connection', (socket) => {
       if (search && search.trim() !== '') {
         const s = `%${search.trim()}%`;
         whereCliente += ` AND (c.nome LIKE ? OR c.codice_fiscale LIKE ? OR c.partita_iva LIKE ?)`;
-        // per le stats globali la ricerca non filtra i conteggi totali
       }
 
       const totClienti = queryOne(`SELECT COUNT(*) as n FROM clienti c WHERE c.attivo=1`).n;
@@ -553,7 +635,6 @@ io.on('connection', (socket) => {
       const inCorso = queryOne(`SELECT COUNT(*) as n FROM adempimenti_cliente ac JOIN clienti c ON ac.id_cliente=c.id WHERE ac.anno=? AND ac.stato='in_corso' AND c.attivo=1`, [anno]).n;
       const na = queryOne(`SELECT COUNT(*) as n FROM adempimenti_cliente ac JOIN clienti c ON ac.id_cliente=c.id WHERE ac.anno=? AND ac.stato='n_a' AND c.attivo=1`, [anno]).n;
 
-      // Clienti con scadenze non completate (da_fare) — top 5
       const scadenzeAperte = queryAll(`
         SELECT c.nome, COUNT(*) as n FROM adempimenti_cliente ac
         JOIN clienti c ON ac.id_cliente=c.id
@@ -564,10 +645,67 @@ io.on('connection', (socket) => {
     } catch (e) { socket.emit('res:stats', { success: false, error: e.message }); }
   });
 
-  socket.on('disconnect', () => console.log(`🔌 Client disconnesso: ${socket.id}`));
+  socket.on('disconnect', () => {
+    console.log(`❌ Client disconnesso: ${socket.id}`);
+  });
+
+  socket.on('error', (error) => {
+    console.error(`⚠️ Errore Socket.IO (${socket.id}):`, error);
+  });
+
+  socket.on('ping', () => {
+    socket.emit('pong', { timestamp: new Date().toISOString() });
+  });
 });
 
 const PORT = process.env.PORT || 3000;
-initDB().then(() => {
-  server.listen(PORT, () => console.log(`🚀 Server avviato su http://localhost:${PORT}`));
+
+// ========================================
+// 🛑 CHIUSURA GRACEFUL
+// ========================================
+const gracefulShutdown = (signal) => {
+  console.log(`\nℹ️ ${signal} ricevuto. Chiusura in corso...`);
+  server.close(() => {
+    console.log("✅ Server chiuso");
+    io.close(() => {
+      console.log("✅ Socket.IO chiuso");
+      process.exit(0);
+    });
+  });
+  setTimeout(() => {
+    console.error("⚠️ Timeout chiusura. Forzatura uscita...");
+    process.exit(1);
+  }, 10000);
+};
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("uncaughtException", (error) => {
+  console.error("❌ Uncaught Exception:", error);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection:", reason);
+});
+
+// ========================================
+// 🚀 AVVIO SERVER SU 0.0.0.0 (TUTTE LE INTERFACCE)
+// ========================================
+initDB().then(async () => {
+  server.listen(PORT, "0.0.0.0", async () => {
+    const localIP = getLocalIP();
+    const publicIP = await getPublicIP();
+    
+    console.log(`✅ Backend avviato su VPS`);
+    if (publicIP) {
+      console.log(`🌐 IP Pubblico: http://${publicIP}:${PORT}`);
+    } else {
+      console.log(`⚠️ IP Pubblico: non disponibile (verifica connessione internet)`);
+    }
+    console.log(`🏠 IP Locale: http://${localIP}:${PORT}`);
+    console.log(`📍 Localhost: http://localhost:${PORT}`);
+    console.log(`🔌 Socket.IO abilitato per sincronizzazione real-time`);
+    console.log(`📂 Frontend servito da: ../frontend/index.html`);
+    console.log(`🏥 Health check: http://${localIP}:${PORT}/api/health`);
+    console.log(`💾 Database path: ${DB_PATH}`);
+  });
 });
