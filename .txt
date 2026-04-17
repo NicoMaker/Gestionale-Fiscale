@@ -1,0 +1,18 @@
+quando copio i dati in anagrafica -> copia tutte le anagrafiche e le note, con stato da fare
+
+nel totale in scadenziario per cliente -> no
+
+stesso cosa totale da fare completato per adempimento 
+
+dashboard per adempimneto che capisco quanti adempimenti fatti e completati
+
+in vista globale -> vedo numero totale adempimenti fatti di quella categoria e anche da fare -> nome cliente in tabella nella parte clienti 
+
+
+in dashboard -> vedi tutte le categorie a bottoni e dentro vedi elenco anagrafiche dei clienti di riferiemnto e li vedo tuttti i dati senza nome asdempimento che vedo ina lto
+
+in irap redditi e 730 -> saldo primo acconto secondo acconto 
+
+
+quando crei adempimenti -> con più frequenza in un anno -> compilo i dari in solo form dove dentro inserisco i dati corretti 
+in adempimento f24 (da chiamare contabilità) -> aggiungere campo iva + contabilità
