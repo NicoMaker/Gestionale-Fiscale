@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestionale Studio Commerciale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  :root {
+    --bg: #0e0f14;
+    --surface: #161820;
+    --surface2: #1e2029;
+    --border: #2a2c38;
+    --accent: #4f8ef7;
+    --accent2: #7c5cbf;
+    --green: #3ecf8e;
+    --red: #f76f6f;
+    --yellow: #f7c94f;
+    --text: #e8eaf0;
+    --text2: #8890a8;
+    --text3: #565c73;
+    --radius: 10px;
+    --font: 'Sora', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo h1 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .sidebar-logo p { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+  .nav { flex: 1; padding: 12px 0; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13px;
+    transition: all .15s;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,142,247,.07); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .topbar h2 { font-size: 17px; font-weight: 600; flex: 1; }
+
+  .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+  /* ── CARDS / GRID ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .stat-card .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+  .stat-card .value { font-size: 32px; font-weight: 700; font-family: var(--mono); }
+  .stat-card .value.green { color: var(--green); }
+  .stat-card .value.blue { color: var(--accent); }
+  .stat-card .value.yellow { color: var(--yellow); }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .table-header h3 { font-size: 14px; font-weight: 600; flex: 1; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text3);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(42,44,56,.5);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(79,142,247,.04); }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+
+  .badge-pf { background: rgba(79,142,247,.15); color: #7ab4ff; }
+  .badge-sp { background: rgba(124,92,191,.15); color: #a882f7; }
+  .badge-sc { background: rgba(62,207,142,.15); color: #3ecf8e; }
+  .badge-ass { background: rgba(247,201,79,.15); color: #f7c94f; }
+  .badge-da_fare { background: rgba(247,111,111,.15); color: #f76f6f; }
+  .badge-in_corso { background: rgba(247,201,79,.15); color: #f7c94f; }
+  .badge-completato { background: rgba(62,207,142,.15); color: #3ecf8e; }
+  .badge-n_a { background: rgba(86,92,115,.15); color: #565c73; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    transition: all .15s;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #6fa3ff; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger { background: rgba(247,111,111,.15); color: var(--red); border: 1px solid rgba(247,111,111,.2); }
+  .btn-danger:hover { background: rgba(247,111,111,.25); }
+  .btn-success { background: rgba(62,207,142,.15); color: var(--green); border: 1px solid rgba(62,207,142,.2); }
+  .btn-success:hover { background: rgba(62,207,142,.25); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* ── INPUTS ── */
+  .input, .select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    width: 100%;
+    transition: border-color .15s;
+  }
+
+  .input:focus, .select:focus { outline: none; border-color: var(--accent); }
+  .input::placeholder { color: var(--text3); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 600; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 560px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+
+  /* ── SCADENZARIO ── */
+  .scad-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .scad-row {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+
+  .scad-row:hover { border-color: var(--accent); }
+  .scad-nome { flex: 1; font-size: 13px; font-weight: 500; }
+  .scad-periodo { font-size: 11px; color: var(--text3); font-family: var(--mono); min-width: 60px; }
+
+  /* ── NOTIFICATIONS ── */
+  .notif-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .notif {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn .2s ease;
+    max-width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  }
+
+  .notif.success { border-left: 3px solid var(--green); }
+  .notif.info { border-left: 3px solid var(--accent); }
+  .notif.error { border-left: 3px solid var(--red); }
+
+  @keyframes slideIn {
+    from { transform: translateX(40px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* ── SEARCH BAR ── */
+  .search-wrap { position: relative; }
+  .search-wrap .input { padding-left: 36px; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 4px; width: fit-content; }
+  .tab { padding: 7px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text2); transition: all .15s; }
+  .tab.active { background: var(--accent); color: white; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+
+  /* ── TIPOLOGIE OVERVIEW ── */
+  .tipo-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .tipo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .tipo-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .tipo-card .codice { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .tipo-card .nome { font-size: 13px; font-weight: 600; }
+  .tipo-card .desc { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .tipo-card .count { margin-top: 12px; font-size: 12px; color: var(--text2); }
+
+  /* ── YEAR SELECTOR ── */
+  .year-selector { display: flex; align-items: center; gap: 8px; }
+  .year-selector button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 14px; }
+  .year-selector button:hover { background: var(--border); }
+  .year-display { font-family: var(--mono); font-size: 16px; font-weight: 700; min-width: 56px; text-align: center; color: var(--accent); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>📁 Studio</h1>
+    <p>Gestionale Fiscale</p>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</div>
+    <div class="nav-item" data-page="clienti"><span class="icon">👥</span> Clienti</div>
+    <div class="nav-item" data-page="scadenzario"><span class="icon">📅</span> Scadenzario</div>
+    <div class="nav-item" data-page="adempimenti"><span class="icon">📋</span> Adempimenti</div>
+    <div class="nav-item" data-page="tipologie"><span class="icon">🏷️</span> Tipologie</div>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <h2 id="page-title">Dashboard</h2>
+    <div id="topbar-actions"></div>
+  </div>
+  <div class="content" id="content"></div>
+</main>
+
+<!-- NOTIFICHE -->
+<div class="notif-container" id="notif-container"></div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-title"><span>👤</span> <span id="modal-cliente-title">Nuovo Cliente</span></div>
+    <input type="hidden" id="cliente-id">
+    <div class="form-row">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Nome / Ragione Sociale *</label>
+        <input class="input" id="c-nome" placeholder="Es. Mario Rossi">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipologia *</label>
+        <select class="select" id="c-tipologia" onchange="onTipologiaChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>Sottotipologia</label>
+        <select class="select" id="c-sottotipologia"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Codice Fiscale</label>
+        <input class="input" id="c-cf" placeholder="RSSMRA80A01L219K" style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label>Partita IVA</label>
+        <input class="input" id="c-piva" placeholder="12345678901">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Email</label>
+        <input class="input" id="c-email" type="email" placeholder="email@esempio.it">
+      </div>
+      <div class="form-group">
+        <label>Telefono</label>
+        <input class="input" id="c-tel" placeholder="+39 000 0000000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Indirizzo</label>
+      <input class="input" id="c-indirizzo" placeholder="Via Roma 1, 00100 Roma">
+    </div>
+    <div class="form-group">
+      <label>Note</label>
+      <input class="input" id="c-note" placeholder="Note aggiuntive...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveCliente()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADEMPIMENTO STATO -->
+<div class="modal-overlay" id="modal-adempimento">
+  <div class="modal" style="width:440px">
+    <div class="modal-title"><span>✏️</span> Aggiorna Adempimento</div>
+    <input type="hidden" id="adp-id">
+    <div class="form-group">
+      <label>Stato</label>
+      <select class="select" id="adp-stato">
+        <option value="da_fare">⭕ Da fare</option>
+        <option value="in_corso">🔄 In corso</option>
+        <option value="completato">✅ Completato</option>
+        <option value="n_a">➖ N/A</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data Completamento</label>
+        <input class="input" id="adp-data" type="date">
+      </div>
+      <div class="form-group">
+        <label>Importo (€)</label>
+        <input class="input" id="adp-importo" type="number" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Note</label>
+      <input class="input" id="adp-note" placeholder="Note...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-adempimento')">Annulla</button>
+      <button class="btn btn-primary" onclick="saveAdpStato()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COPIA SCADENZARIO -->
+<div class="modal-overlay" id="modal-copia">
+  <div class="modal" style="width:400px">
+    <div class="modal-title"><span>📋</span> Copia Scadenzario</div>
+    <input type="hidden" id="copia-cliente-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Anno di partenza</label>
+        <input class="input" id="copia-da" type="number" value="2024">
+      </div>
+      <div class="form-group">
+        <label>Anno destinazione</label>
+        <input class="input" id="copia-a" type="number" value="2025">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-copia')">Annulla</button>
+      <button class="btn btn-primary" onclick="eseguiCopia()">📋 Copia</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const socket = io();
+let appState = {
+  currentPage: 'dashboard',
+  tipologie: [],
+  clienti: [],
+  adempimenti: [],
+  selectedCliente: null,
+  annoCorrente: new Date().getFullYear(),
+};
+
+// ─── SOCKET LISTENERS ──────────────────────────────────────────────────────
+socket.on('connect', () => {
+  loadTipologie();
+  renderPage('dashboard');
+});
+
+socket.on('notify', ({ type, msg }) => showNotif(msg, type));
+
+socket.on('res:tipologie', ({ success, data }) => {
+  if (success) { appState.tipologie = data; populateTipologiaSelect(); }
+});
+
+socket.on('res:clienti', ({ success, data }) => {
+  if (success) appState.clienti = data;
+  if (appState.pendingRender === 'clienti') renderClientiPage();
+  if (appState.pendingRender === 'scadenzario') renderScadenzarioPage();
+});
+
+socket.on('res:stats', ({ success, data }) => {
+  if (success) renderDashboard(data);
+});
+
+socket.on('res:adempimenti', ({ success, data }) => {
+  if (success) { appState.adempimenti = data; }
+  if (appState.pendingRender === 'adempimenti') renderAdempimentiPage();
+});
+
+socket.on('res:scadenzario', ({ success, data }) => {
+  if (success) renderScadenzarioTabella(data);
+});
+
+socket.on('res:create:cliente', ({ success, id }) => {
+  if (success) { closeModal('modal-cliente'); refreshCurrentPage(); }
+});
+
+socket.on('res:update:cliente', ({ success }) => {
+  if (success) { closeModal('modal-cliente'); refreshCurrentPage(); }
+});
+
+socket.on('res:delete:cliente', ({ success }) => {
+  if (success) refreshCurrentPage();
+});
+
+socket.on('res:genera:scadenzario', ({ success }) => {
+  if (success && appState.selectedCliente) {
+    socket.emit('get:scadenzario', { id_cliente: appState.selectedCliente.id, anno: appState.annoCorrente });
+  }
+});
+
+socket.on('res:copia:scadenzario', ({ success }) => {
+  if (success) { closeModal('modal-copia'); }
+});
+
+socket.on('res:update:adempimento_stato', ({ success }) => {
+  if (success) {
+    closeModal('modal-adempimento');
+    if (appState.selectedCliente) {
+      socket.emit('get:scadenzario', { id_cliente: appState.selectedCliente.id, anno: appState.annoCorrente });
+    }
+  }
+});
+
+// ─── NAVIGATION ────────────────────────────────────────────────────────────
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    renderPage(el.dataset.page);
+  });
+});
+
+function renderPage(page) {
+  appState.currentPage = page;
+  const titles = { dashboard: 'Dashboard', clienti: 'Clienti', scadenzario: 'Scadenzario', adempimenti: 'Adempimenti', tipologie: 'Tipologie Cliente' };
+  document.getElementById('page-title').textContent = titles[page];
+
+  switch(page) {
+    case 'dashboard':
+      socket.emit('get:stats', { anno: appState.annoCorrente });
+      break;
+    case 'clienti':
+      appState.pendingRender = 'clienti';
+      socket.emit('get:clienti');
+      break;
+    case 'scadenzario':
+      appState.pendingRender = 'scadenzario';
+      socket.emit('get:clienti');
+      break;
+    case 'adempimenti':
+      appState.pendingRender = 'adempimenti';
+      socket.emit('get:adempimenti');
+      break;
+    case 'tipologie':
+      renderTipologiePage();
+      break;
+  }
+}
+
+function refreshCurrentPage() { renderPage(appState.currentPage); }
+
+// ─── DASHBOARD ──────────────────────────────────────────────────────────────
+function renderDashboard(stats) {
+  const perc = stats.totAdempimenti > 0 ? Math.round(stats.completati / stats.totAdempimenti * 100) : 0;
+  document.getElementById('topbar-actions').innerHTML = `
+    <div class="year-selector">
+      <button onclick="changeAnno(-1)">◀</button>
+      <span class="year-display">${stats.anno}</span>
+      <button onclick="changeAnno(1)">▶</button>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Clienti Totali</div>
+        <div class="value blue">${stats.totClienti}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Adempimenti ${stats.anno}</div>
+        <div class="value">${stats.totAdempimenti}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Completati</div>
+        <div class="value green">${stats.completati}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${perc}%"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Da Fare</div>
+        <div class="value yellow">${stats.daFare}</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header"><h3>Clienti per Tipologia</h3></div>
+      <table>
+        <thead><tr><th>Tipologia</th><th>Codice</th><th>Clienti</th></tr></thead>
+        <tbody>
+          ${stats.perTipologia.map(t => `
+            <tr>
+              <td>${t.nome}</td>
+              <td><span class="badge badge-${t.codice.toLowerCase()}">${t.codice}</span></td>
+              <td><strong>${t.n}</strong></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function changeAnno(delta) {
+  appState.annoCorrente += delta;
+  renderPage(appState.currentPage);
+}
+
+// ─── CLIENTI PAGE ──────────────────────────────────────────────────────────
+function renderClientiPage() {
+  appState.pendingRender = null;
+  document.getElementById('topbar-actions').innerHTML = `
+    <div class="search-wrap" style="width:220px">
+      <span class="search-icon">🔍</span>
+      <input class="input" id="search-clienti" placeholder="Cerca cliente..." oninput="filterClienti()">
+    </div>
+    <button class="btn btn-primary" onclick="openNuovoCliente()">+ Nuovo Cliente</button>
+  `;
+
+  renderClientiTabella(appState.clienti);
+}
+
+function filterClienti() {
+  const q = document.getElementById('search-clienti')?.value.toLowerCase() || '';
+  const filtered = appState.clienti.filter(c => c.nome.toLowerCase().includes(q));
+  renderClientiTabella(filtered);
+}
+
+function renderClientiTabella(clienti) {
+  const tbody = clienti.map(c => `
+    <tr>
+      <td><strong>${c.nome}</strong></td>
+      <td><span class="badge badge-${(c.tipologia_codice||'').toLowerCase()}">${c.tipologia_codice || '-'}</span></td>
+      <td style="color:var(--text2)">${c.sottotipologia_nome || '-'}</td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--text2)">${c.codice_fiscale || c.partita_iva || '-'}</td>
+      <td style="color:var(--text2)">${c.email || '-'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-secondary" onclick="editCliente(${c.id})">✏️</button>
+          <button class="btn btn-sm btn-success" onclick="goScadenzario(${c.id})">📅</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteCliente(${c.id},'${c.nome.replace(/'/g,"\\'")}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="6"><div class="empty"><div class="icon">👥</div><p>Nessun cliente trovato</p></div></td></tr>`;
+
+  document.getElementById('content').innerHTML = `
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3>Tutti i Clienti (${clienti.length})</h3>
+      </div>
+      <table>
+        <thead><tr><th>Nome</th><th>Tipo</th><th>Sottotipo</th><th>CF / P.IVA</th><th>Email</th><th>Azioni</th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ─── SCADENZARIO PAGE ──────────────────────────────────────────────────────
+function renderScadenzarioPage() {
+  appState.pendingRender = null;
+  const clienteOptions = appState.clienti.map(c =>
+    `<option value="${c.id}" ${appState.selectedCliente?.id === c.id ? 'selected':''}>
+      [${c.tipologia_codice}] ${c.nome}
+    </option>`
+  ).join('');
+
+  document.getElementById('topbar-actions').innerHTML = `
+    <select class="select" id="sel-cliente-scad" style="width:260px" onchange="onClienteScadChange()">
+      <option value="">-- Seleziona Cliente --</option>
+      ${clienteOptions}
+    </select>
+    <div class="year-selector">
+      <button onclick="changeAnnoScad(-1)">◀</button>
+      <span class="year-display">${appState.annoCorrente}</span>
+      <button onclick="changeAnnoScad(1)">▶</button>
+    </div>
+  `;
+
+  if (appState.selectedCliente) {
+    loadScadenzario();
+  } else {
+    document.getElementById('content').innerHTML = `
+      <div class="empty">
+        <div class="icon">📅</div>
+        <p>Seleziona un cliente per visualizzare il suo scadenzario</p>
+      </div>
+    `;
+  }
+}
+
+function onClienteScadChange() {
+  const id = parseInt(document.getElementById('sel-cliente-scad').value);
+  appState.selectedCliente = appState.clienti.find(c => c.id === id) || null;
+  if (appState.selectedCliente) loadScadenzario();
+}
+
+function changeAnnoScad(delta) {
+  appState.annoCorrente += delta;
+  document.querySelectorAll('.year-display').forEach(el => el.textContent = appState.annoCorrente);
+  if (appState.selectedCliente) loadScadenzario();
+}
+
+function loadScadenzario() {
+  socket.emit('get:scadenzario', { id_cliente: appState.selectedCliente.id, anno: appState.annoCorrente });
+}
+
+function renderScadenzarioTabella(righe) {
+  const c = appState.selectedCliente;
+  const totali = righe.length;
+  const completati = righe.filter(r => r.stato === 'completato').length;
+  const perc = totali > 0 ? Math.round(completati / totali * 100) : 0;
+
+  const statoIcon = { da_fare: '⭕', in_corso: '🔄', completato: '✅', n_a: '➖' };
+
+  const tbody = righe.map(r => {
+    let periodo = '';
+    if (r.trimestre) periodo = `T${r.trimestre}`;
+    else if (r.mese) periodo = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'][r.mese-1];
+    else periodo = 'Annuale';
+
+    return `
+      <tr onclick="openAdempimentoModal(${r.id},'${r.stato}','${r.data_completamento||''}','${r.importo||''}','${(r.note||'').replace(/'/g,"\\'")}')">
+        <td><strong>${r.adempimento_nome}</strong></td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${r.codice}</td>
+        <td>${periodo}</td>
+        <td><span class="badge badge-${r.stato}">${statoIcon[r.stato]} ${r.stato.replace('_',' ')}</span></td>
+        <td style="font-family:var(--mono);color:var(--text2)">${r.importo ? '€ '+parseFloat(r.importo).toFixed(2) : '-'}</td>
+        <td style="color:var(--text2);font-size:12px">${r.data_completamento || '-'}</td>
+      </tr>
+    `;
+  }).join('') || `<tr><td colspan="6"><div class="empty"><div class="icon">📋</div><p>Nessun adempimento. Clicca "Genera" per creare lo scadenzario.</p></div></td></tr>`;
+
+  document.getElementById('content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:18px;font-weight:700">${c.nome}</div>
+        <div style="font-size:12px;color:var(--text3)">${c.tipologia_nome} ${c.sottotipologia_nome ? '· '+c.sottotipologia_nome : ''}</div>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn btn-secondary" onclick="openModal('modal-copia');document.getElementById('copia-cliente-id').value=${c.id};document.getElementById('copia-da').value=${appState.annoCorrente-1};document.getElementById('copia-a').value=${appState.annoCorrente}">
+        📋 Copia anno
+      </button>
+      <button class="btn btn-primary" onclick="generaScadenzario(${c.id})">⚡ Genera ${appState.annoCorrente}</button>
+    </div>
+
+    <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+      <div class="stat-card" style="min-width:140px">
+        <div class="label">Totale</div><div class="value blue">${totali}</div>
+      </div>
+      <div class="stat-card" style="min-width:140px">
+        <div class="label">Completati</div>
+        <div class="value green">${completati}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${perc}%"></div></div>
+      </div>
+      <div class="stat-card" style="min-width:140px">
+        <div class="label">Da Fare</div>
+        <div class="value yellow">${righe.filter(r=>r.stato==='da_fare').length}</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header"><h3>Scadenzario ${appState.annoCorrente}</h3></div>
+      <table>
+        <thead><tr><th>Adempimento</th><th>Codice</th><th>Periodo</th><th>Stato</th><th>Importo</th><th>Data Compl.</th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-top:10px">💡 Clicca su una riga per aggiornare lo stato</p>
+  `;
+}
+
+function generaScadenzario(id) {
+  socket.emit('genera:scadenzario', { id_cliente: id, anno: appState.annoCorrente });
+}
+
+// ─── ADEMPIMENTI PAGE ──────────────────────────────────────────────────────
+function renderAdempimentiPage() {
+  appState.pendingRender = null;
+  document.getElementById('topbar-actions').innerHTML = '';
+  const rows = appState.adempimenti.map(a => {
+    const tipologie = JSON.parse(a.tipologie_applicabili || '[]');
+    return `
+      <tr>
+        <td><span style="font-family:var(--mono);font-weight:700;color:var(--accent)">${a.codice}</span></td>
+        <td><strong>${a.nome}</strong></td>
+        <td style="color:var(--text2);font-size:12px">${a.descrizione || '-'}</td>
+        <td>
+          ${tipologie.map(t => `<span class="badge badge-${t.toLowerCase()}" style="margin-right:3px">${t}</span>`).join('')}
+        </td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${a.scadenza_tipo || '-'}</td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="table-wrap">
+      <div class="table-header"><h3>Adempimenti Fiscali (${appState.adempimenti.length})</h3></div>
+      <table>
+        <thead><tr><th>Codice</th><th>Nome</th><th>Descrizione</th><th>Tipologie</th><th>Scadenza</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ─── TIPOLOGIE PAGE ────────────────────────────────────────────────────────
+function renderTipologiePage() {
+  document.getElementById('topbar-actions').innerHTML = '';
+  const cards = appState.tipologie.map(t => {
+    const sottotip = t.sottotipologie || [];
+    return `
+      <div class="tipo-card">
+        <div class="codice">${t.codice}</div>
+        <div class="nome">${t.nome}</div>
+        <div class="desc">${t.descrizione || ''}</div>
+        <div style="margin-top:12px">
+          ${sottotip.map(s => `<span class="badge badge-${t.codice.toLowerCase()}" style="margin:2px;font-size:10px">${s.nome.split(' - ')[1] || s.nome}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="tipo-cards">${cards}</div>
+  `;
+}
+
+// ─── CLIENTE MODAL ─────────────────────────────────────────────────────────
+function loadTipologie() { socket.emit('get:tipologie'); }
+
+function populateTipologiaSelect() {
+  const sel = document.getElementById('c-tipologia');
+  if (!sel) return;
+  sel.innerHTML = appState.tipologie.map(t => `<option value="${t.id}">${t.codice} - ${t.nome}</option>`).join('');
+  onTipologiaChange();
+}
+
+function onTipologiaChange() {
+  const tipId = parseInt(document.getElementById('c-tipologia')?.value);
+  const tip = appState.tipologie.find(t => t.id === tipId);
+  const sel = document.getElementById('c-sottotipologia');
+  if (!sel || !tip) return;
+  sel.innerHTML = '<option value="">-- Nessuna --</option>' +
+    (tip.sottotipologie || []).map(s => `<option value="${s.id}">${s.nome}</option>`).join('');
+}
+
+function openNuovoCliente() {
+  document.getElementById('modal-cliente-title').textContent = 'Nuovo Cliente';
+  document.getElementById('cliente-id').value = '';
+  ['c-nome','c-cf','c-piva','c-email','c-tel','c-indirizzo','c-note'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  populateTipologiaSelect();
+  openModal('modal-cliente');
+}
+
+function editCliente(id) {
+  socket.once('res:cliente', ({ success, data }) => {
+    if (!success || !data) return;
+    document.getElementById('modal-cliente-title').textContent = 'Modifica Cliente';
+    document.getElementById('cliente-id').value = data.id;
+    document.getElementById('c-nome').value = data.nome || '';
+    document.getElementById('c-cf').value = data.codice_fiscale || '';
+    document.getElementById('c-piva').value = data.partita_iva || '';
+    document.getElementById('c-email').value = data.email || '';
+    document.getElementById('c-tel').value = data.telefono || '';
+    document.getElementById('c-indirizzo').value = data.indirizzo || '';
+    document.getElementById('c-note').value = data.note || '';
+    populateTipologiaSelect();
+    document.getElementById('c-tipologia').value = data.id_tipologia;
+    onTipologiaChange();
+    setTimeout(() => {
+      document.getElementById('c-sottotipologia').value = data.id_sottotipologia || '';
+    }, 50);
+    openModal('modal-cliente');
+  });
+  socket.emit('get:cliente', { id });
+}
+
+function saveCliente() {
+  const id = document.getElementById('cliente-id').value;
+  const data = {
+    nome: document.getElementById('c-nome').value.trim(),
+    id_tipologia: parseInt(document.getElementById('c-tipologia').value),
+    id_sottotipologia: document.getElementById('c-sottotipologia').value || null,
+    codice_fiscale: document.getElementById('c-cf').value.trim().toUpperCase() || null,
+    partita_iva: document.getElementById('c-piva').value.trim() || null,
+    email: document.getElementById('c-email').value.trim() || null,
+    telefono: document.getElementById('c-tel').value.trim() || null,
+    indirizzo: document.getElementById('c-indirizzo').value.trim() || null,
+    note: document.getElementById('c-note').value.trim() || null,
+  };
+  if (!data.nome) { showNotif('Il nome è obbligatorio', 'error'); return; }
+  if (id) { data.id = parseInt(id); socket.emit('update:cliente', data); }
+  else socket.emit('create:cliente', data);
+}
+
+function deleteCliente(id, nome) {
+  if (confirm(`Eliminare "${nome}"?`)) socket.emit('delete:cliente', { id });
+}
+
+function goScadenzario(id) {
+  appState.selectedCliente = appState.clienti.find(c => c.id === id) || null;
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  document.querySelector('[data-page="scadenzario"]').classList.add('active');
+  appState.pendingRender = 'scadenzario';
+  socket.emit('get:clienti');
+}
+
+// ─── ADEMPIMENTO MODAL ─────────────────────────────────────────────────────
+function openAdempimentoModal(id, stato, data, importo, note) {
+  document.getElementById('adp-id').value = id;
+  document.getElementById('adp-stato').value = stato;
+  document.getElementById('adp-data').value = data || '';
+  document.getElementById('adp-importo').value = importo || '';
+  document.getElementById('adp-note').value = note || '';
+  openModal('modal-adempimento');
+}
+
+function saveAdpStato() {
+  socket.emit('update:adempimento_stato', {
+    id: parseInt(document.getElementById('adp-id').value),
+    stato: document.getElementById('adp-stato').value,
+    data_completamento: document.getElementById('adp-data').value || null,
+    importo: document.getElementById('adp-importo').value || null,
+    note: document.getElementById('adp-note').value || null,
+  });
+}
+
+// ─── COPIA SCADENZARIO ─────────────────────────────────────────────────────
+function eseguiCopia() {
+  socket.emit('copia:scadenzario', {
+    id_cliente: parseInt(document.getElementById('copia-cliente-id').value),
+    anno_da: parseInt(document.getElementById('copia-da').value),
+    anno_a: parseInt(document.getElementById('copia-a').value),
+  });
+}
+
+// ─── MODAL HELPERS ─────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ─── NOTIFICATIONS ─────────────────────────────────────────────────────────
+function showNotif(msg, type = 'info') {
+  const icons = { success: '✅', info: 'ℹ️', error: '❌' };
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('notif-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+</script>
+</body>
+</html>
