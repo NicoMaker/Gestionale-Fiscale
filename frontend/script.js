@@ -62,23 +62,28 @@ socket.on('res:tipologie', ({ success, data }) => {
   }
 });
 
+// FIX: renderizza sempre se siamo sulla pagina clienti (ricerca live)
 socket.on('res:clienti', ({ success, data }) => {
   if (!success) return;
   state.clienti = data;
   if (state._pending === 'clienti') {
     state._pending = null;
     renderClientiPage();
-  }
-  if (state._pending === 'scadenzario') {
+  } else if (state._pending === 'scadenzario') {
     state._pending = null;
     renderScadenzarioPage();
+  } else if (state.page === 'clienti') {
+    renderClientiPage();
   }
 });
 
+// FIX: renderizza sempre se siamo sulla pagina adempimenti (ricerca live)
 socket.on('res:adempimenti', ({ success, data }) => {
   if (success) state.adempimenti = data;
   if (state._pending === 'adempimenti') {
     state._pending = null;
+    renderAdempimentiPage();
+  } else if (state.page === 'adempimenti') {
     renderAdempimentiPage();
   }
   // Aggiorna anche il select nel modal aggiungi adempimento se aperto
@@ -90,6 +95,7 @@ socket.on('res:adempimenti', ({ success, data }) => {
   }
 });
 
+// Dashboard: res:stats renderizza sempre (non dipende da _pending)
 socket.on('res:stats', ({ success, data }) => {
   if (success) renderDashboard(data);
 });
@@ -207,16 +213,13 @@ function renderPage(page) {
 
   if (page === 'dashboard') {
     document.getElementById('topbar-actions').innerHTML = `
-      <div class="search-wrap" style="width:260px">
-        <span class="search-icon">🔍</span>
-        <input class="input" id="dash-search" placeholder="Cerca nella dashboard..." oninput="applyDashSearch()">
-      </div>
       <div class="year-sel">
         <button onclick="changeAnno(-1)">◀</button>
         <span class="year-num">${state.anno}</span>
         <button onclick="changeAnno(1)">▶</button>
       </div>
       <button class="btn btn-print btn-sm" onclick="window.print()">🖨️ Stampa</button>`;
+    // FIX: emetti dopo che il DOM del topbar è pronto
     socket.emit('get:stats', { anno: state.anno, search: '' });
 
   } else if (page === 'clienti') {
@@ -605,10 +608,13 @@ function renderGlobaleFiltri() {
     </div>
     <div id="globale-content"><div class="empty">⏳ Caricamento...</div></div>
   `;
+  // FIX: ripristina i valori dei select dopo aver riscritto il DOM
   if (document.getElementById('fg-stato')) document.getElementById('fg-stato').value = state.filtri.stato;
   if (document.getElementById('fg-categoria')) document.getElementById('fg-categoria').value = state.filtri.categoria;
 }
 
+// FIX: applyGlobaleFiltri aggiorna state.filtri E chiama loadGlobale
+// senza ricostruire tutto il DOM (evita il reset dei select)
 function applyGlobaleFiltri() {
   state.filtri.stato = document.getElementById('fg-stato')?.value || 'tutti';
   state.filtri.categoria = document.getElementById('fg-categoria')?.value || 'tutti';
@@ -945,7 +951,6 @@ function openAddAdp(id) {
     `<option value="${a.id}">[${a.categoria}] ${a.codice} - ${a.nome}</option>`
   ).join('');
   document.getElementById('add-adp-periodo').value = '';
-  // Aggiorna le opzioni periodo in base al tipo di scadenza selezionato
   updatePeriodoOptions();
   openModal('modal-add-adp');
 }
