@@ -335,3 +335,78 @@ select option.separator { color: var(--text3); font-style: italic; background: v
   .badge { border: 1px solid #ccc; background: #f5f5f5 !important; color: #000 !important; }
 }
 .print-header { display: none; }
+
+/* ─── AGGIUNTE CSS per scadenzario migliorato ─── */
+/* Incolla queste righe in fondo al tuo styles.css esistente */
+
+/* Sezione categoria nella tabella scadenzario */
+tr.cat-section-row td {
+  padding: 8px 14px !important;
+}
+
+/* Select cliente con optgroup */
+select optgroup {
+  color: var(--text3);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  background: var(--surface2);
+}
+
+select optgroup option {
+  color: var(--text);
+  font-weight: 400;
+  font-size: 13px;
+  text-transform: none;
+  padding-left: 12px;
+}
+
+/* Badge periodo mensile — 12 colori */
+.periodo-mese { font-family: var(--mono); font-size: 10px; font-weight: 700; }
+
+/* Adempimento cell con border-left categoria */
+td[rowspan] {
+  border-top: 1px solid var(--border) !important;
+}
+
+/* Mini progress nella cella adempimento */
+.adp-mini-prog {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.adp-mini-prog-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.adp-mini-prog-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Header info cliente in scadenzario */
+.cliente-header-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Select con optgroup styling migliorato */
+.select optgroup {
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--surface2);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
