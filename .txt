@@ -16,3 +16,8 @@ in irap redditi e 730 -> saldo primo acconto secondo acconto
 
 quando crei adempimenti -> con più frequenza in un anno -> compilo i dari in solo form dove dentro inserisco i dati corretti 
 in adempimento f24 (da chiamare contabilità) -> aggiungere campo iva + contabilità
+
+
+quando crei adempimento gestisci su flag contabilità e allora anche i dati di Iva 
+
+e infine metti anche che puoi fare copia anno per tutti i clienti e anche la creazione dei dati (adempimenti) per tutti la prima volta 
