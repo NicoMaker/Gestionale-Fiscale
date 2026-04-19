@@ -996,3 +996,28 @@ select option:disabled {
 .pannello-cliente-row:hover {
   background: var(--accent-dim);
 }
+
+/* Aggiungere IN FONDO al styles.css esistente */
+
+/* ─── DASHBOARD: tab categorie ──────────────────────────────────────────── */
+.cat-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.cat-tab:hover { border-color: var(--accent); color: var(--text); }
+.cat-tab-active { font-weight: 800; }
+
+/* ─── DASHBOARD: righe adempimenti cliccabili ───────────────────────────── */
+.adp-dash-row { cursor: pointer; transition: background 0.12s; }
+.adp-dash-row:hover td { background: var(--accent-dim); }
+.adp-dash-row td { transition: background 0.12s; }
