@@ -99,6 +99,8 @@ let state = {
   globalePreFiltroAdp: "",
   globaleStats: null,
   _dashRendered: false,
+  // Tiene traccia degli adempimenti già inseriti per il cliente selezionato
+  adpInseriti: [],
 };
 
 function debounce(fn, ms) {
@@ -129,6 +131,50 @@ socket.on("disconnect", () => {
   document.getElementById("conn-status").style.color = "var(--red)";
 });
 socket.on("notify", ({ type, msg }) => showNotif(msg, type));
+
+// ── REAL-TIME BROADCAST EVENTS ─────────────────────────────────────────────
+// Il server emette questi eventi a tutti i client quando ci sono modifiche
+socket.on("broadcast:scadenzario_updated", ({ id_cliente, anno }) => {
+  // Aggiorna la pagina corrente se stiamo guardando quel cliente/anno
+  if (state.page === "scadenzario" && state.selectedCliente) {
+    if (!id_cliente || state.selectedCliente.id === id_cliente) {
+      if (!anno || state.anno === anno) {
+        loadScadenzario();
+      }
+    }
+  }
+});
+
+socket.on("broadcast:globale_updated", ({ anno }) => {
+  if (state.page === "scadenzario_globale") {
+    if (!anno || state.anno === anno) {
+      loadGlobale();
+    }
+  }
+});
+
+socket.on("broadcast:stats_updated", ({ anno }) => {
+  if (state.page === "dashboard") {
+    if (!anno || state.anno === anno) {
+      socket.emit("get:stats", { anno: state.anno });
+    }
+  }
+});
+
+socket.on("broadcast:clienti_updated", () => {
+  if (state.page === "clienti") {
+    socket.emit("get:clienti");
+  }
+});
+
+socket.on("broadcast:adempimenti_updated", () => {
+  if (state.page === "adempimenti") {
+    socket.emit("get:adempimenti");
+  }
+  // Aggiorna anche la lista adempimenti in memoria per il modal
+  socket.emit("get:adempimenti");
+});
+
 socket.on("res:tipologie", ({ success, data }) => {
   if (success) {
     state.tipologie = data;
@@ -152,14 +198,17 @@ socket.on("res:adempimenti", ({ success, data }) => {
     state._pending = null;
     renderAdempimentiPage();
   } else if (state.page === "adempimenti") renderAdempimentiPage();
+
+  // Aggiorna il select nel modal add-adp se è aperto
   const sel = document.getElementById("add-adp-select");
   if (sel && success) {
-    sel.innerHTML = data
-      .map(
-        (a) =>
-          `<option value="${a.id}">[${a.categoria}] ${a.codice} - ${a.nome}</option>`,
-      )
-      .join("");
+    // Non sovrascrivere se il modal non è aperto
+    const modalOpen = document
+      .getElementById("modal-add-adp")
+      ?.classList.contains("open");
+    if (modalOpen) {
+      refreshAddAdpSelect();
+    }
     updatePeriodoOptions();
   }
 });
@@ -172,6 +221,10 @@ socket.on("res:stats", ({ success, data }) => {
 socket.on("res:scadenzario", ({ success, data }) => {
   if (success) {
     state.scadenzario = data;
+    // Calcola gli id adempimenti già inseriti per questo cliente/anno
+    const inseriti = new Set();
+    data.forEach((r) => inseriti.add(r.id_adempimento));
+    state.adpInseriti = Array.from(inseriti);
     renderScadenzarioTabella(data);
   }
 });
@@ -542,7 +595,6 @@ function getPeriodoShort(r) {
   if (r.scadenza_tipo === "mensile") return MESI_SHORT[(r.mese || 1) - 1];
   return "Ann.";
 }
-
 function isContabilita(r) {
   return (
     parseInt(r.is_contabilita) === 1 ||
@@ -553,7 +605,6 @@ function isContabilita(r) {
 function hasRate(r) {
   return parseInt(r.has_rate) === 1 || r.has_rate === true || r.has_rate === 1;
 }
-
 function renderImportoCellCompact(r) {
   if (isContabilita(r)) {
     const iva = r.importo_iva
@@ -586,7 +637,6 @@ function renderImportoCellCompact(r) {
     ? `<div class="importi-cell"><div class="imp-row"><span class="imp-lbl">💶 Imp.</span><span class="imp-val">€${parseFloat(r.importo).toFixed(2)}</span></div></div>`
     : `<span class="imp-empty">—</span>`;
 }
-
 function renderImportoCell(r) {
   if (isContabilita(r)) {
     const iva = r.importo_iva
@@ -615,8 +665,6 @@ function renderImportoCell(r) {
   }
   return r.importo ? `💶 €${parseFloat(r.importo).toFixed(2)}` : "-";
 }
-
-// Riga periodo con etichette contestuali chiare (nome adp + periodo nel title)
 function renderPeriodoRigaCompleta(r) {
   const stato = r.stato || "da_fare";
   const pl = getPeriodoLabel(r),
@@ -643,7 +691,21 @@ function renderPeriodoRigaCompleta(r) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SCADENZARIO SINGOLO — con ANTEPRIMA CARD CLIENTE
+// HELPER: calcola adempimenti mancanti per il cliente corrente
+// ═══════════════════════════════════════════════════════════════
+function getAdempimentiMancanti() {
+  if (!state.selectedCliente) return [];
+  const cat = JSON.parse(state.selectedCliente.categorie_attive || "[]");
+  // Filtra gli adempimenti compatibili con il cliente
+  const compatibili = state.adempimenti.filter(
+    (a) => a.categoria === "TUTTI" || cat.includes(a.categoria),
+  );
+  // Restituisce quelli NON ancora inseriti (id non in adpInseriti)
+  return compatibili.filter((a) => !state.adpInseriti.includes(a.id));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCADENZARIO SINGOLO
 // ═══════════════════════════════════════════════════════════════
 function renderScadenzarioPage() {
   const opts = state.clienti
@@ -666,6 +728,7 @@ function renderScadenzarioPage() {
 function onClienteChange() {
   const id = parseInt(document.getElementById("sel-cliente").value);
   state.selectedCliente = state.clienti.find((c) => c.id === id) || null;
+  state.adpInseriti = []; // reset
   if (state.selectedCliente) loadScadenzario();
 }
 function changeAnnoScad(d) {
@@ -698,6 +761,26 @@ function resetScadFiltri() {
   if (document.getElementById("scad-search"))
     document.getElementById("scad-search").value = "";
   loadScadenzario();
+}
+
+// ── Bottone "+ Adempimento" smart: disabilitato se non ci sono mancanti ───
+function renderBtnAddAdp(id_cliente) {
+  const mancanti = getAdempimentiMancanti();
+  const hasMancanti = mancanti.length > 0;
+
+  if (!hasMancanti) {
+    // Tutti gli adempimenti compatibili sono già stati inseriti
+    return `<button class="btn btn-sm btn-purple" disabled
+      title="Tutti gli adempimenti compatibili sono già stati inseriti per questo cliente"
+      style="opacity:0.4;cursor:not-allowed;filter:grayscale(0.6)">
+      ✓ Tutti inseriti
+    </button>`;
+  }
+
+  return `<button class="btn btn-sm btn-purple" onclick="openAddAdp(${id_cliente})"
+    title="${mancanti.length} adempiment${mancanti.length === 1 ? "o" : "i"} ancora da aggiungere">
+    + Adempimento <span style="font-size:10px;background:rgba(255,255,255,0.2);border-radius:10px;padding:1px 6px;margin-left:2px">${mancanti.length}</span>
+  </button>`;
 }
 
 function renderScadenzarioTabella(righe) {
@@ -791,7 +874,6 @@ function renderScadenzarioTabella(righe) {
   document.getElementById("content").innerHTML = `
     <div class="print-header"><strong>Studio Commerciale - Scadenzario</strong><br>Cliente: <strong>${c.nome}</strong> | Anno: <strong>${state.anno}</strong> | Stampa: ${new Date().toLocaleDateString("it-IT")}</div>
 
-    <!-- ▶ CARD ANTEPRIMA CLIENTE -->
     <div class="cliente-preview-card">
       <div class="cpc-avatar-wrap">
         <div class="cpc-avatar">${(c.nome || "?").charAt(0).toUpperCase()}</div>
@@ -819,7 +901,7 @@ function renderScadenzarioTabella(righe) {
         </div>
       </div>
       <div class="cpc-actions no-print">
-        <button class="btn btn-sm btn-purple" onclick="openAddAdp(${c.id})">+ Adempimento</button>
+        <div id="btn-add-adp-wrap">${renderBtnAddAdp(c.id)}</div>
         <button class="btn btn-sm btn-secondary" onclick="openCopia(${c.id})">Copia anno</button>
         <button class="btn btn-sm btn-primary" onclick="generaScad(${c.id})">⚡ Genera ${state.anno}</button>
         <button class="btn btn-print btn-sm" onclick="window.print()">🖨️ Stampa</button>
@@ -879,7 +961,7 @@ function eseguiCopia() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// VISTA GLOBALE — con PANNELLO STAT AGGREGATE + CONTESTO RICERCA
+// VISTA GLOBALE
 // ═══════════════════════════════════════════════════════════════
 function calcolaGlobaleStats(righe) {
   const clientiSet = new Set(righe.map((r) => r.id_cliente));
@@ -899,7 +981,6 @@ function calcolaGlobaleStats(righe) {
   });
   return { clienti: clientiSet.size, tot, comp, daF, inC, na, perc, perCat };
 }
-
 function renderGlobalePage() {
   const preSearch = state.globalePreFiltroAdp || "";
   document.getElementById("topbar-actions").innerHTML = `
@@ -910,13 +991,9 @@ function renderGlobalePage() {
     <div class="year-sel"><button onclick="changeAnnoGlobale(-1)">&#9664;</button><span class="year-num">${state.anno}</span><button onclick="changeAnnoGlobale(1)">&#9654;</button></div>
     ${preSearch ? `<button class="btn btn-xs btn-secondary no-print" onclick="clearGlobalePrefiltro()">✕ "${escAttr(preSearch)}"</button>` : ""}
     <button class="btn btn-print btn-sm no-print" onclick="window.print()">🖨️ Stampa</button>`;
-
   document.getElementById("content").innerHTML = `
     <div class="print-header"><strong>Studio Commerciale - Vista Globale ${state.anno}</strong><br>Stampa: ${new Date().toLocaleDateString("it-IT")}</div>
-
-    <!-- ▶ PANNELLO GLOBALE (si aggiorna dopo la risposta) -->
     <div id="globale-header-panel"></div>
-
     <div class="filtri-bar no-print">
       <label>Stato:</label>
       <select class="select" style="width:150px" id="fg-stato" onchange="applyGlobaleFiltri()">
@@ -931,14 +1008,12 @@ function renderGlobalePage() {
       </select>
     </div>
     <div id="globale-content"><div class="empty" style="padding:40px">⏳ Caricamento...</div></div>`;
-
   if (document.getElementById("fg-stato"))
     document.getElementById("fg-stato").value = state.filtri.stato;
   if (document.getElementById("fg-categoria"))
     document.getElementById("fg-categoria").value = state.filtri.categoria;
   loadGlobale(preSearch);
 }
-
 function renderGlobaleHeader() {
   const el = document.getElementById("globale-header-panel");
   if (!el) return;
@@ -949,7 +1024,6 @@ function renderGlobaleHeader() {
   }
   const catColor = {};
   CATEGORIE.forEach((c) => (catColor[c.codice] = c.color));
-  // Badge per categoria con % avanzamento
   const catBadges = Object.entries(gs.perCat)
     .sort((a, b) => b[1].totale - a[1].totale)
     .map(([cat, d]) => {
@@ -964,8 +1038,6 @@ function renderGlobaleHeader() {
     </div>`;
     })
     .join("");
-
-  // Tag filtri attivi (memoria del contesto)
   const filterTags = [];
   if (state.globalePreFiltroAdp)
     filterTags.push(
@@ -982,7 +1054,6 @@ function renderGlobaleHeader() {
   filterTags.push(
     `<span class="ctx-tag ctx-tag-anno">📅 Anno: ${state.anno}</span>`,
   );
-
   el.innerHTML = `<div class="globale-preview-card">
     <div class="gpc-left">
       <div class="gpc-globe">🌐</div>
@@ -1006,7 +1077,6 @@ function renderGlobaleHeader() {
     <div class="gpc-cats">${catBadges}</div>
   </div>`;
 }
-
 function clearGlobalePrefiltro() {
   state.globalePreFiltroAdp = "";
   renderGlobalePage();
@@ -1061,7 +1131,6 @@ function renderGlobaleTabella(righe) {
     container.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>Nessun risultato per i filtri selezionati</p></div>`;
     return;
   }
-
   const html = Object.values(perCliente)
     .map((cl) => {
       const comp = cl.righe.filter((r) => r.stato === "completato").length;
@@ -1094,7 +1163,6 @@ function renderGlobaleTabella(righe) {
         if (r.stato === "in_corso") ga.in_corso++;
         ga.righe.push(r);
       });
-
       const adpRows = Object.values(groupedAdp)
         .map((adp) => {
           const p2 =
@@ -1139,12 +1207,12 @@ function renderGlobaleTabella(righe) {
               return `<div class="periodo-globale-row s-${rx.stato}" onclick="openAdpById(${rx.id})" title="${escAttr(adp.nome)} — ${escAttr(pl)}: clicca per modificare">
               <div class="pga-label"><span class="periodo-tag-sm">${ps}</span></div>
               <div class="pga-stato"><span class="badge b-${rx.stato}" style="font-size:8px">${STATI[rx.stato] || rx.stato}</span></div>
-              <div class="pga-importo" title="Importo ${escAttr(adp.nome)} — ${escAttr(pl)}">${imp}</div>
+              <div class="pga-importo">${imp}</div>
               <div class="pga-date">
-                ${rx.data_scadenza ? `<span class="pga-date-chip" title="Scadenza: ${escAttr(adp.nome)} — ${escAttr(pl)}">📅 ${rx.data_scadenza}</span>` : ""}
-                ${rx.data_completamento ? `<span class="pga-date-chip" style="color:var(--green)" title="Completato: ${escAttr(adp.nome)} — ${escAttr(pl)}">✅ ${rx.data_completamento}</span>` : ""}
+                ${rx.data_scadenza ? `<span class="pga-date-chip">📅 ${rx.data_scadenza}</span>` : ""}
+                ${rx.data_completamento ? `<span class="pga-date-chip" style="color:var(--green)">✅ ${rx.data_completamento}</span>` : ""}
               </div>
-              <div class="pga-note">${rx.note ? `<span class="pga-note-txt" title="Note: ${escAttr(adp.nome)} — ${escAttr(pl)}">📝 ${rx.note}</span>` : ""}</div>
+              <div class="pga-note">${rx.note ? `<span class="pga-note-txt">📝 ${rx.note}</span>` : ""}</div>
             </div>`;
             })
             .join("")}</div>
@@ -1156,12 +1224,12 @@ function renderGlobaleTabella(righe) {
             periodoCell = `<div class="periodo-globale-row s-${rx.stato}" onclick="openAdpById(${rx.id})" title="${escAttr(adp.nome)} — ${escAttr(pl)}: clicca per modificare">
           <div class="pga-label"><span class="periodo-tag-sm">${pl}</span></div>
           <div class="pga-stato"><span class="badge b-${rx.stato}" style="font-size:8px">${STATI[rx.stato] || rx.stato}</span></div>
-          <div class="pga-importo" title="Importo ${escAttr(adp.nome)}">${imp}</div>
+          <div class="pga-importo">${imp}</div>
           <div class="pga-date">
-            ${rx.data_scadenza ? `<span class="pga-date-chip" title="Data scadenza: ${escAttr(adp.nome)}">📅 ${rx.data_scadenza}</span>` : ""}
-            ${rx.data_completamento ? `<span class="pga-date-chip" style="color:var(--green)" title="Data completamento: ${escAttr(adp.nome)}">✅ ${rx.data_completamento}</span>` : ""}
+            ${rx.data_scadenza ? `<span class="pga-date-chip">📅 ${rx.data_scadenza}</span>` : ""}
+            ${rx.data_completamento ? `<span class="pga-date-chip" style="color:var(--green)">✅ ${rx.data_completamento}</span>` : ""}
           </div>
-          <div class="pga-note">${rx.note ? `<span class="pga-note-txt" title="Note: ${escAttr(adp.nome)}">📝 ${rx.note}</span>` : ""}</div>
+          <div class="pga-note">${rx.note ? `<span class="pga-note-txt">📝 ${rx.note}</span>` : ""}</div>
         </div>`;
           }
           return `<tr>
@@ -1629,25 +1697,64 @@ function openCopia(id) {
   document.getElementById("copia-a").value = state.anno;
   openModal("modal-copia");
 }
+
+// ── MODAL ADD ADEMPIMENTO: mostra solo adempimenti non ancora inseriti ─────
+function refreshAddAdpSelect() {
+  const mancanti = getAdempimentiMancanti();
+  const sel = document.getElementById("add-adp-select");
+  if (!sel) return;
+  if (!mancanti.length) {
+    sel.innerHTML = `<option value="">Nessun adempimento da aggiungere</option>`;
+    sel.disabled = true;
+    const btn = document.querySelector("#modal-add-adp .btn-primary");
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+    }
+  } else {
+    sel.disabled = false;
+    sel.innerHTML = mancanti
+      .map(
+        (a) =>
+          `<option value="${a.id}">[${a.categoria}] ${a.codice} - ${a.nome}</option>`,
+      )
+      .join("");
+    const btn = document.querySelector("#modal-add-adp .btn-primary");
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = "";
+    }
+  }
+  updatePeriodoOptions();
+}
+
 function openAddAdp(id) {
   document.getElementById("add-adp-cliente-id").value = id;
   document.getElementById("add-adp-anno").value = state.anno;
-  const sel = document.getElementById("add-adp-select");
-  sel.innerHTML = state.adempimenti
-    .map(
-      (a) =>
-        `<option value="${a.id}">[${a.categoria}] ${a.codice} - ${a.nome}</option>`,
-    )
-    .join("");
-  updatePeriodoOptions();
+
+  // Se adempimenti non sono ancora caricati, li carica e poi apre il modal
+  if (!state.adempimenti.length) {
+    socket.once("res:adempimenti", () => {
+      refreshAddAdpSelect();
+      openModal("modal-add-adp");
+    });
+    socket.emit("get:adempimenti");
+    return;
+  }
+
+  refreshAddAdpSelect();
   openModal("modal-add-adp");
 }
+
 function updatePeriodoOptions() {
   const selAdp = document.getElementById("add-adp-select"),
     selP = document.getElementById("add-adp-periodo");
   if (!selAdp || !selP) return;
   const adp = state.adempimenti.find((a) => a.id === parseInt(selAdp.value));
-  if (!adp) return;
+  if (!adp) {
+    selP.innerHTML = '<option value="">- Seleziona adempimento -</option>';
+    return;
+  }
   let opts = '<option value="">- Seleziona -</option>';
   if (adp.scadenza_tipo === "trimestrale")
     opts += `<option value="trimestre_1">1° Trim. (Gen-Mar)</option><option value="trimestre_2">2° Trim. (Apr-Giu)</option><option value="trimestre_3">3° Trim. (Lug-Set)</option><option value="trimestre_4">4° Trim. (Ott-Dic)</option>`;
@@ -1660,6 +1767,7 @@ function updatePeriodoOptions() {
   else opts += `<option value="annuale">Annuale</option>`;
   selP.innerHTML = opts;
 }
+
 function eseguiAddAdp() {
   const pv = document.getElementById("add-adp-periodo").value;
   let trimestre = null,
