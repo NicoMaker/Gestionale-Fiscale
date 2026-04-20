@@ -2475,3 +2475,374 @@ function updateDashboardContent(stats) {
 
   grid.innerHTML = html;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// TIPOLOGIE — albero percorsi completo
+// ═══════════════════════════════════════════════════════════════
+function renderTipologiePage() {
+  // Mappa completa di tutti i percorsi per tipologia
+  const PERCORSI = {
+    PF: [
+      { col2: null,           col2Label: null,             col3: null,           col3Label: null,             codice: "PF_PRIV",      nome: "Privato",                                       hasPer: true },
+      { col2: "ditta",        col2Label: "Ditta Individuale", col3: "ordinario",  col3Label: "Ordinario",      codice: "PF_DITTA_ORD", nome: "Ditta Ind. – Ordinario",                        hasPer: true },
+      { col2: "ditta",        col2Label: "Ditta Individuale", col3: "semplificato",col3Label: "Semplificato",  codice: "PF_DITTA_SEM", nome: "Ditta Ind. – Semplificato",                     hasPer: true },
+      { col2: "ditta",        col2Label: "Ditta Individuale", col3: "forfettario", col3Label: "Forfettario",   codice: "PF_DITTA_FOR", nome: "Ditta Ind. – Forfettario",                      hasPer: true },
+      { col2: "socio",        col2Label: "Socio",           col3: null,           col3Label: null,             codice: "PF_SOCIO",     nome: "Socio",                                         hasPer: true },
+      { col2: "professionista",col2Label: "Professionista", col3: "ordinario",    col3Label: "Ordinario",      codice: "PF_PROF_ORD",  nome: "Professionista – Ordinario",                    hasPer: true },
+      { col2: "professionista",col2Label: "Professionista", col3: "semplificato", col3Label: "Semplificato",   codice: "PF_PROF_SEM",  nome: "Professionista – Semplificato",                 hasPer: true },
+      { col2: "professionista",col2Label: "Professionista", col3: "forfettario",  col3Label: "Forfettario",    codice: "PF_PROF_FOR",  nome: "Professionista – Forfettario",                  hasPer: true },
+    ],
+    SP: [
+      { col2: null, col2Label: null, col3: "ordinaria",    col3Label: "Ordinaria",    codice: "SP_ORD",  nome: "Soc. Persone – Ordinaria",    hasPer: true },
+      { col2: null, col2Label: null, col3: "semplificata", col3Label: "Semplificata", codice: "SP_SEMP", nome: "Soc. Persone – Semplificata",  hasPer: true },
+    ],
+    SC: [
+      { col2: null, col2Label: null, col3: "ordinaria", col3Label: "Ordinaria", codice: "SC_ORD", nome: "Soc. Capitali – Ordinaria", hasPer: true },
+    ],
+    ASS: [
+      { col2: null, col2Label: null, col3: "ordinaria",    col3Label: "Ordinaria",    codice: "ASS_ORD",  nome: "Associazione – Ordinaria",    hasPer: true },
+      { col2: null, col2Label: null, col3: "semplificata", col3Label: "Semplificata", codice: "ASS_SEMP", nome: "Associazione – Semplificata",  hasPer: true },
+    ],
+  };
+
+  const PERIODICITA = [
+    { value: "mensile",      label: "📅 Mensile",      color: "#22d3ee" },
+    { value: "trimestrale",  label: "📆 Trimestrale",  color: "#a78bfa" },
+  ];
+
+  const tipColors = { PF: "#5b8df6", SP: "#a78bfa", SC: "#34d399", ASS: "#fbbf24" };
+  const tipDesc   = { PF: "Persona Fisica", SP: "Società di Persone", SC: "Società di Capitali", ASS: "Associazione" };
+  const tipIcons  = { PF: "👤", SP: "🤝", SC: "🏢", ASS: "🏛️" };
+
+  function colBadge(num, label, color) {
+    return `<div class="tp-col-step">
+      <div class="tp-col-num" style="background:${color || 'var(--accent)'}22;border-color:${color || 'var(--accent)'}55;color:${color || 'var(--accent)'}">${num}</div>
+      <div class="tp-col-val">${label}</div>
+    </div>`;
+  }
+
+  function arrowSvg() {
+    return `<span class="tp-arrow">›</span>`;
+  }
+
+  let html = `
+    <div class="infobox" style="margin-bottom:20px">
+      🗂️ Tutti i percorsi di classificazione possibili. Ogni riga mostra la sequenza completa delle 4 colonne (Tipologia → Sottocategoria → Regime → Periodicità) che può essere assegnata a un cliente.
+    </div>
+    <div class="tp-grid">`;
+
+  Object.entries(PERCORSI).forEach(([tipCodice, percorsi]) => {
+    const tipColor = tipColors[tipCodice] || "var(--accent)";
+
+    // Conta totale percorsi con periodicità
+    const totalePaths = percorsi.reduce((n, p) => n + (p.hasPer ? 2 : 1), 0);
+
+    html += `
+      <div class="tp-card">
+        <div class="tp-card-header" style="border-left:4px solid ${tipColor}">
+          <div class="tp-badge" style="background:${tipColor}22;border-color:${tipColor}44;color:${tipColor}">${tipIcons[tipCodice]} ${tipCodice}</div>
+          <div>
+            <div class="tp-card-title">${tipDesc[tipCodice]}</div>
+            <div class="tp-card-sub">${totalePaths} percorsi possibili</div>
+          </div>
+        </div>
+        <div class="tp-percorsi">`;
+
+    // Per PF raggruppa per col2 per mostrare separatori visivi
+    if (tipCodice === "PF") {
+      const gruppi = {};
+      percorsi.forEach(p => {
+        const g = p.col2Label || "__privato__";
+        if (!gruppi[g]) gruppi[g] = { label: p.col2Label, percorsi: [] };
+        gruppi[g].percorsi.push(p);
+      });
+
+      Object.entries(gruppi).forEach(([gKey, g]) => {
+        html += `<div class="tp-gruppo">
+          <div class="tp-gruppo-label">${g.label ? `<span style="color:${tipColor};font-weight:700">● ${g.label}</span>` : `<span style="color:${tipColor};font-weight:700">● Privato / Socio</span>`}</div>`;
+
+        g.percorsi.forEach(p => {
+          html += buildPercorsoRows(p, tipCodice, tipColor, PERIODICITA, colBadge, arrowSvg);
+        });
+
+        html += `</div>`;
+      });
+    } else {
+      percorsi.forEach(p => {
+        html += buildPercorsoRows(p, tipCodice, tipColor, PERIODICITA, colBadge, arrowSvg);
+      });
+    }
+
+    html += `</div></div>`;
+  });
+
+  html += `</div>
+
+  <style>
+    .tp-grid { display: flex; flex-direction: column; gap: 18px; }
+    .tp-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .tp-card-header { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+    .tp-badge { display: flex; align-items: center; gap: 7px; padding: 8px 14px; border: 1px solid; border-radius: var(--r-sm); font-size: 14px; font-weight: 800; font-family: var(--mono); white-space: nowrap; }
+    .tp-card-title { font-size: 15px; font-weight: 700; }
+    .tp-card-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .tp-percorsi { padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .tp-gruppo { margin-bottom: 10px; }
+    .tp-gruppo-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+    .tp-row { display: flex; align-items: center; gap: 0; padding: 7px 10px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 7px; flex-wrap: wrap; gap: 2px; transition: border-color 0.12s; }
+    .tp-row:hover { border-color: var(--accent); background: var(--surface3); }
+    .tp-col-step { display: flex; align-items: center; gap: 5px; }
+    .tp-col-num { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; border: 1px solid; flex-shrink: 0; font-family: var(--mono); }
+    .tp-col-val { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+    .tp-arrow { color: var(--text3); font-size: 16px; margin: 0 4px; line-height: 1; }
+    .tp-codice { font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; margin-left: auto; flex-shrink: 0; }
+    .tp-per-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border: 1px solid; border-radius: 20px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+  </style>`;
+
+  document.getElementById("content").innerHTML = html;
+}
+
+function buildPercorsoRows(p, tipCodice, tipColor, PERIODICITA, colBadge, arrowSvg) {
+  let html = "";
+  const perRows = p.hasPer ? PERIODICITA : [null];
+
+  perRows.forEach(per => {
+    let cols = [];
+
+    // COL 1 — Tipologia
+    cols.push(colBadge(1, tipCodice, tipColor));
+
+    // COL 2 — Sottocategoria (solo PF)
+    if (p.col2Label) {
+      const col2Colors = { "Ditta Individuale": "#fb923c", "Professionista": "#34d399", "Socio": "#a78bfa" };
+      cols.push(arrowSvg());
+      cols.push(colBadge(2, p.col2Label, col2Colors[p.col2Label] || "var(--text2)"));
+    } else if (tipCodice === "PF") {
+      // Privato/Socio non hanno col2 in cascata
+    }
+
+    // COL 3 — Regime
+    if (p.col3Label) {
+      const col3Colors = { "Ordinario": "#5b8df6", "Semplificato": "#22d3ee", "Forfettario": "#fbbf24", "Ordinaria": "#5b8df6", "Semplificata": "#22d3ee" };
+      cols.push(arrowSvg());
+      cols.push(colBadge(3, p.col3Label, col3Colors[p.col3Label] || "var(--text2)"));
+    }
+
+    // COL 4 — Periodicità
+    if (per) {
+      cols.push(arrowSvg());
+      cols.push(`<div class="tp-col-step">
+        <div class="tp-col-num" style="background:${per.color}22;border-color:${per.color}55;color:${per.color}">4</div>
+        <span class="tp-per-badge" style="color:${per.color};border-color:${per.color}44;background:${per.color}11">${per.label}</span>
+      </div>`);
+    }
+
+    // Codice sottotipologia (a destra)
+    const codiceHtml = `<span class="tp-codice" style="background:${tipColor}15;color:${tipColor};border:1px solid ${tipColor}33">${p.codice}</span>`;
+
+    html += `<div class="tp-row">${cols.join("")}${codiceHtml}</div>`;
+  });
+
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TIPOLOGIE — albero percorsi completo (numeri colonna corretti)
+// ═══════════════════════════════════════════════════════════════
+function renderTipologiePage() {
+  const PERCORSI = {
+    PF: [
+      // col2:null col3:null → 1 › 4
+      { col2Label: null,                col3Label: null,              codice: "PF_PRIV",      hasPer: true },
+      // col2:ditta col3:regime → 1 › 2 › 3 › 4
+      { col2Label: "Ditta Individuale", col3Label: "Ordinario",       codice: "PF_DITTA_ORD", hasPer: true },
+      { col2Label: "Ditta Individuale", col3Label: "Semplificato",    codice: "PF_DITTA_SEM", hasPer: true },
+      { col2Label: "Ditta Individuale", col3Label: "Forfettario",     codice: "PF_DITTA_FOR", hasPer: true },
+      // col2:socio col3:null → 1 › 2 › 4
+      { col2Label: "Socio",             col3Label: null,              codice: "PF_SOCIO",     hasPer: true },
+      // col2:prof col3:regime → 1 › 2 › 3 › 4
+      { col2Label: "Professionista",    col3Label: "Ordinario",       codice: "PF_PROF_ORD",  hasPer: true },
+      { col2Label: "Professionista",    col3Label: "Semplificato",    codice: "PF_PROF_SEM",  hasPer: true },
+      { col2Label: "Professionista",    col3Label: "Forfettario",     codice: "PF_PROF_FOR",  hasPer: true },
+    ],
+    SP: [
+      // col2:null col3:regime → 1 › 3 › 4
+      { col2Label: null, col3Label: "Ordinaria",    codice: "SP_ORD",  hasPer: true },
+      { col2Label: null, col3Label: "Semplificata", codice: "SP_SEMP", hasPer: true },
+    ],
+    SC: [
+      // col2:null col3:ordinaria → 1 › 3 › 4
+      { col2Label: null, col3Label: "Ordinaria", codice: "SC_ORD", hasPer: true },
+    ],
+    ASS: [
+      // col2:null col3:regime → 1 › 3 › 4
+      { col2Label: null, col3Label: "Ordinaria",    codice: "ASS_ORD",  hasPer: true },
+      { col2Label: null, col3Label: "Semplificata", codice: "ASS_SEMP", hasPer: true },
+    ],
+  };
+
+  const PERIODICITA = [
+    { value: "mensile",     label: "📅 Mensile",     color: "#22d3ee" },
+    { value: "trimestrale", label: "📆 Trimestrale", color: "#a78bfa" },
+  ];
+
+  const tipColors  = { PF: "#5b8df6", SP: "#a78bfa", SC: "#34d399", ASS: "#fbbf24" };
+  const tipDesc    = { PF: "Persona Fisica", SP: "Società di Persone", SC: "Società di Capitali", ASS: "Associazione" };
+  const tipIcons   = { PF: "👤", SP: "🤝", SC: "🏢", ASS: "🏛️" };
+  const col2Colors = { "Ditta Individuale": "#fb923c", "Professionista": "#34d399", "Socio": "#a78bfa" };
+  const col3Colors = { "Ordinario": "#5b8df6", "Semplificato": "#22d3ee", "Forfettario": "#fbbf24", "Ordinaria": "#5b8df6", "Semplificata": "#22d3ee" };
+
+  // Render di un singolo step con il numero REALE della colonna
+  function step(colNum, label, color) {
+    const c = color || "var(--accent)";
+    return `<div class="tp-step">
+      <div class="tp-num" style="background:${c}18;border-color:${c}44;color:${c}">${colNum}</div>
+      <div class="tp-val">${label}</div>
+    </div>`;
+  }
+
+  function arrow() {
+    return `<span class="tp-arr">›</span>`;
+  }
+
+  // Raggruppa PF per col2Label per i separatori visivi
+  function gruppiPF(percorsi) {
+    const map = {};
+    const order = [];
+    percorsi.forEach(p => {
+      const k = p.col2Label || "__nessuna__";
+      if (!map[k]) { map[k] = []; order.push(k); }
+      map[k].push(p);
+    });
+    return order.map(k => ({ label: k === "__nessuna__" ? null : k, items: map[k] }));
+  }
+
+  let html = `
+    <div class="infobox" style="margin-bottom:20px">
+      🗂️ Tutti i percorsi di classificazione possibili. I numeri cerchiati indicano sempre la colonna reale:
+      <strong style="color:var(--accent)">1</strong> Tipologia ·
+      <strong style="color:#fb923c">2</strong> Sottocategoria ·
+      <strong style="color:#5b8df6">3</strong> Regime ·
+      <strong style="color:#22d3ee">4</strong> Periodicità
+    </div>
+    <div class="tp-grid">`;
+
+  Object.entries(PERCORSI).forEach(([tipCodice, percorsi]) => {
+    const tipColor = tipColors[tipCodice];
+    const totalePaths = percorsi.reduce((n, p) => n + (p.hasPer ? 2 : 1), 0);
+
+    html += `<div class="tp-card">
+      <div class="tp-card-header" style="border-left:4px solid ${tipColor}">
+        <div class="tp-badge" style="background:${tipColor}18;border:1px solid ${tipColor}44;color:${tipColor}">${tipIcons[tipCodice]} ${tipCodice}</div>
+        <div>
+          <div class="tp-card-title">${tipDesc[tipCodice]}</div>
+          <div class="tp-card-sub">${totalePaths} percorsi possibili</div>
+        </div>
+      </div>
+      <div class="tp-percorsi">`;
+
+    const gruppi = tipCodice === "PF"
+      ? gruppiPF(percorsi)
+      : [{ label: null, items: percorsi }];
+
+    gruppi.forEach(g => {
+      if (g.label) {
+        const gc = col2Colors[g.label] || tipColor;
+        html += `<div class="tp-sep-label"><span style="color:${gc}">● ${g.label}</span></div>`;
+      }
+
+      g.items.forEach(p => {
+        const perRows = p.hasPer ? PERIODICITA : [null];
+
+        perRows.forEach(per => {
+          const parts = [];
+
+          // Colonna 1 — sempre presente, numero 1
+          parts.push(step(1, tipCodice, tipColor));
+
+          // Colonna 2 — presente solo se col2Label esiste, numero 2
+          if (p.col2Label) {
+            parts.push(arrow());
+            parts.push(step(2, p.col2Label, col2Colors[p.col2Label] || "#7c85a2"));
+          }
+
+          // Colonna 3 — presente solo se col3Label esiste, numero 3
+          if (p.col3Label) {
+            parts.push(arrow());
+            parts.push(step(3, p.col3Label, col3Colors[p.col3Label] || "#7c85a2"));
+          }
+
+          // Colonna 4 — periodicità, numero sempre 4
+          if (per) {
+            parts.push(arrow());
+            parts.push(`<div class="tp-step">
+              <div class="tp-num" style="background:${per.color}18;border-color:${per.color}44;color:${per.color}">4</div>
+              <span class="tp-per" style="color:${per.color};border-color:${per.color}44;background:${per.color}11">${per.label}</span>
+            </div>`);
+          }
+
+          // Codice sottotipologia allineato a destra
+          parts.push(`<span class="tp-codice" style="background:${tipColor}12;color:${tipColor};border:1px solid ${tipColor}30">${p.codice}</span>`);
+
+          html += `<div class="tp-row">${parts.join("")}</div>`;
+        });
+      });
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += `</div>
+
+  <style>
+    .tp-grid { display:flex; flex-direction:column; gap:18px; }
+
+    .tp-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .tp-card-header { display:flex; align-items:center; gap:14px; padding:14px 18px; background:var(--surface2); border-bottom:1px solid var(--border); }
+    .tp-badge { display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:var(--r-sm); font-size:14px; font-weight:800; font-family:var(--mono); white-space:nowrap; }
+    .tp-card-title { font-size:15px; font-weight:700; }
+    .tp-card-sub { font-size:11px; color:var(--text3); margin-top:2px; }
+
+    .tp-percorsi { padding:12px 16px; display:flex; flex-direction:column; gap:5px; }
+
+    .tp-sep-label {
+      font-size:10px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.08em; padding:8px 0 4px;
+      border-bottom:1px solid var(--border); margin:2px 0 2px;
+    }
+
+    .tp-row {
+      display:flex; align-items:center; flex-wrap:wrap; gap:3px;
+      padding:7px 10px; background:var(--surface2);
+      border:1px solid var(--border2); border-radius:7px;
+      transition:border-color .12s, background .12s;
+    }
+    .tp-row:hover { border-color:var(--accent); background:var(--surface3); }
+
+    .tp-step { display:flex; align-items:center; gap:5px; }
+
+    .tp-num {
+      width:19px; height:19px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:9px; font-weight:800; border:1px solid;
+      flex-shrink:0; font-family:var(--mono);
+    }
+
+    .tp-val { font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; }
+
+    .tp-arr { color:var(--text3); font-size:16px; line-height:1; margin:0 2px; }
+
+    .tp-per {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:2px 9px; border:1px solid; border-radius:20px;
+      font-size:11px; font-weight:700; white-space:nowrap;
+    }
+
+    .tp-codice {
+      font-family:var(--mono); font-size:10px; font-weight:700;
+      padding:2px 7px; border-radius:4px;
+      margin-left:auto; flex-shrink:0;
+    }
+  </style>`;
+
+  document.getElementById("content").innerHTML = html;
+}
