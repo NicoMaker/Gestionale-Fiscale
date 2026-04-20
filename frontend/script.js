@@ -53,6 +53,67 @@ const CATEGORIE = [
   { codice: "BILANCIO", nome: "📊 Bilancio", icona: "📊", color: "#22d3ee" },
 ];
 
+// ─── LOGICA 4 COLONNE ─────────────────────────────────────────
+const COL2_OPTIONS = {
+  PF: [
+    { value: "privato", label: "Privato" },
+    { value: "ditta", label: "Ditta Individuale" },
+    { value: "socio", label: "Socio" },
+    { value: "professionista", label: "Professionista" },
+  ],
+  SP: null,
+  SC: null,
+  ASS: null,
+};
+
+function getCol3Options(tipCodice, col2Value) {
+  if (tipCodice === "SP" || tipCodice === "ASS") {
+    return [
+      { value: "ordinaria", label: "Ordinaria" },
+      { value: "semplificata", label: "Semplificata" },
+    ];
+  }
+  if (tipCodice === "SC") {
+    return [{ value: "ordinaria", label: "Ordinaria" }];
+  }
+  if (tipCodice === "PF") {
+    if (!col2Value || col2Value === "privato" || col2Value === "socio")
+      return null;
+    return [
+      { value: "ordinario", label: "Ordinario" },
+      { value: "semplificato", label: "Semplificato" },
+      { value: "forfettario", label: "Forfettario" },
+    ];
+  }
+  return null;
+}
+
+function col4Visible(col3Value) {
+  return !!col3Value;
+}
+
+const SOTTOTIPO_MAP = {
+  "PF|privato|": "PF_PRIV",
+  "PF|ditta|ordinario": "PF_DITTA_ORD",
+  "PF|ditta|semplificato": "PF_DITTA_SEP2",
+  "PF|ditta|forfettario": "PF_DITTA_FOR",
+  "PF|socio|": "PF_SOCIO",
+  "PF|professionista|ordinario": "PF_PROF_ORD",
+  "PF|professionista|semplificato": "PF_PROF_SEM",
+  "PF|professionista|forfettario": "PF_PROF_FOR",
+  "SP||ordinaria": "SP_ORD",
+  "SP||semplificata": "SP_SEMP",
+  "SC||ordinaria": "SC_ORD",
+  "ASS||ordinaria": "ASS_ORD",
+  "ASS||semplificata": "ASS_SEMP",
+};
+
+function getSottotipoCode(tipCodice, col2, col3) {
+  const key = `${tipCodice}|${col2 || ""}|${col3 || ""}`;
+  return SOTTOTIPO_MAP[key] || null;
+}
+
+// ─── ROW STORE ────────────────────────────────────────────────
 let _rowStore = {};
 function storeRow(r) {
   _rowStore[r.id] = r;
@@ -99,7 +160,6 @@ let state = {
   globalePreFiltroAdp: "",
   globaleStats: null,
   _dashRendered: false,
-  // Tiene traccia degli adempimenti già inseriti per il cliente selezionato
   adpInseriti: [],
 };
 
@@ -119,7 +179,7 @@ function escAttr(s) {
     .replace(/>/g, "&gt;");
 }
 
-// ─── SOCKET ───────────────────────────────────────────────────────────────
+// ─── SOCKET ───────────────────────────────────────────────────
 socket.on("connect", () => {
   document.getElementById("conn-status").textContent = "● Online";
   document.getElementById("conn-status").style.color = "var(--green)";
@@ -132,54 +192,34 @@ socket.on("disconnect", () => {
 });
 socket.on("notify", ({ type, msg }) => showNotif(msg, type));
 
-// ── REAL-TIME BROADCAST EVENTS ─────────────────────────────────────────────
-// Il server emette questi eventi a tutti i client quando ci sono modifiche
 socket.on("broadcast:scadenzario_updated", ({ id_cliente, anno }) => {
-  // Aggiorna la pagina corrente se stiamo guardando quel cliente/anno
   if (state.page === "scadenzario" && state.selectedCliente) {
     if (!id_cliente || state.selectedCliente.id === id_cliente) {
-      if (!anno || state.anno === anno) {
-        loadScadenzario();
-      }
+      if (!anno || state.anno === anno) loadScadenzario();
     }
   }
 });
-
 socket.on("broadcast:globale_updated", ({ anno }) => {
   if (state.page === "scadenzario_globale") {
-    if (!anno || state.anno === anno) {
-      loadGlobale();
-    }
+    if (!anno || state.anno === anno) loadGlobale();
   }
 });
-
 socket.on("broadcast:stats_updated", ({ anno }) => {
   if (state.page === "dashboard") {
-    if (!anno || state.anno === anno) {
+    if (!anno || state.anno === anno)
       socket.emit("get:stats", { anno: state.anno });
-    }
   }
 });
-
 socket.on("broadcast:clienti_updated", () => {
-  if (state.page === "clienti") {
-    socket.emit("get:clienti");
-  }
+  if (state.page === "clienti") socket.emit("get:clienti");
 });
-
 socket.on("broadcast:adempimenti_updated", () => {
-  if (state.page === "adempimenti") {
-    socket.emit("get:adempimenti");
-  }
-  // Aggiorna anche la lista adempimenti in memoria per il modal
+  if (state.page === "adempimenti") socket.emit("get:adempimenti");
   socket.emit("get:adempimenti");
 });
 
 socket.on("res:tipologie", ({ success, data }) => {
-  if (success) {
-    state.tipologie = data;
-    populateTipologiaSelect();
-  }
+  if (success) state.tipologie = data;
 });
 socket.on("res:clienti", ({ success, data }) => {
   if (!success) return;
@@ -198,17 +238,12 @@ socket.on("res:adempimenti", ({ success, data }) => {
     state._pending = null;
     renderAdempimentiPage();
   } else if (state.page === "adempimenti") renderAdempimentiPage();
-
-  // Aggiorna il select nel modal add-adp se è aperto
   const sel = document.getElementById("add-adp-select");
   if (sel && success) {
-    // Non sovrascrivere se il modal non è aperto
     const modalOpen = document
       .getElementById("modal-add-adp")
       ?.classList.contains("open");
-    if (modalOpen) {
-      refreshAddAdpSelect();
-    }
+    if (modalOpen) refreshAddAdpSelect();
     updatePeriodoOptions();
   }
 });
@@ -221,7 +256,6 @@ socket.on("res:stats", ({ success, data }) => {
 socket.on("res:scadenzario", ({ success, data }) => {
   if (success) {
     state.scadenzario = data;
-    // Calcola gli id adempimenti già inseriti per questo cliente/anno
     const inseriti = new Set();
     data.forEach((r) => inseriti.add(r.id_adempimento));
     state.adpInseriti = Array.from(inseriti);
@@ -440,11 +474,11 @@ function updateDashboardContent(stats) {
   });
   const fT = adpVis.reduce((s, a) => s + a.totale, 0),
     fC = adpVis.reduce((s, a) => s + a.completati, 0);
-  const fD = adpVis.reduce((s, a) => s + a.da_fare, 0),
-    fI = adpVis.reduce(
-      (s, a) => s + Math.max(0, a.totale - a.completati - a.da_fare),
-      0,
-    );
+  const fD = adpVis.reduce((s, a) => s + a.da_fare, 0);
+  const fI = adpVis.reduce(
+    (s, a) => s + Math.max(0, a.totale - a.completati - a.da_fare),
+    0,
+  );
   const fP = fT > 0 ? Math.round((fC / fT) * 100) : 0,
     isF = sc !== "tutti" || sq !== "";
   const se = (id, v) => {
@@ -457,7 +491,7 @@ function updateDashboardContent(stats) {
   };
   si(
     "ds-lbl-tot",
-    `Adempimenti ${stats.anno}${isF ? ' <span style="font-size:9px;color:var(--yellow)">(filtro)</span>' : ""}`,
+    `Adempimenti ${stats.anno}${isF ? ` <span style="font-size:9px;color:var(--yellow)">(filtro)</span>` : ""}`,
   );
   se("ds-tot", fT);
   se("ds-comp", fC);
@@ -577,6 +611,276 @@ function renderClientiTabella(clienti) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// MODAL CLIENTE — LOGICA 4 COLONNE (CASCADE)
+// ═══════════════════════════════════════════════════════════════
+function aggiornaColonneCliente() {
+  const tipCodice = _getTipologiaCodice();
+  const col2Wrap = document.getElementById("wrap-col2");
+  const col2Sel = document.getElementById("c-col2");
+  const col2Opts = COL2_OPTIONS[tipCodice];
+  if (!col2Opts) {
+    col2Wrap.style.display = "none";
+    col2Sel.value = "";
+    _aggiornaCol3(tipCodice, "");
+    return;
+  }
+  col2Wrap.style.display = "";
+  const col2Current = col2Sel.value;
+  col2Sel.innerHTML =
+    `<option value="">-- Seleziona --</option>` +
+    col2Opts
+      .map(
+        (o) =>
+          `<option value="${o.value}" ${col2Current === o.value ? "selected" : ""}>${o.label}</option>`,
+      )
+      .join("");
+  if (!col2Current) col2Sel.value = "";
+  _aggiornaCol3(tipCodice, col2Sel.value);
+}
+function _aggiornaCol3(tipCodice, col2Val) {
+  const col3Opts = getCol3Options(tipCodice, col2Val);
+  const col3Wrap = document.getElementById("wrap-col3");
+  const col3Sel = document.getElementById("c-col3");
+  if (!col3Opts) {
+    _nascondiCol3();
+    return;
+  }
+  col3Wrap.style.display = "";
+  const col3Current = col3Sel.value;
+  col3Sel.innerHTML =
+    `<option value="">-- Seleziona --</option>` +
+    col3Opts
+      .map(
+        (o) =>
+          `<option value="${o.value}" ${col3Current === o.value ? "selected" : ""}>${o.label}</option>`,
+      )
+      .join("");
+  if (!col3Current) col3Sel.value = "";
+  if (col3Sel.value) {
+    document.getElementById("wrap-col4").style.display = "";
+  } else {
+    _nascondiCol4();
+  }
+}
+function _nascondiCol3() {
+  const w = document.getElementById("wrap-col3");
+  const s = document.getElementById("c-col3");
+  if (w) w.style.display = "none";
+  if (s) s.value = "";
+  _nascondiCol4();
+}
+function _nascondiCol4() {
+  const w = document.getElementById("wrap-col4");
+  const s = document.getElementById("c-col4");
+  if (w) w.style.display = "none";
+  if (s) s.value = "";
+}
+function _getTipologiaCodice() {
+  const sel = document.getElementById("c-tipologia");
+  if (!sel || !sel.value) return "";
+  const tip = state.tipologie.find((t) => String(t.id) === String(sel.value));
+  return tip ? tip.codice : "";
+}
+function _calcolaSottotipologiaId() {
+  const tipCodice = _getTipologiaCodice();
+  const col2 = document.getElementById("c-col2")?.value || "";
+  const col3 = document.getElementById("c-col3")?.value || "";
+  const stCode = getSottotipoCode(tipCodice, col2, col3);
+  if (!stCode) return null;
+  for (const t of state.tipologie) {
+    const sub = (t.sottotipologie || []).find((s) => s.codice === stCode);
+    if (sub) return sub.id;
+  }
+  return null;
+}
+function populateTipologiaSelect(selectedId) {
+  const sel = document.getElementById("c-tipologia");
+  if (!sel) return;
+  sel.innerHTML = state.tipologie
+    .map(
+      (t) =>
+        `<option value="${t.id}" ${String(t.id) === String(selectedId) ? "selected" : ""}>${t.codice} — ${t.nome}</option>`,
+    )
+    .join("");
+}
+function onTipologiaChange() {
+  const col2Sel = document.getElementById("c-col2");
+  if (col2Sel) col2Sel.value = "";
+  const col3Sel = document.getElementById("c-col3");
+  if (col3Sel) col3Sel.value = "";
+  _nascondiCol4();
+  aggiornaColonneCliente();
+}
+function onCol2Change() {
+  const col3Sel = document.getElementById("c-col3");
+  if (col3Sel) col3Sel.value = "";
+  _nascondiCol4();
+  aggiornaColonneCliente();
+}
+function onCol3Change() {
+  const tipCodice = _getTipologiaCodice();
+  const col2Val = document.getElementById("c-col2")?.value || "";
+  _aggiornaCol3(tipCodice, col2Val);
+}
+function renderCategorieSelect(attuali = []) {
+  const container = document.getElementById("categorie-attive");
+  if (!container) return;
+  container.innerHTML = CATEGORIE.map(
+    (cat) =>
+      `<label style="display:inline-flex;align-items:center;gap:8px;margin:4px 8px 4px 0;padding:8px 12px;background:var(--surface2);border-radius:var(--r-sm);cursor:pointer;border:1px solid ${attuali.includes(cat.codice) ? "var(--accent)" : "var(--border)"};transition:all 0.12s"><input type="checkbox" value="${cat.codice}" ${attuali.includes(cat.codice) ? "checked" : ""} style="accent-color:var(--accent)" onchange="this.parentElement.style.borderColor=this.checked?'var(--accent)':'var(--border)'"><span>${cat.icona} ${cat.nome}</span></label>`,
+  ).join("");
+}
+function getSelectedCategorie() {
+  return Array.from(document.querySelectorAll("#categorie-attive input"))
+    .filter((cb) => cb.checked)
+    .map((cb) => cb.value);
+}
+function openNuovoCliente() {
+  document.getElementById("modal-cliente-title").textContent = "Nuovo Cliente";
+  document.getElementById("cliente-id").value = "";
+  [
+    "c-nome",
+    "c-cf",
+    "c-piva",
+    "c-email",
+    "c-tel",
+    "c-indirizzo",
+    "c-note",
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  if (document.getElementById("c-col2"))
+    document.getElementById("c-col2").value = "";
+  if (document.getElementById("c-col3"))
+    document.getElementById("c-col3").value = "";
+  if (document.getElementById("c-col4"))
+    document.getElementById("c-col4").value = "";
+  renderCategorieSelect([
+    "IVA",
+    "DICHIARAZIONI",
+    "PREVIDENZA",
+    "LAVORO",
+    "TRIBUTI",
+    "BILANCIO",
+  ]);
+  populateTipologiaSelect(state.tipologie[0]?.id);
+  aggiornaColonneCliente();
+  openModal("modal-cliente");
+}
+function editCliente(id) {
+  socket.once("res:cliente", ({ success, data }) => {
+    if (!success || !data) return;
+    document.getElementById("modal-cliente-title").textContent =
+      "Modifica Cliente";
+    document.getElementById("cliente-id").value = data.id;
+    document.getElementById("c-nome").value = data.nome || "";
+    document.getElementById("c-cf").value = data.codice_fiscale || "";
+    document.getElementById("c-piva").value = data.partita_iva || "";
+    document.getElementById("c-email").value = data.email || "";
+    document.getElementById("c-tel").value = data.telefono || "";
+    document.getElementById("c-indirizzo").value = data.indirizzo || "";
+    document.getElementById("c-note").value = data.note || "";
+    const cat = JSON.parse(
+      data.categorie_attive ||
+        '["IVA","DICHIARAZIONI","PREVIDENZA","LAVORO","TRIBUTI","BILANCIO"]',
+    );
+    renderCategorieSelect(cat);
+    populateTipologiaSelect(data.id_tipologia);
+    const tipCodice = _getTipologiaCodice();
+    let col2Val = "",
+      col3Val = "",
+      col4Val = "";
+    if (data.id_sottotipologia) {
+      let subCode = "";
+      for (const t of state.tipologie) {
+        const sub = (t.sottotipologie || []).find(
+          (s) => s.id === data.id_sottotipologia,
+        );
+        if (sub) {
+          subCode = sub.codice;
+          break;
+        }
+      }
+      for (const [key, val] of Object.entries(SOTTOTIPO_MAP)) {
+        if (val === subCode) {
+          const parts = key.split("|");
+          col2Val = parts[1] || "";
+          col3Val = parts[2] || "";
+          break;
+        }
+      }
+    }
+    col4Val = data.periodicita || "";
+    setTimeout(() => {
+      if (document.getElementById("c-col2"))
+        document.getElementById("c-col2").value = col2Val;
+      if (document.getElementById("c-col3"))
+        document.getElementById("c-col3").value = col3Val;
+      aggiornaColonneCliente();
+      setTimeout(() => {
+        if (document.getElementById("c-col4"))
+          document.getElementById("c-col4").value = col4Val;
+      }, 50);
+    }, 60);
+    openModal("modal-cliente");
+  });
+  socket.emit("get:cliente", { id });
+}
+function saveCliente() {
+  const id = document.getElementById("cliente-id").value;
+  const nome = document.getElementById("c-nome").value.trim();
+  if (!nome) {
+    showNotif("Il nome è obbligatorio", "error");
+    return;
+  }
+  const categorie = getSelectedCategorie();
+  if (!categorie.length) {
+    showNotif("Seleziona almeno una categoria", "error");
+    return;
+  }
+  const id_sottotipologia = _calcolaSottotipologiaId();
+  const col4Val = document.getElementById("c-col4")?.value || "";
+  const data = {
+    nome,
+    id_tipologia: parseInt(document.getElementById("c-tipologia").value),
+    id_sottotipologia: id_sottotipologia || null,
+    codice_fiscale:
+      document.getElementById("c-cf").value.trim().toUpperCase() || null,
+    partita_iva: document.getElementById("c-piva").value.trim() || null,
+    email: document.getElementById("c-email").value.trim() || null,
+    telefono: document.getElementById("c-tel").value.trim() || null,
+    indirizzo: document.getElementById("c-indirizzo").value.trim() || null,
+    note: document.getElementById("c-note").value.trim() || null,
+    categorie_attive: categorie,
+    periodicita: col4Val || null,
+  };
+  if (id) {
+    data.id = parseInt(id);
+    socket.emit("update:cliente", data);
+  } else socket.emit("create:cliente", data);
+}
+function deleteCliente(id) {
+  if (confirm("Eliminare questo cliente?"))
+    socket.emit("delete:cliente", { id });
+}
+function goScadenzario(id) {
+  const c = state.clienti.find((x) => x.id === id);
+  if (c) {
+    state.selectedCliente = c;
+    document
+      .querySelectorAll(".nav-item")
+      .forEach((x) => x.classList.remove("active"));
+    document.querySelector('[data-page="scadenzario"]').classList.add("active");
+    renderPage("scadenzario");
+  } else {
+    state._gotoClienteId = id;
+    state._pending = "scadenzario";
+    socket.emit("get:clienti");
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // HELPER: label e importo
 // ═══════════════════════════════════════════════════════════════
 function getPeriodoLabel(r) {
@@ -605,6 +909,7 @@ function isContabilita(r) {
 function hasRate(r) {
   return parseInt(r.has_rate) === 1 || r.has_rate === true || r.has_rate === 1;
 }
+
 function renderImportoCellCompact(r) {
   if (isContabilita(r)) {
     const iva = r.importo_iva
@@ -669,21 +974,20 @@ function renderPeriodoRigaCompleta(r) {
   const stato = r.stato || "da_fare";
   const pl = getPeriodoLabel(r),
     ps = getPeriodoShort(r);
-  const nome = r.adempimento_nome || "";
   const imp = renderImportoCellCompact(r);
-  return `<div class="periodo-row-full s-${stato}" onclick="openAdpById(${r.id})" title="${escAttr(nome)} — ${escAttr(pl)}: clicca per modificare">
+  return `<div class="periodo-row-full s-${stato}" onclick="openAdpById(${r.id})" title="${escAttr(r.adempimento_nome)} — ${escAttr(pl)}: clicca per modificare">
     <div class="periodo-row-header">
       <span class="periodo-tag">${ps}</span>
       <span class="badge b-${stato}" style="font-size:9px">${STATI[stato] || stato}</span>
-      ${r.data_scadenza ? `<span class="prf-chip" title="Data scadenza di: ${escAttr(nome)} — ${escAttr(pl)}">📅 Scad. <strong>${r.data_scadenza}</strong></span>` : ""}
-      ${r.data_completamento ? `<span class="prf-chip prf-chip-green" title="Data completamento di: ${escAttr(nome)} — ${escAttr(pl)}">✅ Compl. <strong>${r.data_completamento}</strong></span>` : ""}
+      ${r.data_scadenza ? `<span class="prf-chip" title="Data scadenza">📅 Scad. <strong>${r.data_scadenza}</strong></span>` : ""}
+      ${r.data_completamento ? `<span class="prf-chip prf-chip-green">✅ Compl. <strong>${r.data_completamento}</strong></span>` : ""}
     </div>
     ${
       imp !== `<span class="imp-empty">—</span>` || r.note
         ? `
     <div class="periodo-row-body">
-      <div class="periodo-importo-wrap" title="Importo di: ${escAttr(nome)} — ${escAttr(pl)}">${imp}</div>
-      ${r.note ? `<div class="periodo-note-full" title="Note di: ${escAttr(nome)} — ${escAttr(pl)}">📝 <em>${r.note}</em></div>` : ""}
+      <div class="periodo-importo-wrap">${imp}</div>
+      ${r.note ? `<div class="periodo-note-full">📝 <em>${r.note}</em></div>` : ""}
     </div>`
         : ""
     }
@@ -691,22 +995,22 @@ function renderPeriodoRigaCompleta(r) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// HELPER: calcola adempimenti mancanti per il cliente corrente
+// SCADENZARIO SINGOLO
 // ═══════════════════════════════════════════════════════════════
 function getAdempimentiMancanti() {
   if (!state.selectedCliente) return [];
   const cat = JSON.parse(state.selectedCliente.categorie_attive || "[]");
-  // Filtra gli adempimenti compatibili con il cliente
   const compatibili = state.adempimenti.filter(
     (a) => a.categoria === "TUTTI" || cat.includes(a.categoria),
   );
-  // Restituisce quelli NON ancora inseriti (id non in adpInseriti)
   return compatibili.filter((a) => !state.adpInseriti.includes(a.id));
 }
-
-// ═══════════════════════════════════════════════════════════════
-// SCADENZARIO SINGOLO
-// ═══════════════════════════════════════════════════════════════
+function renderBtnAddAdp(id_cliente) {
+  const mancanti = getAdempimentiMancanti();
+  if (!mancanti.length)
+    return `<button class="btn btn-sm btn-purple" disabled style="opacity:0.4;cursor:not-allowed">✓ Tutti inseriti</button>`;
+  return `<button class="btn btn-sm btn-purple" onclick="openAddAdp(${id_cliente})" title="${mancanti.length} adempimenti da aggiungere">+ Adempimento <span style="font-size:10px;background:rgba(255,255,255,0.2);border-radius:10px;padding:1px 6px;margin-left:2px">${mancanti.length}</span></button>`;
+}
 function renderScadenzarioPage() {
   const opts = state.clienti
     .map(
@@ -728,7 +1032,7 @@ function renderScadenzarioPage() {
 function onClienteChange() {
   const id = parseInt(document.getElementById("sel-cliente").value);
   state.selectedCliente = state.clienti.find((c) => c.id === id) || null;
-  state.adpInseriti = []; // reset
+  state.adpInseriti = [];
   if (state.selectedCliente) loadScadenzario();
 }
 function changeAnnoScad(d) {
@@ -762,36 +1066,15 @@ function resetScadFiltri() {
     document.getElementById("scad-search").value = "";
   loadScadenzario();
 }
-
-// ── Bottone "+ Adempimento" smart: disabilitato se non ci sono mancanti ───
-function renderBtnAddAdp(id_cliente) {
-  const mancanti = getAdempimentiMancanti();
-  const hasMancanti = mancanti.length > 0;
-
-  if (!hasMancanti) {
-    // Tutti gli adempimenti compatibili sono già stati inseriti
-    return `<button class="btn btn-sm btn-purple" disabled
-      title="Tutti gli adempimenti compatibili sono già stati inseriti per questo cliente"
-      style="opacity:0.4;cursor:not-allowed;filter:grayscale(0.6)">
-      ✓ Tutti inseriti
-    </button>`;
-  }
-
-  return `<button class="btn btn-sm btn-purple" onclick="openAddAdp(${id_cliente})"
-    title="${mancanti.length} adempiment${mancanti.length === 1 ? "o" : "i"} ancora da aggiungere">
-    + Adempimento <span style="font-size:10px;background:rgba(255,255,255,0.2);border-radius:10px;padding:1px 6px;margin-left:2px">${mancanti.length}</span>
-  </button>`;
-}
-
 function renderScadenzarioTabella(righe) {
   _rowStore = {};
   righe.forEach((r) => storeRow(r));
   const c = state.selectedCliente;
   const tot = righe.length,
     comp = righe.filter((r) => r.stato === "completato").length;
-  const daF = righe.filter((r) => r.stato === "da_fare").length,
-    inC = righe.filter((r) => r.stato === "in_corso").length,
-    na = righe.filter((r) => r.stato === "n_a").length;
+  const daF = righe.filter((r) => r.stato === "da_fare").length;
+  const inC = righe.filter((r) => r.stato === "in_corso").length;
+  const na = righe.filter((r) => r.stato === "n_a").length;
   const perc = tot > 0 ? Math.round((comp / tot) * 100) : 0;
   const grouped = {};
   righe.forEach((r) => {
@@ -806,7 +1089,6 @@ function renderScadenzarioTabella(righe) {
         (a.mese || 0) - (b.mese || 0),
     ),
   );
-
   const tbody =
     Object.entries(grouped)
       .map(([, rows]) => {
@@ -825,32 +1107,15 @@ function renderScadenzarioTabella(righe) {
           (hasRate(r0)
             ? `<span class="badge" style="background:var(--green-dim);color:var(--green);font-size:9px">RATE</span>`
             : "");
-        const adpLabelTd = `<td class="adp-label-td">
-      <span class="adp-codice">${r0.codice}</span>
-      <span class="adp-nome">${r0.adempimento_nome}</span>
-      <span class="badge b-categoria" style="margin-top:4px">${r0.categoria || "-"}</span>
-      ${flagsBadge ? `<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">${flagsBadge}</div>` : ""}
-    </td>`;
+        const adpLabelTd = `<td class="adp-label-td"><span class="adp-codice">${r0.codice}</span><span class="adp-nome">${r0.adempimento_nome}</span><span class="badge b-categoria" style="margin-top:4px">${r0.categoria || "-"}</span>${flagsBadge ? `<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">${flagsBadge}</div>` : ""}</td>`;
         if (isMulti) {
           const descP =
             r0.scadenza_tipo === "semestrale"
-              ? "2 semestri (Gen-Giu · Lug-Dic)"
+              ? "2 semestri"
               : r0.scadenza_tipo === "trimestrale"
                 ? "4 trimestri"
                 : "12 mesi";
-          return `<tr>${adpLabelTd}<td colspan="5">
-        <div style="display:flex;align-items:flex-start;gap:14px">
-          <div style="flex:1;min-width:0">
-            <div class="periodi-desc-label">${r0.adempimento_nome} — ${descP}</div>
-            <div class="periodi-lista">${rows.map((rx) => renderPeriodoRigaCompleta(rx)).join("")}</div>
-          </div>
-          <div class="periodi-progress">
-            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">${compR}/${totR}</div>
-            <div class="prog-bar" style="width:80px"><div class="prog-fill green" style="width:${percR}%"></div></div>
-            <div style="font-size:10px;color:var(--text3);margin-top:3px">${percR}%</div>
-          </div>
-        </div>
-      </td></tr>`;
+          return `<tr>${adpLabelTd}<td colspan="5"><div style="display:flex;align-items:flex-start;gap:14px"><div style="flex:1;min-width:0"><div class="periodi-desc-label">${r0.adempimento_nome} — ${descP}</div><div class="periodi-lista">${rows.map((rx) => renderPeriodoRigaCompleta(rx)).join("")}</div></div><div class="periodi-progress"><div style="font-size:11px;color:var(--text2);margin-bottom:4px">${compR}/${totR}</div><div class="prog-bar" style="width:80px"><div class="prog-fill green" style="width:${percR}%"></div></div><div style="font-size:10px;color:var(--text3);margin-top:3px">${percR}%</div></div></div></td></tr>`;
         }
         return rows
           .map(
@@ -873,11 +1138,8 @@ function renderScadenzarioTabella(righe) {
 
   document.getElementById("content").innerHTML = `
     <div class="print-header"><strong>Studio Commerciale - Scadenzario</strong><br>Cliente: <strong>${c.nome}</strong> | Anno: <strong>${state.anno}</strong> | Stampa: ${new Date().toLocaleDateString("it-IT")}</div>
-
     <div class="cliente-preview-card">
-      <div class="cpc-avatar-wrap">
-        <div class="cpc-avatar">${(c.nome || "?").charAt(0).toUpperCase()}</div>
-      </div>
+      <div class="cpc-avatar-wrap"><div class="cpc-avatar">${(c.nome || "?").charAt(0).toUpperCase()}</div></div>
       <div class="cpc-info">
         <div class="cpc-nome">${c.nome}</div>
         <div class="cpc-sub">${c.tipologia_nome || ""}${c.sottotipologia_nome ? " · " + c.sottotipologia_nome : ""}</div>
@@ -894,11 +1156,7 @@ function renderScadenzarioTabella(righe) {
         <div class="cpc-stat-item"><div class="cpc-stat-num v-yellow">${daF}</div><div class="cpc-stat-lbl">Da fare</div></div>
         <div class="cpc-stat-item"><div class="cpc-stat-num v-purple">${inC}</div><div class="cpc-stat-lbl">In corso</div></div>
         <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--text3)">${na}</div><div class="cpc-stat-lbl">N/A</div></div>
-        <div class="cpc-stat-item">
-          <div class="cpc-stat-num v-green">${perc}%</div>
-          <div class="cpc-stat-lbl">Avanz.</div>
-          <div class="prog-bar" style="width:60px;margin-top:4px"><div class="prog-fill green" style="width:${perc}%"></div></div>
-        </div>
+        <div class="cpc-stat-item"><div class="cpc-stat-num v-green">${perc}%</div><div class="cpc-stat-lbl">Avanz.</div><div class="prog-bar" style="width:60px;margin-top:4px"><div class="prog-fill green" style="width:${perc}%"></div></div></div>
       </div>
       <div class="cpc-actions no-print">
         <div id="btn-add-adp-wrap">${renderBtnAddAdp(c.id)}</div>
@@ -907,7 +1165,6 @@ function renderScadenzarioTabella(righe) {
         <button class="btn btn-print btn-sm" onclick="window.print()">🖨️ Stampa</button>
       </div>
     </div>
-
     <div class="filtri-bar no-print">
       <label>Filtra:</label>
       <select class="select" style="width:150px" id="f-stato" onchange="applyScadFiltri()">
@@ -924,7 +1181,6 @@ function renderScadenzarioTabella(righe) {
   if (document.getElementById("f-stato"))
     document.getElementById("f-stato").value = state.filtri.stato;
 }
-
 function generaScad(id) {
   if (confirm(`Generare scadenzario ${state.anno}?`))
     socket.emit("genera:scadenzario", { id_cliente: id, anno: state.anno });
@@ -967,9 +1223,9 @@ function calcolaGlobaleStats(righe) {
   const clientiSet = new Set(righe.map((r) => r.id_cliente));
   const tot = righe.length,
     comp = righe.filter((r) => r.stato === "completato").length;
-  const daF = righe.filter((r) => r.stato === "da_fare").length,
-    inC = righe.filter((r) => r.stato === "in_corso").length,
-    na = righe.filter((r) => r.stato === "n_a").length;
+  const daF = righe.filter((r) => r.stato === "da_fare").length;
+  const inC = righe.filter((r) => r.stato === "in_corso").length;
+  const na = righe.filter((r) => r.stato === "n_a").length;
   const perc = tot > 0 ? Math.round((comp / tot) * 100) : 0;
   const perCat = {};
   righe.forEach((r) => {
@@ -984,10 +1240,7 @@ function calcolaGlobaleStats(righe) {
 function renderGlobalePage() {
   const preSearch = state.globalePreFiltroAdp || "";
   document.getElementById("topbar-actions").innerHTML = `
-    <div class="search-wrap" style="width:260px"><span class="search-icon">🔍</span>
-      <input class="input" id="global-search-globale" placeholder="Cerca cliente, adempimento..."
-        value="${escAttr(preSearch)}" oninput="onGlobaleSearchInput(this.value)">
-    </div>
+    <div class="search-wrap" style="width:260px"><span class="search-icon">🔍</span><input class="input" id="global-search-globale" placeholder="Cerca cliente, adempimento..." value="${escAttr(preSearch)}" oninput="onGlobaleSearchInput(this.value)"></div>
     <div class="year-sel"><button onclick="changeAnnoGlobale(-1)">&#9664;</button><span class="year-num">${state.anno}</span><button onclick="changeAnnoGlobale(1)">&#9654;</button></div>
     ${preSearch ? `<button class="btn btn-xs btn-secondary no-print" onclick="clearGlobalePrefiltro()">✕ "${escAttr(preSearch)}"</button>` : ""}
     <button class="btn btn-print btn-sm no-print" onclick="window.print()">🖨️ Stampa</button>`;
@@ -997,8 +1250,7 @@ function renderGlobalePage() {
     <div class="filtri-bar no-print">
       <label>Stato:</label>
       <select class="select" style="width:150px" id="fg-stato" onchange="applyGlobaleFiltri()">
-        <option value="tutti">Tutti</option><option value="da_fare">Da fare</option>
-        <option value="in_corso">In corso</option><option value="completato">Completato</option><option value="n_a">N/A</option>
+        <option value="tutti">Tutti</option><option value="da_fare">Da fare</option><option value="in_corso">In corso</option><option value="completato">Completato</option><option value="n_a">N/A</option>
       </select>
       <label>Categoria:</label>
       <select class="select" style="width:160px" id="fg-categoria" onchange="applyGlobaleFiltri()">
@@ -1029,13 +1281,7 @@ function renderGlobaleHeader() {
     .map(([cat, d]) => {
       const p = d.totale > 0 ? Math.round((d.completati / d.totale) * 100) : 0;
       const col = catColor[cat] || "var(--accent)";
-      return `<div class="gph-cat-chip" style="border-color:${col}33">
-      <span style="color:${col};font-size:10px;font-weight:800">${cat}</span>
-      <span class="badge b-completato" style="font-size:8px;padding:1px 5px">${d.completati}✓</span>
-      <span class="badge b-da_fare" style="font-size:8px;padding:1px 5px">${d.da_fare}⭕</span>
-      <div class="mini-bar" style="width:36px"><div class="mini-fill" style="width:${p}%"></div></div>
-      <span style="font-size:9px;color:var(--text3);font-family:var(--mono)">${p}%</span>
-    </div>`;
+      return `<div class="gph-cat-chip" style="border-color:${col}33"><span style="color:${col};font-size:10px;font-weight:800">${cat}</span><span class="badge b-completato" style="font-size:8px;padding:1px 5px">${d.completati}✓</span><span class="badge b-da_fare" style="font-size:8px;padding:1px 5px">${d.da_fare}⭕</span><div class="mini-bar" style="width:36px"><div class="mini-fill" style="width:${p}%"></div></div><span style="font-size:9px;color:var(--text3);font-family:var(--mono)">${p}%</span></div>`;
     })
     .join("");
   const filterTags = [];
@@ -1055,24 +1301,13 @@ function renderGlobaleHeader() {
     `<span class="ctx-tag ctx-tag-anno">📅 Anno: ${state.anno}</span>`,
   );
   el.innerHTML = `<div class="globale-preview-card">
-    <div class="gpc-left">
-      <div class="gpc-globe">🌐</div>
-      <div>
-        <div class="gpc-title">Vista Globale ${state.anno}</div>
-        <div class="gpc-sub">${gs.clienti} client${gs.clienti === 1 ? "e" : "i"} — ${gs.tot} adempiment${gs.tot === 1 ? "o" : "i"}</div>
-        <div class="gpc-ctx-tags">${filterTags.join("")}</div>
-      </div>
-    </div>
+    <div class="gpc-left"><div class="gpc-globe">🌐</div><div><div class="gpc-title">Vista Globale ${state.anno}</div><div class="gpc-sub">${gs.clienti} client${gs.clienti === 1 ? "e" : "i"} — ${gs.tot} adempiment${gs.tot === 1 ? "o" : "i"}</div><div class="gpc-ctx-tags">${filterTags.join("")}</div></div></div>
     <div class="gpc-stats">
       <div class="cpc-stat-item"><div class="cpc-stat-num v-green">${gs.comp}</div><div class="cpc-stat-lbl">Completati</div></div>
       <div class="cpc-stat-item"><div class="cpc-stat-num v-yellow">${gs.daF}</div><div class="cpc-stat-lbl">Da fare</div></div>
       <div class="cpc-stat-item"><div class="cpc-stat-num v-purple">${gs.inC}</div><div class="cpc-stat-lbl">In corso</div></div>
       <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--text3)">${gs.na}</div><div class="cpc-stat-lbl">N/A</div></div>
-      <div class="cpc-stat-item">
-        <div class="cpc-stat-num v-green">${gs.perc}%</div>
-        <div class="cpc-stat-lbl">Avanz. globale</div>
-        <div class="prog-bar" style="width:70px;margin-top:4px"><div class="prog-fill green" style="width:${gs.perc}%"></div></div>
-      </div>
+      <div class="cpc-stat-item"><div class="cpc-stat-num v-green">${gs.perc}%</div><div class="cpc-stat-lbl">Avanz. globale</div><div class="prog-bar" style="width:70px;margin-top:4px"><div class="prog-fill green" style="width:${gs.perc}%"></div></div></div>
     </div>
     <div class="gpc-cats">${catBadges}</div>
   </div>`;
@@ -1111,7 +1346,6 @@ function applyGlobaleFiltri() {
   loadGlobale();
 }
 const applyGlobaleSearchDB = debounce(loadGlobale, 300);
-
 function renderGlobaleTabella(righe) {
   righe.forEach((r) => storeRow(r));
   const container = document.getElementById("globale-content");
@@ -1197,80 +1431,23 @@ function renderGlobaleTabella(righe) {
                 : adp.scad === "trimestrale"
                   ? "4 trimestri"
                   : "12 mesi";
-            periodoCell = `<div>
-          <div class="periodi-desc-label">${adp.nome} — ${descT}</div>
-          <div class="periodi-globale-wrap">${sorted
-            .map((rx) => {
-              const imp = renderImportoCellCompact(rx);
-              const pl = getPeriodoLabel(rx),
-                ps = getPeriodoShort(rx);
-              return `<div class="periodo-globale-row s-${rx.stato}" onclick="openAdpById(${rx.id})" title="${escAttr(adp.nome)} — ${escAttr(pl)}: clicca per modificare">
-              <div class="pga-label"><span class="periodo-tag-sm">${ps}</span></div>
-              <div class="pga-stato"><span class="badge b-${rx.stato}" style="font-size:8px">${STATI[rx.stato] || rx.stato}</span></div>
-              <div class="pga-importo">${imp}</div>
-              <div class="pga-date">
-                ${rx.data_scadenza ? `<span class="pga-date-chip">📅 ${rx.data_scadenza}</span>` : ""}
-                ${rx.data_completamento ? `<span class="pga-date-chip" style="color:var(--green)">✅ ${rx.data_completamento}</span>` : ""}
-              </div>
-              <div class="pga-note">${rx.note ? `<span class="pga-note-txt">📝 ${rx.note}</span>` : ""}</div>
-            </div>`;
-            })
-            .join("")}</div>
-        </div>`;
+            periodoCell = `<div><div class="periodi-desc-label">${adp.nome} — ${descT}</div><div class="periodi-globale-wrap">${sorted
+              .map((rx) => {
+                const imp = renderImportoCellCompact(rx),
+                  ps = getPeriodoShort(rx);
+                return `<div class="periodo-globale-row s-${rx.stato}" onclick="openAdpById(${rx.id})"><div class="pga-label"><span class="periodo-tag-sm">${ps}</span></div><div class="pga-stato"><span class="badge b-${rx.stato}" style="font-size:8px">${STATI[rx.stato] || rx.stato}</span></div><div class="pga-importo">${imp}</div><div class="pga-date">${rx.data_scadenza ? `<span class="pga-date-chip">📅 ${rx.data_scadenza}</span>` : ""}${rx.data_completamento ? `<span class="pga-date-chip" style="color:var(--green)">✅ ${rx.data_completamento}</span>` : ""}</div><div class="pga-note">${rx.note ? `<span class="pga-note-txt">📝 ${rx.note}</span>` : ""}</div></div>`;
+              })
+              .join("")}</div></div>`;
           } else {
-            const rx = adp.righe[0];
-            const imp = renderImportoCellCompact(rx);
-            const pl = getPeriodoLabel(rx);
-            periodoCell = `<div class="periodo-globale-row s-${rx.stato}" onclick="openAdpById(${rx.id})" title="${escAttr(adp.nome)} — ${escAttr(pl)}: clicca per modificare">
-          <div class="pga-label"><span class="periodo-tag-sm">${pl}</span></div>
-          <div class="pga-stato"><span class="badge b-${rx.stato}" style="font-size:8px">${STATI[rx.stato] || rx.stato}</span></div>
-          <div class="pga-importo">${imp}</div>
-          <div class="pga-date">
-            ${rx.data_scadenza ? `<span class="pga-date-chip">📅 ${rx.data_scadenza}</span>` : ""}
-            ${rx.data_completamento ? `<span class="pga-date-chip" style="color:var(--green)">✅ ${rx.data_completamento}</span>` : ""}
-          </div>
-          <div class="pga-note">${rx.note ? `<span class="pga-note-txt">📝 ${rx.note}</span>` : ""}</div>
-        </div>`;
+            const rx = adp.righe[0],
+              imp = renderImportoCellCompact(rx),
+              pl = getPeriodoLabel(rx);
+            periodoCell = `<div class="periodo-globale-row s-${rx.stato}" onclick="openAdpById(${rx.id})"><div class="pga-label"><span class="periodo-tag-sm">${pl}</span></div><div class="pga-stato"><span class="badge b-${rx.stato}" style="font-size:8px">${STATI[rx.stato] || rx.stato}</span></div><div class="pga-importo">${imp}</div><div class="pga-date">${rx.data_scadenza ? `<span class="pga-date-chip">📅 ${rx.data_scadenza}</span>` : ""}${rx.data_completamento ? `<span class="pga-date-chip" style="color:var(--green)">✅ ${rx.data_completamento}</span>` : ""}</div><div class="pga-note">${rx.note ? `<span class="pga-note-txt">📝 ${rx.note}</span>` : ""}</div></div>`;
           }
-          return `<tr>
-        <td class="td-mono" style="font-size:10px;color:var(--accent);white-space:nowrap;vertical-align:top;padding-top:10px">${adp.codice}</td>
-        <td style="vertical-align:top;padding-top:10px"><strong style="font-size:12px">${adp.nome}</strong>${flagsBadge ? `<div style="margin-top:3px;display:flex;gap:3px">${flagsBadge}</div>` : ""}</td>
-        <td style="vertical-align:top;padding-top:10px"><span class="badge b-categoria">${adp.categoria || "-"}</span></td>
-        <td style="min-width:320px;padding:6px 14px">${periodoCell}</td>
-        <td style="white-space:nowrap;vertical-align:top;padding-top:10px">
-          <span class="badge b-completato" style="margin-bottom:3px;display:block">✓ ${adp.completati}</span>
-          <span class="badge b-da_fare" style="display:block">⭕ ${adp.da_fare}</span>
-          ${adp.in_corso > 0 ? `<span class="badge b-in_corso" style="display:block">🔄 ${adp.in_corso}</span>` : ""}
-        </td>
-        <td style="vertical-align:top;padding-top:10px"><div style="display:flex;align-items:center;gap:6px">
-          <div class="mini-bar" style="width:55px"><div class="mini-fill" style="width:${p2}%"></div></div>
-          <span style="font-size:10px;font-family:var(--mono);color:var(--text3)">${p2}%</span>
-        </div></td>
-      </tr>`;
+          return `<tr><td class="td-mono" style="font-size:10px;color:var(--accent);white-space:nowrap;vertical-align:top;padding-top:10px">${adp.codice}</td><td style="vertical-align:top;padding-top:10px"><strong style="font-size:12px">${adp.nome}</strong>${flagsBadge ? `<div style="margin-top:3px;display:flex;gap:3px">${flagsBadge}</div>` : ""}</td><td style="vertical-align:top;padding-top:10px"><span class="badge b-categoria">${adp.categoria || "-"}</span></td><td style="min-width:320px;padding:6px 14px">${periodoCell}</td><td style="white-space:nowrap;vertical-align:top;padding-top:10px"><span class="badge b-completato" style="margin-bottom:3px;display:block">✓ ${adp.completati}</span><span class="badge b-da_fare" style="display:block">⭕ ${adp.da_fare}</span>${adp.in_corso > 0 ? `<span class="badge b-in_corso" style="display:block">🔄 ${adp.in_corso}</span>` : ""}</td><td style="vertical-align:top;padding-top:10px"><div style="display:flex;align-items:center;gap:6px"><div class="mini-bar" style="width:55px"><div class="mini-fill" style="width:${p2}%"></div></div><span style="font-size:10px;font-family:var(--mono);color:var(--text3)">${p2}%</span></div></td></tr>`;
         })
         .join("");
-      return `<div class="table-wrap" style="margin-bottom:14px">
-      <div class="table-header" style="cursor:pointer" onclick="toggleSection(this)">
-        <span class="badge b-${(cl.tipo || "").toLowerCase()}" style="margin-right:6px">${cl.tipo}</span>
-        <h3>${cl.nome}</h3>
-        <div style="display:flex;align-items:center;gap:8px;margin-left:8px">
-          <span class="badge b-completato">✓ ${comp}</span><span class="badge b-da_fare">⭕ ${daF}</span>
-          ${inC > 0 ? `<span class="badge b-in_corso">🔄 ${inC}</span>` : ""}
-          ${na > 0 ? `<span class="badge b-n_a">➖ ${na}</span>` : ""}
-        </div>
-        <div class="mini-bar" style="width:70px;display:inline-block;margin-left:8px"><div class="mini-fill" style="width:${perc}%"></div></div>
-        <span style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-left:4px">${perc}%</span>
-        <span class="toggle-arrow" style="margin-left:auto">▾</span>
-      </div>
-      <div class="section-body">
-        <table><thead><tr>
-          <th style="width:70px">Codice</th><th>Adempimento</th><th style="width:90px">Categoria</th>
-          <th>Periodi · Importi · Date · Note</th>
-          <th style="width:90px">Riepilogo</th><th style="width:100px">Avanz.</th>
-        </tr></thead>
-        <tbody>${adpRows}</tbody></table>
-      </div>
-    </div>`;
+      return `<div class="table-wrap" style="margin-bottom:14px"><div class="table-header" style="cursor:pointer" onclick="toggleSection(this)"><span class="badge b-${(cl.tipo || "").toLowerCase()}" style="margin-right:6px">${cl.tipo}</span><h3>${cl.nome}</h3><div style="display:flex;align-items:center;gap:8px;margin-left:8px"><span class="badge b-completato">✓ ${comp}</span><span class="badge b-da_fare">⭕ ${daF}</span>${inC > 0 ? `<span class="badge b-in_corso">🔄 ${inC}</span>` : ""}${na > 0 ? `<span class="badge b-n_a">➖ ${na}</span>` : ""}</div><div class="mini-bar" style="width:70px;display:inline-block;margin-left:8px"><div class="mini-fill" style="width:${perc}%"></div></div><span style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-left:4px">${perc}%</span><span class="toggle-arrow" style="margin-left:auto">▾</span></div><div class="section-body"><table><thead><tr><th style="width:70px">Codice</th><th>Adempimento</th><th style="width:90px">Categoria</th><th>Periodi · Importi · Date · Note</th><th style="width:90px">Riepilogo</th><th style="width:100px">Avanz.</th></tr></thead><tbody>${adpRows}</tbody></table></div></div>`;
     })
     .join("");
   container.innerHTML = html;
@@ -1301,6 +1478,12 @@ function renderAdempimentiPage() {
   renderAdempimentiTabella(state.adempimenti);
 }
 function renderAdempimentiTabella(adempimenti) {
+  const sl = {
+    annuale: "1x/anno",
+    semestrale: "2x/anno",
+    trimestrale: "4x/anno",
+    mensile: "12x/anno",
+  };
   const rows =
     adempimenti
       .map((a) => {
@@ -1313,22 +1496,13 @@ function renderAdempimentiTabella(adempimenti) {
           flags.push(
             `<span class="badge" style="background:var(--green-dim);color:var(--green);font-size:9px">RATE</span>`,
           );
-        const sl = {
-          annuale: "1x/anno",
-          semestrale: "2x/anno",
-          trimestrale: "4x/anno",
-          mensile: "12x/anno",
-        };
         return `<tr><td><span style="font-family:var(--mono);font-weight:700;color:var(--accent)">${a.codice}</span></td>
       <td><strong>${a.nome}</strong></td><td class="td-dim" style="font-size:12px">${a.descrizione || "-"}</td>
       <td><span class="badge b-categoria">${a.categoria || "-"}</span></td>
       <td><span style="font-family:var(--mono);font-size:11px">${a.scadenza_tipo || "-"}</span></td>
-      <td><span class="badge" style="background:var(--accent-dim);color:var(--accent);font-size:10px">${sl[a.scadenza_tipo] || a.scadenza_tipo}</span></td>
+      <td><span style="font-family:var(--mono);font-size:11px;background:var(--accent-dim);color:var(--accent);padding:2px 6px;border-radius:4px">${sl[a.scadenza_tipo] || a.scadenza_tipo}</span></td>
       <td>${flags.join(" ") || "-"}</td>
-      <td class="col-actions no-print"><div style="display:flex;gap:4px">
-        <button class="btn btn-xs btn-secondary" onclick="editAdpDef(${a.id})">Modifica</button>
-        <button class="btn btn-xs btn-danger" onclick="deleteAdpDef(${a.id})">Elimina</button>
-      </div></td>
+      <td class="col-actions no-print"><div style="display:flex;gap:4px"><button class="btn btn-xs btn-secondary" onclick="editAdpDef(${a.id})">Modifica</button><button class="btn btn-xs btn-danger" onclick="deleteAdpDef(${a.id})">Elimina</button></div></td>
     </tr>`;
       })
       .join("") ||
@@ -1342,171 +1516,214 @@ function renderAdempimentiTabella(adempimenti) {
       <tbody>${rows}</tbody></table>
     </div>`;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// TIPOLOGIE — PAGINA VISIVA COMPLETA CON TUTTE 4 COLONNE
+// ═══════════════════════════════════════════════════════════════
 function renderTipologiePage() {
-  const colors = {
-    PF: "var(--accent)",
-    SP: "var(--purple)",
-    SC: "var(--green)",
-    ASS: "var(--yellow)",
-  };
-  const cards = state.tipologie
-    .map((t) => {
-      const col = colors[t.codice] || "var(--accent)";
-      const subs = (t.sottotipologie || [])
-        .map((s) => {
-          if (s.is_separator)
-            return `<div style="font-size:10px;color:var(--text3);margin:8px 0 4px;font-weight:700;text-transform:uppercase">${s.nome}</div>`;
-          return `<div style="font-size:12px;padding:4px 8px;background:var(--surface2);border-radius:5px;border-left:2px solid ${col};margin-bottom:4px">${s.nome}</div>`;
-        })
-        .join("");
-      return `<div class="tipo-card"><div class="tipo-codice" style="color:${col}">${t.codice}</div><div class="tipo-nome">${t.nome}</div><div class="tipo-desc">${t.descrizione || ""}</div><div class="divider"></div>${subs}</div>`;
-    })
-    .join("");
-  document.getElementById("content").innerHTML =
-    `<div class="tipo-cards">${cards}</div>`;
+  document.getElementById("topbar-actions").innerHTML = "";
+
+  const tipologieVisive = [
+    {
+      codice: "PF",
+      nome: "Persona Fisica",
+      desc: "Contribuente persona fisica",
+      colore: "#5b8df6",
+      coloreAlt: "rgba(91,141,246,0.08)",
+      col2: COL2_OPTIONS.PF,
+      col3Map: {
+        privato: null,
+        socio: null,
+        ditta: getCol3Options("PF", "ditta"),
+        professionista: getCol3Options("PF", "professionista"),
+      },
+      showCol4: true,
+    },
+    {
+      codice: "SP",
+      nome: "Società di Persone",
+      desc: "SNC, SAS, SS",
+      colore: "#a78bfa",
+      coloreAlt: "rgba(167,139,250,0.08)",
+      col2: null,
+      col3: getCol3Options("SP", ""),
+      showCol4: true,
+    },
+    {
+      codice: "SC",
+      nome: "Società di Capitali",
+      desc: "SRL, SPA, SAPA",
+      colore: "#34d399",
+      coloreAlt: "rgba(52,211,153,0.08)",
+      col2: null,
+      col3: getCol3Options("SC", ""),
+      showCol4: true,
+    },
+    {
+      codice: "ASS",
+      nome: "Associazione",
+      desc: "Associazioni e enti non commerciali",
+      colore: "#fbbf24",
+      coloreAlt: "rgba(251,191,36,0.08)",
+      col2: null,
+      col3: getCol3Options("ASS", ""),
+      showCol4: true,
+    },
+  ];
+
+  function colBlock(num, label, c, content, note = "") {
+    return `<div class="tip-col-block" style="border-color:${c}40;background:${c}08">
+      <div class="tip-col-num" style="background:${c};color:#fff">${num}</div>
+      <div class="tip-col-label">${label}</div>
+      ${content}
+      ${note ? `<div class="tip-col-note">${note}</div>` : ""}
+    </div>`;
+  }
+  function colItems(opts) {
+    return opts
+      .map((o) => `<div class="tip-col-item">${o.label || o}</div>`)
+      .join("");
+  }
+  function arrow(c, skip = false) {
+    return `<div class="tip-flow-arrow${skip ? " tip-flow-skip" : ""}" style="color:${c}">${skip ? "▶▶" : "▶"}</div>`;
+  }
+
+  function buildFlowCard(tip) {
+    const c = tip.colore;
+    let cols = [];
+
+    // ── COL 1: Tipologia ──────────────────────────────────────
+    cols.push(
+      colBlock(
+        1,
+        "Tipologia",
+        c,
+        `<div class="tip-col-value" style="color:${c}">${tip.codice}</div><div class="tip-col-sub">${tip.nome}</div>`,
+      ),
+    );
+
+    // ── COL 2: Solo PF ────────────────────────────────────────
+    if (tip.col2) {
+      cols.push(arrow(c));
+      cols.push(
+        colBlock(
+          2,
+          "Sottocategoria PF",
+          c,
+          colItems(tip.col2),
+          "Solo per Persona Fisica",
+        ),
+      );
+    } else {
+      cols.push(arrow(c, true));
+      // placeholder col2 vuoto per allineamento
+      cols.push(`<div class="tip-col-block tip-col-skip" style="border-color:${c}20;background:${c}04;opacity:0.4">
+        <div class="tip-col-num" style="background:${c}40;color:${c}">2</div>
+        <div class="tip-col-label">Sottocategoria</div>
+        <div class="tip-col-note" style="font-size:10px">Non applicabile<br>per ${tip.codice}</div>
+      </div>`);
+    }
+
+    // ── COL 3: Regime ─────────────────────────────────────────
+    cols.push(arrow(c));
+    if (tip.col3) {
+      // SP / SC / ASS: col3 sempre visibile
+      cols.push(colBlock(3, "Regime contabile", c, colItems(tip.col3)));
+    } else if (tip.col2) {
+      // PF: col3 dipende da col2 — mostro entrambe le varianti
+      const dittaOpts = tip.col3Map.ditta || [];
+      cols.push(`<div class="tip-col-block" style="border-color:${c}40;background:${c}08">
+        <div class="tip-col-num" style="background:${c};color:#fff">3</div>
+        <div class="tip-col-label">Regime contabile</div>
+        <div class="tip-col-note" style="margin-bottom:4px">Per Privato / Socio:</div>
+        <div class="tip-col-item" style="opacity:0.5;font-style:italic">— Non richiesto —</div>
+        <div class="tip-col-note" style="margin:6px 0 4px">Per Ditta / Prof.:</div>
+        ${colItems(dittaOpts)}
+      </div>`);
+    }
+
+    // ── COL 4: Periodicità ────────────────────────────────────
+    cols.push(arrow(c));
+    cols.push(
+      colBlock(
+        4,
+        "Periodicità IVA",
+        c,
+        `<div class="tip-col-item">📅 Mensile</div><div class="tip-col-item">📆 Trimestrale</div>`,
+        "Visibile dopo selezione regime",
+      ),
+    );
+
+    return `
+      <div class="tip-flow-card">
+        <div class="tip-flow-header" style="border-left:4px solid ${c};background:${tip.coloreAlt}">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="tip-flow-code" style="color:${c}">${tip.codice}</div>
+            <div>
+              <div class="tip-flow-nome">${tip.nome}</div>
+              <div class="tip-flow-desc">${tip.desc}</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+              ${tip.col2 ? `<span style="font-size:10px;padding:3px 8px;border-radius:4px;background:${c}20;color:${c};font-weight:700">4 colonne attive</span>` : `<span style="font-size:10px;padding:3px 8px;border-radius:4px;background:${c}20;color:${c};font-weight:700">Col.2 saltata → 3 colonne</span>`}
+            </div>
+          </div>
+        </div>
+        <div class="tip-flow-body">
+          ${cols.join("")}
+        </div>
+      </div>`;
+  }
+
+  const html = `
+    <div class="print-header"><strong>Studio Commerciale - Tipologie Clienti</strong><br>Stampa: ${new Date().toLocaleDateString("it-IT")}</div>
+
+    <div class="infobox" style="margin-bottom:20px">
+      🗂️ La classificazione avviene in <strong>4 colonne a cascata</strong>. Le colonne si attivano in sequenza in base alle scelte precedenti.<br>
+      Per <strong>SP, SC, ASS</strong> la colonna 2 è saltata automaticamente. La colonna 4 (periodicità) appare solo dopo aver selezionato un regime nella colonna 3.
+    </div>
+
+    <!-- LEGENDA RAPIDA -->
+    <div class="tip-legenda-grid">
+      <div class="tip-legenda-item">
+        <div class="tip-legenda-num" style="background:#5b8df6">1</div>
+        <div><div class="tip-legenda-titolo">Tipologia</div><div class="tip-legenda-sub">PF · SP · SC · ASS</div></div>
+      </div>
+      <div class="tip-legenda-arrow">▶</div>
+      <div class="tip-legenda-item">
+        <div class="tip-legenda-num" style="background:#a78bfa">2</div>
+        <div><div class="tip-legenda-titolo">Sottocategoria</div><div class="tip-legenda-sub">Solo per PF</div></div>
+      </div>
+      <div class="tip-legenda-arrow">▶</div>
+      <div class="tip-legenda-item">
+        <div class="tip-legenda-num" style="background:#34d399">3</div>
+        <div><div class="tip-legenda-titolo">Regime</div><div class="tip-legenda-sub">Ordinario · Semplif. · Forf.</div></div>
+      </div>
+      <div class="tip-legenda-arrow">▶</div>
+      <div class="tip-legenda-item">
+        <div class="tip-legenda-num" style="background:#fbbf24">4</div>
+        <div><div class="tip-legenda-titolo">Periodicità</div><div class="tip-legenda-sub">Mensile · Trimestrale</div></div>
+      </div>
+    </div>
+
+    <!-- CARDS PER TIPOLOGIA -->
+    <div class="tipologie-flow-grid">
+      ${tipologieVisive.map((t) => buildFlowCard(t)).join("")}
+    </div>
+
+    <!-- LEGENDA FINALE -->
+    <div class="infobox" style="margin-top:16px">
+      <strong>Legenda frecce:</strong>
+      <span style="margin-left:12px">▶ = passaggio diretto tra colonne</span>
+      <span style="margin-left:12px">▶▶ = colonna 2 saltata (non applicabile)</span>
+      <span style="margin-left:12px;opacity:0.6">□ con bordo tenue = colonna non attiva per questa tipologia</span>
+    </div>`;
+
+  document.getElementById("content").innerHTML = html;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MODALI
+// MODAL ADEMPIMENTO STATO
 // ═══════════════════════════════════════════════════════════════
-function populateTipologiaSelect() {
-  const sel = document.getElementById("c-tipologia");
-  if (!sel) return;
-  sel.innerHTML = state.tipologie
-    .map((t) => `<option value="${t.id}">${t.codice} - ${t.nome}</option>`)
-    .join("");
-  onTipologiaChange();
-}
-function onTipologiaChange() {
-  const tipId = parseInt(document.getElementById("c-tipologia")?.value);
-  const tip = state.tipologie.find((t) => t.id === tipId);
-  const sel = document.getElementById("c-sottotipologia");
-  if (!sel || !tip) return;
-  sel.innerHTML =
-    '<option value="">-- Nessuna --</option>' +
-    (tip.sottotipologie || [])
-      .map((s) => {
-        if (s.is_separator) return `<option disabled>-- ${s.nome} --</option>`;
-        return `<option value="${s.id}">${s.nome}</option>`;
-      })
-      .join("");
-}
-function renderCategorieSelect(attuali = []) {
-  const container = document.getElementById("categorie-attive");
-  if (!container) return;
-  container.innerHTML = CATEGORIE.map(
-    (cat) =>
-      `<label style="display:inline-flex;align-items:center;gap:8px;margin:4px 8px 4px 0;padding:8px 12px;background:var(--surface2);border-radius:var(--r-sm);cursor:pointer;border:1px solid ${attuali.includes(cat.codice) ? "var(--accent)" : "var(--border)"};transition:all 0.12s"><input type="checkbox" value="${cat.codice}" ${attuali.includes(cat.codice) ? "checked" : ""} style="accent-color:var(--accent)" onchange="this.parentElement.style.borderColor=this.checked?'var(--accent)':'var(--border)'"><span>${cat.icona} ${cat.nome}</span></label>`,
-  ).join("");
-}
-function getSelectedCategorie() {
-  return Array.from(document.querySelectorAll("#categorie-attive input"))
-    .filter((cb) => cb.checked)
-    .map((cb) => cb.value);
-}
-function openNuovoCliente() {
-  document.getElementById("modal-cliente-title").textContent = "Nuovo Cliente";
-  document.getElementById("cliente-id").value = "";
-  [
-    "c-nome",
-    "c-cf",
-    "c-piva",
-    "c-email",
-    "c-tel",
-    "c-indirizzo",
-    "c-note",
-  ].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
-  renderCategorieSelect([
-    "IVA",
-    "DICHIARAZIONI",
-    "PREVIDENZA",
-    "LAVORO",
-    "TRIBUTI",
-    "BILANCIO",
-  ]);
-  populateTipologiaSelect();
-  openModal("modal-cliente");
-}
-function editCliente(id) {
-  socket.once("res:cliente", ({ success, data }) => {
-    if (!success || !data) return;
-    document.getElementById("modal-cliente-title").textContent =
-      "Modifica Cliente";
-    document.getElementById("cliente-id").value = data.id;
-    document.getElementById("c-nome").value = data.nome || "";
-    document.getElementById("c-cf").value = data.codice_fiscale || "";
-    document.getElementById("c-piva").value = data.partita_iva || "";
-    document.getElementById("c-email").value = data.email || "";
-    document.getElementById("c-tel").value = data.telefono || "";
-    document.getElementById("c-indirizzo").value = data.indirizzo || "";
-    document.getElementById("c-note").value = data.note || "";
-    const cat = JSON.parse(
-      data.categorie_attive ||
-        '["IVA","DICHIARAZIONI","PREVIDENZA","LAVORO","TRIBUTI","BILANCIO"]',
-    );
-    renderCategorieSelect(cat);
-    populateTipologiaSelect();
-    document.getElementById("c-tipologia").value = data.id_tipologia;
-    onTipologiaChange();
-    setTimeout(() => {
-      document.getElementById("c-sottotipologia").value =
-        data.id_sottotipologia || "";
-    }, 60);
-    openModal("modal-cliente");
-  });
-  socket.emit("get:cliente", { id });
-}
-function saveCliente() {
-  const id = document.getElementById("cliente-id").value;
-  const data = {
-    nome: document.getElementById("c-nome").value.trim(),
-    id_tipologia: parseInt(document.getElementById("c-tipologia").value),
-    id_sottotipologia:
-      document.getElementById("c-sottotipologia").value || null,
-    codice_fiscale:
-      document.getElementById("c-cf").value.trim().toUpperCase() || null,
-    partita_iva: document.getElementById("c-piva").value.trim() || null,
-    email: document.getElementById("c-email").value.trim() || null,
-    telefono: document.getElementById("c-tel").value.trim() || null,
-    indirizzo: document.getElementById("c-indirizzo").value.trim() || null,
-    note: document.getElementById("c-note").value.trim() || null,
-    categorie_attive: getSelectedCategorie(),
-  };
-  if (!data.nome) {
-    showNotif("Il nome è obbligatorio", "error");
-    return;
-  }
-  if (!data.categorie_attive.length) {
-    showNotif("Seleziona almeno una categoria", "error");
-    return;
-  }
-  if (id) {
-    data.id = parseInt(id);
-    socket.emit("update:cliente", data);
-  } else socket.emit("create:cliente", data);
-}
-function deleteCliente(id) {
-  if (confirm("Eliminare questo cliente?"))
-    socket.emit("delete:cliente", { id });
-}
-function goScadenzario(id) {
-  const c = state.clienti.find((x) => x.id === id);
-  if (c) {
-    state.selectedCliente = c;
-    document
-      .querySelectorAll(".nav-item")
-      .forEach((x) => x.classList.remove("active"));
-    document.querySelector('[data-page="scadenzario"]').classList.add("active");
-    renderPage("scadenzario");
-  } else {
-    state._gotoClienteId = id;
-    state._pending = "scadenzario";
-    socket.emit("get:clienti");
-  }
-}
 function openAdpModal(
   id,
   stato,
@@ -1562,8 +1779,8 @@ function openAdpModal(
   openModal("modal-adempimento");
 }
 function saveAdpStato() {
-  const isC = parseInt(document.getElementById("adp-is-contabilita").value),
-    hasR = parseInt(document.getElementById("adp-has-rate").value);
+  const isC = parseInt(document.getElementById("adp-is-contabilita").value);
+  const hasR = parseInt(document.getElementById("adp-has-rate").value);
   const payload = {
     id: parseInt(document.getElementById("adp-id").value),
     stato: document.getElementById("adp-stato").value,
@@ -1600,9 +1817,13 @@ function deleteAdpCliente() {
       id: parseInt(document.getElementById("adp-id").value),
     });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL ADEMPIMENTO DEF
+// ═══════════════════════════════════════════════════════════════
 function onAdpFlagsChange() {
-  const hC = document.getElementById("adp-def-contabilita").checked,
-    hR = document.getElementById("adp-def-rate").checked;
+  const hC = document.getElementById("adp-def-contabilita").checked;
+  const hR = document.getElementById("adp-def-rate").checked;
   if (hC) document.getElementById("adp-def-rate").checked = false;
   if (hR) document.getElementById("adp-def-contabilita").checked = false;
   document.getElementById("sect-rate-labels").style.display =
@@ -1653,8 +1874,8 @@ function editAdpDef(id) {
 }
 function saveAdpDef() {
   const id = document.getElementById("adp-def-id").value;
-  const isC = document.getElementById("adp-def-contabilita").checked,
-    hasR = document.getElementById("adp-def-rate").checked;
+  const isC = document.getElementById("adp-def-contabilita").checked;
+  const hasR = document.getElementById("adp-def-rate").checked;
   const data = {
     codice: document
       .getElementById("adp-def-codice")
@@ -1688,6 +1909,10 @@ function deleteAdpDef(id) {
   if (confirm(`Eliminare "${a?.nome || id}"?`))
     socket.emit("delete:adempimento", { id });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL COPIA / GENERA / ADD ADP
+// ═══════════════════════════════════════════════════════════════
 function openCopia(id) {
   document.getElementById("copia-cliente-id").value = id;
   document.getElementById("copia-modalita").value = "cliente";
@@ -1697,8 +1922,6 @@ function openCopia(id) {
   document.getElementById("copia-a").value = state.anno;
   openModal("modal-copia");
 }
-
-// ── MODAL ADD ADEMPIMENTO: mostra solo adempimenti non ancora inseriti ─────
 function refreshAddAdpSelect() {
   const mancanti = getAdempimentiMancanti();
   const sel = document.getElementById("add-adp-select");
@@ -1727,12 +1950,9 @@ function refreshAddAdpSelect() {
   }
   updatePeriodoOptions();
 }
-
 function openAddAdp(id) {
   document.getElementById("add-adp-cliente-id").value = id;
   document.getElementById("add-adp-anno").value = state.anno;
-
-  // Se adempimenti non sono ancora caricati, li carica e poi apre il modal
   if (!state.adempimenti.length) {
     socket.once("res:adempimenti", () => {
       refreshAddAdpSelect();
@@ -1741,21 +1961,19 @@ function openAddAdp(id) {
     socket.emit("get:adempimenti");
     return;
   }
-
   refreshAddAdpSelect();
   openModal("modal-add-adp");
 }
-
 function updatePeriodoOptions() {
   const selAdp = document.getElementById("add-adp-select"),
     selP = document.getElementById("add-adp-periodo");
   if (!selAdp || !selP) return;
   const adp = state.adempimenti.find((a) => a.id === parseInt(selAdp.value));
   if (!adp) {
-    selP.innerHTML = '<option value="">- Seleziona adempimento -</option>';
+    selP.innerHTML = `<option value="">- Seleziona adempimento -</option>`;
     return;
   }
-  let opts = '<option value="">- Seleziona -</option>';
+  let opts = `<option value="">- Seleziona -</option>`;
   if (adp.scadenza_tipo === "trimestrale")
     opts += `<option value="trimestre_1">1° Trim. (Gen-Mar)</option><option value="trimestre_2">2° Trim. (Apr-Giu)</option><option value="trimestre_3">3° Trim. (Lug-Set)</option><option value="trimestre_4">4° Trim. (Ott-Dic)</option>`;
   else if (adp.scadenza_tipo === "semestrale")
@@ -1767,7 +1985,6 @@ function updatePeriodoOptions() {
   else opts += `<option value="annuale">Annuale</option>`;
   selP.innerHTML = opts;
 }
-
 function eseguiAddAdp() {
   const pv = document.getElementById("add-adp-periodo").value;
   let trimestre = null,
@@ -1785,6 +2002,10 @@ function eseguiAddAdp() {
     mese,
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL UTILS
+// ═══════════════════════════════════════════════════════════════
 function openModal(id) {
   document.getElementById(id).classList.add("open");
 }

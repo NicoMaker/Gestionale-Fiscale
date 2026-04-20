@@ -51,39 +51,105 @@
 
     <div class="notif-container" id="notif-container"></div>
 
-    <!-- MODAL CLIENTE -->
+    <!-- ══════════════════════════════════════════════════════════
+         MODAL CLIENTE
+    ══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-cliente">
       <div class="modal modal-lg">
         <div class="modal-title">
           👤 <span id="modal-cliente-title">Nuovo Cliente</span>
         </div>
         <input type="hidden" id="cliente-id" />
+
+        <!-- Nome -->
         <div class="form-group">
-          <label>Nome / Ragione Sociale *</label
-          ><input
+          <label>Nome / Ragione Sociale *</label>
+          <input
             class="input"
             id="c-nome"
             placeholder="Es. Mario Rossi o Alfa Srl"
           />
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Tipologia *</label
-            ><select
+
+        <!-- ── 4 COLONNE CLASSIFICAZIONE ─────────────────────── -->
+        <div class="infobox" style="margin-bottom: 14px">
+          🗂️ Classifica il cliente nelle 4 colonne. I campi si attivano in
+          cascata in base alle selezioni precedenti.
+        </div>
+
+        <div class="quattro-colonne-grid">
+          <!-- Colonna 1: Tipologia -->
+          <div class="form-group col-classificazione">
+            <label>
+              <span class="col-num">1</span>
+              Tipologia *
+            </label>
+            <select
               class="select"
               id="c-tipologia"
               onchange="onTipologiaChange()"
-            ></select>
+            >
+              <!-- popolato da JS -->
+            </select>
+            <div class="col-hint">PF · SP · SC · ASS</div>
           </div>
-          <div class="form-group">
-            <label>Sottotipologia</label
-            ><select class="select" id="c-sottotipologia"></select>
+
+          <!-- Colonna 2: Solo per PF -->
+          <div
+            class="form-group col-classificazione"
+            id="wrap-col2"
+            style="display: none"
+          >
+            <label>
+              <span class="col-num">2</span>
+              Sottocategoria PF
+            </label>
+            <select class="select" id="c-col2" onchange="onCol2Change()">
+              <option value="">-- Seleziona --</option>
+            </select>
+            <div class="col-hint">Privato · Ditta · Socio · Prof.</div>
+          </div>
+
+          <!-- Colonna 3: Regime contabile -->
+          <div
+            class="form-group col-classificazione"
+            id="wrap-col3"
+            style="display: none"
+          >
+            <label>
+              <span class="col-num">3</span>
+              Regime
+            </label>
+            <select class="select" id="c-col3" onchange="onCol3Change()">
+              <option value="">-- Seleziona --</option>
+            </select>
+            <div class="col-hint">Ord. · Sempl. · Forf.</div>
+          </div>
+
+          <!-- Colonna 4: Periodicità -->
+          <div
+            class="form-group col-classificazione"
+            id="wrap-col4"
+            style="display: none"
+          >
+            <label>
+              <span class="col-num">4</span>
+              Periodicità
+            </label>
+            <select class="select" id="c-col4">
+              <option value="">-- Seleziona --</option>
+              <option value="mensile">📅 Mensile</option>
+              <option value="trimestrale">📆 Trimestrale</option>
+            </select>
+            <div class="col-hint">Mensile · Trimestrale</div>
           </div>
         </div>
+        <!-- ── fine 4 colonne ─────────────────────────────────── -->
+
         <div class="form-row">
           <div class="form-group">
-            <label>Codice Fiscale</label
-            ><input
+            <label>Codice Fiscale</label>
+            <input
               class="input"
               id="c-cf"
               placeholder="RSSMRA80A01L219K"
@@ -91,14 +157,14 @@
             />
           </div>
           <div class="form-group">
-            <label>Partita IVA</label
-            ><input class="input" id="c-piva" placeholder="12345678901" />
+            <label>Partita IVA</label>
+            <input class="input" id="c-piva" placeholder="12345678901" />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Email</label
-            ><input
+            <label>Email</label>
+            <input
               class="input"
               id="c-email"
               type="email"
@@ -106,21 +172,21 @@
             />
           </div>
           <div class="form-group">
-            <label>Telefono</label
-            ><input class="input" id="c-tel" placeholder="+39 000 0000000" />
+            <label>Telefono</label>
+            <input class="input" id="c-tel" placeholder="+39 000 0000000" />
           </div>
         </div>
         <div class="form-group">
-          <label>Indirizzo</label
-          ><input
+          <label>Indirizzo</label>
+          <input
             class="input"
             id="c-indirizzo"
             placeholder="Via Roma 1, 00100 Roma"
           />
         </div>
         <div class="form-group">
-          <label>Note</label
-          ><textarea
+          <label>Note</label>
+          <textarea
             class="input"
             id="c-note"
             rows="2"
@@ -183,7 +249,6 @@
             ><input class="input" id="adp-data" type="date" />
           </div>
         </div>
-        <!-- Importo normale -->
         <div id="sect-importo-normale">
           <div class="form-group">
             <label>Importo (€)</label
@@ -196,7 +261,6 @@
             />
           </div>
         </div>
-        <!-- Importo con rate -->
         <div id="sect-importo-rate" style="display: none">
           <div class="rate-grid" id="rate-grid-labels">
             <div class="form-group">
@@ -231,7 +295,6 @@
             </div>
           </div>
         </div>
-        <!-- Importo contabilità -->
         <div id="sect-importo-cont" style="display: none">
           <div class="form-row">
             <div class="form-group">
@@ -343,16 +406,14 @@
               type="checkbox"
               id="adp-def-contabilita"
               onchange="onAdpFlagsChange()"
-            />
-            <span>📊 Contabilità (IVA + Cont.)</span></label
+            /><span>📊 Contabilità (IVA + Cont.)</span></label
           >
           <label class="flag-chip"
             ><input
               type="checkbox"
               id="adp-def-rate"
               onchange="onAdpFlagsChange()"
-            />
-            <span>💰 Rate (Saldo + Acconti)</span></label
+            /><span>💰 Rate (Saldo + Acconti)</span></label
           >
         </div>
         <div id="sect-rate-labels" style="display: none">
