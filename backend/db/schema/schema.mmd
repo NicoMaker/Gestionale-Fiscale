@@ -4,6 +4,7 @@ erDiagram
         text codice UK
         text nome
         text descrizione
+        text colore
     }
 
     SOTTOTIPOLOGIE {
@@ -11,6 +12,22 @@ erDiagram
         int id_tipologia FK
         text codice
         text nome
+        int is_separator
+        int ordine
+    }
+
+    REGIMI_CONTABILI {
+        int id PK
+        text codice UK
+        text nome
+        text descrizione
+    }
+
+    PERIODICITA {
+        int id PK
+        text codice UK
+        text nome
+        text descrizione
     }
 
     CLIENTI {
@@ -18,15 +35,26 @@ erDiagram
         text nome
         int id_tipologia FK
         int id_sottotipologia FK
+        text col2_value
+        text col3_value
+        text periodicita
         text codice_fiscale
         text partita_iva
         text email
         text telefono
         text indirizzo
+        text citta
+        text cap
+        text provincia
+        text pec
+        text sdi
+        text iban
         text note
+        text referente
         text categorie_attive
         int attivo
         text created_at
+        text updated_at
     }
 
     ADEMPIMENTI {
@@ -36,6 +64,9 @@ erDiagram
         text descrizione
         text categoria
         text scadenza_tipo
+        int is_contabilita
+        int has_rate
+        text rate_labels
         int attivo
     }
 
@@ -52,10 +83,15 @@ erDiagram
         text data_completamento
         text note
         real importo
+        real importo_saldo
+        real importo_acconto1
+        real importo_acconto2
+        real importo_iva
+        real importo_contabilita
     }
 
-    TIPOLOGIE_CLIENTE ||--o{ SOTTOTIPOLOGIE : "ha (1:N)"
-    TIPOLOGIE_CLIENTE ||--o{ CLIENTI : "classifica (1:N)"
-    SOTTOTIPOLOGIE ||--o{ CLIENTI : "dettaglia (1:N)"
-    ADEMPIMENTI ||--o{ ADEMPIMENTI_CLIENTE : "assegnato a (1:N)"
-    CLIENTI ||--o{ ADEMPIMENTI_CLIENTE : "ha scadenze (1:N)"
+    TIPOLOGIE_CLIENTE ||--o{ SOTTOTIPOLOGIE : "contiene"
+    TIPOLOGIE_CLIENTE ||--o{ CLIENTI : "definisce"
+    SOTTOTIPOLOGIE ||--o{ CLIENTI : "specifica"
+    CLIENTI ||--o{ ADEMPIMENTI_CLIENTE : "possiede"
+    ADEMPIMENTI ||--o{ ADEMPIMENTI_CLIENTE : "genera"
