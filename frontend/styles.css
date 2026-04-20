@@ -546,3 +546,60 @@ tr.clickable:hover td { background: var(--accent-dim); cursor: pointer; }
     page-break-inside: auto;
   }
 }
+
+/* ─── DASHBOARD — CARD GRIGLIA ADEMPIMENTI ───────────────────── */
+/* Aggiungi queste regole al tuo styles.css */
+
+.dash-adp-card {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dash-adp-card:hover {
+  border-color: var(--accent);
+  background: var(--surface3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+.dash-adp-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-adp-nome {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+.dash-adp-stats {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.dash-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text2);
+}
+.dash-stat-chip .ds-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+.dash-stat-chip .ds-lbl {
+  font-size: 10px;
+  color: var(--text3);
+}
