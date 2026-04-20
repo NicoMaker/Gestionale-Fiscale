@@ -5,6 +5,7 @@ const path = require('path');
 const cors = require('cors');
 const { initDB, getLocalIP } = require('./modules/database');
 const setupSocketHandlers = require('./modules/socketHandlers');
+const downloadDbRouter = require('./modules/downloadDb');
 
 const app = express();
 const server = http.createServer(app);
@@ -20,6 +21,9 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.static(path.join(__dirname, "../frontend")));
+
+// Endpoint per scaricare il database
+app.use('/api', downloadDbRouter);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
