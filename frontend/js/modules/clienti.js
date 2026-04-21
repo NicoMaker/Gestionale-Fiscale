@@ -31,22 +31,20 @@ function renderClientiTabella(clienti) {
     ? clienti.map(c => {
         const tipColor = getTipologiaColor(c.tipologia_codice);
         const sottotipoLabel = getLabelSottotipologia(c);
+        const avatar = getAvatar(c.nome);
 
-        let infoBadges = `<span class="badge b-${(c.tipologia_codice || "").toLowerCase()}">${c.tipologia_codice || "-"}</span>`;
-        if (c.col2_value) infoBadges += ` <span class="badge-info">${col2Map[c.col2_value] || c.col2_value}</span>`;
-        if (c.col3_value) infoBadges += ` <span class="badge-info">${col3Map[c.col3_value] || c.col3_value}</span>`;
-        if (c.periodicita) infoBadges += ` <span class="badge-per">${c.periodicita === "mensile" ? "📅" : "📆"} ${c.periodicita === "mensile" ? "Mens." : "Trim."}</span>`;
+        let infoBadges = `<span class="badge b-${(c.tipologia_codice || "").toLowerCase()}" title="${TIPOLOGIE_INFO[c.tipologia_codice]?.desc || c.tipologia_codice}">${c.tipologia_codice || "-"}</span>`;
+        if (c.col2_value) infoBadges += ` <span class="badge-info" title="Sottocategoria: ${col2Map[c.col2_value] || c.col2_value}">${col2Map[c.col2_value] || c.col2_value}</span>`;
+        if (c.col3_value) infoBadges += ` <span class="badge-info" title="Regime: ${col3Map[c.col3_value] || c.col3_value}">${col3Map[c.col3_value] || c.col3_value}</span>`;
+        if (c.periodicita) infoBadges += ` <span class="badge-per" title="Periodicità: ${c.periodicita === 'mensile' ? 'Mensile' : 'Trimestrale'}">${c.periodicita === "mensile" ? "📅" : "📆"} ${c.periodicita === "mensile" ? "Mens." : "Trim."}</span>`;
 
         const categorie = (() => { try { return JSON.parse(c.categorie_attive || "[]"); } catch (e) { return []; } })();
-        const catBadges = categorie.map(cat => {
-          const found = CATEGORIE.find(x => x.codice === cat);
-          return found ? `<span class="cat-mini-badge" style="color:${found.color};border-color:${found.color}22;background:${found.color}11">${found.icona}</span>` : "";
-        }).join("");
+        const catBadges = renderCatIconsWithTooltip(categorie);
 
-        return `<tr class="clickable" onclick="showClienteDettaglio(${c.id})">
+        return `<tr class="clickable" onclick="showClienteDettaglio(${c.id})" title="Clicca per vedere il dettaglio di ${escAttr(c.nome)}">
           <td>
             <div style="display:flex;align-items:center;gap:10px">
-              <div class="cliente-avatar-sm" style="background:${tipColor}22;border-color:${tipColor};color:${tipColor}">${(c.nome || "?").charAt(0).toUpperCase()}</div>
+              <div class="cliente-avatar-sm" style="background:${tipColor}22;border-color:${tipColor};color:${tipColor}" title="${escAttr(c.nome)}">${avatar}</div>
               <div>
                 <div style="font-weight:700;font-size:13px">${escAttr(c.nome)}</div>
                 <div style="font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono)">${c.codice_fiscale || c.partita_iva || ""}</div>
@@ -57,9 +55,9 @@ function renderClientiTabella(clienti) {
           <td class="td-dim" style="font-size:12px">${c.email || "-"}</td>
           <td><div style="display:flex;flex-wrap:wrap;gap:3px">${catBadges}</div></td>
           <td class="col-actions no-print"><div style="display:flex;gap:5px" onclick="event.stopPropagation()">
-            <button class="btn btn-sm btn-secondary" onclick="editCliente(${c.id})">✏️</button>
-            <button class="btn btn-sm btn-success"   onclick="goScadenzario(${c.id})">📅</button>
-            <button class="btn btn-sm btn-danger"    onclick="deleteCliente(${c.id})">🗑️</button>
+            <button class="btn btn-sm btn-secondary" onclick="editCliente(${c.id})" title="Modifica i dati del cliente">✏️</button>
+            <button class="btn btn-sm btn-success"   onclick="goScadenzario(${c.id})" title="Vai allo scadenzario del cliente">📅</button>
+            <button class="btn btn-sm btn-danger"    onclick="deleteCliente(${c.id})" title="Elimina il cliente (operazione irreversibile)">🗑️</button>
           </div></td>
         </tr>`;
       }).join("")
@@ -68,25 +66,37 @@ function renderClientiTabella(clienti) {
   document.getElementById("content").innerHTML = `
     <div class="filtri-avanzati no-print" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:var(--surface2);border-radius:var(--r-sm);">
       <span style="font-size:11px;color:var(--text3);font-weight:700;">🔍 Filtri:</span>
-      <select id="filter-col2" class="select" style="width:160px" onchange="applyClientiFiltri()">
-        <option value="">Sottocategoria</option>
-        <option value="privato">Privato</option><option value="ditta">Ditta Individuale</option>
-        <option value="socio">Socio</option><option value="professionista">Professionista</option>
+      <select id="filter-col2" class="select" style="width:170px" onchange="applyClientiFiltri()" title="Filtra per sottocategoria">
+        <option value="">— Sottocategoria —</option>
+        <option value="privato">Privato</option>
+        <option value="ditta">Ditta Individuale</option>
+        <option value="socio">Socio</option>
+        <option value="professionista">Professionista</option>
       </select>
-      <select id="filter-col3" class="select" style="width:140px" onchange="applyClientiFiltri()">
-        <option value="">Regime</option>
-        <option value="ordinario">Ordinario</option><option value="semplificato">Semplificato</option>
-        <option value="forfettario">Forfettario</option><option value="ordinaria">Ordinaria</option><option value="semplificata">Semplificata</option>
+      <select id="filter-col3" class="select" style="width:150px" onchange="applyClientiFiltri()" title="Filtra per regime fiscale">
+        <option value="">— Regime —</option>
+        <option value="ordinario">Ordinario</option>
+        <option value="semplificato">Semplificato</option>
+        <option value="forfettario">Forfettario</option>
+        <option value="ordinaria">Ordinaria</option>
+        <option value="semplificata">Semplificata</option>
       </select>
-      <select id="filter-periodicita" class="select" style="width:140px" onchange="applyClientiFiltri()">
-        <option value="">Periodicità</option>
-        <option value="mensile">📅 Mensile</option><option value="trimestrale">📆 Trimestrale</option>
+      <select id="filter-periodicita" class="select" style="width:150px" onchange="applyClientiFiltri()" title="Filtra per periodicità contabile">
+        <option value="">— Periodicità —</option>
+        <option value="mensile">📅 Mensile</option>
+        <option value="trimestrale">📆 Trimestrale</option>
       </select>
-      <button class="btn btn-sm btn-secondary" onclick="resetClientiFiltri()" style="margin-left:auto">⟳ Reset</button>
+      <button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="margin-left:auto" title="Azzera tutti i filtri e mostra tutti i clienti">⟳ Tutti</button>
     </div>
     <div class="table-wrap">
       <div class="table-header no-print"><h3>Clienti (${clienti.length})</h3></div>
-      <table><thead><tr><th>Cliente</th><th>Classificazione</th><th>Email</th><th>Categorie</th><th class="no-print">Azioni</th></tr></thead>
+      <table><thead><tr>
+        <th>Cliente</th>
+        <th>Classificazione</th>
+        <th>Email</th>
+        <th title="Categorie adempimenti attive per questo cliente — passa il mouse sulle icone per i dettagli">Categorie</th>
+        <th class="no-print">Azioni</th>
+      </tr></thead>
       <tbody>${tbody}</tbody></table>
     </div>`;
 }
@@ -98,11 +108,12 @@ function showClienteDettaglio(id) {
   state._currentClienteDettaglio = c;
   const tipColor = getTipologiaColor(c.tipologia_codice);
   const sottotipoLabel = getLabelSottotipologia(c);
+  const avatar = getAvatar(c.nome);
 
   const categorie = (() => { try { return JSON.parse(c.categorie_attive || "[]"); } catch (e) { return []; } })();
   const catHtml = categorie.map(cat => {
     const found = CATEGORIE.find(x => x.codice === cat);
-    return found ? `<span class="cat-det-badge" style="color:${found.color};border-color:${found.color}33;background:${found.color}11">${found.icona} ${found.codice}</span>` : "";
+    return found ? `<span class="cat-det-badge" style="color:${found.color};border-color:${found.color}33;background:${found.color}11" title="${found.nome}: ${getCatDescription(found.codice)}">${found.icona} ${found.codice}</span>` : "";
   }).join("");
 
   const col2LMap = { privato: "Privato", ditta: "Ditta Individuale", socio: "Socio", professionista: "Professionista" };
@@ -110,17 +121,17 @@ function showClienteDettaglio(id) {
 
   const classificazioneHtml = `
     <div class="det-class-grid">
-      <div class="det-class-item"><div class="det-class-num">1</div><div><div class="det-class-label">Tipologia</div><div class="det-class-val"><span class="badge b-${(c.tipologia_codice||"").toLowerCase()}">${c.tipologia_codice||"-"}</span> ${c.tipologia_nome||""}</div></div></div>
-      ${c.col2_value ? `<div class="det-class-item"><div class="det-class-num">2</div><div><div class="det-class-label">Sottocategoria</div><div class="det-class-val">${col2LMap[c.col2_value]||c.col2_value}</div></div></div>` : ""}
-      ${c.col3_value ? `<div class="det-class-item"><div class="det-class-num">3</div><div><div class="det-class-label">Regime</div><div class="det-class-val">${col3LMap[c.col3_value]||c.col3_value}</div></div></div>` : ""}
-      ${c.periodicita ? `<div class="det-class-item"><div class="det-class-num">4</div><div><div class="det-class-label">Periodicità</div><div class="det-class-val">${c.periodicita==="mensile"?"📅 Mensile":"📆 Trimestrale"}</div></div></div>` : ""}
+      <div class="det-class-item" title="Tipologia principale del cliente"><div class="det-class-num">1</div><div><div class="det-class-label">Tipologia</div><div class="det-class-val"><span class="badge b-${(c.tipologia_codice||"").toLowerCase()}">${c.tipologia_codice||"-"}</span> ${c.tipologia_nome||""}</div></div></div>
+      ${c.col2_value ? `<div class="det-class-item" title="Sottocategoria del cliente"><div class="det-class-num">2</div><div><div class="det-class-label">Sottocategoria</div><div class="det-class-val">${col2LMap[c.col2_value]||c.col2_value}</div></div></div>` : ""}
+      ${c.col3_value ? `<div class="det-class-item" title="Regime fiscale applicato"><div class="det-class-num">3</div><div><div class="det-class-label">Regime</div><div class="det-class-val">${col3LMap[c.col3_value]||c.col3_value}</div></div></div>` : ""}
+      ${c.periodicita ? `<div class="det-class-item" title="Frequenza di registrazione contabile"><div class="det-class-num">4</div><div><div class="det-class-label">Periodicità</div><div class="det-class-val">${c.periodicita==="mensile"?"📅 Mensile":"📆 Trimestrale"}</div></div></div>` : ""}
     </div>
     ${sottotipoLabel ? `<div class="sottotipo-badge-full">🏷️ ${sottotipoLabel}</div>` : ""}`;
 
   document.getElementById("modal-cliente-det-title").textContent = c.nome;
   document.getElementById("cliente-dettaglio-content").innerHTML = `
     <div class="det-header" style="border-left:4px solid ${tipColor}">
-      <div class="det-avatar" style="background:${tipColor}22;border-color:${tipColor};color:${tipColor}">${(c.nome||"?").charAt(0).toUpperCase()}</div>
+      <div class="det-avatar" style="background:${tipColor}22;border-color:${tipColor};color:${tipColor}">${avatar}</div>
       <div style="flex:1">
         <div style="font-size:18px;font-weight:800">${escAttr(c.nome)}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px">${getClassificazioneCompleta(c)}</div>
@@ -261,7 +272,7 @@ function renderCategorieSelect(attuali = []) {
   const container = document.getElementById("categorie-attive");
   if (!container) return;
   container.innerHTML = CATEGORIE.map(cat =>
-    `<label style="display:inline-flex;align-items:center;gap:8px;margin:4px 8px 4px 0;padding:8px 12px;background:var(--surface2);border-radius:var(--r-sm);cursor:pointer;border:1px solid ${attuali.includes(cat.codice)?"var(--accent)":"var(--border)"};transition:all 0.12s">
+    `<label style="display:inline-flex;align-items:center;gap:8px;margin:4px 8px 4px 0;padding:8px 12px;background:var(--surface2);border-radius:var(--r-sm);cursor:pointer;border:1px solid ${attuali.includes(cat.codice)?"var(--accent)":"var(--border)"};transition:all 0.12s" title="${cat.nome}: ${getCatDescription(cat.codice)}">
       <input type="checkbox" value="${cat.codice}" ${attuali.includes(cat.codice)?"checked":""} style="accent-color:var(--accent)" onchange="this.parentElement.style.borderColor=this.checked?'var(--accent)':'var(--border)'">
       <span>${cat.icona} ${cat.nome}</span>
     </label>`

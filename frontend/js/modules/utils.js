@@ -31,6 +31,19 @@ function escAttr(s) {
     .replace(/>/g, "&gt;");
 }
 
+// ─── AVATAR A 2 LETTERE ───────────────────────────────────────
+// "Studio Verdi" → "SV", "Anna" → "AN", "Alfa Srl" → "AS"
+function getAvatar(nome) {
+  if (!nome) return "??";
+  const words = nome.trim().split(/\s+/).filter(w => w.length > 0);
+  if (words.length === 1) {
+    // Una sola parola: prime 2 lettere maiuscole
+    return words[0].substring(0, 2).toUpperCase();
+  }
+  // Più parole: prima lettera di ciascuna (max 2)
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
 // ─── TIPOLOGIA COLOR ──────────────────────────────────────────
 function getTipologiaColor(tipCodice) {
   return (TIPOLOGIE_INFO[tipCodice] || {}).color || "var(--accent)";
@@ -128,6 +141,12 @@ function showNotif(msg, type = "info") {
   setTimeout(() => div.remove(), 4000);
 }
 
+// ─── SCROLL TO TOP ────────────────────────────────────────────
+function scrollToTop() {
+  const content = document.getElementById("content");
+  if (content) content.scrollTop = 0;
+}
+
 // ─── DOWNLOAD DATABASE ────────────────────────────────────────
 function scaricaDatabase() {
   showNotif("⏳ Download in corso...", "info");
@@ -148,4 +167,40 @@ function scaricaDatabase() {
       showNotif("✅ Database scaricato!", "success");
     })
     .catch(error => showNotif(`❌ Errore: ${error.message}`, "error"));
+}
+
+// ─── SEARCHABLE SELECT ────────────────────────────────────────
+// Inizializza una select con ricerca integrata
+function makeSearchableSelect(selectId, placeholder) {
+  const sel = document.getElementById(selectId);
+  if (!sel || sel.dataset.searchable) return;
+  sel.dataset.searchable = "1";
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "searchable-select-wrap";
+  sel.parentNode.insertBefore(wrapper, sel);
+  wrapper.appendChild(sel);
+
+  const searchInput = document.createElement("input");
+  searchInput.className = "select-search-input";
+  searchInput.placeholder = placeholder || "🔍 Cerca...";
+  wrapper.insertBefore(searchInput, sel);
+
+  // Salva tutte le opzioni originali
+  const allOptions = Array.from(sel.options).map(o => ({ value: o.value, text: o.text }));
+
+  searchInput.addEventListener("input", () => {
+    const q = searchInput.value.toLowerCase();
+    const cur = sel.value;
+    sel.innerHTML = "";
+    allOptions.forEach(o => {
+      if (!q || o.text.toLowerCase().includes(q) || o.value.toLowerCase().includes(q)) {
+        const opt = document.createElement("option");
+        opt.value = o.value;
+        opt.textContent = o.text;
+        if (o.value === cur) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    });
+  });
 }

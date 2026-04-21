@@ -2029,3 +2029,503 @@ tr.clickable:hover td {
     page-break-inside: auto;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   UPDATES.CSS — Aggiornamenti UI: filtri scadenzario, tooltip,
+   avatar 2 lettere, navigazione adempimenti globale, select ricerca
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── AVATAR 2 LETTERE — più largo per 2 caratteri ──────────── */
+.cliente-avatar-sm {
+  min-width: 36px;
+  width: 36px;
+  height: 36px;
+  font-size: 12px;
+  letter-spacing: -0.5px;
+}
+.cpc-avatar {
+  min-width: 46px;
+  letter-spacing: -0.5px;
+}
+.gcr-avatar {
+  min-width: 34px;
+  letter-spacing: -0.5px;
+}
+.cliente-info-avatar {
+  min-width: 36px;
+  letter-spacing: -0.5px;
+}
+.det-avatar {
+  min-width: 44px;
+  letter-spacing: -0.5px;
+}
+
+/* ─── BARRA FILTRI SCADENZARIO (stile Vista Globale) ─────────── */
+.scad-filtri-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.scad-filtro-select {
+  /* Dimensione più grande come in Vista Globale */
+  font-size: 13px;
+  padding: 7px 11px;
+  width: auto;
+  min-width: 130px;
+}
+
+/* ─── TOOLTIP NATIVI MIGLIORATI ─────────────────────────────── */
+/* I tooltip HTML nativi (title="") funzionano ovunque.
+   Aggiungiamo stili per evidenziare gli elementi con tooltip. */
+[title] {
+  cursor: help;
+}
+/* Eccezione: bottoni e click mantengono il pointer */
+button[title], .btn[title], .nav-item[title], .periodo-pill[title],
+.clickable[title], tr.clickable[title], .dash-adp-card[title] {
+  cursor: pointer;
+}
+
+/* ─── BARRA NAVIGAZIONE ADEMPIMENTO (Vista Globale) ─────────── */
+.glob-nav-adp {
+  width: 100%;
+}
+.glob-nav-adp .btn {
+  white-space: nowrap;
+}
+
+/* ─── BOTTONE "TUTTI" RESET FILTRI ───────────────────────────── */
+/* Evidenzia i bottoni reset in modo coerente */
+.btn-reset-tutti {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(91, 141, 246, 0.3);
+  font-weight: 700;
+}
+.btn-reset-tutti:hover {
+  background: rgba(91, 141, 246, 0.2);
+}
+
+/* ─── SCADENZARIO FILTRI BAR — layout responsive ─────────────── */
+@media (max-width: 1200px) {
+  .scad-filtri-bar {
+    flex-wrap: wrap;
+  }
+  .scad-filtro-select {
+    min-width: 110px;
+  }
+}
+
+/* ─── PERIODO PILL FIX — assicura leggibilità ────────────────── */
+.pp-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+/* ─── SEARCHABLE SELECT (ricerca in dropdown) ────────────────── */
+.searchable-select-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.select-search-input {
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 12px;
+  outline: none;
+  width: 100%;
+}
+.select-search-input:focus {
+  border-color: var(--accent);
+}
+.select-search-input::placeholder {
+  color: var(--text3);
+}
+
+/* ─── GLOB PREVIEW CARD — nav adempimento integrata ─────────── */
+.globale-preview-card {
+  flex-direction: column;
+}
+.globale-preview-card .gpc-left,
+.globale-preview-card .gpc-stats {
+  width: 100%;
+}
+.gpc-top-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* ─── HOVER CARD CLIENTE IN GLOBALE ──────────────────────────── */
+.glob-cliente-card {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.glob-cliente-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(91, 141, 246, 0.12);
+}
+
+/* ─── TOOLTIPS SU ICONE CATEGORIA ─────────────────────────────── */
+.cat-mini-badge {
+  cursor: help;
+  transition: transform 0.12s, opacity 0.12s;
+}
+.cat-mini-badge:hover {
+  transform: scale(1.15);
+  opacity: 0.9;
+}
+.cat-det-badge {
+  cursor: help;
+}
+
+/* ─── FILTRI AVANZATI CLIENTI — bottone Tutti ────────────────── */
+.filtri-avanzati .btn-primary {
+  /* Il bottone "Tutti" è primario ma compatto */
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+/* ─── NAV ITEM TOOLTIP ───────────────────────────────────────── */
+.nav-item[title] {
+  cursor: pointer;
+}
+
+/* ─── TOPBAR BUTTONS TOOLTIP ─────────────────────────────────── */
+.topbar-actions .btn[title] {
+  cursor: pointer;
+}
+
+/* ─── PRINT: nascondi navigazione adempimento ─────────────────── */
+@media print {
+  .glob-nav-adp,
+  .scad-filtri-bar,
+  .filtri-avanzati {
+    display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UPDATES-V2.CSS — Testi più grandi, leggibilità migliorata,
+   card riepilogo adempimenti nello scadenzario
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── FONT SIZE GLOBALE — più grande e leggibile ─────────────── */
+body {
+  font-size: 14px;
+}
+
+/* Topbar titolo pagina più grande */
+.topbar-title {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+/* Sidebar nav items */
+.nav-item {
+  font-size: 14px;
+  padding: 12px 18px;
+}
+.nav-icon {
+  font-size: 17px;
+}
+
+/* ─── STAT CARDS — valori più grandi ─────────────────────────── */
+.stat-value {
+  font-size: 34px;
+  font-weight: 800;
+}
+.stat-label {
+  font-size: 11px;
+}
+.stat-sub {
+  font-size: 11px;
+}
+
+/* ─── TABLE — testo più grande ───────────────────────────────── */
+th {
+  font-size: 11px;
+  padding: 10px 16px;
+}
+td {
+  font-size: 14px;
+  padding: 12px 16px;
+}
+.table-header h3 {
+  font-size: 15px;
+}
+
+/* ─── BUTTONS — testo più grande ─────────────────────────────── */
+.btn {
+  font-size: 13px;
+  padding: 8px 16px;
+}
+.btn-sm {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+.btn-xs {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+/* ─── INPUTS & SELECT ────────────────────────────────────────── */
+.input, .select {
+  font-size: 13px;
+  padding: 9px 13px;
+}
+.form-group label {
+  font-size: 12px;
+}
+
+/* ─── BADGE — più visibili ────────────────────────────────────── */
+.badge {
+  font-size: 11px;
+  padding: 3px 10px;
+}
+.badge-info, .badge-per {
+  font-size: 11px;
+  padding: 3px 9px;
+}
+
+/* ─── CAT TAB — dimensioni migliorate ────────────────────────── */
+.cat-tab {
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+/* ─── PERIODO PILL — più grande ──────────────────────────────── */
+.periodo-pill {
+  min-width: 130px;
+  flex: 1 1 130px;
+  padding: 10px 13px;
+}
+.pp-tag {
+  font-size: 13px;
+  padding: 3px 9px;
+}
+.pp-stato-icon {
+  font-size: 15px;
+}
+.pp-date {
+  font-size: 11px;
+}
+.pp-note {
+  font-size: 11px;
+}
+.pp-imp .imp-row {
+  font-size: 12px;
+}
+
+/* ─── ADP CARD ───────────────────────────────────────────────── */
+.adp-codice {
+  font-size: 13px;
+}
+.adp-nome {
+  font-size: 15px;
+}
+.adp-tipo-badge {
+  font-size: 12px;
+}
+.adp-card-header {
+  padding: 10px 14px;
+}
+
+/* ─── CAT SECTION ────────────────────────────────────────────── */
+.cat-section-nome {
+  font-size: 16px;
+}
+.cat-section-count {
+  font-size: 12px;
+}
+.cat-section-icon {
+  font-size: 20px;
+}
+
+/* ─── CLIENTE PREVIEW CARD ───────────────────────────────────── */
+.cpc-nome {
+  font-size: 20px;
+  font-weight: 800;
+}
+.cpc-stat-num {
+  font-size: 24px;
+  font-weight: 800;
+}
+.cpc-stat-lbl {
+  font-size: 11px;
+}
+.cpc-meta-chip {
+  font-size: 12px;
+}
+
+/* ─── GLOBALE PREVIEW CARD ───────────────────────────────────── */
+.gpc-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+.gpc-sub {
+  font-size: 13px;
+}
+
+/* ─── GLOB CLIENTE CARD ──────────────────────────────────────── */
+.gcr-nome {
+  font-size: 15px;
+  font-weight: 700;
+}
+.gcr-cf {
+  font-size: 12px;
+}
+
+/* ─── ADP DEF CARD ───────────────────────────────────────────── */
+.adp-def-nome {
+  font-size: 15px;
+  font-weight: 700;
+}
+.adp-def-codice {
+  font-size: 13px;
+}
+.adp-def-desc {
+  font-size: 12px;
+}
+.adp-scad-badge {
+  font-size: 12px;
+}
+
+/* ─── DASH ADP CARD ──────────────────────────────────────────── */
+.dash-adp-nome {
+  font-size: 14px;
+  font-weight: 700;
+}
+.dash-stat-chip .ds-num {
+  font-size: 13px;
+}
+.dash-stat-chip .ds-lbl {
+  font-size: 11px;
+}
+
+/* ─── MODAL ──────────────────────────────────────────────────── */
+.modal-title {
+  font-size: 17px;
+}
+
+/* ─── NOTIFICHE ──────────────────────────────────────────────── */
+.notif {
+  font-size: 14px;
+}
+
+/* ─── YEAR NUM ───────────────────────────────────────────────── */
+.year-num {
+  font-size: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARD RIEPILOGO ADEMPIMENTI — Scadenzario Cliente
+   ═══════════════════════════════════════════════════════════════ */
+
+.adp-riepilogo-card {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+.adp-riepilogo-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(91, 141, 246, 0.12);
+}
+
+/* ─── MINI BAR più alta ──────────────────────────────────────── */
+.mini-bar {
+  height: 6px;
+}
+
+/* ─── IMPORTI CELL ───────────────────────────────────────────── */
+.imp-lbl {
+  font-size: 11px;
+}
+.imp-val {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ─── DATI RIFERIMENTO ───────────────────────────────────────── */
+.dati-ref-item .ref-label {
+  font-size: 12px;
+}
+.dati-ref-item .ref-value {
+  font-size: 11px;
+}
+
+/* ─── INFOBOX ────────────────────────────────────────────────── */
+.infobox {
+  font-size: 13px;
+}
+
+/* ─── CAT MINI BADGE ─────────────────────────────────────────── */
+.cat-mini-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+}
+.cat-det-badge {
+  font-size: 12px;
+}
+
+/* ─── TABS DASHBOARD — più grandi ────────────────────────────── */
+#dash-cat-tabs .cat-tab {
+  font-size: 12px;
+  padding: 5px 13px;
+}
+
+/* ─── GLOB CLIENTE PERIODI — header più leggibile ────────────── */
+.glob-cliente-header {
+  padding: 12px 16px;
+}
+
+/* ─── SCADENZARIO FILTRI BAR ─────────────────────────────────── */
+.scad-filtro-select {
+  font-size: 13px;
+  min-width: 145px;
+}
+
+/* ─── EMPTY STATE ────────────────────────────────────────────── */
+.empty p {
+  font-size: 16px;
+}
+.empty-icon {
+  font-size: 52px;
+}
+
+/* ─── ADEMPIMENTI CAT HEADER ─────────────────────────────────── */
+.adp-cat-header {
+  padding: 14px 18px;
+}
+
+/* ─── TOPBAR ACTIONS responsive ──────────────────────────────── */
+@media (max-width: 1400px) {
+  .topbar-actions {
+    gap: 6px;
+  }
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
+
+/* ─── PRINT: rimuovi riepilogo card se non serve ─────────────── */
+@media print {
+  .adp-riepilogo-card {
+    border: 1px solid #ccc !important;
+    background: #f8f8f8 !important;
+  }
+}

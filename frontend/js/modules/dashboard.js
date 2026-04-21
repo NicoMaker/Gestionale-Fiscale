@@ -4,7 +4,7 @@
 
 function buildDashboardShell(stats) {
   document.getElementById("content").innerHTML = `
-    <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:20px">
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:24px">
       <div class="stat-card"><div class="stat-label">Clienti Attivi</div><div class="stat-value v-blue">${stats.totClienti}</div></div>
       <div class="stat-card"><div class="stat-label" id="ds-lbl-tot">Adempimenti ${stats.anno}</div><div class="stat-value" id="ds-tot">-</div></div>
       <div class="stat-card"><div class="stat-label">Completati</div><div class="stat-value v-green" id="ds-comp">-</div><div class="prog-bar"><div class="prog-fill green" id="ds-prog" style="width:0%"></div></div><div class="stat-sub" id="ds-perc">0%</div></div>
@@ -16,14 +16,14 @@ function buildDashboardShell(stats) {
       <div class="table-header no-print" style="flex-wrap:wrap;gap:10px">
         <h3 id="dash-adp-count-title">Adempimenti ${stats.anno}</h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:1">
-          <div id="dash-cat-tabs" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-          <div class="search-wrap" style="width:210px;margin-left:auto">
+          <div id="dash-cat-tabs" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+          <div class="search-wrap" style="width:230px;margin-left:auto">
             <span class="search-icon">🔍</span>
             <input class="input" id="dash-adp-search" placeholder="Cerca nome, codice..." value="" oninput="onDashAdpSearch(this.value)">
           </div>
         </div>
       </div>
-      <div id="dash-adp-grid" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px"></div>
+      <div id="dash-adp-grid" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
     </div>`;
   state._dashRendered = true;
 }
@@ -51,7 +51,7 @@ function updateDashboardContent(stats) {
   const se = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   const si = (id, v) => { const e = document.getElementById(id); if (e) e.innerHTML = v; };
 
-  si("ds-lbl-tot", `Adempimenti ${stats.anno}${isF ? ` <span style="font-size:9px;color:var(--yellow)">(filtro)</span>` : ""}`);
+  si("ds-lbl-tot", `Adempimenti ${stats.anno}${isF ? ` <span style="font-size:10px;color:var(--yellow)">(filtro attivo)</span>` : ""}`);
   se("ds-tot", fT);
   se("ds-comp", fC);
   se("ds-dafare", fD);
@@ -63,16 +63,26 @@ function updateDashboardContent(stats) {
 
   const title = document.getElementById("dash-adp-count-title");
   if (title)
-    title.innerHTML = `Adempimenti ${stats.anno} <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:6px">${adpVis.length}/${allAdp.length} — clicca per Vista Globale</span>`;
+    title.innerHTML = `Adempimenti ${stats.anno} <span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:6px">${adpVis.length}/${allAdp.length} — clicca su una card per Vista Globale</span>`;
 
-  // Tabs categoria
+  // Tabs categoria — con "Tutti" in evidenza
   const tabsEl = document.getElementById("dash-cat-tabs");
   if (tabsEl)
-    tabsEl.innerHTML = [{ codice: "tutti", nome: "Tutti", color: "var(--text2)" }, ...CATEGORIE]
+    tabsEl.innerHTML = [{ codice: "tutti", nome: "📋 Tutti", color: "var(--accent)" }, ...CATEGORIE]
       .map(c => {
         const active = state.dashFiltroCategoria === c.codice;
-        const col = c.color || "var(--text2)";
-        return `<button class="cat-tab${active ? " cat-tab-active" : ""}" style="${active ? `background:${col}22;border-color:${col};color:${col}` : ""}" onclick="setDashCat('${c.codice}')">${c.nome || c.codice}</button>`;
+        const col = c.color || "var(--accent)";
+        // Conta adempimenti per questa categoria
+        const count = c.codice === "tutti"
+          ? allAdp.length
+          : allAdp.filter(a => a.categoria === c.codice).length;
+        return `<button class="cat-tab${active ? " cat-tab-active" : ""}"
+          style="${active ? `background:${col}22;border-color:${col};color:${col}` : ""}"
+          onclick="setDashCat('${c.codice}')"
+          title="Filtra per: ${c.nome || c.codice}">
+          ${c.nome || c.codice}
+          <span style="font-size:10px;opacity:0.7;margin-left:3px">${count}</span>
+        </button>`;
       }).join("");
 
   // Raggruppa per categoria
@@ -87,7 +97,10 @@ function updateDashboardContent(stats) {
   if (!grid) return;
 
   if (!adpVis.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3)">Nessun adempimento</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3)">
+      <div style="font-size:40px;margin-bottom:16px">📋</div>
+      <div style="font-size:15px">Nessun adempimento trovato</div>
+    </div>`;
     return;
   }
 
@@ -96,10 +109,10 @@ function updateDashboardContent(stats) {
     const catInfo = CATEGORIE.find(x => x.codice === catCode);
     const cc = catInfo?.color || "var(--accent)";
 
-    html += `<div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:8px 4px;margin-top:4px;border-bottom:1px solid var(--border)">
-      <span style="font-size:16px">${catInfo?.icona || "📋"}</span>
-      <span style="color:${cc};font-weight:800;font-size:13px">${catCode}</span>
-      <span style="color:var(--text3);font-size:11px">${items.length} adempiment${items.length === 1 ? "o" : "i"}</span>
+    html += `<div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:10px 6px;margin-top:6px;border-bottom:1px solid var(--border)">
+      <span style="font-size:20px">${catInfo?.icona || "📋"}</span>
+      <span style="color:${cc};font-weight:800;font-size:15px">${catCode}</span>
+      <span style="color:var(--text3);font-size:12px">${items.length} adempiment${items.length === 1 ? "o" : "i"}</span>
     </div>`;
 
     items.forEach(a => {
@@ -107,18 +120,18 @@ function updateDashboardContent(stats) {
       const iC = Math.max(0, a.totale - a.completati - a.da_fare);
       const pgColor = p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
 
-      html += `<div class="dash-adp-card" onclick="goVistaGlobaleAdp('${escAttr(a.nome)}')" title="Clicca per Vista Globale">
+      html += `<div class="dash-adp-card" onclick="goVistaGlobaleAdp('${escAttr(a.nome)}')" title="Clicca per Vista Globale — ${escAttr(a.nome)}">
         <div class="dash-adp-card-top">
-          <span class="adp-def-codice">${a.codice}</span>
-          <div class="mini-bar" style="width:50px"><div class="mini-fill" style="width:${p}%;background:${pgColor}"></div></div>
-          <span style="font-size:10px;font-family:var(--mono);color:${pgColor};min-width:28px;text-align:right">${p}%</span>
+          <span class="adp-def-codice" style="font-size:13px">${a.codice}</span>
+          <div class="mini-bar" style="width:60px"><div class="mini-fill" style="width:${p}%;background:${pgColor}"></div></div>
+          <span style="font-size:11px;font-family:var(--mono);color:${pgColor};min-width:32px;text-align:right">${p}%</span>
         </div>
-        <div class="dash-adp-nome">${a.nome}</div>
+        <div class="dash-adp-nome" style="font-size:14px">${a.nome}</div>
         <div class="dash-adp-stats">
-          <div class="dash-stat-chip"><span class="ds-num">${a.totale}</span><span class="ds-lbl">Tot.</span></div>
-          <div class="dash-stat-chip" style="color:var(--green)"><span class="ds-num">${a.completati}</span><span class="ds-lbl">✓</span></div>
-          <div class="dash-stat-chip" style="color:var(--red)"><span class="ds-num">${a.da_fare}</span><span class="ds-lbl">⭕</span></div>
-          ${iC > 0 ? `<div class="dash-stat-chip" style="color:var(--yellow)"><span class="ds-num">${iC}</span><span class="ds-lbl">🔄</span></div>` : ""}
+          <div class="dash-stat-chip" title="Totale"><span class="ds-num">${a.totale}</span><span class="ds-lbl">Tot.</span></div>
+          <div class="dash-stat-chip" style="color:var(--green)" title="Completati"><span class="ds-num">${a.completati}</span><span class="ds-lbl">✓ Comp.</span></div>
+          <div class="dash-stat-chip" style="color:var(--red)" title="Da fare"><span class="ds-num">${a.da_fare}</span><span class="ds-lbl">⭕ Da fare</span></div>
+          ${iC > 0 ? `<div class="dash-stat-chip" style="color:var(--yellow)" title="In corso"><span class="ds-num">${iC}</span><span class="ds-lbl">🔄 Corso</span></div>` : ""}
         </div>
       </div>`;
     });

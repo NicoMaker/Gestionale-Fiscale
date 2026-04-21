@@ -14,6 +14,14 @@ const applyAdempimentiFiltriSearch = debounce(() => {
   renderAdempimentiTabella(filtered);
 }, 300);
 
+function resetAdempimentiFiltri() {
+  const s = document.getElementById("global-search-adempimenti");
+  const c = document.getElementById("filter-adp-cat");
+  if (s) s.value = "";
+  if (c) c.value = "";
+  renderAdempimentiTabella(state.adempimenti);
+}
+
 function renderAdempimentiPage() { renderAdempimentiTabella(state.adempimenti); }
 
 function renderAdempimentiTabella(adempimenti) {
@@ -24,9 +32,37 @@ function renderAdempimentiTabella(adempimenti) {
     grouped[cat].push(a);
   });
 
-  let html = `<div class="adp-def-grid">`;
   const scadIcons = { annuale: "📅", semestrale: "📆", trimestrale: "📊", mensile: "🗓️" };
   const scadFreq  = { annuale: "1×/anno", semestrale: "2×/anno", trimestrale: "4×/anno", mensile: "12×/anno" };
+  const scadDesc  = {
+    annuale:      "Scadenza annuale",
+    semestrale:   "Scadenza semestrale (2 volte l'anno)",
+    trimestrale:  "Scadenza trimestrale (4 volte l'anno)",
+    mensile:      "Scadenza mensile (12 volte l'anno)"
+  };
+
+  // Counter totale
+  const totAdp = adempimenti.length;
+  const totAll = state.adempimenti.length;
+  const isFiltrato = totAdp < totAll;
+
+  let html = `<div style="margin-bottom:16px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:14px;color:var(--text2)">
+      ${isFiltrato
+        ? `<span style="color:var(--yellow)">⚠️ Filtro attivo:</span> ${totAdp} di ${totAll} adempimenti`
+        : `<span style="color:var(--text3)">${totAll} adempimenti totali</span>`}
+    </span>
+    ${isFiltrato ? `<button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:12px">⟳ Tutti</button>` : ""}
+  </div>`;
+
+  html += `<div class="adp-def-grid">`;
+
+  if (!adempimenti.length) {
+    html += `<div class="empty"><div class="empty-icon">📋</div><p style="font-size:15px">Nessun adempimento trovato</p></div>`;
+    html += `</div>`;
+    document.getElementById("content").innerHTML = html;
+    return;
+  }
 
   Object.entries(grouped).forEach(([catCode, items]) => {
     const catInfo  = CATEGORIE.find(x => x.codice === catCode);
@@ -34,24 +70,24 @@ function renderAdempimentiTabella(adempimenti) {
 
     const cards = items.map(a => {
       const flagsBadges = [];
-      if (a.is_contabilita) flagsBadges.push(`<span class="adp-flag-badge" style="color:#22d3ee;background:#22d3ee15;border-color:#22d3ee33">📊 Cont.</span>`);
-      if (a.has_rate)       flagsBadges.push(`<span class="adp-flag-badge" style="color:#34d399;background:#34d39915;border-color:#34d39933">💰 Rate</span>`);
+      if (a.is_contabilita) flagsBadges.push(`<span class="adp-flag-badge" style="color:#22d3ee;background:#22d3ee15;border-color:#22d3ee33;font-size:11px" title="Adempimento di contabilità">📊 Cont.</span>`);
+      if (a.has_rate)       flagsBadges.push(`<span class="adp-flag-badge" style="color:#34d399;background:#34d39915;border-color:#34d39933;font-size:11px" title="Adempimento con rate">💰 Rate</span>`);
 
-      return `<div class="adp-def-card">
+      return `<div class="adp-def-card" title="${escAttr(a.nome)} — ${a.categoria} — ${scadDesc[a.scadenza_tipo] || a.scadenza_tipo}">
         <div class="adp-def-card-top">
-          <div class="adp-def-codice">${a.codice}</div>
-          <div style="display:flex;gap:4px">
+          <div class="adp-def-codice" style="font-size:13px" title="Codice identificativo">${a.codice}</div>
+          <div style="display:flex;gap:5px">
             <button class="btn btn-xs btn-secondary" onclick="editAdpDef(${a.id})" title="Modifica">✏️</button>
             <button class="btn btn-xs btn-danger"    onclick="deleteAdpDef(${a.id})" title="Elimina">🗑️</button>
           </div>
         </div>
-        <div class="adp-def-nome">${a.nome}</div>
-        ${a.descrizione ? `<div class="adp-def-desc">${a.descrizione}</div>` : ""}
+        <div class="adp-def-nome" style="font-size:15px">${a.nome}</div>
+        ${a.descrizione ? `<div class="adp-def-desc" style="font-size:12px">${a.descrizione}</div>` : ""}
         <div class="adp-def-meta">
-          <span class="adp-scad-badge">
-            <span style="font-size:12px">${scadIcons[a.scadenza_tipo]||"📅"}</span>
+          <span class="adp-scad-badge" style="font-size:12px" title="${scadDesc[a.scadenza_tipo] || a.scadenza_tipo}">
+            <span style="font-size:14px">${scadIcons[a.scadenza_tipo]||"📅"}</span>
             ${a.scadenza_tipo}
-            <span style="color:var(--text3);font-size:9px">(${scadFreq[a.scadenza_tipo]||""})</span>
+            <span style="color:var(--text3);font-size:10px">(${scadFreq[a.scadenza_tipo]||""})</span>
           </span>
           ${flagsBadges.join("")}
         </div>
@@ -60,17 +96,15 @@ function renderAdempimentiTabella(adempimenti) {
 
     html += `<div class="adp-cat-group">
       <div class="adp-cat-header" style="border-left:3px solid ${catColor}">
-        <span style="font-size:18px">${catInfo?.icona||"📋"}</span>
-        <span style="color:${catColor};font-weight:800;font-size:14px">${catCode}</span>
-        ${catCode!=="TUTTI"?`<span style="color:var(--text3);font-size:11px">${items.length} adempiment${items.length===1?"o":"i"}</span>`:""}
+        <span style="font-size:20px" title="${catInfo?.nome || catCode}">${catInfo?.icona||"📋"}</span>
+        <span style="color:${catColor};font-weight:800;font-size:15px">${catCode}</span>
+        ${catCode!=="TUTTI" ? `<span style="color:var(--text3);font-size:12px">${items.length} adempiment${items.length===1?"o":"i"}</span>` : ""}
       </div>
       <div class="adp-cat-cards">${cards}</div>
     </div>`;
   });
 
   html += `</div>`;
-  if (!adempimenti.length)
-    html = `<div class="empty"><div class="empty-icon">📋</div><p>Nessun adempimento trovato</p></div>`;
   document.getElementById("content").innerHTML = html;
 }
 

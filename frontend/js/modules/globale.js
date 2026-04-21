@@ -15,32 +15,38 @@ function calcolaGlobaleStats(data) {
 function renderGlobalePage() {
   document.getElementById("topbar-actions").innerHTML = `
     <div class="year-sel">
-      <button onclick="changeAnnoGlobale(-1)">&#9664;</button>
+      <button onclick="changeAnnoGlobale(-1)" title="Anno precedente">&#9664;</button>
       <span class="year-num">${state.anno}</span>
-      <button onclick="changeAnnoGlobale(1)">&#9654;</button>
+      <button onclick="changeAnnoGlobale(1)" title="Anno successivo">&#9654;</button>
     </div>
-    <select class="select" id="glob-filtro-adp" style="width:190px" onchange="applyGlobaleFiltri()">
-      <option value="">Tutti adempimenti</option>
+    <select class="select" id="glob-filtro-adp" style="width:210px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per tipo di adempimento">
+      <option value="">📋 Tutti adempimenti</option>
     </select>
-    <select class="select" id="glob-filtro-stato" style="width:135px" onchange="applyGlobaleFiltri()">
-      <option value="">Tutti stati</option>
-      <option value="da_fare">⭕ Da fare</option><option value="in_corso">🔄 In corso</option>
-      <option value="completato">✅ Completato</option><option value="n_a">➖ N/A</option>
+    <select class="select" id="glob-filtro-stato" style="width:155px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per stato adempimento">
+      <option value="">🔵 Tutti stati</option>
+      <option value="da_fare">⭕ Da fare</option>
+      <option value="in_corso">🔄 In corso</option>
+      <option value="completato">✅ Completato</option>
+      <option value="n_a">➖ N/A</option>
     </select>
-    <select class="select" id="glob-filtro-tipo" style="width:110px" onchange="applyGlobaleFiltri()">
-      <option value="">Tutti tipi</option>
-      <option value="PF">PF</option><option value="SP">SP</option>
-      <option value="SC">SC</option><option value="ASS">ASS</option>
+    <select class="select" id="glob-filtro-tipo" style="width:125px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per tipologia cliente">
+      <option value="">👥 Tutti tipi</option>
+      <option value="PF">👤 PF</option>
+      <option value="SP">🤝 SP</option>
+      <option value="SC">🏢 SC</option>
+      <option value="ASS">🏛️ ASS</option>
     </select>
-    <select class="select" id="glob-filtro-periodicita" style="width:130px" onchange="applyGlobaleFiltri()">
-      <option value="">Periodicità</option>
-      <option value="mensile">📅 Mensile</option><option value="trimestrale">📆 Trimestrale</option>
+    <select class="select" id="glob-filtro-periodicita" style="width:155px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per periodicità contabile">
+      <option value="">📅 Periodicità</option>
+      <option value="mensile">📅 Mensile</option>
+      <option value="trimestrale">📆 Trimestrale</option>
     </select>
-    <div class="search-wrap" style="width:190px">
+    <div class="search-wrap" style="width:200px">
       <span class="search-icon">🔍</span>
-      <input class="input" id="glob-search" placeholder="Cerca cliente..." oninput="applyGlobaleFiltriDebounced()">
+      <input class="input" id="glob-search" placeholder="Cerca cliente..." oninput="applyGlobaleFiltriDebounced()" title="Cerca per nome cliente, CF o P.IVA" style="font-size:13px">
     </div>
-    <button class="btn btn-print btn-sm" onclick="window.print()">🖨️ Stampa</button>`;
+    <button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" title="Azzera tutti i filtri e mostra tutto" style="font-size:13px">⟳ Tutti</button>
+    <button class="btn btn-print btn-sm" onclick="window.print()" title="Stampa la vista globale" style="font-size:13px">🖨️ Stampa</button>`;
   loadGlobale();
 }
 
@@ -72,18 +78,42 @@ function applyGlobaleFiltri() {
   loadGlobale();
 }
 
+function resetGlobaleFiltri() {
+  state.globalePreFiltroAdp = "";
+  ["glob-filtro-adp","glob-filtro-stato","glob-filtro-tipo","glob-filtro-periodicita","glob-search"]
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  loadGlobale();
+}
+
 function renderGlobaleHeader() {
   const st = state.globaleStats;
   if (!st) return;
   const adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
     const current = state.globalePreFiltroAdp || adpSel.value;
-    adpSel.innerHTML = `<option value="">Tutti adempimenti</option>` +
+    adpSel.innerHTML = `<option value="">📋 Tutti adempimenti</option>` +
       Array.from(st.adempimenti).sort()
         .map(a => `<option value="${escAttr(a)}" ${current===a?"selected":""}>${a}</option>`)
         .join("");
     if (state.globalePreFiltroAdp) state.globalePreFiltroAdp = "";
   }
+}
+
+// ─── NAVIGAZIONE ADEMPIMENTO PRECEDENTE/SUCCESSIVO ────────────
+function navigaAdempimento(direzione) {
+  const adpSel = document.getElementById("glob-filtro-adp");
+  if (!adpSel || !state.globaleStats) return;
+  const lista = Array.from(state.globaleStats.adempimenti).sort();
+  const current = adpSel.value;
+  const idx = lista.indexOf(current);
+  let newIdx;
+  if (direzione === -1) {
+    newIdx = idx <= 0 ? lista.length - 1 : idx - 1;
+  } else {
+    newIdx = idx >= lista.length - 1 || idx === -1 ? 0 : idx + 1;
+  }
+  adpSel.value = lista[newIdx];
+  applyGlobaleFiltri();
 }
 
 function renderGlobaleTabella(rawData) {
@@ -97,21 +127,44 @@ function renderGlobaleTabella(rawData) {
   });
 
   const perc = st.totale > 0 ? Math.round((st.comp / st.totale) * 100) : 0;
+
+  const adpSel = document.getElementById("glob-filtro-adp");
+  const adpFiltroAttivo = adpSel?.value || "";
+  const adpListaOrdinata = st.adempimenti ? Array.from(st.adempimenti).sort() : [];
+  const adpIdx = adpListaOrdinata.indexOf(adpFiltroAttivo);
+
+  const navAdpHtml = adpFiltroAttivo && adpListaOrdinata.length > 1
+    ? `<div class="glob-nav-adp" style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 16px;background:var(--surface3);border-radius:var(--r-sm);border:1px solid var(--border2)">
+        <button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(-1)" title="Adempimento precedente" style="font-size:13px">&#9664; Prec.</button>
+        <span style="flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--accent)">${adpFiltroAttivo}</span>
+        <span style="font-size:12px;color:var(--text3)">${adpIdx + 1} / ${adpListaOrdinata.length}</span>
+        <button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(1)" title="Adempimento successivo" style="font-size:13px">Succ. &#9654;</button>
+        <button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" title="Torna a vedere tutti gli adempimenti" style="margin-left:8px;font-size:13px">✕ Tutti</button>
+      </div>`
+    : "";
+
   const headerCard = `<div class="globale-preview-card">
-    <div class="gpc-left">
-      <div class="gpc-globe">🌐</div>
-      <div>
-        <div class="gpc-title">Vista Globale ${state.anno}</div>
-        <div class="gpc-sub">${st.clienti} clienti · ${st.adempimenti.size} tipi adempimenti</div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">
+      <div class="gpc-left">
+        <div class="gpc-globe" title="Vista globale di tutti i clienti">🌐</div>
+        <div>
+          <div class="gpc-title" style="font-size:17px">Vista Globale ${state.anno}</div>
+          <div class="gpc-sub" style="font-size:13px">${st.clienti} clienti · ${st.adempimenti.size} tipi adempimenti</div>
+        </div>
+      </div>
+      <div class="gpc-stats">
+        <div class="cpc-stat-item" title="Totale adempimenti"><div class="cpc-stat-num" style="color:var(--accent);font-size:24px">${st.totale}</div><div class="cpc-stat-lbl" style="font-size:11px">Totale</div></div>
+        <div class="cpc-stat-item" title="Completati"><div class="cpc-stat-num" style="color:var(--green);font-size:24px">${st.comp}</div><div class="cpc-stat-lbl" style="font-size:11px">Comp.</div></div>
+        <div class="cpc-stat-item" title="Da fare"><div class="cpc-stat-num" style="color:var(--red);font-size:24px">${st.daF}</div><div class="cpc-stat-lbl" style="font-size:11px">Da fare</div></div>
+        <div class="cpc-stat-item" title="In corso"><div class="cpc-stat-num" style="color:var(--yellow);font-size:24px">${st.inC}</div><div class="cpc-stat-lbl" style="font-size:11px">In corso</div></div>
+        <div class="cpc-stat-item" title="Percentuale completamento">
+          <div class="cpc-stat-num" style="color:var(--green);font-size:24px">${perc}%</div>
+          <div class="cpc-stat-lbl" style="font-size:11px">Progresso</div>
+          <div class="mini-bar" style="margin-top:4px;width:70px"><div class="mini-fill" style="width:${perc}%"></div></div>
+        </div>
       </div>
     </div>
-    <div class="gpc-stats">
-      <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--accent)">${st.totale}</div><div class="cpc-stat-lbl">Totale</div></div>
-      <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--green)">${st.comp}</div><div class="cpc-stat-lbl">Comp.</div></div>
-      <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--red)">${st.daF}</div><div class="cpc-stat-lbl">Da fare</div></div>
-      <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--yellow)">${st.inC}</div><div class="cpc-stat-lbl">In corso</div></div>
-      <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--green)">${perc}%</div><div class="cpc-stat-lbl">Progresso</div><div class="mini-bar" style="margin-top:4px;width:60px"><div class="mini-fill" style="width:${perc}%"></div></div></div>
-    </div>
+    ${navAdpHtml}
   </div>`;
 
   // Raggruppa per adempimento → poi per cliente con tutti i periodi
@@ -146,7 +199,7 @@ function renderGlobaleTabella(rawData) {
 
     const clientiHtml = Object.values(g.clienti).map(c => {
       const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
-      const avatar   = (c.nome || "?").charAt(0).toUpperCase();
+      const avatar   = getAvatar(c.nome);
       const compC = c.periodi.filter(r => r.stato === "completato").length;
       const totC  = c.periodi.length;
       const pC    = totC > 0 ? Math.round((compC / totC) * 100) : 0;
@@ -157,7 +210,7 @@ function renderGlobaleTabella(rawData) {
       if (c.col3) parts.push(col3Map[c.col3] || c.col3);
       if (c.periodicita) parts.push(c.periodicita === "mensile" ? "Mens." : "Trim.");
       const classInfo = parts.length
-        ? `<div style="font-size:9px;color:var(--text3);margin-top:2px;font-family:var(--mono)">${parts.join(" · ")}</div>`
+        ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono)">${parts.join(" · ")}</div>`
         : "";
 
       const periodiHtml = c.periodi.map(r => renderPeriodoPill(r)).join("");
@@ -165,46 +218,46 @@ function renderGlobaleTabella(rawData) {
 
       return `<div class="glob-cliente-card">
         <div class="glob-cliente-header">
-          <div class="gcr-avatar" style="border-color:${tipColor};color:${tipColor};background:${tipColor}15">${avatar}</div>
+          <div class="gcr-avatar" style="border-color:${tipColor};color:${tipColor};background:${tipColor}15;font-size:13px" title="${escAttr(c.nome)}">${avatar}</div>
           <div style="flex:1;min-width:0">
-            <div class="gcr-nome">${escAttr(c.nome)}</div>
-            <div class="gcr-cf">${c.cf || c.piva || "-"}</div>
+            <div class="gcr-nome" style="font-size:14px">${escAttr(c.nome)}</div>
+            <div class="gcr-cf" style="font-size:11px">${c.cf || c.piva || "-"}</div>
             ${classInfo}
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
-            <span class="badge b-${(c.tipologia_codice||"").toLowerCase()}">${c.tipologia_codice||"-"}</span>
-            ${c.periodicita ? `<span class="badge-per" style="font-size:9px">${c.periodicita==="mensile"?"📅":"📆"} ${c.periodicita==="mensile"?"Mens.":"Trim."}</span>` : ""}
+            <span class="badge b-${(c.tipologia_codice||"").toLowerCase()}" style="font-size:11px" title="${TIPOLOGIE_INFO[c.tipologia_codice]?.desc || ''}">${c.tipologia_codice||"-"}</span>
+            ${c.periodicita ? `<span class="badge-per" style="font-size:10px" title="Periodicità: ${c.periodicita}">${c.periodicita==="mensile"?"📅":"📆"} ${c.periodicita==="mensile"?"Mens.":"Trim."}</span>` : ""}
           </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-left:12px">
-            <div class="mini-bar" style="width:50px"><div class="mini-fill" style="width:${pC}%;background:${pgColor}"></div></div>
-            <span style="font-size:10px;font-family:var(--mono);color:${pgColor}">${compC}/${totC}</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-left:14px">
+            <div class="mini-bar" style="width:56px" title="${pC}% completato"><div class="mini-fill" style="width:${pC}%;background:${pgColor}"></div></div>
+            <span style="font-size:11px;font-family:var(--mono);color:${pgColor};min-width:36px;text-align:right" title="${compC} completati su ${totC}">${compC}/${totC}</span>
           </div>
         </div>
         <div class="glob-cliente-periodi${isMensile ? " periodi-mensili" : ""}">${periodiHtml}</div>
       </div>`;
     }).join("");
 
-    content += `<div class="table-wrap" style="margin-bottom:14px">
+    content += `<div class="table-wrap" style="margin-bottom:16px">
       <div class="table-header">
-        <div style="display:flex;align-items:center;gap:10px;flex:1">
-          <span style="font-size:16px">${catInfo?.icona || "📋"}</span>
+        <div style="display:flex;align-items:center;gap:12px;flex:1">
+          <span style="font-size:20px" title="${catInfo?.nome || g.categoria}">${catInfo?.icona || "📋"}</span>
           <div>
-            <span style="font-family:var(--mono);font-size:11px;color:${catColor};font-weight:700">${g.codice}</span>
-            <strong style="margin-left:8px">${g.nome}</strong>
-            <span class="badge b-categoria" style="margin-left:8px;color:${catColor};background:${catColor}15">${g.categoria}</span>
+            <span style="font-family:var(--mono);font-size:12px;color:${catColor};font-weight:700" title="Codice adempimento">${g.codice}</span>
+            <strong style="margin-left:10px;font-size:15px">${g.nome}</strong>
+            <span class="badge b-categoria" style="margin-left:10px;color:${catColor};background:${catColor}15;font-size:11px" title="Categoria: ${catInfo?.nome || g.categoria}">${g.categoria}</span>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="mini-bar" style="width:80px"><div class="mini-fill" style="width:${pG}%"></div></div>
-          <span style="font-size:11px;font-family:var(--mono);color:var(--text2)">${compG}/${totG} (${pG}%)</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="mini-bar" style="width:90px" title="${pG}% completato"><div class="mini-fill" style="width:${pG}%"></div></div>
+          <span style="font-size:12px;font-family:var(--mono);color:var(--text2)" title="${compG} completati su ${totG} (${pG}%)">${compG}/${totG} (${pG}%)</span>
         </div>
       </div>
-      <div style="padding:10px;display:flex;flex-direction:column;gap:6px">${clientiHtml}</div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:8px">${clientiHtml}</div>
     </div>`;
   });
 
   if (!content)
-    content = `<div class="empty"><div class="empty-icon">🌐</div><p>Nessun adempimento trovato per ${state.anno}</p></div>`;
+    content = `<div class="empty"><div class="empty-icon">🌐</div><p style="font-size:15px">Nessun adempimento trovato per ${state.anno}</p></div>`;
 
   document.getElementById("content").innerHTML = headerCard + content;
 }
