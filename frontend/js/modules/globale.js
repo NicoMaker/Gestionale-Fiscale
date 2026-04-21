@@ -47,6 +47,11 @@ function renderGlobalePage() {
     </div>
     <button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" title="Azzera tutti i filtri e mostra tutto" style="font-size:13px">⟳ Tutti</button>
     <button class="btn btn-print btn-sm" onclick="window.print()" title="Stampa la vista globale" style="font-size:13px">🖨️ Stampa</button>`;
+
+  // FIX: Inizializza subito la searchable select per il filtro adempimenti
+  // (verrà popolata in renderGlobaleHeader quando arrivano i dati)
+  setTimeout(() => initSearchableSelect("glob-filtro-adp"), 50);
+
   loadGlobale();
 }
 
@@ -86,7 +91,13 @@ function applyGlobaleFiltriLocali() {
 function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
   ["glob-filtro-adp","glob-filtro-stato","glob-filtro-tipo","glob-filtro-periodicita","glob-filtro-cliente-stato","glob-search"]
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.value = "";
+        if (el._ssRefresh) el._ssRefresh();
+      }
+    });
   loadGlobale();
 }
 
@@ -96,10 +107,19 @@ function renderGlobaleHeader() {
   const adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
     const current = state.globalePreFiltroAdp || adpSel.value;
+    // Ricostruisce le opzioni native
     adpSel.innerHTML = `<option value="">📋 Tutti adempimenti</option>` +
       Array.from(st.adempimenti).sort()
         .map(a => `<option value="${escAttr(a)}" ${current===a?"selected":""}>${a}</option>`)
         .join("");
+
+    // FIX: inizializza o aggiorna la searchable select
+    if (!adpSel.dataset.ssinit) {
+      initSearchableSelect("glob-filtro-adp");
+    } else if (adpSel._ssRefresh) {
+      adpSel._ssRefresh();
+    }
+
     if (state.globalePreFiltroAdp) state.globalePreFiltroAdp = "";
   }
 }
@@ -118,11 +138,12 @@ function navigaAdempimento(direzione) {
     newIdx = idx >= lista.length - 1 || idx === -1 ? 0 : idx + 1;
   }
   adpSel.value = lista[newIdx];
+  // Aggiorna anche il trigger della searchable select
+  if (adpSel._ssRefresh) adpSel._ssRefresh();
   applyGlobaleFiltri();
 }
 
 // ─── FILTRO CLIENTE PER SITUAZIONE ────────────────────────────
-// Restituisce true se il cliente (con i suoi periodi) passa il filtro
 function clientePassaFiltroStato(periodi, filtroClienteStato) {
   if (!filtroClienteStato) return true;
   const hasInCorso    = periodi.some(r => r.stato === "in_corso");
@@ -163,7 +184,6 @@ function renderGlobaleTabella(rawData) {
   const adpListaOrdinata = st.adempimenti ? Array.from(st.adempimenti).sort() : [];
   const adpIdx = adpListaOrdinata.indexOf(adpFiltroAttivo);
 
-  // Badge filtro cliente-stato attivo
   const filtroClienteStatoLabels = {
     con_in_corso:     "🔄 Con almeno 1 in corso",
     senza_in_corso:   "✅ Senza in corso",
@@ -241,12 +261,11 @@ function renderGlobaleTabella(rawData) {
   let totalClientiVisibili = 0;
 
   Object.values(grouped).forEach(g => {
-    // Filtra i clienti in base al filtro-cliente-stato (lato client)
     const clientiFiltrati = Object.values(g.clienti).filter(c =>
       clientePassaFiltroStato(c.periodi, filtroClienteStato)
     );
 
-    if (!clientiFiltrati.length) return; // salta questo adempimento se nessun cliente passa il filtro
+    if (!clientiFiltrati.length) return;
 
     const allRows = clientiFiltrati.flatMap(c => c.periodi);
     const compG = allRows.filter(r => r.stato === "completato").length;
@@ -268,7 +287,6 @@ function renderGlobaleTabella(rawData) {
       const pC    = totC > 0 ? Math.round((compC / totC) * 100) : 0;
       const pgColor = pC === 100 ? "var(--green)" : pC > 50 ? "var(--yellow)" : "var(--red)";
 
-      // Mini badge situazione cliente (visibili solo se rilevanti)
       const situazioneBadges = [];
       if (compC > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px" title="${compC} completati">✅ ${compC}</span>`);
       if (inCC  > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px" title="${inCC} in corso">🔄 ${inCC}</span>`);

@@ -53,6 +53,7 @@ function renderAdpRiepilogoCliente(data) {
       <span class="riepilogo-adp-header-icon">📋</span>
       <span class="riepilogo-adp-header-title">Riepilogo Adempimenti</span>
       <span class="riepilogo-adp-header-sub">${Object.keys(adpMap).length} adempimenti · Anno ${state.anno}</span>
+      <span style="font-size:11px;color:var(--text3);margin-left:8px">— clicca una card per filtrare</span>
     </div>
     <div class="riepilogo-adp-body">`;
 
@@ -75,8 +76,13 @@ function renderAdpRiepilogoCliente(data) {
       const tot     = g.rows.length;
       const p       = tot > 0 ? Math.round((comp / tot) * 100) : 0;
       const pgColor = p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
+      // FIX: id_adempimento per filtrare al click
+      const idAdp = g.rows[0]?.id_adempimento;
 
-      html += `<div class="riepilogo-adp-card" title="${escAttr(g.nome)} — ${g.scadenza_tipo}">
+      html += `<div class="riepilogo-adp-card" 
+        onclick="filtraScadPerAdp(${idAdp})" 
+        title="Clicca per filtrare: ${escAttr(g.nome)}" 
+        style="cursor:pointer">
         <div class="riepilogo-adp-card-top">
           <span class="riepilogo-adp-codice">${g.codice}</span>
           <span class="riepilogo-adp-scad">${scadIcons[g.scadenza_tipo]||"📅"} ${g.scadenza_tipo}</span>
@@ -100,6 +106,20 @@ function renderAdpRiepilogoCliente(data) {
 
   html += `</div></div>`;
   return html;
+}
+
+// FIX: Funzione per filtrare lo scadenzario cliccando dal riepilogo
+function filtraScadPerAdp(idAdp) {
+  const sel = document.getElementById("scad-filtro-adp");
+  if (!sel) return;
+  sel.value = idAdp ? String(idAdp) : "";
+  // Aggiorna il trigger della searchable select se presente
+  if (sel._ssRefresh) sel._ssRefresh();
+  // Applica il filtro lato client (senza reload da server)
+  applyScadFiltriAdp();
+  // Scorri fino alla sezione scadenzario
+  const scadContent = document.getElementById("scad-content");
+  if (scadContent) scadContent.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // ─── AGGIORNA SELECT ADEMPIMENTO FILTRO (lato client, searchable) ─
@@ -278,11 +298,23 @@ function renderScadenzarioTabella(data) {
     generaBtnTitle = `Genera ${mancanti.length} adempimento/i mancante/i per l'anno selezionato`;
   }
 
+  // Indicatore filtro attivo per adempimento
+  const adpFiltroAttivo = adpFiltroId
+    ? data.find(r => String(r.id_adempimento) === String(adpFiltroId))?.adempimento_nome || ""
+    : "";
+  const filtroBadge = adpFiltroAttivo
+    ? `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">
+        🔍 ${escAttr(adpFiltroAttivo)}
+        <button onclick="resetScadFiltri()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi filtro">✕</button>
+      </span>`
+    : "";
+
   const clienteCard = `<div class="cliente-preview-card" style="border-left-color:${tipColor}">
     <div class="cpc-inner">
       <div class="cpc-avatar" style="border-color:${tipColor};color:${tipColor};background:${tipColor}22">${avatar}</div>
       <div class="cpc-info">
         <div class="cpc-nome">${escAttr(c.nome)}</div>
+        ${filtroBadge ? `<div style="margin-top:6px">${filtroBadge}</div>` : ""}
         <div class="cpc-badges">
           <span class="badge b-${(c.tipologia_codice||"").toLowerCase()}" title="${TIPOLOGIE_INFO[c.tipologia_codice]?.desc||''}">${c.tipologia_codice||"-"}</span>
           ${sottotipoLabel ? `<span class="badge b-categoria">${sottotipoLabel}</span>` : ""}
@@ -444,12 +476,9 @@ function refreshAddAdpSelect() {
     .map(a => `<option value="${a.id}" data-scadenza="${a.scadenza_tipo}">${a.codice} — ${a.nome}</option>`)
     .join("");
 
-  // Inizializza o reinizializza la select con ricerca
   if (!sel.dataset.ssinit) {
-    // Prima volta: inizializza
     initSearchableSelect("add-adp-select");
   } else {
-    // Già inizializzata: aggiorna il trigger al primo elemento
     if (sel._ssRefresh) sel._ssRefresh();
   }
 
