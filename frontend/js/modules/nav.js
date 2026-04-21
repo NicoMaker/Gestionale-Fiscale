@@ -16,7 +16,7 @@ function initSearchableSelect(selectId) {
   // Wrapper
   const wrap = document.createElement("div");
   wrap.className = "ss-wrap";
-  wrap.style.cssText = `position:relative;display:inline-block;min-width:${sel.style.minWidth||"160px"};max-width:${sel.style.maxWidth||"260px"};width:${sel.style.width||"auto"}`;
+  wrap.style.cssText = `position:relative;display:inline-block;min-width:${sel.style.minWidth || "160px"};max-width:${sel.style.maxWidth || "260px"};width:${sel.style.width || "auto"}`;
   sel.parentNode.insertBefore(wrap, sel);
   wrap.appendChild(sel);
 
@@ -46,26 +46,35 @@ function initSearchableSelect(selectId) {
 
   // Raccoglie tutte le opzioni originali
   function getAllOptions() {
-    return Array.from(sel.options).map(o => ({ value: o.value, text: o.text }));
+    return Array.from(sel.options).map((o) => ({
+      value: o.value,
+      text: o.text,
+    }));
   }
 
   function renderList(q) {
     const opts = getAllOptions();
-    const filtered = q ? opts.filter(o => o.text.toLowerCase().includes(q.toLowerCase())) : opts;
+    const filtered = q
+      ? opts.filter((o) => o.text.toLowerCase().includes(q.toLowerCase()))
+      : opts;
     list.innerHTML = "";
     if (!filtered.length) {
       list.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3);font-size:13px">Nessun risultato</div>`;
       return;
     }
-    filtered.forEach(o => {
+    filtered.forEach((o) => {
       const item = document.createElement("div");
       item.className = "ss-item";
       item.dataset.value = o.value;
       const isSelected = String(o.value) === String(sel.value);
       item.style.cssText = `padding:9px 14px;cursor:pointer;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.1s;${isSelected ? "background:var(--accent-dim);color:var(--accent);font-weight:700" : ""}`;
       item.textContent = o.text;
-      item.addEventListener("mouseover", () => { if (!isSelected) item.style.background = "var(--surface3)"; });
-      item.addEventListener("mouseout",  () => { if (!isSelected) item.style.background = ""; });
+      item.addEventListener("mouseover", () => {
+        if (!isSelected) item.style.background = "var(--surface3)";
+      });
+      item.addEventListener("mouseout", () => {
+        if (!isSelected) item.style.background = "";
+      });
       item.addEventListener("click", () => {
         sel.value = o.value;
         sel.dispatchEvent(new Event("change", { bubbles: true }));
@@ -107,7 +116,7 @@ function initSearchableSelect(selectId) {
   });
 
   // Espone metodo per aggiornare il trigger quando la select cambia dall'esterno
-  sel._ssRefresh = function() {
+  sel._ssRefresh = function () {
     const opt = sel.options[sel.selectedIndex];
     if (opt) trigger.querySelector(".ss-trigger-label").textContent = opt.text;
   };
@@ -118,7 +127,9 @@ function initNav() {
   document.querySelectorAll(".nav-item").forEach((el) => {
     if (el.dataset.page)
       el.addEventListener("click", () => {
-        document.querySelectorAll(".nav-item").forEach((x) => x.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((x) => x.classList.remove("active"));
         el.classList.add("active");
         renderPage(el.dataset.page);
       });
@@ -139,7 +150,9 @@ function initNav() {
   // Chiusura modal con Escape
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape")
-      document.querySelectorAll(".modal-overlay.open").forEach((m) => m.classList.remove("open"));
+      document
+        .querySelectorAll(".modal-overlay.open")
+        .forEach((m) => m.classList.remove("open"));
   });
 }
 
@@ -151,12 +164,12 @@ function renderPage(page) {
   scrollToTop();
 
   const titles = {
-    dashboard:           "Dashboard",
-    clienti:             "Clienti",
-    scadenzario:         "Scadenzario Cliente",
+    dashboard: "Dashboard",
+    clienti: "Clienti",
+    scadenzario: "Scadenzario Cliente",
     scadenzario_globale: "Vista Globale",
-    adempimenti:         "Adempimenti Fiscali",
-    tipologie:           "Tipologie Clienti",
+    adempimenti: "Adempimenti Fiscali",
+    tipologie: "Tipologie Clienti",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
 
@@ -172,7 +185,6 @@ function renderPage(page) {
       <button class="btn btn-cyan btn-sm no-print"   onclick="openCopiaTutti()" title="Copia adempimenti da un anno all'altro" style="font-size:13px">📋 Copia Anno</button>
       <button class="btn btn-print btn-sm"           onclick="window.print()" title="Stampa la pagina corrente" style="font-size:13px">🖨️ Stampa</button>`;
     socket.emit("get:stats", { anno: state.anno });
-
   } else if (page === "clienti") {
     state._pending = "clienti";
     document.getElementById("topbar-actions").innerHTML = `
@@ -184,15 +196,12 @@ function renderPage(page) {
       <button class="btn btn-print btn-sm no-print" onclick="window.print()" title="Stampa lista clienti" style="font-size:13px">🖨️ Stampa</button>
       <button class="btn btn-primary no-print" onclick="openNuovoCliente()" title="Aggiungi un nuovo cliente" style="font-size:13px">+ Nuovo Cliente</button>`;
     socket.emit("get:clienti");
-
   } else if (page === "scadenzario") {
     state._pending = "scadenzario";
     document.getElementById("topbar-actions").innerHTML = "";
     socket.emit("get:clienti");
-
   } else if (page === "scadenzario_globale") {
     renderGlobalePage();
-
   } else if (page === "adempimenti") {
     state._pending = "adempimenti";
     document.getElementById("topbar-actions").innerHTML = `
@@ -207,7 +216,6 @@ function renderPage(page) {
       <button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" title="Mostra tutti gli adempimenti" style="font-size:13px">⟳ Tutti</button>
       <button class="btn btn-primary no-print" onclick="openNuovoAdpDef()" title="Crea un nuovo tipo di adempimento" style="font-size:13px">+ Nuovo</button>`;
     socket.emit("get:adempimenti");
-
   } else if (page === "tipologie") {
     document.getElementById("topbar-actions").innerHTML = "";
     renderTipologiePage();
@@ -221,7 +229,9 @@ function refreshPage() {
 // ─── CAMBIO ANNO (DASHBOARD) ──────────────────────────────────
 function changeAnno(d) {
   state.anno += d;
-  document.querySelectorAll(".year-num").forEach((el) => (el.textContent = state.anno));
+  document
+    .querySelectorAll(".year-num")
+    .forEach((el) => (el.textContent = state.anno));
   if (state.page === "dashboard") {
     state._dashRendered = false;
     socket.emit("get:stats", { anno: state.anno });

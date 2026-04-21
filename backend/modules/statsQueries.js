@@ -1,8 +1,11 @@
-const { queryAll, queryOne } = require('./database');
+const { queryAll, queryOne } = require("./database");
 
 function getStats(anno) {
-  const totClienti = queryOne(`SELECT COUNT(*) as c FROM clienti WHERE attivo=1`).c;
-  const adpStats = queryAll(`
+  const totClienti = queryOne(
+    `SELECT COUNT(*) as c FROM clienti WHERE attivo=1`,
+  ).c;
+  const adpStats = queryAll(
+    `
     SELECT 
       a.codice,
       a.nome,
@@ -15,9 +18,12 @@ function getStats(anno) {
     WHERE a.attivo=1
     GROUP BY a.id
     ORDER BY a.categoria, a.nome
-  `, [anno]);
+  `,
+    [anno],
+  );
 
-  const totali = queryOne(`
+  const totali = queryOne(
+    `
     SELECT 
       COUNT(*) as totale,
       SUM(CASE WHEN stato='completato' THEN 1 ELSE 0 END) as completati,
@@ -25,7 +31,9 @@ function getStats(anno) {
       SUM(CASE WHEN stato='in_corso' THEN 1 ELSE 0 END) as in_corso,
       SUM(CASE WHEN stato='n_a' THEN 1 ELSE 0 END) as na
     FROM adempimenti_cliente WHERE anno=?
-  `, [anno]);
+  `,
+    [anno],
+  );
 
   return {
     anno,

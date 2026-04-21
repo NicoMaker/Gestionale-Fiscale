@@ -4,12 +4,19 @@
 
 function calcolaGlobaleStats(data) {
   const totale = data.length;
-  const comp   = data.filter(r => r.stato === "completato").length;
-  const daF    = data.filter(r => r.stato === "da_fare").length;
-  const inC    = data.filter(r => r.stato === "in_corso").length;
-  const clientiSet = new Set(data.map(r => r.cliente_id));
-  const adpSet     = new Set(data.map(r => r.adempimento_nome));
-  return { totale, comp, daF, inC, clienti: clientiSet.size, adempimenti: adpSet };
+  const comp = data.filter((r) => r.stato === "completato").length;
+  const daF = data.filter((r) => r.stato === "da_fare").length;
+  const inC = data.filter((r) => r.stato === "in_corso").length;
+  const clientiSet = new Set(data.map((r) => r.cliente_id));
+  const adpSet = new Set(data.map((r) => r.adempimento_nome));
+  return {
+    totale,
+    comp,
+    daF,
+    inC,
+    clienti: clientiSet.size,
+    adempimenti: adpSet,
+  };
 }
 
 function renderGlobalePage() {
@@ -57,18 +64,20 @@ function renderGlobalePage() {
 
 function changeAnnoGlobale(d) {
   state.anno += d;
-  document.querySelectorAll(".year-num").forEach(el => el.textContent = state.anno);
+  document
+    .querySelectorAll(".year-num")
+    .forEach((el) => (el.textContent = state.anno));
   loadGlobale();
 }
 
 function loadGlobale() {
   const filtri = {};
-  const adpSel   = document.getElementById("glob-filtro-adp")?.value;
+  const adpSel = document.getElementById("glob-filtro-adp")?.value;
   const statoSel = document.getElementById("glob-filtro-stato")?.value;
-  const search   = document.getElementById("glob-search")?.value;
-  if (adpSel)   filtri.adempimento = adpSel;
+  const search = document.getElementById("glob-search")?.value;
+  if (adpSel) filtri.adempimento = adpSel;
   if (statoSel) filtri.stato = statoSel;
-  if (search)   filtri.search = search;
+  if (search) filtri.search = search;
   if (state.globalePreFiltroAdp) filtri.adempimento = state.globalePreFiltroAdp;
   socket.emit("get:scadenzario_globale", { anno: state.anno, filtri });
 }
@@ -90,14 +99,20 @@ function applyGlobaleFiltriLocali() {
 
 function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
-  ["glob-filtro-adp","glob-filtro-stato","glob-filtro-tipo","glob-filtro-periodicita","glob-filtro-cliente-stato","glob-search"]
-    .forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.value = "";
-        if (el._ssRefresh) el._ssRefresh();
-      }
-    });
+  [
+    "glob-filtro-adp",
+    "glob-filtro-stato",
+    "glob-filtro-tipo",
+    "glob-filtro-periodicita",
+    "glob-filtro-cliente-stato",
+    "glob-search",
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = "";
+      if (el._ssRefresh) el._ssRefresh();
+    }
+  });
   loadGlobale();
 }
 
@@ -108,9 +123,14 @@ function renderGlobaleHeader() {
   if (adpSel) {
     const current = state.globalePreFiltroAdp || adpSel.value;
     // Ricostruisce le opzioni native
-    adpSel.innerHTML = `<option value="">📋 Tutti adempimenti</option>` +
-      Array.from(st.adempimenti).sort()
-        .map(a => `<option value="${escAttr(a)}" ${current===a?"selected":""}>${a}</option>`)
+    adpSel.innerHTML =
+      `<option value="">📋 Tutti adempimenti</option>` +
+      Array.from(st.adempimenti)
+        .sort()
+        .map(
+          (a) =>
+            `<option value="${escAttr(a)}" ${current === a ? "selected" : ""}>${a}</option>`,
+        )
         .join("");
 
     // FIX: inizializza o aggiorna la searchable select
@@ -146,34 +166,46 @@ function navigaAdempimento(direzione) {
 // ─── FILTRO CLIENTE PER SITUAZIONE ────────────────────────────
 function clientePassaFiltroStato(periodi, filtroClienteStato) {
   if (!filtroClienteStato) return true;
-  const hasInCorso    = periodi.some(r => r.stato === "in_corso");
-  const hasDaFare     = periodi.some(r => r.stato === "da_fare");
-  const hasCompletato = periodi.some(r => r.stato === "completato");
-  const hasNA         = periodi.some(r => r.stato === "n_a");
-  const tuttiComp     = periodi.every(r => r.stato === "completato" || r.stato === "n_a");
-  const nessunAvanz   = periodi.every(r => r.stato === "da_fare");
+  const hasInCorso = periodi.some((r) => r.stato === "in_corso");
+  const hasDaFare = periodi.some((r) => r.stato === "da_fare");
+  const hasCompletato = periodi.some((r) => r.stato === "completato");
+  const hasNA = periodi.some((r) => r.stato === "n_a");
+  const tuttiComp = periodi.every(
+    (r) => r.stato === "completato" || r.stato === "n_a",
+  );
+  const nessunAvanz = periodi.every((r) => r.stato === "da_fare");
 
   switch (filtroClienteStato) {
-    case "con_in_corso":     return hasInCorso;
-    case "senza_in_corso":   return !hasInCorso;
-    case "tutti_completati": return tuttiComp;
-    case "con_da_fare":      return hasDaFare;
-    case "solo_da_fare":     return nessunAvanz;
-    case "non_completati":   return !tuttiComp;
-    case "con_na":           return hasNA;
-    default:                 return true;
+    case "con_in_corso":
+      return hasInCorso;
+    case "senza_in_corso":
+      return !hasInCorso;
+    case "tutti_completati":
+      return tuttiComp;
+    case "con_da_fare":
+      return hasDaFare;
+    case "solo_da_fare":
+      return nessunAvanz;
+    case "non_completati":
+      return !tuttiComp;
+    case "con_na":
+      return hasNA;
+    default:
+      return true;
   }
 }
 
 function renderGlobaleTabella(rawData) {
   const st = state.globaleStats;
-  const filtroTipo        = document.getElementById("glob-filtro-tipo")?.value || "";
-  const filtroPer         = document.getElementById("glob-filtro-periodicita")?.value || "";
-  const filtroClienteStato = document.getElementById("glob-filtro-cliente-stato")?.value || "";
+  const filtroTipo = document.getElementById("glob-filtro-tipo")?.value || "";
+  const filtroPer =
+    document.getElementById("glob-filtro-periodicita")?.value || "";
+  const filtroClienteStato =
+    document.getElementById("glob-filtro-cliente-stato")?.value || "";
 
-  const data = rawData.filter(r => {
+  const data = rawData.filter((r) => {
     if (filtroTipo && r.cliente_tipologia_codice !== filtroTipo) return false;
-    if (filtroPer  && r.cliente_periodicita !== filtroPer) return false;
+    if (filtroPer && r.cliente_periodicita !== filtroPer) return false;
     return true;
   });
 
@@ -181,17 +213,19 @@ function renderGlobaleTabella(rawData) {
 
   const adpSel = document.getElementById("glob-filtro-adp");
   const adpFiltroAttivo = adpSel?.value || "";
-  const adpListaOrdinata = st.adempimenti ? Array.from(st.adempimenti).sort() : [];
+  const adpListaOrdinata = st.adempimenti
+    ? Array.from(st.adempimenti).sort()
+    : [];
   const adpIdx = adpListaOrdinata.indexOf(adpFiltroAttivo);
 
   const filtroClienteStatoLabels = {
-    con_in_corso:     "🔄 Con almeno 1 in corso",
-    senza_in_corso:   "✅ Senza in corso",
+    con_in_corso: "🔄 Con almeno 1 in corso",
+    senza_in_corso: "✅ Senza in corso",
     tutti_completati: "🏆 Tutto completato",
-    con_da_fare:      "⭕ Con almeno 1 da fare",
-    solo_da_fare:     "🚨 Solo da fare",
-    non_completati:   "⚠️ Non al 100%",
-    con_na:           "➖ Con almeno 1 N/A",
+    con_da_fare: "⭕ Con almeno 1 da fare",
+    solo_da_fare: "🚨 Solo da fare",
+    non_completati: "⚠️ Non al 100%",
+    con_na: "➖ Con almeno 1 N/A",
   };
   const filtroClienteStatoBadge = filtroClienteStato
     ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;background:var(--yellow)18;border:1px solid var(--yellow)44;border-radius:20px;font-size:12px;color:var(--yellow)">
@@ -201,15 +235,16 @@ function renderGlobaleTabella(rawData) {
       </div>`
     : "";
 
-  const navAdpHtml = adpFiltroAttivo && adpListaOrdinata.length > 1
-    ? `<div class="glob-nav-adp" style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 16px;background:var(--surface3);border-radius:var(--r-sm);border:1px solid var(--border2)">
+  const navAdpHtml =
+    adpFiltroAttivo && adpListaOrdinata.length > 1
+      ? `<div class="glob-nav-adp" style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 16px;background:var(--surface3);border-radius:var(--r-sm);border:1px solid var(--border2)">
         <button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(-1)" title="Adempimento precedente" style="font-size:13px">&#9664; Prec.</button>
         <span style="flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--accent)">${adpFiltroAttivo}</span>
         <span style="font-size:12px;color:var(--text3)">${adpIdx + 1} / ${adpListaOrdinata.length}</span>
         <button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(1)" title="Adempimento successivo" style="font-size:13px">Succ. &#9654;</button>
         <button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" title="Torna a vedere tutti gli adempimenti" style="margin-left:8px;font-size:13px">✕ Tutti</button>
       </div>`
-    : "";
+      : "";
 
   const headerCard = `<div class="globale-preview-card">
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">
@@ -238,73 +273,116 @@ function renderGlobaleTabella(rawData) {
 
   // Raggruppa per adempimento → poi per cliente con tutti i periodi
   const grouped = {};
-  data.forEach(r => {
+  data.forEach((r) => {
     storeRow(r);
     const adpKey = r.adempimento_nome;
     if (!grouped[adpKey])
-      grouped[adpKey] = { nome: r.adempimento_nome, codice: r.adempimento_codice, categoria: r.categoria, clienti: {} };
+      grouped[adpKey] = {
+        nome: r.adempimento_nome,
+        codice: r.adempimento_codice,
+        categoria: r.categoria,
+        clienti: {},
+      };
     const cliKey = r.cliente_id;
     if (!grouped[adpKey].clienti[cliKey])
       grouped[adpKey].clienti[cliKey] = {
-        id: r.cliente_id, nome: r.cliente_nome, cf: r.cliente_cf, piva: r.cliente_piva,
-        tipologia_codice: r.cliente_tipologia_codice, tipologia_colore: r.cliente_tipologia_colore,
-        sottotipologia_nome: r.cliente_sottotipologia_nome, periodicita: r.cliente_periodicita,
-        col2: r.cliente_col2, col3: r.cliente_col3, periodi: [],
+        id: r.cliente_id,
+        nome: r.cliente_nome,
+        cf: r.cliente_cf,
+        piva: r.cliente_piva,
+        tipologia_codice: r.cliente_tipologia_codice,
+        tipologia_colore: r.cliente_tipologia_colore,
+        sottotipologia_nome: r.cliente_sottotipologia_nome,
+        periodicita: r.cliente_periodicita,
+        col2: r.cliente_col2,
+        col3: r.cliente_col3,
+        periodi: [],
       };
     grouped[adpKey].clienti[cliKey].periodi.push(r);
   });
 
-  const col2Map = { privato: "Privato", ditta: "Ditta Ind.", socio: "Socio", professionista: "Prof." };
-  const col3Map = { ordinario: "Ord.", semplificato: "Sempl.", forfettario: "Forf.", ordinaria: "Ord.", semplificata: "Sempl." };
+  const col2Map = {
+    privato: "Privato",
+    ditta: "Ditta Ind.",
+    socio: "Socio",
+    professionista: "Prof.",
+  };
+  const col3Map = {
+    ordinario: "Ord.",
+    semplificato: "Sempl.",
+    forfettario: "Forf.",
+    ordinaria: "Ord.",
+    semplificata: "Sempl.",
+  };
 
   let content = "";
   let totalClientiVisibili = 0;
 
-  Object.values(grouped).forEach(g => {
-    const clientiFiltrati = Object.values(g.clienti).filter(c =>
-      clientePassaFiltroStato(c.periodi, filtroClienteStato)
+  Object.values(grouped).forEach((g) => {
+    const clientiFiltrati = Object.values(g.clienti).filter((c) =>
+      clientePassaFiltroStato(c.periodi, filtroClienteStato),
     );
 
     if (!clientiFiltrati.length) return;
 
-    const allRows = clientiFiltrati.flatMap(c => c.periodi);
-    const compG = allRows.filter(r => r.stato === "completato").length;
-    const totG  = allRows.length;
-    const pG    = totG > 0 ? Math.round((compG / totG) * 100) : 0;
-    const catInfo  = CATEGORIE.find(x => x.codice === g.categoria);
+    const allRows = clientiFiltrati.flatMap((c) => c.periodi);
+    const compG = allRows.filter((r) => r.stato === "completato").length;
+    const totG = allRows.length;
+    const pG = totG > 0 ? Math.round((compG / totG) * 100) : 0;
+    const catInfo = CATEGORIE.find((x) => x.codice === g.categoria);
     const catColor = catInfo?.color || "var(--accent)";
 
     totalClientiVisibili += clientiFiltrati.length;
 
-    const clientiHtml = clientiFiltrati.map(c => {
-      const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
-      const avatar   = getAvatar(c.nome);
-      const compC = c.periodi.filter(r => r.stato === "completato").length;
-      const inCC  = c.periodi.filter(r => r.stato === "in_corso").length;
-      const daFC  = c.periodi.filter(r => r.stato === "da_fare").length;
-      const naC   = c.periodi.filter(r => r.stato === "n_a").length;
-      const totC  = c.periodi.length;
-      const pC    = totC > 0 ? Math.round((compC / totC) * 100) : 0;
-      const pgColor = pC === 100 ? "var(--green)" : pC > 50 ? "var(--yellow)" : "var(--red)";
+    const clientiHtml = clientiFiltrati
+      .map((c) => {
+        const tipColor =
+          c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
+        const avatar = getAvatar(c.nome);
+        const compC = c.periodi.filter((r) => r.stato === "completato").length;
+        const inCC = c.periodi.filter((r) => r.stato === "in_corso").length;
+        const daFC = c.periodi.filter((r) => r.stato === "da_fare").length;
+        const naC = c.periodi.filter((r) => r.stato === "n_a").length;
+        const totC = c.periodi.length;
+        const pC = totC > 0 ? Math.round((compC / totC) * 100) : 0;
+        const pgColor =
+          pC === 100
+            ? "var(--green)"
+            : pC > 50
+              ? "var(--yellow)"
+              : "var(--red)";
 
-      const situazioneBadges = [];
-      if (compC > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px" title="${compC} completati">✅ ${compC}</span>`);
-      if (inCC  > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px" title="${inCC} in corso">🔄 ${inCC}</span>`);
-      if (daFC  > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px" title="${daFC} da fare">⭕ ${daFC}</span>`);
-      if (naC   > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--text3);background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:1px 6px" title="${naC} N/A">➖ ${naC}</span>`);
+        const situazioneBadges = [];
+        if (compC > 0)
+          situazioneBadges.push(
+            `<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px" title="${compC} completati">✅ ${compC}</span>`,
+          );
+        if (inCC > 0)
+          situazioneBadges.push(
+            `<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px" title="${inCC} in corso">🔄 ${inCC}</span>`,
+          );
+        if (daFC > 0)
+          situazioneBadges.push(
+            `<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px" title="${daFC} da fare">⭕ ${daFC}</span>`,
+          );
+        if (naC > 0)
+          situazioneBadges.push(
+            `<span style="font-size:10px;color:var(--text3);background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:1px 6px" title="${naC} N/A">➖ ${naC}</span>`,
+          );
 
-      const parts = [];
-      if (c.col2) parts.push(col2Map[c.col2] || c.col2);
-      if (c.col3) parts.push(col3Map[c.col3] || c.col3);
-      if (c.periodicita) parts.push(c.periodicita === "mensile" ? "Mens." : "Trim.");
-      const classInfo = parts.length
-        ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono)">${parts.join(" · ")}</div>`
-        : "";
+        const parts = [];
+        if (c.col2) parts.push(col2Map[c.col2] || c.col2);
+        if (c.col3) parts.push(col3Map[c.col3] || c.col3);
+        if (c.periodicita)
+          parts.push(c.periodicita === "mensile" ? "Mens." : "Trim.");
+        const classInfo = parts.length
+          ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono)">${parts.join(" · ")}</div>`
+          : "";
 
-      const periodiHtml = c.periodi.map(r => renderPeriodoPill(r)).join("");
-      const isMensile = c.periodi.length > 4;
+        const periodiHtml = c.periodi.map((r) => renderPeriodoPill(r)).join("");
+        const isMensile = c.periodi.length > 4;
 
-      return `<div class="glob-cliente-card">
+        return `<div class="glob-cliente-card">
         <div class="glob-cliente-header">
           <div class="gcr-avatar" style="border-color:${tipColor};color:${tipColor};background:${tipColor}15;font-size:13px" title="${escAttr(c.nome)}">${avatar}</div>
           <div style="flex:1;min-width:0">
@@ -314,8 +392,8 @@ function renderGlobaleTabella(rawData) {
             ${situazioneBadges.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${situazioneBadges.join("")}</div>` : ""}
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
-            <span class="badge b-${(c.tipologia_codice||"").toLowerCase()}" style="font-size:11px" title="${TIPOLOGIE_INFO[c.tipologia_codice]?.desc || ''}">${c.tipologia_codice||"-"}</span>
-            ${c.periodicita ? `<span class="badge-per" style="font-size:10px" title="Periodicità: ${c.periodicita}">${c.periodicita==="mensile"?"📅":"📆"} ${c.periodicita==="mensile"?"Mens.":"Trim."}</span>` : ""}
+            <span class="badge b-${(c.tipologia_codice || "").toLowerCase()}" style="font-size:11px" title="${TIPOLOGIE_INFO[c.tipologia_codice]?.desc || ""}">${c.tipologia_codice || "-"}</span>
+            ${c.periodicita ? `<span class="badge-per" style="font-size:10px" title="Periodicità: ${c.periodicita}">${c.periodicita === "mensile" ? "📅" : "📆"} ${c.periodicita === "mensile" ? "Mens." : "Trim."}</span>` : ""}
           </div>
           <div style="display:flex;align-items:center;gap:8px;margin-left:14px">
             <div class="mini-bar" style="width:56px" title="${pC}% completato"><div class="mini-fill" style="width:${pC}%;background:${pgColor}"></div></div>
@@ -324,7 +402,8 @@ function renderGlobaleTabella(rawData) {
         </div>
         <div class="glob-cliente-periodi${isMensile ? " periodi-mensili" : ""}">${periodiHtml}</div>
       </div>`;
-    }).join("");
+      })
+      .join("");
 
     content += `<div class="table-wrap" style="margin-bottom:16px">
       <div class="table-header">
@@ -334,7 +413,7 @@ function renderGlobaleTabella(rawData) {
             <span style="font-family:var(--mono);font-size:12px;color:${catColor};font-weight:700" title="Codice adempimento">${g.codice}</span>
             <strong style="margin-left:10px;font-size:15px">${g.nome}</strong>
             <span class="badge b-categoria" style="margin-left:10px;color:${catColor};background:${catColor}15;font-size:11px" title="Categoria: ${catInfo?.nome || g.categoria}">${g.categoria}</span>
-            ${filtroClienteStato ? `<span style="font-size:11px;color:var(--text3);margin-left:8px">${clientiFiltrati.length} client${clientiFiltrati.length===1?"e":"i"} visibil${clientiFiltrati.length===1?"e":"i"}</span>` : ""}
+            ${filtroClienteStato ? `<span style="font-size:11px;color:var(--text3);margin-left:8px">${clientiFiltrati.length} client${clientiFiltrati.length === 1 ? "e" : "i"} visibil${clientiFiltrati.length === 1 ? "e" : "i"}</span>` : ""}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
@@ -350,9 +429,11 @@ function renderGlobaleTabella(rawData) {
     content = `<div class="empty">
       <div class="empty-icon">🌐</div>
       <p style="font-size:15px">
-        ${filtroClienteStato
-          ? `Nessun cliente corrisponde al filtro "<strong>${filtroClienteStatoLabels[filtroClienteStato] || filtroClienteStato}</strong>" per ${state.anno}`
-          : `Nessun adempimento trovato per ${state.anno}`}
+        ${
+          filtroClienteStato
+            ? `Nessun cliente corrisponde al filtro "<strong>${filtroClienteStatoLabels[filtroClienteStato] || filtroClienteStato}</strong>" per ${state.anno}`
+            : `Nessun adempimento trovato per ${state.anno}`
+        }
       </p>
       ${filtroClienteStato ? `<button class="btn btn-sm btn-primary" onclick="document.getElementById('glob-filtro-cliente-stato').value='';applyGlobaleFiltriLocali()" style="margin-top:12px">⟳ Rimuovi filtro</button>` : ""}
     </div>`;

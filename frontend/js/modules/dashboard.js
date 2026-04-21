@@ -40,7 +40,8 @@ function buildDashboardShell(stats) {
 
 // ─── FILTRO STATO ADEMPIMENTO ─────────────────────────────────
 function onDashFiltroStatoAdp() {
-  state.dashFiltroStatoAdp = document.getElementById("dash-filtro-stato-adp")?.value || "";
+  state.dashFiltroStatoAdp =
+    document.getElementById("dash-filtro-stato-adp")?.value || "";
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
 
@@ -50,7 +51,11 @@ function resetDashFiltri() {
   state.dashFiltroCategoria = "tutti";
   state.dashFiltroClienteStato = "";
   state.dashFiltroStatoAdp = "";
-  ["dash-adp-search", "dash-filtro-cliente-stato", "dash-filtro-stato-adp"].forEach(id => {
+  [
+    "dash-adp-search",
+    "dash-filtro-cliente-stato",
+    "dash-filtro-stato-adp",
+  ].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
@@ -62,33 +67,50 @@ function adempimentoPassaFiltroClienteStato(a, filtro) {
   if (!filtro) return true;
   const inCorso = Math.max(0, a.totale - a.completati - a.da_fare);
   switch (filtro) {
-    case "con_in_corso":     return inCorso > 0;
-    case "senza_in_corso":   return inCorso === 0;
-    case "tutti_completati": return a.totale > 0 && a.completati === a.totale;
-    case "con_da_fare":      return a.da_fare > 0;
-    case "solo_da_fare":     return a.totale > 0 && a.da_fare === a.totale;
-    case "non_completati":   return a.totale > 0 && a.completati < a.totale;
-    case "con_na":           return (a.na || 0) > 0;
-    default:                 return true;
+    case "con_in_corso":
+      return inCorso > 0;
+    case "senza_in_corso":
+      return inCorso === 0;
+    case "tutti_completati":
+      return a.totale > 0 && a.completati === a.totale;
+    case "con_da_fare":
+      return a.da_fare > 0;
+    case "solo_da_fare":
+      return a.totale > 0 && a.da_fare === a.totale;
+    case "non_completati":
+      return a.totale > 0 && a.completati < a.totale;
+    case "con_na":
+      return (a.na || 0) > 0;
+    default:
+      return true;
   }
 }
 
 function onDashFiltroClienteStato() {
-  state.dashFiltroClienteStato = document.getElementById("dash-filtro-cliente-stato")?.value || "";
+  state.dashFiltroClienteStato =
+    document.getElementById("dash-filtro-cliente-stato")?.value || "";
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
 
 // ─── FILTRO STATO: filtra card in base a da_fare/in_corso/completato/n_a ──
 function adempimentoPassaFiltroStato(a, filtroStato) {
   if (!filtroStato) return true;
-  const inCorso = Math.max(0, a.totale - a.completati - a.da_fare - (a.na || 0));
+  const inCorso = Math.max(
+    0,
+    a.totale - a.completati - a.da_fare - (a.na || 0),
+  );
   const na = a.na || 0;
   switch (filtroStato) {
-    case "da_fare":    return a.da_fare > 0;
-    case "in_corso":   return inCorso > 0;
-    case "completato": return a.completati > 0;
-    case "n_a":        return na > 0;
-    default:           return true;
+    case "da_fare":
+      return a.da_fare > 0;
+    case "in_corso":
+      return inCorso > 0;
+    case "completato":
+      return a.completati > 0;
+    case "n_a":
+      return na > 0;
+    default:
+      return true;
   }
 }
 
@@ -99,9 +121,15 @@ function updateDashboardContent(stats) {
   const sf = state.dashFiltroClienteStato || "";
   const ss = state.dashFiltroStatoAdp || "";
 
-  const adpVis = allAdp.filter(a => {
+  const adpVis = allAdp.filter((a) => {
     if (sc !== "tutti" && a.categoria !== sc) return false;
-    if (sq && !a.nome.toLowerCase().includes(sq) && !a.codice.toLowerCase().includes(sq) && !a.categoria.toLowerCase().includes(sq)) return false;
+    if (
+      sq &&
+      !a.nome.toLowerCase().includes(sq) &&
+      !a.codice.toLowerCase().includes(sq) &&
+      !a.categoria.toLowerCase().includes(sq)
+    )
+      return false;
     if (!adempimentoPassaFiltroClienteStato(a, sf)) return false;
     if (!adempimentoPassaFiltroStato(a, ss)) return false;
     return true;
@@ -110,14 +138,26 @@ function updateDashboardContent(stats) {
   const fT = adpVis.reduce((s, a) => s + a.totale, 0);
   const fC = adpVis.reduce((s, a) => s + a.completati, 0);
   const fD = adpVis.reduce((s, a) => s + a.da_fare, 0);
-  const fI = adpVis.reduce((s, a) => s + Math.max(0, a.totale - a.completati - a.da_fare), 0);
+  const fI = adpVis.reduce(
+    (s, a) => s + Math.max(0, a.totale - a.completati - a.da_fare),
+    0,
+  );
   const fP = fT > 0 ? Math.round((fC / fT) * 100) : 0;
   const isF = sc !== "tutti" || sq !== "" || sf !== "" || ss !== "";
 
-  const se = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  const si = (id, v) => { const e = document.getElementById(id); if (e) e.innerHTML = v; };
+  const se = (id, v) => {
+    const e = document.getElementById(id);
+    if (e) e.textContent = v;
+  };
+  const si = (id, v) => {
+    const e = document.getElementById(id);
+    if (e) e.innerHTML = v;
+  };
 
-  si("ds-lbl-tot", `Adempimenti ${stats.anno}${isF ? ` <span style="font-size:10px;color:var(--yellow)">(filtro attivo)</span>` : ""}`);
+  si(
+    "ds-lbl-tot",
+    `Adempimenti ${stats.anno}${isF ? ` <span style="font-size:10px;color:var(--yellow)">(filtro attivo)</span>` : ""}`,
+  );
   se("ds-tot", fT);
   se("ds-comp", fC);
   se("ds-dafare", fD);
@@ -140,13 +180,17 @@ function updateDashboardContent(stats) {
   // Tabs categoria
   const tabsEl = document.getElementById("dash-cat-tabs");
   if (tabsEl)
-    tabsEl.innerHTML = [{ codice: "tutti", nome: "📋 Tutti", color: "var(--accent)" }, ...CATEGORIE]
-      .map(c => {
+    tabsEl.innerHTML = [
+      { codice: "tutti", nome: "📋 Tutti", color: "var(--accent)" },
+      ...CATEGORIE,
+    ]
+      .map((c) => {
         const active = state.dashFiltroCategoria === c.codice;
         const col = c.color || "var(--accent)";
-        const count = c.codice === "tutti"
-          ? allAdp.length
-          : allAdp.filter(a => a.categoria === c.codice).length;
+        const count =
+          c.codice === "tutti"
+            ? allAdp.length
+            : allAdp.filter((a) => a.categoria === c.codice).length;
         return `<button class="cat-tab${active ? " cat-tab-active" : ""}"
           style="${active ? `background:${col}22;border-color:${col};color:${col}` : ""}"
           onclick="setDashCat('${c.codice}')"
@@ -154,11 +198,12 @@ function updateDashboardContent(stats) {
           ${c.nome || c.codice}
           <span style="font-size:10px;opacity:0.7;margin-left:3px">${count}</span>
         </button>`;
-      }).join("");
+      })
+      .join("");
 
   // Raggruppa per categoria
   const grouped = {};
-  adpVis.forEach(a => {
+  adpVis.forEach((a) => {
     const cat = a.categoria || "ALTRI";
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(a);
@@ -178,7 +223,7 @@ function updateDashboardContent(stats) {
 
   let html = "";
   Object.entries(grouped).forEach(([catCode, items]) => {
-    const catInfo = CATEGORIE.find(x => x.codice === catCode);
+    const catInfo = CATEGORIE.find((x) => x.codice === catCode);
     const cc = catInfo?.color || "var(--accent)";
 
     html += `<div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:10px 6px;margin-top:6px;border-bottom:1px solid var(--border)">
@@ -187,20 +232,33 @@ function updateDashboardContent(stats) {
       <span style="color:var(--text3);font-size:12px">${items.length} adempiment${items.length === 1 ? "o" : "i"}</span>
     </div>`;
 
-    items.forEach(a => {
+    items.forEach((a) => {
       const p = a.totale > 0 ? Math.round((a.completati / a.totale) * 100) : 0;
       const iC = Math.max(0, a.totale - a.completati - a.da_fare - (a.na || 0));
       const na = a.na || 0;
-      const pgColor = p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
+      const pgColor =
+        p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
 
       // Highlight badge se filtro stato attivo
-      const hl = (col) => ss ? `box-shadow:0 0 0 2px ${col};` : "";
+      const hl = (col) => (ss ? `box-shadow:0 0 0 2px ${col};` : "");
 
       const statoBadges = [];
-      if (a.completati > 0) statoBadges.push(`<span class="ds-badge" style="color:var(--green);background:var(--green)12;border-color:var(--green)33;${ss==="completato"?hl("var(--green)"):""}" title="${a.completati} completati">✅ ${a.completati}</span>`);
-      if (iC > 0)           statoBadges.push(`<span class="ds-badge" style="color:var(--yellow);background:var(--yellow)12;border-color:var(--yellow)33;${ss==="in_corso"?hl("var(--yellow)"):""}" title="${iC} in corso">🔄 ${iC}</span>`);
-      if (a.da_fare > 0)    statoBadges.push(`<span class="ds-badge" style="color:var(--red);background:var(--red)12;border-color:var(--red)33;${ss==="da_fare"?hl("var(--red)"):""}" title="${a.da_fare} da fare">⭕ ${a.da_fare}</span>`);
-      if (na > 0)           statoBadges.push(`<span class="ds-badge" style="color:var(--text3);background:var(--surface3);border-color:var(--border);${ss==="n_a"?hl("var(--text3)"):""}" title="${na} N/A">➖ ${na}</span>`);
+      if (a.completati > 0)
+        statoBadges.push(
+          `<span class="ds-badge" style="color:var(--green);background:var(--green)12;border-color:var(--green)33;${ss === "completato" ? hl("var(--green)") : ""}" title="${a.completati} completati">✅ ${a.completati}</span>`,
+        );
+      if (iC > 0)
+        statoBadges.push(
+          `<span class="ds-badge" style="color:var(--yellow);background:var(--yellow)12;border-color:var(--yellow)33;${ss === "in_corso" ? hl("var(--yellow)") : ""}" title="${iC} in corso">🔄 ${iC}</span>`,
+        );
+      if (a.da_fare > 0)
+        statoBadges.push(
+          `<span class="ds-badge" style="color:var(--red);background:var(--red)12;border-color:var(--red)33;${ss === "da_fare" ? hl("var(--red)") : ""}" title="${a.da_fare} da fare">⭕ ${a.da_fare}</span>`,
+        );
+      if (na > 0)
+        statoBadges.push(
+          `<span class="ds-badge" style="color:var(--text3);background:var(--surface3);border-color:var(--border);${ss === "n_a" ? hl("var(--text3)") : ""}" title="${na} N/A">➖ ${na}</span>`,
+        );
 
       html += `<div class="dash-adp-card" onclick="goVistaGlobaleAdp('${escAttr(a.nome)}')" title="Clicca per Vista Globale — ${escAttr(a.nome)}">
         <div class="dash-adp-card-top">
@@ -241,7 +299,11 @@ function onDashAdpSearch(val) {
 
 function goVistaGlobaleAdp(nome) {
   state.globalePreFiltroAdp = nome;
-  document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
-  document.querySelector('[data-page="scadenzario_globale"]').classList.add("active");
+  document
+    .querySelectorAll(".nav-item")
+    .forEach((x) => x.classList.remove("active"));
+  document
+    .querySelector('[data-page="scadenzario_globale"]')
+    .classList.add("active");
   renderPage("scadenzario_globale");
 }

@@ -1,5 +1,5 @@
-const { runQuery, queryAll, queryOne } = require('./database');
-const { inserisciAdempimentoSeAssente } = require('./adempimentiQueries');
+const { runQuery, queryAll, queryOne } = require("./database");
+const { inserisciAdempimentoSeAssente } = require("./adempimentiQueries");
 
 function getScadenzarioConDettagliCliente(id_cliente, anno, filtri = {}) {
   let sql = `
@@ -47,7 +47,7 @@ function getScadenzarioConDettagliCliente(id_cliente, anno, filtri = {}) {
     sql += ` AND (a.nome LIKE ? OR a.codice LIKE ?)`;
     params.push(s, s);
   }
-  
+
   sql += ` ORDER BY a.categoria, a.nome, ac.mese, ac.trimestre, ac.semestre`;
   return queryAll(sql, params);
 }
@@ -113,7 +113,7 @@ function generaScadenzarioInterno(id_cliente, anno) {
   if (!cliente) throw new Error("Cliente non trovato");
   const cat = JSON.parse(cliente.categorie_attive || "[]");
   const adps = queryAll(`SELECT * FROM adempimenti WHERE attivo=1`).filter(
-    (a) => a.categoria === "TUTTI" || cat.includes(a.categoria)
+    (a) => a.categoria === "TUTTI" || cat.includes(a.categoria),
   );
   let tot = 0;
   adps.forEach((a) => {
@@ -140,19 +140,27 @@ function generaTuttiClientiAnno(anno) {
 function copiaScadenzarioCliente(id_cliente, anno_da, anno_a) {
   const righe = queryAll(
     `SELECT * FROM adempimenti_cliente WHERE id_cliente=? AND anno=?`,
-    [id_cliente, anno_da]
+    [id_cliente, anno_da],
   );
   let tot = 0;
   righe.forEach((r) => {
     const ex = queryOne(
       `SELECT id FROM adempimenti_cliente WHERE id_cliente=? AND id_adempimento=? AND anno=? AND COALESCE(mese,0)=COALESCE(?,0) AND COALESCE(trimestre,0)=COALESCE(?,0) AND COALESCE(semestre,0)=COALESCE(?,0)`,
-      [id_cliente, r.id_adempimento, anno_a, r.mese, r.trimestre, r.semestre]
+      [id_cliente, r.id_adempimento, anno_a, r.mese, r.trimestre, r.semestre],
     );
     if (!ex) {
       try {
         runQuery(
           `INSERT INTO adempimenti_cliente (id_cliente,id_adempimento,anno,mese,trimestre,semestre,stato) VALUES (?,?,?,?,?,?,?)`,
-          [r.id_cliente, r.id_adempimento, anno_a, r.mese, r.trimestre, r.semestre, "da_fare"]
+          [
+            r.id_cliente,
+            r.id_adempimento,
+            anno_a,
+            r.mese,
+            r.trimestre,
+            r.semestre,
+            "da_fare",
+          ],
         );
         tot++;
       } catch (e) {}
@@ -184,24 +192,40 @@ function updateAdempimentoStato(data) {
       data.importo_iva || null,
       data.importo_contabilita || null,
       data.id,
-    ]
+    ],
   );
-  return queryOne(`SELECT id_cliente, anno FROM adempimenti_cliente WHERE id=?`, [data.id]);
+  return queryOne(
+    `SELECT id_cliente, anno FROM adempimenti_cliente WHERE id=?`,
+    [data.id],
+  );
 }
 
 function deleteAdempimentoCliente(id) {
-  const row = queryOne(`SELECT id_cliente, anno FROM adempimenti_cliente WHERE id=?`, [id]);
+  const row = queryOne(
+    `SELECT id_cliente, anno FROM adempimenti_cliente WHERE id=?`,
+    [id],
+  );
   runQuery(`DELETE FROM adempimenti_cliente WHERE id=?`, [id]);
   return row;
 }
 
 function addAdempimentoCliente(data) {
-  const adp = queryOne(`SELECT * FROM adempimenti WHERE id=?`, [data.id_adempimento]);
+  const adp = queryOne(`SELECT * FROM adempimenti WHERE id=?`, [
+    data.id_adempimento,
+  ]);
   if (!adp) throw new Error("Adempimento non trovato");
-  
+
   runQuery(
     `INSERT INTO adempimenti_cliente (id_cliente,id_adempimento,anno,mese,trimestre,semestre,stato) VALUES (?,?,?,?,?,?,?)`,
-    [data.id_cliente, data.id_adempimento, data.anno, data.mese || null, data.trimestre || null, data.semestre || null, "da_fare"]
+    [
+      data.id_cliente,
+      data.id_adempimento,
+      data.anno,
+      data.mese || null,
+      data.trimestre || null,
+      data.semestre || null,
+      "da_fare",
+    ],
   );
 }
 
@@ -214,5 +238,5 @@ module.exports = {
   copiaTuttiClienti,
   updateAdempimentoStato,
   deleteAdempimentoCliente,
-  addAdempimentoCliente
+  addAdempimentoCliente,
 };

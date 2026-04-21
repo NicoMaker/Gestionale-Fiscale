@@ -1,11 +1,11 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const path = require('path');
-const cors = require('cors');
-const { initDB, getLocalIP, getPublicIP } = require('./modules/database'); // Importata getPublicIP
-const setupSocketHandlers = require('./modules/socketHandlers');
-const downloadDbRouter = require('./modules/downloadDb');
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const path = require("path");
+const cors = require("cors");
+const { initDB, getLocalIP, getPublicIP } = require("./modules/database"); // Importata getPublicIP
+const setupSocketHandlers = require("./modules/socketHandlers");
+const downloadDbRouter = require("./modules/downloadDb");
 
 const app = express();
 const server = http.createServer(app);
@@ -22,7 +22,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-app.use('/api', downloadDbRouter);
+app.use("/api", downloadDbRouter);
 
 app.get("/api/health", (req, res) => {
   res.json({

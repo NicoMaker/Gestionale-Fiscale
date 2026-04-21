@@ -1,14 +1,25 @@
-const { runQuery, queryAll, queryOne } = require('./database');
+const { runQuery, queryAll, queryOne } = require("./database");
 
 function getAdempimenti() {
-  return queryAll(`SELECT * FROM adempimenti WHERE attivo=1 ORDER BY categoria, nome`);
+  return queryAll(
+    `SELECT * FROM adempimenti WHERE attivo=1 ORDER BY categoria, nome`,
+  );
 }
 
 function createAdempimento(data) {
   const rl = data.rate_labels ? JSON.stringify(data.rate_labels) : null;
   runQuery(
     `INSERT INTO adempimenti (codice,nome,descrizione,categoria,scadenza_tipo,is_contabilita,has_rate,rate_labels) VALUES (?,?,?,?,?,?,?,?)`,
-    [data.codice, data.nome, data.descrizione || null, data.categoria, data.scadenza_tipo, data.is_contabilita || 0, data.has_rate || 0, rl]
+    [
+      data.codice,
+      data.nome,
+      data.descrizione || null,
+      data.categoria,
+      data.scadenza_tipo,
+      data.is_contabilita || 0,
+      data.has_rate || 0,
+      rl,
+    ],
   );
   return queryOne(`SELECT last_insert_rowid() as id`).id;
 }
@@ -17,7 +28,17 @@ function updateAdempimento(data) {
   const rl = data.rate_labels ? JSON.stringify(data.rate_labels) : null;
   runQuery(
     `UPDATE adempimenti SET codice=?,nome=?,descrizione=?,categoria=?,scadenza_tipo=?,is_contabilita=?,has_rate=?,rate_labels=? WHERE id=?`,
-    [data.codice, data.nome, data.descrizione || null, data.categoria, data.scadenza_tipo, data.is_contabilita || 0, data.has_rate || 0, rl, data.id]
+    [
+      data.codice,
+      data.nome,
+      data.descrizione || null,
+      data.categoria,
+      data.scadenza_tipo,
+      data.is_contabilita || 0,
+      data.has_rate || 0,
+      rl,
+      data.id,
+    ],
   );
 }
 
@@ -25,20 +46,22 @@ function deleteAdempimento(id) {
   // Verifica se l'adempimento è stato assegnato a qualche cliente
   const count = queryOne(
     `SELECT COUNT(*) as cnt FROM adempimenti_cliente WHERE id_adempimento = ?`,
-    [id]
+    [id],
   );
-  
+
   if (count.cnt > 0) {
-    throw new Error(`Impossibile eliminare l'adempimento: è assegnato a ${count.cnt} clienti. Elimina prima gli adempimenti dai clienti.`);
+    throw new Error(
+      `Impossibile eliminare l'adempimento: è assegnato a ${count.cnt} clienti. Elimina prima gli adempimenti dai clienti.`,
+    );
   }
-  
+
   runQuery(`UPDATE adempimenti SET attivo=0 WHERE id=?`, [id]);
 }
 
 function canDeleteAdempimento(id) {
   const count = queryOne(
     `SELECT COUNT(*) as cnt FROM adempimenti_cliente WHERE id_adempimento = ?`,
-    [id]
+    [id],
   );
   return { canDelete: count.cnt === 0, clientiCount: count.cnt };
 }
@@ -49,12 +72,12 @@ function inserisciAdempimentoSeAssente(id_cliente, adp, anno) {
     for (let t = 1; t <= 4; t++) {
       const ex = queryOne(
         `SELECT id FROM adempimenti_cliente WHERE id_cliente=? AND id_adempimento=? AND anno=? AND trimestre=?`,
-        [id_cliente, adp.id, anno, t]
+        [id_cliente, adp.id, anno, t],
       );
       if (!ex) {
         runQuery(
           `INSERT INTO adempimenti_cliente (id_cliente,id_adempimento,anno,trimestre,stato) VALUES (?,?,?,?,?)`,
-          [id_cliente, adp.id, anno, t, "da_fare"]
+          [id_cliente, adp.id, anno, t, "da_fare"],
         );
         inseriti++;
       }
@@ -63,12 +86,12 @@ function inserisciAdempimentoSeAssente(id_cliente, adp, anno) {
     for (let s = 1; s <= 2; s++) {
       const ex = queryOne(
         `SELECT id FROM adempimenti_cliente WHERE id_cliente=? AND id_adempimento=? AND anno=? AND semestre=?`,
-        [id_cliente, adp.id, anno, s]
+        [id_cliente, adp.id, anno, s],
       );
       if (!ex) {
         runQuery(
           `INSERT INTO adempimenti_cliente (id_cliente,id_adempimento,anno,semestre,stato) VALUES (?,?,?,?,?)`,
-          [id_cliente, adp.id, anno, s, "da_fare"]
+          [id_cliente, adp.id, anno, s, "da_fare"],
         );
         inseriti++;
       }
@@ -77,12 +100,12 @@ function inserisciAdempimentoSeAssente(id_cliente, adp, anno) {
     for (let m = 1; m <= 12; m++) {
       const ex = queryOne(
         `SELECT id FROM adempimenti_cliente WHERE id_cliente=? AND id_adempimento=? AND anno=? AND mese=?`,
-        [id_cliente, adp.id, anno, m]
+        [id_cliente, adp.id, anno, m],
       );
       if (!ex) {
         runQuery(
           `INSERT INTO adempimenti_cliente (id_cliente,id_adempimento,anno,mese,stato) VALUES (?,?,?,?,?)`,
-          [id_cliente, adp.id, anno, m, "da_fare"]
+          [id_cliente, adp.id, anno, m, "da_fare"],
         );
         inseriti++;
       }
@@ -90,12 +113,12 @@ function inserisciAdempimentoSeAssente(id_cliente, adp, anno) {
   } else {
     const ex = queryOne(
       `SELECT id FROM adempimenti_cliente WHERE id_cliente=? AND id_adempimento=? AND anno=? AND mese IS NULL AND trimestre IS NULL AND semestre IS NULL`,
-      [id_cliente, adp.id, anno]
+      [id_cliente, adp.id, anno],
     );
     if (!ex) {
       runQuery(
         `INSERT INTO adempimenti_cliente (id_cliente,id_adempimento,anno,stato) VALUES (?,?,?,?)`,
-        [id_cliente, adp.id, anno, "da_fare"]
+        [id_cliente, adp.id, anno, "da_fare"],
       );
       inseriti++;
     }
@@ -122,5 +145,5 @@ module.exports = {
   deleteAdempimento,
   generaAdempimentoPerTutti,
   inserisciAdempimentoSeAssente,
-  canDeleteAdempimento
+  canDeleteAdempimento,
 };

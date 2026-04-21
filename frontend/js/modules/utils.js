@@ -12,19 +12,26 @@ function storeRow(r) {
 
 function openAdpById(id) {
   const r = _rowStore[id];
-  if (!r) { console.warn("Row not found:", id); return; }
+  if (!r) {
+    console.warn("Row not found:", id);
+    return;
+  }
   openAdpModal(r);
 }
 
 // ─── DEBOUNCE ─────────────────────────────────────────────────
 function debounce(fn, ms) {
   let t;
-  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+  return (...a) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...a), ms);
+  };
 }
 
 // ─── HTML ESCAPE ──────────────────────────────────────────────
 function escAttr(s) {
-  return (s || "").toString()
+  return (s || "")
+    .toString()
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;")
     .replace(/</g, "&lt;")
@@ -35,7 +42,10 @@ function escAttr(s) {
 // "Studio Verdi" → "SV", "Anna" → "AN", "Alfa Srl" → "AS"
 function getAvatar(nome) {
   if (!nome) return "??";
-  const words = nome.trim().split(/\s+/).filter(w => w.length > 0);
+  const words = nome
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
   if (words.length === 1) {
     // Una sola parola: prime 2 lettere maiuscole
     return words[0].substring(0, 2).toUpperCase();
@@ -53,16 +63,17 @@ function getTipologiaColor(tipCodice) {
 function getCol3Options(tipCodice, col2Value) {
   if (tipCodice === "SP" || tipCodice === "ASS")
     return [
-      { value: "ordinaria",    label: "Ordinaria" },
+      { value: "ordinaria", label: "Ordinaria" },
       { value: "semplificata", label: "Semplificata" },
     ];
   if (tipCodice === "SC") return [{ value: "ordinaria", label: "Ordinaria" }];
   if (tipCodice === "PF") {
-    if (!col2Value || col2Value === "privato" || col2Value === "socio") return null;
+    if (!col2Value || col2Value === "privato" || col2Value === "socio")
+      return null;
     return [
-      { value: "ordinario",    label: "Ordinario" },
+      { value: "ordinario", label: "Ordinario" },
       { value: "semplificato", label: "Semplificato" },
-      { value: "forfettario",  label: "Forfettario" },
+      { value: "forfettario", label: "Forfettario" },
     ];
   }
   return null;
@@ -74,7 +85,10 @@ function getSottotipoCode(tipCodice, col2, col3) {
 }
 
 function getLabelSottotipologia(cliente) {
-  if (cliente.sottotipologia_codice && SOTTOTIPO_LABEL_MAP[cliente.sottotipologia_codice])
+  if (
+    cliente.sottotipologia_codice &&
+    SOTTOTIPO_LABEL_MAP[cliente.sottotipologia_codice]
+  )
     return SOTTOTIPO_LABEL_MAP[cliente.sottotipologia_codice];
   return cliente.sottotipologia_nome || null;
 }
@@ -83,15 +97,32 @@ function getClassificazioneCompleta(c) {
   const parts = [];
   if (c.tipologia_codice) parts.push(c.tipologia_codice);
   if (c.col2_value) {
-    const labels = { privato: "Privato", ditta: "Ditta Ind.", socio: "Socio", professionista: "Professionista" };
+    const labels = {
+      privato: "Privato",
+      ditta: "Ditta Ind.",
+      socio: "Socio",
+      professionista: "Professionista",
+    };
     parts.push(labels[c.col2_value] || c.col2_value);
   }
   if (c.col3_value) {
-    const labels = { ordinario: "Ord.", semplificato: "Sempl.", forfettario: "Forf.", ordinaria: "Ord.", semplificata: "Sempl." };
+    const labels = {
+      ordinario: "Ord.",
+      semplificato: "Sempl.",
+      forfettario: "Forf.",
+      ordinaria: "Ord.",
+      semplificata: "Sempl.",
+    };
     parts.push(labels[c.col3_value] || c.col3_value);
   }
   if (c.periodicita)
-    parts.push(c.periodicita === "mensile" ? "Mensile" : c.periodicita === "trimestrale" ? "Trimestrale" : c.periodicita);
+    parts.push(
+      c.periodicita === "mensile"
+        ? "Mensile"
+        : c.periodicita === "trimestrale"
+          ? "Trimestrale"
+          : c.periodicita,
+    );
   return parts.join(" · ");
 }
 
@@ -109,13 +140,17 @@ function getPeriodoLabel(r) {
 
 function getPeriodoShort(r) {
   if (r.scadenza_tipo === "trimestrale") return `T${r.trimestre}`;
-  if (r.scadenza_tipo === "semestrale")  return r.semestre === 1 ? "S1" : "S2";
-  if (r.scadenza_tipo === "mensile")     return MESI_SHORT[(r.mese || 1) - 1];
+  if (r.scadenza_tipo === "semestrale") return r.semestre === 1 ? "S1" : "S2";
+  if (r.scadenza_tipo === "mensile") return MESI_SHORT[(r.mese || 1) - 1];
   return "Ann.";
 }
 
 function isContabilita(r) {
-  return parseInt(r.is_contabilita) === 1 || r.is_contabilita === true || r.is_contabilita === 1;
+  return (
+    parseInt(r.is_contabilita) === 1 ||
+    r.is_contabilita === true ||
+    r.is_contabilita === 1
+  );
 }
 
 function hasRate(r) {
@@ -151,11 +186,14 @@ function scrollToTop() {
 function scaricaDatabase() {
   showNotif("⏳ Download in corso...", "info");
   fetch("/api/download-db", { method: "GET" })
-    .then(response => {
-      if (!response.ok) return response.json().then(err => { throw new Error(err.error || "Download fallito"); });
+    .then((response) => {
+      if (!response.ok)
+        return response.json().then((err) => {
+          throw new Error(err.error || "Download fallito");
+        });
       return response.blob();
     })
-    .then(blob => {
+    .then((blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -166,7 +204,7 @@ function scaricaDatabase() {
       window.URL.revokeObjectURL(url);
       showNotif("✅ Database scaricato!", "success");
     })
-    .catch(error => showNotif(`❌ Errore: ${error.message}`, "error"));
+    .catch((error) => showNotif(`❌ Errore: ${error.message}`, "error"));
 }
 
 // ─── SEARCHABLE SELECT ────────────────────────────────────────
@@ -187,14 +225,21 @@ function makeSearchableSelect(selectId, placeholder) {
   wrapper.insertBefore(searchInput, sel);
 
   // Salva tutte le opzioni originali
-  const allOptions = Array.from(sel.options).map(o => ({ value: o.value, text: o.text }));
+  const allOptions = Array.from(sel.options).map((o) => ({
+    value: o.value,
+    text: o.text,
+  }));
 
   searchInput.addEventListener("input", () => {
     const q = searchInput.value.toLowerCase();
     const cur = sel.value;
     sel.innerHTML = "";
-    allOptions.forEach(o => {
-      if (!q || o.text.toLowerCase().includes(q) || o.value.toLowerCase().includes(q)) {
+    allOptions.forEach((o) => {
+      if (
+        !q ||
+        o.text.toLowerCase().includes(q) ||
+        o.value.toLowerCase().includes(q)
+      ) {
         const opt = document.createElement("option");
         opt.value = o.value;
         opt.textContent = o.text;

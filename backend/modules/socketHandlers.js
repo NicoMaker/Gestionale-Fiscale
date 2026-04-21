@@ -100,13 +100,13 @@ module.exports = function setupSocketHandlers(io) {
         socket.emit("res:delete:cliente", { success: true });
         socket.emit("notify", {
           type: "success",
-          msg: "Cliente eliminato con successo"
+          msg: "Cliente eliminato con successo",
         });
       } catch (e) {
         socket.emit("res:delete:cliente", { success: false, error: e.message });
         socket.emit("notify", {
           type: "error",
-          msg: e.message
+          msg: e.message,
         });
       }
     });
@@ -161,7 +161,7 @@ module.exports = function setupSocketHandlers(io) {
         socket.emit("res:delete:adempimento", { success: true });
         socket.emit("notify", {
           type: "success",
-          msg: "Adempimento eliminato con successo"
+          msg: "Adempimento eliminato con successo",
         });
       } catch (e) {
         socket.emit("res:delete:adempimento", {
@@ -170,7 +170,7 @@ module.exports = function setupSocketHandlers(io) {
         });
         socket.emit("notify", {
           type: "error",
-          msg: e.message
+          msg: e.message,
         });
       }
     });

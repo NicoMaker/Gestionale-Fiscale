@@ -20,7 +20,7 @@ function getLocalIP() {
 async function getPublicIP() {
   try {
     // Utilizziamo l'API di ipify per ottenere l'indirizzo pubblico
-    const response = await fetch('https://api.ipify.org?format=json');
+    const response = await fetch("https://api.ipify.org?format=json");
     const data = await response.json();
     return data.ip;
   } catch (e) {
@@ -85,18 +85,22 @@ function migrateDB() {
     `ALTER TABLE clienti ADD COLUMN col3_value TEXT`,
   ];
   migrations.forEach((sql) => {
-    try { db.run(sql); } catch (e) {}
+    try {
+      db.run(sql);
+    } catch (e) {}
   });
   saveDB();
 }
 
 module.exports = {
-  get db() { return db; },
+  get db() {
+    return db;
+  },
   initDB,
   saveDB,
   runQuery,
   queryAll,
   queryOne,
   getLocalIP,
-  getPublicIP // Aggiunto alle esportazioni
+  getPublicIP, // Aggiunto alle esportazioni
 };

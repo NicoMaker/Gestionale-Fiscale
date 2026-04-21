@@ -63,7 +63,8 @@ socket.on("res:clienti", ({ success, data }) => {
     state._pending = null;
     // Se avevamo un gotoClienteId, impostalo come selectedCliente
     if (state._gotoClienteId) {
-      state.selectedCliente = state.clienti.find(c => c.id === state._gotoClienteId) || null;
+      state.selectedCliente =
+        state.clienti.find((c) => c.id === state._gotoClienteId) || null;
       state._gotoClienteId = null;
     }
     renderScadenzarioPage();
@@ -82,7 +83,9 @@ socket.on("res:adempimenti", ({ success, data }) => {
   }
   const sel = document.getElementById("add-adp-select");
   if (sel && success) {
-    const modalOpen = document.getElementById("modal-add-adp")?.classList.contains("open");
+    const modalOpen = document
+      .getElementById("modal-add-adp")
+      ?.classList.contains("open");
     if (modalOpen) refreshAddAdpSelect();
     updatePeriodoOptions();
   }
@@ -99,7 +102,7 @@ socket.on("res:scadenzario", ({ success, data }) => {
   if (success) {
     state.scadenzario = data;
     const inseriti = new Set();
-    data.forEach(r => inseriti.add(r.id_adempimento));
+    data.forEach((r) => inseriti.add(r.id_adempimento));
     state.adpInseriti = Array.from(inseriti);
     renderScadenzarioTabella(data);
   }
@@ -124,7 +127,10 @@ socket.on("res:create:cliente", ({ success }) => {
 });
 
 socket.on("res:update:cliente", ({ success }) => {
-  if (success) { closeModal("modal-cliente"); refreshPage(); }
+  if (success) {
+    closeModal("modal-cliente");
+    refreshPage();
+  }
 });
 
 socket.on("res:delete:cliente", ({ success }) => {
@@ -165,7 +171,10 @@ socket.on("res:genera:tutti", ({ success }) => {
 });
 
 socket.on("res:copia:scadenzario", ({ success }) => {
-  if (success) { closeModal("modal-copia"); loadScadenzario(); }
+  if (success) {
+    closeModal("modal-copia");
+    loadScadenzario();
+  }
 });
 
 socket.on("res:copia:tutti", ({ success }) => {
@@ -175,20 +184,24 @@ socket.on("res:copia:tutti", ({ success }) => {
 socket.on("res:update:adempimento_stato", ({ success }) => {
   if (success) {
     closeModal("modal-adempimento");
-    if (state.page === "scadenzario")         loadScadenzario();
+    if (state.page === "scadenzario") loadScadenzario();
     if (state.page === "scadenzario_globale") loadGlobale();
-    if (state.page === "dashboard")           socket.emit("get:stats", { anno: state.anno });
+    if (state.page === "dashboard")
+      socket.emit("get:stats", { anno: state.anno });
   }
 });
 
 socket.on("res:delete:adempimento_cliente", ({ success }) => {
   if (success) {
     closeModal("modal-adempimento");
-    if (state.page === "scadenzario")         loadScadenzario();
+    if (state.page === "scadenzario") loadScadenzario();
     if (state.page === "scadenzario_globale") loadGlobale();
   }
 });
 
 socket.on("res:add:adempimento_cliente", ({ success }) => {
-  if (success) { closeModal("modal-add-adp"); loadScadenzario(); }
+  if (success) {
+    closeModal("modal-add-adp");
+    loadScadenzario();
+  }
 });
