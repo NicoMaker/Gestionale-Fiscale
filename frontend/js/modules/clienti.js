@@ -347,12 +347,18 @@ function saveCliente() {
   const id   = document.getElementById("cliente-id").value;
   const nome = document.getElementById("c-nome").value.trim();
   if (!nome) { showNotif("Il nome è obbligatorio", "error"); return; }
+  
+  // ─── VALIDAZIONE CAMPI OBBLIGATORI CLASSIFICAZIONE ───
+  if (!validaClassificazioneCliente()) return;
+  
   const categorie = getSelectedCategorie();
   if (!categorie.length) { showNotif("Seleziona almeno una categoria", "error"); return; }
+  
   const id_sottotipologia = _calcolaSottotipologiaId();
   const col2Val = document.getElementById("c-col2")?.value || "";
   const col3Val = document.getElementById("c-col3")?.value || "";
   const col4Val = document.getElementById("c-col4")?.value || "";
+  
   const data = {
     nome,
     id_tipologia:    parseInt(document.getElementById("c-tipologia").value),
@@ -375,10 +381,10 @@ function saveCliente() {
     note:            document.getElementById("c-note").value.trim() || null,
     categorie_attive: categorie,
   };
+  
   if (id) { data.id = parseInt(id); socket.emit("update:cliente", data); }
   else socket.emit("create:cliente", data);
 }
-
 function deleteCliente(id) {
   if (confirm("Eliminare questo cliente?")) socket.emit("delete:cliente", { id });
 }
@@ -395,4 +401,51 @@ function goScadenzario(id) {
     state._pending = "scadenzario";
     socket.emit("get:clienti");
   }
+}
+
+// ─── VALIDAZIONE CAMPI OBBLIGATORI CLASSIFICAZIONE ────────────
+function validaClassificazioneCliente() {
+  const tipologia = document.getElementById("c-tipologia").value;
+  if (!tipologia) {
+    showNotif("La Tipologia è obbligatoria", "error");
+    document.getElementById("c-tipologia").focus();
+    return false;
+  }
+
+  const tipCodice = _getTipologiaCodice();
+  const col2Wrap = document.getElementById("wrap-col2");
+  const col3Wrap = document.getElementById("wrap-col3");
+  const col4Wrap = document.getElementById("wrap-col4");
+
+  // Validazione Col2 (se visibile)
+  if (col2Wrap && col2Wrap.style.display !== "none") {
+    const col2Value = document.getElementById("c-col2").value;
+    if (!col2Value) {
+      showNotif("La Sottocategoria è obbligatoria per questa tipologia", "error");
+      document.getElementById("c-col2").focus();
+      return false;
+    }
+  }
+
+  // Validazione Col3 (se visibile)
+  if (col3Wrap && col3Wrap.style.display !== "none") {
+    const col3Value = document.getElementById("c-col3").value;
+    if (!col3Value) {
+      showNotif("Il Regime è obbligatorio per questa configurazione", "error");
+      document.getElementById("c-col3").focus();
+      return false;
+    }
+  }
+
+  // Validazione Col4 (se visibile)
+  if (col4Wrap && col4Wrap.style.display !== "none") {
+    const col4Value = document.getElementById("c-col4").value;
+    if (!col4Value) {
+      showNotif("La Periodicità è obbligatoria", "error");
+      document.getElementById("c-col4").focus();
+      return false;
+    }
+  }
+
+  return true;
 }
