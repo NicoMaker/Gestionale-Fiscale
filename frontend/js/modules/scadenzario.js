@@ -9,12 +9,9 @@ function getAdempimentiMancanti() {
   return compatibili.filter(a => !state.adpInseriti.includes(a.id));
 }
 
-// ─── VERIFICA SE CI SONO DATI DA GENERARE ──────────────────────
 function hasDatiDaGenerare() {
   if (!state.selectedCliente) return false;
-  // Se non ci sono adempimenti nello scadenzario per quest'anno, ci sono dati da generare
   if (!state.scadenzario || state.scadenzario.length === 0) return true;
-  // Oppure se ci sono adempimenti mancanti
   return getAdempimentiMancanti().length > 0;
 }
 
@@ -105,18 +102,28 @@ function renderAdpRiepilogoCliente(data) {
   return html;
 }
 
-// ─── AGGIORNA SELECT ADEMPIMENTO FILTRO (lato client) ─────────
+// ─── AGGIORNA SELECT ADEMPIMENTO FILTRO (lato client, searchable) ─
 function aggiornaFiltroAdpScad(data) {
   const sel = document.getElementById("scad-filtro-adp");
   if (!sel) return;
-  const current = sel.value;
+  const currentValue = sel.value;
+
   const adpSet = {};
   data.forEach(r => { adpSet[r.id_adempimento] = r.adempimento_nome; });
+
+  // Ricostruisce le opzioni native (il searchable le leggerà)
   sel.innerHTML = `<option value="">📋 Tutti adempimenti</option>` +
     Object.entries(adpSet)
       .sort((a, b) => a[1].localeCompare(b[1]))
-      .map(([id, nome]) => `<option value="${id}" ${current == id ? "selected" : ""}>${nome}</option>`)
+      .map(([id, nome]) => `<option value="${id}" ${currentValue == id ? "selected" : ""}>${nome}</option>`)
       .join("");
+
+  // Inizializza searchable se non ancora fatto; altrimenti aggiorna il trigger
+  if (!sel.dataset.ssinit) {
+    initSearchableSelect("scad-filtro-adp");
+  } else if (sel._ssRefresh) {
+    sel._ssRefresh();
+  }
 }
 
 // ─── RENDER PAGE ──────────────────────────────────────────────
@@ -126,7 +133,7 @@ function renderScadenzarioPage() {
     .join("");
 
   document.getElementById("topbar-actions").innerHTML = `
-    <select class="select topbar-select" id="sel-cliente" onchange="onClienteChange()" title="Seleziona il cliente">
+    <select class="select topbar-select" id="sel-cliente" onchange="onClienteChange()" title="Seleziona il cliente" style="min-width:200px;max-width:260px">
       <option value="">-- Seleziona Cliente --</option>${opts}
     </select>
     <div class="year-sel">
@@ -134,7 +141,7 @@ function renderScadenzarioPage() {
       <span class="year-num">${state.anno}</span>
       <button onclick="changeAnnoScad(1)" title="Anno successivo">&#9654;</button>
     </div>
-    <select class="select topbar-select" id="scad-filtro-adp" onchange="applyScadFiltriAdp()" title="Filtra per adempimento specifico">
+    <select class="select topbar-select" id="scad-filtro-adp" onchange="applyScadFiltriAdp()" title="Filtra per adempimento specifico" style="min-width:160px;max-width:220px">
       <option value="">📋 Tutti adempimenti</option>
     </select>
     <select class="select topbar-select" id="scad-filtro-stato" onchange="applyScadFiltri()" title="Filtra per stato">
@@ -148,11 +155,15 @@ function renderScadenzarioPage() {
       <option value="">📋 Tutte le categorie</option>
       ${CATEGORIE.map(c => `<option value="${c.codice}">${c.icona} ${c.codice}</option>`).join("")}
     </select>
-    <button class="btn btn-sm btn-primary" onclick="resetScadFiltri()" title="Azzera tutti i filtri e mostra tutti gli adempimenti">⟳ Tutti</button>
+    <button class="btn btn-sm btn-primary" onclick="resetScadFiltri()" title="Azzera tutti i filtri">⟳ Tutti</button>
     <div class="search-wrap" style="width:180px">
       <span class="search-icon">🔍</span>
       <input class="input" id="scad-search" placeholder="Cerca adempimento..." oninput="applyScadSearch()" title="Cerca per nome o codice adempimento">
     </div>`;
+
+  // Inizializza la select cliente con ricerca
+  initSearchableSelect("sel-cliente");
+  // La select adempimento verrà inizializzata in aggiornaFiltroAdpScad
 
   if (state.selectedCliente) loadScadenzario();
   else document.getElementById("content").innerHTML = `<div class="empty"><div class="empty-icon">📅</div><p>Seleziona un cliente dalla lista in alto</p></div>`;
@@ -162,8 +173,12 @@ function onClienteChange() {
   const id = parseInt(document.getElementById("sel-cliente").value);
   state.selectedCliente = state.clienti.find(c => c.id === id) || null;
   state.adpInseriti = [];
+  // Reset select adempimento
   const adpSel = document.getElementById("scad-filtro-adp");
-  if (adpSel) adpSel.innerHTML = `<option value="">📋 Tutti adempimenti</option>`;
+  if (adpSel) {
+    adpSel.innerHTML = `<option value="">📋 Tutti adempimenti</option>`;
+    if (adpSel._ssRefresh) adpSel._ssRefresh();
+  }
   if (state.selectedCliente) loadScadenzario();
 }
 
@@ -184,7 +199,6 @@ function loadScadenzario() {
   });
 }
 
-// Filtro adempimento è lato client — non ricarica dal server
 function applyScadFiltriAdp() {
   if (!state.scadenzario) return;
   renderScadenzarioTabella(state.scadenzario);
@@ -200,15 +214,18 @@ function applyScadFiltri() {
 
 function resetScadFiltri() {
   const statoSelect = document.getElementById("scad-filtro-stato");
-  const catSelect = document.getElementById("scad-filtro-cat");
-  const adpSelect = document.getElementById("scad-filtro-adp");
+  const catSelect   = document.getElementById("scad-filtro-cat");
+  const adpSelect   = document.getElementById("scad-filtro-adp");
   const searchInput = document.getElementById("scad-search");
-  
+
   if (statoSelect) statoSelect.value = "";
-  if (catSelect) catSelect.value = "";
-  if (adpSelect) adpSelect.value = "";
+  if (catSelect)   catSelect.value   = "";
+  if (adpSelect) {
+    adpSelect.value = "";
+    if (adpSelect._ssRefresh) adpSelect._ssRefresh();
+  }
   if (searchInput) searchInput.value = "";
-  
+
   if (state.selectedCliente) loadScadenzario();
 }
 
@@ -217,10 +234,8 @@ function renderScadenzarioTabella(data) {
   const c = state.selectedCliente;
   if (!c) return;
 
-  // Aggiorna select adempimenti
   aggiornaFiltroAdpScad(data);
 
-  // Filtro lato client per adempimento specifico
   const adpFiltroId = document.getElementById("scad-filtro-adp")?.value || "";
   const dataFiltrata = adpFiltroId
     ? data.filter(r => String(r.id_adempimento) === String(adpFiltroId))
@@ -245,29 +260,22 @@ function renderScadenzarioTabella(data) {
   const col3Map = { ordinario: "Ord.", semplificato: "Sempl.", forfettario: "Forf.", ordinaria: "Ord.", semplificata: "Sempl." };
   const pgColor = perc === 100 ? "var(--green)" : perc > 50 ? "var(--yellow)" : "var(--red)";
 
-  // Determina lo stile del bottone Genera in base ai dati esistenti
   const hasDati = data && data.length > 0;
   const mancanti = getAdempimentiMancanti();
   const hasDatiDaGenerare = mancanti.length > 0;
-  
+
   let generaBtnClass = "btn btn-sm btn-orange";
   let generaBtnTitle = "Genera adempimenti mancanti per l'anno selezionato";
-  let generaBtnIcon = "⚡";
-  
+  let generaBtnIcon  = "⚡";
+
   if (!hasDati) {
-    // Nessun dato: bottone normale (arancione)
-    generaBtnClass = "btn btn-sm btn-orange";
     generaBtnTitle = "Nessun adempimento presente. Genera lo scadenzario per l'anno selezionato";
   } else if (hasDati && !hasDatiDaGenerare) {
-    // Dati presenti e nessun adempimento mancante: bottone disabilitato (grigio/verde)
     generaBtnClass = "btn btn-sm btn-success";
     generaBtnTitle = "✅ Tutti gli adempimenti sono già stati generati per quest'anno";
-    generaBtnIcon = "✓";
-  } else if (hasDati && hasDatiDaGenerare) {
-    // Dati presenti ma ci sono adempimenti mancanti: bottone normale (arancione)
-    generaBtnClass = "btn btn-sm btn-orange";
+    generaBtnIcon  = "✓";
+  } else {
     generaBtnTitle = `Genera ${mancanti.length} adempimento/i mancante/i per l'anno selezionato`;
-    generaBtnIcon = "⚡";
   }
 
   const clienteCard = `<div class="cliente-preview-card" style="border-left-color:${tipColor}">
@@ -304,17 +312,15 @@ function renderScadenzarioTabella(data) {
     </div>
     <div class="cpc-actions no-print">
       <button class="${generaBtnClass}" onclick="generaScadenzario()" title="${generaBtnTitle}" ${!hasDatiDaGenerare && hasDati ? 'disabled' : ''}>${generaBtnIcon} Genera</button>
-      <button class="btn btn-sm btn-cyan"   onclick="openCopia()">📋 Copia</button>
+      <button class="btn btn-sm btn-cyan" onclick="openCopia()">📋 Copia</button>
       ${renderBtnAddAdp(c.id)}
       <button class="btn btn-print btn-sm" style="margin-left:auto" onclick="window.print()">🖨️ Stampa</button>
     </div>
     ${renderClienteDatiRiferimento(c)}
   </div>`;
 
-  // Riepilogo con tutti i dati (non filtrati per adempimento)
   const riepilogoHtml = renderAdpRiepilogoCliente(data);
 
-  // Dettaglio filtrato
   const grouped = {};
   dataFiltrata.forEach(r => {
     storeRow(r);
@@ -374,7 +380,6 @@ function renderScadenzarioTabella(data) {
 // ─── AZIONI ───────────────────────────────────────────────────
 function generaScadenzario() {
   if (!state.selectedCliente) return;
-  // Se ci sono già tutti gli adempimenti, non fare nulla
   if (state.scadenzario && state.scadenzario.length > 0 && getAdempimentiMancanti().length === 0) {
     showNotif("✅ Tutti gli adempimenti sono già stati generati per quest'anno", "info");
     return;
@@ -434,9 +439,20 @@ function refreshAddAdpSelect() {
   const mancanti = getAdempimentiMancanti();
   const sel = document.getElementById("add-adp-select");
   if (!sel) return;
+
   sel.innerHTML = mancanti
     .map(a => `<option value="${a.id}" data-scadenza="${a.scadenza_tipo}">${a.codice} — ${a.nome}</option>`)
     .join("");
+
+  // Inizializza o reinizializza la select con ricerca
+  if (!sel.dataset.ssinit) {
+    // Prima volta: inizializza
+    initSearchableSelect("add-adp-select");
+  } else {
+    // Già inizializzata: aggiorna il trigger al primo elemento
+    if (sel._ssRefresh) sel._ssRefresh();
+  }
+
   updatePeriodoOptions();
 }
 

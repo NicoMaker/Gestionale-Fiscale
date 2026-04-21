@@ -2,6 +2,117 @@
 // NAV.JS — Navigazione e routing tra le pagine
 // ═══════════════════════════════════════════════════════════════
 
+// ─── SEARCHABLE SELECT HELPER ─────────────────────────────────
+// Trasforma una <select> esistente in una select con ricerca integrata
+// nel dropdown. Chiama questa funzione DOPO aver inserito la select nel DOM.
+function initSearchableSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel || sel.dataset.ssinit) return;
+  sel.dataset.ssinit = "1";
+
+  // Nascondiamo la select nativa
+  sel.style.display = "none";
+
+  // Wrapper
+  const wrap = document.createElement("div");
+  wrap.className = "ss-wrap";
+  wrap.style.cssText = `position:relative;display:inline-block;min-width:${sel.style.minWidth||"160px"};max-width:${sel.style.maxWidth||"260px"};width:${sel.style.width||"auto"}`;
+  sel.parentNode.insertBefore(wrap, sel);
+  wrap.appendChild(sel);
+
+  // Bottone trigger (mostra il valore selezionato)
+  const trigger = document.createElement("div");
+  trigger.className = "ss-trigger input topbar-select";
+  trigger.style.cssText = `display:flex;align-items:center;justify-content:space-between;gap:6px;cursor:pointer;user-select:none;padding:7px 12px;font-size:13px;width:100%;box-sizing:border-box`;
+  trigger.innerHTML = `<span class="ss-trigger-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${sel.options[sel.selectedIndex]?.text || "-- Seleziona --"}</span><span style="font-size:10px;opacity:0.5;flex-shrink:0">▼</span>`;
+  wrap.insertBefore(trigger, sel);
+
+  // Dropdown panel
+  const panel = document.createElement("div");
+  panel.className = "ss-panel";
+  panel.style.cssText = `display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:9999;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);box-shadow:0 12px 40px rgba(0,0,0,0.6);overflow:hidden`;
+  wrap.appendChild(panel);
+
+  // Campo ricerca dentro il panel
+  const searchInput = document.createElement("input");
+  searchInput.placeholder = "🔍 Cerca...";
+  searchInput.style.cssText = `width:100%;padding:9px 14px;background:var(--surface3);border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--sans);font-size:13px;outline:none;box-sizing:border-box`;
+  panel.appendChild(searchInput);
+
+  // Lista opzioni
+  const list = document.createElement("div");
+  list.style.cssText = `max-height:280px;overflow-y:auto`;
+  panel.appendChild(list);
+
+  // Raccoglie tutte le opzioni originali
+  function getAllOptions() {
+    return Array.from(sel.options).map(o => ({ value: o.value, text: o.text }));
+  }
+
+  function renderList(q) {
+    const opts = getAllOptions();
+    const filtered = q ? opts.filter(o => o.text.toLowerCase().includes(q.toLowerCase())) : opts;
+    list.innerHTML = "";
+    if (!filtered.length) {
+      list.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3);font-size:13px">Nessun risultato</div>`;
+      return;
+    }
+    filtered.forEach(o => {
+      const item = document.createElement("div");
+      item.className = "ss-item";
+      item.dataset.value = o.value;
+      const isSelected = String(o.value) === String(sel.value);
+      item.style.cssText = `padding:9px 14px;cursor:pointer;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.1s;${isSelected ? "background:var(--accent-dim);color:var(--accent);font-weight:700" : ""}`;
+      item.textContent = o.text;
+      item.addEventListener("mouseover", () => { if (!isSelected) item.style.background = "var(--surface3)"; });
+      item.addEventListener("mouseout",  () => { if (!isSelected) item.style.background = ""; });
+      item.addEventListener("click", () => {
+        sel.value = o.value;
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        trigger.querySelector(".ss-trigger-label").textContent = o.text;
+        closePanel();
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function openPanel() {
+    panel.style.display = "block";
+    searchInput.value = "";
+    renderList("");
+    setTimeout(() => searchInput.focus(), 30);
+    trigger.style.borderColor = "var(--accent)";
+    trigger.querySelector("span:last-child").textContent = "▲";
+  }
+
+  function closePanel() {
+    panel.style.display = "none";
+    trigger.style.borderColor = "";
+    trigger.querySelector("span:last-child").textContent = "▼";
+  }
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    panel.style.display === "none" ? openPanel() : closePanel();
+  });
+
+  searchInput.addEventListener("input", () => renderList(searchInput.value));
+
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePanel();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target)) closePanel();
+  });
+
+  // Espone metodo per aggiornare il trigger quando la select cambia dall'esterno
+  sel._ssRefresh = function() {
+    const opt = sel.options[sel.selectedIndex];
+    if (opt) trigger.querySelector(".ss-trigger-label").textContent = opt.text;
+  };
+}
+
 // ─── INIT NAV ─────────────────────────────────────────────────
 function initNav() {
   document.querySelectorAll(".nav-item").forEach((el) => {
