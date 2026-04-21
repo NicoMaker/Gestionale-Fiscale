@@ -41,6 +41,16 @@ function renderGlobalePage() {
       <option value="mensile">📅 Mensile</option>
       <option value="trimestrale">📆 Trimestrale</option>
     </select>
+    <select class="select" id="glob-filtro-cliente-stato" style="width:210px;font-size:13px" onchange="applyGlobaleFiltriLocali()" title="Filtra clienti per situazione complessiva">
+      <option value="">👤 Tutti i clienti</option>
+      <option value="con_in_corso">🔄 Con almeno 1 in corso</option>
+      <option value="senza_in_corso">✅ Senza in corso</option>
+      <option value="tutti_completati">🏆 Tutto completato</option>
+      <option value="con_da_fare">⭕ Con almeno 1 da fare</option>
+      <option value="solo_da_fare">🚨 Solo da fare (nessun avanzamento)</option>
+      <option value="non_completati">⚠️ Non ancora completati al 100%</option>
+      <option value="con_na">➖ Con almeno 1 N/A</option>
+    </select>
     <div class="search-wrap" style="width:200px">
       <span class="search-icon">🔍</span>
       <input class="input" id="glob-search" placeholder="Cerca cliente..." oninput="applyGlobaleFiltriDebounced()" title="Cerca per nome cliente, CF o P.IVA" style="font-size:13px">
@@ -78,9 +88,14 @@ function applyGlobaleFiltri() {
   loadGlobale();
 }
 
+// Filtri applicati solo lato client (non richiedono reload dal server)
+function applyGlobaleFiltriLocali() {
+  if (state.scadGlobale) renderGlobaleTabella(state.scadGlobale);
+}
+
 function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
-  ["glob-filtro-adp","glob-filtro-stato","glob-filtro-tipo","glob-filtro-periodicita","glob-search"]
+  ["glob-filtro-adp","glob-filtro-stato","glob-filtro-tipo","glob-filtro-periodicita","glob-filtro-cliente-stato","glob-search"]
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
   loadGlobale();
 }
@@ -116,10 +131,35 @@ function navigaAdempimento(direzione) {
   applyGlobaleFiltri();
 }
 
+// ─── FILTRO CLIENTE PER SITUAZIONE ────────────────────────────
+// Restituisce true se il cliente (con i suoi periodi) passa il filtro
+function clientePassaFiltroStato(periodi, filtroClienteStato) {
+  if (!filtroClienteStato) return true;
+  const hasInCorso    = periodi.some(r => r.stato === "in_corso");
+  const hasDaFare     = periodi.some(r => r.stato === "da_fare");
+  const hasCompletato = periodi.some(r => r.stato === "completato");
+  const hasNA         = periodi.some(r => r.stato === "n_a");
+  const tuttiComp     = periodi.every(r => r.stato === "completato" || r.stato === "n_a");
+  const nessunAvanz   = periodi.every(r => r.stato === "da_fare");
+
+  switch (filtroClienteStato) {
+    case "con_in_corso":     return hasInCorso;
+    case "senza_in_corso":   return !hasInCorso;
+    case "tutti_completati": return tuttiComp;
+    case "con_da_fare":      return hasDaFare;
+    case "solo_da_fare":     return nessunAvanz;
+    case "non_completati":   return !tuttiComp;
+    case "con_na":           return hasNA;
+    default:                 return true;
+  }
+}
+
 function renderGlobaleTabella(rawData) {
   const st = state.globaleStats;
-  const filtroTipo = document.getElementById("glob-filtro-tipo")?.value || "";
-  const filtroPer  = document.getElementById("glob-filtro-periodicita")?.value || "";
+  const filtroTipo        = document.getElementById("glob-filtro-tipo")?.value || "";
+  const filtroPer         = document.getElementById("glob-filtro-periodicita")?.value || "";
+  const filtroClienteStato = document.getElementById("glob-filtro-cliente-stato")?.value || "";
+
   const data = rawData.filter(r => {
     if (filtroTipo && r.cliente_tipologia_codice !== filtroTipo) return false;
     if (filtroPer  && r.cliente_periodicita !== filtroPer) return false;
@@ -132,6 +172,24 @@ function renderGlobaleTabella(rawData) {
   const adpFiltroAttivo = adpSel?.value || "";
   const adpListaOrdinata = st.adempimenti ? Array.from(st.adempimenti).sort() : [];
   const adpIdx = adpListaOrdinata.indexOf(adpFiltroAttivo);
+
+  // Badge filtro cliente-stato attivo
+  const filtroClienteStatoLabels = {
+    con_in_corso:     "🔄 Con almeno 1 in corso",
+    senza_in_corso:   "✅ Senza in corso",
+    tutti_completati: "🏆 Tutto completato",
+    con_da_fare:      "⭕ Con almeno 1 da fare",
+    solo_da_fare:     "🚨 Solo da fare",
+    non_completati:   "⚠️ Non al 100%",
+    con_na:           "➖ Con almeno 1 N/A",
+  };
+  const filtroClienteStatoBadge = filtroClienteStato
+    ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;background:var(--yellow)18;border:1px solid var(--yellow)44;border-radius:20px;font-size:12px;color:var(--yellow)">
+        <span>Filtro clienti:</span>
+        <strong>${filtroClienteStatoLabels[filtroClienteStato] || filtroClienteStato}</strong>
+        <button onclick="document.getElementById('glob-filtro-cliente-stato').value='';applyGlobaleFiltriLocali()" style="background:none;border:none;color:var(--yellow);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi filtro">✕</button>
+      </div>`
+    : "";
 
   const navAdpHtml = adpFiltroAttivo && adpListaOrdinata.length > 1
     ? `<div class="glob-nav-adp" style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 16px;background:var(--surface3);border-radius:var(--r-sm);border:1px solid var(--border2)">
@@ -150,6 +208,7 @@ function renderGlobaleTabella(rawData) {
         <div>
           <div class="gpc-title" style="font-size:17px">Vista Globale ${state.anno}</div>
           <div class="gpc-sub" style="font-size:13px">${st.clienti} clienti · ${st.adempimenti.size} tipi adempimenti</div>
+          ${filtroClienteStatoBadge}
         </div>
       </div>
       <div class="gpc-stats">
@@ -189,21 +248,42 @@ function renderGlobaleTabella(rawData) {
   const col3Map = { ordinario: "Ord.", semplificato: "Sempl.", forfettario: "Forf.", ordinaria: "Ord.", semplificata: "Sempl." };
 
   let content = "";
+  let totalClientiVisibili = 0;
+
   Object.values(grouped).forEach(g => {
-    const allRows = Object.values(g.clienti).flatMap(c => c.periodi);
+    // Filtra i clienti in base al filtro-cliente-stato (lato client)
+    const clientiFiltrati = Object.values(g.clienti).filter(c =>
+      clientePassaFiltroStato(c.periodi, filtroClienteStato)
+    );
+
+    if (!clientiFiltrati.length) return; // salta questo adempimento se nessun cliente passa il filtro
+
+    const allRows = clientiFiltrati.flatMap(c => c.periodi);
     const compG = allRows.filter(r => r.stato === "completato").length;
     const totG  = allRows.length;
     const pG    = totG > 0 ? Math.round((compG / totG) * 100) : 0;
     const catInfo  = CATEGORIE.find(x => x.codice === g.categoria);
     const catColor = catInfo?.color || "var(--accent)";
 
-    const clientiHtml = Object.values(g.clienti).map(c => {
+    totalClientiVisibili += clientiFiltrati.length;
+
+    const clientiHtml = clientiFiltrati.map(c => {
       const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
       const avatar   = getAvatar(c.nome);
       const compC = c.periodi.filter(r => r.stato === "completato").length;
+      const inCC  = c.periodi.filter(r => r.stato === "in_corso").length;
+      const daFC  = c.periodi.filter(r => r.stato === "da_fare").length;
+      const naC   = c.periodi.filter(r => r.stato === "n_a").length;
       const totC  = c.periodi.length;
       const pC    = totC > 0 ? Math.round((compC / totC) * 100) : 0;
       const pgColor = pC === 100 ? "var(--green)" : pC > 50 ? "var(--yellow)" : "var(--red)";
+
+      // Mini badge situazione cliente (visibili solo se rilevanti)
+      const situazioneBadges = [];
+      if (compC > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px" title="${compC} completati">✅ ${compC}</span>`);
+      if (inCC  > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px" title="${inCC} in corso">🔄 ${inCC}</span>`);
+      if (daFC  > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px" title="${daFC} da fare">⭕ ${daFC}</span>`);
+      if (naC   > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--text3);background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:1px 6px" title="${naC} N/A">➖ ${naC}</span>`);
 
       const parts = [];
       if (c.col2) parts.push(col2Map[c.col2] || c.col2);
@@ -223,6 +303,7 @@ function renderGlobaleTabella(rawData) {
             <div class="gcr-nome" style="font-size:14px">${escAttr(c.nome)}</div>
             <div class="gcr-cf" style="font-size:11px">${c.cf || c.piva || "-"}</div>
             ${classInfo}
+            ${situazioneBadges.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${situazioneBadges.join("")}</div>` : ""}
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
             <span class="badge b-${(c.tipologia_codice||"").toLowerCase()}" style="font-size:11px" title="${TIPOLOGIE_INFO[c.tipologia_codice]?.desc || ''}">${c.tipologia_codice||"-"}</span>
@@ -245,6 +326,7 @@ function renderGlobaleTabella(rawData) {
             <span style="font-family:var(--mono);font-size:12px;color:${catColor};font-weight:700" title="Codice adempimento">${g.codice}</span>
             <strong style="margin-left:10px;font-size:15px">${g.nome}</strong>
             <span class="badge b-categoria" style="margin-left:10px;color:${catColor};background:${catColor}15;font-size:11px" title="Categoria: ${catInfo?.nome || g.categoria}">${g.categoria}</span>
+            ${filtroClienteStato ? `<span style="font-size:11px;color:var(--text3);margin-left:8px">${clientiFiltrati.length} client${clientiFiltrati.length===1?"e":"i"} visibil${clientiFiltrati.length===1?"e":"i"}</span>` : ""}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
@@ -257,7 +339,15 @@ function renderGlobaleTabella(rawData) {
   });
 
   if (!content)
-    content = `<div class="empty"><div class="empty-icon">🌐</div><p style="font-size:15px">Nessun adempimento trovato per ${state.anno}</p></div>`;
+    content = `<div class="empty">
+      <div class="empty-icon">🌐</div>
+      <p style="font-size:15px">
+        ${filtroClienteStato
+          ? `Nessun cliente corrisponde al filtro "<strong>${filtroClienteStatoLabels[filtroClienteStato] || filtroClienteStato}</strong>" per ${state.anno}`
+          : `Nessun adempimento trovato per ${state.anno}`}
+      </p>
+      ${filtroClienteStato ? `<button class="btn btn-sm btn-primary" onclick="document.getElementById('glob-filtro-cliente-stato').value='';applyGlobaleFiltriLocali()" style="margin-top:12px">⟳ Rimuovi filtro</button>` : ""}
+    </div>`;
 
   document.getElementById("content").innerHTML = headerCard + content;
 }

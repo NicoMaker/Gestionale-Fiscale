@@ -17,9 +17,21 @@ function buildDashboardShell(stats) {
         <h3 id="dash-adp-count-title">Adempimenti ${stats.anno}</h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:1">
           <div id="dash-cat-tabs" style="display:flex;gap:5px;flex-wrap:wrap"></div>
-          <div class="search-wrap" style="width:230px;margin-left:auto">
-            <span class="search-icon">🔍</span>
-            <input class="input" id="dash-adp-search" placeholder="Cerca nome, codice..." value="" oninput="onDashAdpSearch(this.value)">
+          <div style="display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap">
+            <select class="select" id="dash-filtro-cliente-stato" style="width:210px;font-size:12px" onchange="onDashFiltroClienteStato()" title="Filtra adempimenti per situazione cliente">
+              <option value="">👤 Tutti i clienti</option>
+              <option value="con_in_corso">🔄 Con almeno 1 in corso</option>
+              <option value="senza_in_corso">✅ Senza in corso</option>
+              <option value="tutti_completati">🏆 Tutto completato</option>
+              <option value="con_da_fare">⭕ Con almeno 1 da fare</option>
+              <option value="solo_da_fare">🚨 Solo da fare</option>
+              <option value="non_completati">⚠️ Non al 100%</option>
+              <option value="con_na">➖ Con almeno 1 N/A</option>
+            </select>
+            <div class="search-wrap" style="width:230px">
+              <span class="search-icon">🔍</span>
+              <input class="input" id="dash-adp-search" placeholder="Cerca nome, codice..." value="" oninput="onDashAdpSearch(this.value)">
+            </div>
           </div>
         </div>
       </div>
@@ -28,16 +40,43 @@ function buildDashboardShell(stats) {
   state._dashRendered = true;
 }
 
+// ─── FILTRO CLIENTE STATO (lato client, per dashboard) ────────
+function adempimentoPassaFiltroClienteStato(a, filtro) {
+  if (!filtro) return true;
+  // a.clienti_dettaglio è un array [{comp, in_corso, da_fare, na, totale}] per cliente
+  // Se non disponibile, fallback: usa le statistiche aggregate dell'adempimento
+  // Nota: il server non fornisce il dettaglio per cliente nell'endpoint stats,
+  // quindi approssimiamo con i dati aggregati dell'adempimento.
+  const inCorso = Math.max(0, a.totale - a.completati - a.da_fare);
+  switch (filtro) {
+    case "con_in_corso":     return inCorso > 0;
+    case "senza_in_corso":   return inCorso === 0;
+    case "tutti_completati": return a.totale > 0 && a.completati === a.totale;
+    case "con_da_fare":      return a.da_fare > 0;
+    case "solo_da_fare":     return a.totale > 0 && a.da_fare === a.totale;
+    case "non_completati":   return a.totale > 0 && a.completati < a.totale;
+    case "con_na":           return (a.na || 0) > 0;
+    default:                 return true;
+  }
+}
+
+function onDashFiltroClienteStato() {
+  state.dashFiltroClienteStato = document.getElementById("dash-filtro-cliente-stato")?.value || "";
+  if (state.dashStats) updateDashboardContent(state.dashStats);
+}
+
 function updateDashboardContent(stats) {
   const allAdp = stats.adempimentiStats || [];
   const sq = (state.dashSearch || "").toLowerCase().trim();
   const sc = state.dashFiltroCategoria || "tutti";
+  const sf = state.dashFiltroClienteStato || "";
   const catColor = {};
   CATEGORIE.forEach(c => catColor[c.codice] = c.color);
 
   const adpVis = allAdp.filter(a => {
     if (sc !== "tutti" && a.categoria !== sc) return false;
     if (sq && !a.nome.toLowerCase().includes(sq) && !a.codice.toLowerCase().includes(sq) && !a.categoria.toLowerCase().includes(sq)) return false;
+    if (!adempimentoPassaFiltroClienteStato(a, sf)) return false;
     return true;
   });
 
@@ -46,7 +85,7 @@ function updateDashboardContent(stats) {
   const fD = adpVis.reduce((s, a) => s + a.da_fare, 0);
   const fI = adpVis.reduce((s, a) => s + Math.max(0, a.totale - a.completati - a.da_fare), 0);
   const fP = fT > 0 ? Math.round((fC / fT) * 100) : 0;
-  const isF = sc !== "tutti" || sq !== "";
+  const isF = sc !== "tutti" || sq !== "" || sf !== "";
 
   const se = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   const si = (id, v) => { const e = document.getElementById(id); if (e) e.innerHTML = v; };
@@ -65,6 +104,20 @@ function updateDashboardContent(stats) {
   if (title)
     title.innerHTML = `Adempimenti ${stats.anno} <span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:6px">${adpVis.length}/${allAdp.length} — clicca su una card per Vista Globale</span>`;
 
+  // Badge filtro cliente stato attivo
+  const filtroLabels = {
+    con_in_corso:     "🔄 Con almeno 1 in corso",
+    senza_in_corso:   "✅ Senza in corso",
+    tutti_completati: "🏆 Tutto completato",
+    con_da_fare:      "⭕ Con almeno 1 da fare",
+    solo_da_fare:     "🚨 Solo da fare",
+    non_completati:   "⚠️ Non al 100%",
+    con_na:           "➖ Con almeno 1 N/A",
+  };
+  // Aggiorna il select (in caso di re-render)
+  const sfSel = document.getElementById("dash-filtro-cliente-stato");
+  if (sfSel && sfSel.value !== sf) sfSel.value = sf;
+
   // Tabs categoria — con "Tutti" in evidenza
   const tabsEl = document.getElementById("dash-cat-tabs");
   if (tabsEl)
@@ -72,7 +125,6 @@ function updateDashboardContent(stats) {
       .map(c => {
         const active = state.dashFiltroCategoria === c.codice;
         const col = c.color || "var(--accent)";
-        // Conta adempimenti per questa categoria
         const count = c.codice === "tutti"
           ? allAdp.length
           : allAdp.filter(a => a.categoria === c.codice).length;
@@ -100,6 +152,7 @@ function updateDashboardContent(stats) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3)">
       <div style="font-size:40px;margin-bottom:16px">📋</div>
       <div style="font-size:15px">Nessun adempimento trovato</div>
+      ${sf ? `<button class="btn btn-sm btn-primary" onclick="document.getElementById('dash-filtro-cliente-stato').value='';onDashFiltroClienteStato()" style="margin-top:12px">⟳ Rimuovi filtro</button>` : ""}
     </div>`;
     return;
   }
@@ -118,7 +171,15 @@ function updateDashboardContent(stats) {
     items.forEach(a => {
       const p = a.totale > 0 ? Math.round((a.completati / a.totale) * 100) : 0;
       const iC = Math.max(0, a.totale - a.completati - a.da_fare);
+      const na = a.na || 0;
       const pgColor = p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
+
+      // Mini badge stato
+      const statoBadges = [];
+      if (a.completati > 0) statoBadges.push(`<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px" title="${a.completati} completati">✅ ${a.completati}</span>`);
+      if (iC > 0)           statoBadges.push(`<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px" title="${iC} in corso">🔄 ${iC}</span>`);
+      if (a.da_fare > 0)    statoBadges.push(`<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px" title="${a.da_fare} da fare">⭕ ${a.da_fare}</span>`);
+      if (na > 0)           statoBadges.push(`<span style="font-size:10px;color:var(--text3);background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:1px 6px" title="${na} N/A">➖ ${na}</span>`);
 
       html += `<div class="dash-adp-card" onclick="goVistaGlobaleAdp('${escAttr(a.nome)}')" title="Clicca per Vista Globale — ${escAttr(a.nome)}">
         <div class="dash-adp-card-top">
@@ -132,7 +193,9 @@ function updateDashboardContent(stats) {
           <div class="dash-stat-chip" style="color:var(--green)" title="Completati"><span class="ds-num">${a.completati}</span><span class="ds-lbl">✓ Comp.</span></div>
           <div class="dash-stat-chip" style="color:var(--red)" title="Da fare"><span class="ds-num">${a.da_fare}</span><span class="ds-lbl">⭕ Da fare</span></div>
           ${iC > 0 ? `<div class="dash-stat-chip" style="color:var(--yellow)" title="In corso"><span class="ds-num">${iC}</span><span class="ds-lbl">🔄 Corso</span></div>` : ""}
+          ${na > 0 ? `<div class="dash-stat-chip" style="color:var(--text3)" title="N/A"><span class="ds-num">${na}</span><span class="ds-lbl">➖ N/A</span></div>` : ""}
         </div>
+        ${statoBadges.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${statoBadges.join("")}</div>` : ""}
       </div>`;
     });
   });
