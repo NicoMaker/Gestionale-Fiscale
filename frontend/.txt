@@ -1,0 +1,1 @@
+mettere campo 2 acconto in cifra corretto nome -> come label con ckeckbox se completi uno dei due casi nel caso di adempimenti rate a quel punto dato s8i colora di blu invece se non fatto rosso ma tutti rosso se non fatto 

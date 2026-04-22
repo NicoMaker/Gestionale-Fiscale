@@ -77,9 +77,7 @@ function loadGlobale() {
   if (statoSel) filtri.stato = statoSel;
   if (search) filtri.search = search;
   if (state.globalePreFiltroAdp) filtri.adempimento = state.globalePreFiltroAdp;
-  if (typeof socket !== 'undefined') {
-    socket.emit("get:scadenzario_globale", { anno: state.anno, filtri });
-  }
+  socket.emit("get:scadenzario_globale", { anno: state.anno, filtri });
 }
 
 const applyGlobaleFiltriDebounced = debounce(() => {
@@ -197,8 +195,6 @@ function renderGlobaleTabella(rawData) {
   const filtroClienteStato =
     document.getElementById("glob-filtro-cliente-stato")?.value || "";
 
-  // ⭐ Nota: i dati rawData contengono già le informazioni del cliente
-  // dal backend (che ora prende la configurazione annuale)
   const data = rawData.filter((r) => {
     if (filtroTipo && r.cliente_tipologia_codice !== filtroTipo) return false;
     if (filtroPer && r.cliente_periodicita !== filtroPer) return false;
@@ -426,10 +422,3 @@ function renderGlobaleTabella(rawData) {
 
   document.getElementById("content").innerHTML = headerCard + content;
 }
-
-// Esponi funzioni globali
-window.changeAnnoGlobale = changeAnnoGlobale;
-window.applyGlobaleFiltri = applyGlobaleFiltri;
-window.resetGlobaleFiltri = resetGlobaleFiltri;
-window.navigaAdempimento = navigaAdempimento;
-window.applyGlobaleFiltriLocali = applyGlobaleFiltriLocali;
