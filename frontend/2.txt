@@ -1,1 +1,1 @@
-non tiene colore giusto e togli tutte le categorie per parte adempimetni e in uttto nelle viste le categorie neglia dempimenti viste dapertuttto e poi vorrei che potessi creare anceh adempimento con solo checkbox v o x e anche se per contabilità -> per due sezioni iva e contabilità   quando completo iva diventa colore blu e completo entrambi i dati verde e parte contabilità un ckeck non scritta e per forfettario solo annaule e non mensile e trimesetrale
+togliere categorie da ogni parte 
