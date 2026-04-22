@@ -2421,3 +2421,73 @@ button[title],
   background: var(--border2);
   border-radius: 2px;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   AVATAR ADATTIVO — font scalato automaticamente per 3+ iniziali
+   Aggiungere in styles.css oppure nel <style> inline dell'HTML
+   ════════════════════════════════════════════════════════════════ */
+
+/* Classe base: font scalato via JS con avatarFontSize() su .cliente-info-avatar
+   Per tutti gli altri avatar usiamo il CSS container-query trick:
+   contenitore piccolo → font automaticamente ridotto via word-break */
+
+.cliente-avatar-sm,
+.cpc-avatar,
+.det-avatar,
+.gcr-avatar,
+.cliente-info-avatar {
+  /* Impedisce l'overflow e scala il font al contenitore */
+  overflow: hidden;
+  word-break: break-all;
+  line-height: 1;
+  /* font-size di default già impostato inline; questo è il fallback */
+  font-size: inherit;
+}
+
+/* Quando l'avatar contiene 3 caratteri il browser non scala da solo,
+   ma con letter-spacing negativo li stringiamo per farli stare */
+.cliente-avatar-sm {
+  letter-spacing: -0.5px;
+}
+
+/* ─── CLASSI HELPER generate da avatarFontSize() ─────────────── */
+/* Usare queste classi in alternativa allo stile inline: */
+.av-len-1,
+.av-len-2 {
+  font-size: 13px;
+} /* default */
+.av-len-3 {
+  font-size: 10px;
+} /* 3 caratteri ~78% */
+.av-len-4 {
+  font-size: 8px;
+} /* 4+ caratteri ~62% */
+
+/* Per avatar più grandi (cpc-avatar 50px, base 20px) */
+.cpc-avatar.av-len-3 {
+  font-size: 15px;
+}
+.cpc-avatar.av-len-4 {
+  font-size: 12px;
+}
+
+/* ── FIX: 4 colonne allineate in altezza ── */
+.quattro-colonne-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+  align-items: stretch; /* <-- tutte alla stessa altezza */
+}
+.col-classificazione {
+  display: flex;
+  flex-direction: column;
+}
+.col-classificazione .select,
+.col-classificazione .input {
+  flex: 1;
+  height: 42px;
+}
+.col-hint {
+  min-height: 18px; /* riserva spazio anche quando non c'è testo */
+}

@@ -154,7 +154,7 @@ function renderClienteInfoBox(cliente) {
 
   return `
     <div class="cliente-info-header">
-      <div class="cliente-info-avatar" style="border-color:${tipColor};color:${tipColor};background:${tipColor}22">${avatar}</div>
+      <div class="cliente-info-avatar" style="border-color:${tipColor};color:${tipColor};background:${tipColor}22;font-size:${avatarFontSize(avatar, 15)}">${avatar}</div>
       <div style="flex:1">
         <div class="cliente-info-nome">${escAttr(cliente.nome)}</div>
         <div class="cliente-info-badges">${tipBadge} ${subBadge}</div>

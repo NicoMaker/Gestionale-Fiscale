@@ -38,8 +38,10 @@ function escAttr(s) {
     .replace(/>/g, "&gt;");
 }
 
-// ─── AVATAR A 2 LETTERE ───────────────────────────────────────
-// "Studio Verdi" → "SV", "Anna" → "AN", "Alfa Srl" → "AS"
+// ─── AVATAR ADATTIVO ──────────────────────────────────────────
+// 1 parola  → prime 2 lettere:        "Anna"             → "AN"
+// 2 parole  → iniziali:               "Studio Verdi"     → "SV"
+// 3+ parole → iniziali di tutte:      "Pinco Pallo Rosa" → "PPR"
 function getAvatar(nome) {
   if (!nome) return "??";
   const words = nome
@@ -47,11 +49,21 @@ function getAvatar(nome) {
     .split(/\s+/)
     .filter((w) => w.length > 0);
   if (words.length === 1) {
-    // Una sola parola: prime 2 lettere maiuscole
     return words[0].substring(0, 2).toUpperCase();
   }
-  // Più parole: prima lettera di ciascuna (max 2)
-  return (words[0][0] + words[1][0]).toUpperCase();
+  // Tutte le iniziali, nessun limite di parole
+  return words.map((w) => w[0]).join("").toUpperCase();
+}
+
+// ─── FONT SIZE AVATAR ─────────────────────────────────────────
+// Restituisce il font-size inline da usare nell'avatar in base
+// al numero di caratteri: 2→normale, 3→ridotto, 4+→molto ridotto
+function avatarFontSize(avatar, base) {
+  const b = base || 13;
+  const len = (avatar || "").length;
+  if (len <= 2) return b + "px";
+  if (len === 3) return Math.round(b * 0.78) + "px";
+  return Math.round(b * 0.62) + "px";
 }
 
 // ─── TIPOLOGIA COLOR ──────────────────────────────────────────

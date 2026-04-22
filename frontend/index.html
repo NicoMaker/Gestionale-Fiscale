@@ -10,29 +10,6 @@
     />
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="css/styles.css" />
-
-    <style>
-      /* ── FIX: 4 colonne allineate in altezza ── */
-      .quattro-colonne-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin-bottom: 18px;
-        align-items: stretch;   /* <-- tutte alla stessa altezza */
-      }
-      .col-classificazione {
-        display: flex;
-        flex-direction: column;
-      }
-      .col-classificazione .select,
-      .col-classificazione .input {
-        flex: 1;
-        height: 42px;
-      }
-      .col-hint {
-        min-height: 18px; /* riserva spazio anche quando non c'è testo */
-      }
-    </style>
   </head>
   <body>
     <!-- ═══ SIDEBAR ═════════════════════════════════════════ -->
