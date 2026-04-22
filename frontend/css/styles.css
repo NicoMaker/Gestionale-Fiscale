@@ -2491,3 +2491,63 @@ button[title],
 .col-hint {
   min-height: 18px; /* riserva spazio anche quando non c'è testo */
 }
+
+
+/* ─── 4 COLONNE ──────────────────────────────────────────────── */
+.quattro-colonne-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* ← usa minmax(0,1fr) per evitare overflow */
+  gap: 14px;
+  margin-bottom: 18px;
+  align-items: stretch;
+}
+
+.col-classificazione {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* ← fondamentale per evitare overflow del contenuto */
+}
+
+.col-classificazione .select,
+.col-classificazione .input {
+  flex: 1;
+  width: 100%;
+  min-width: 0; /* ← evita che il select spinga oltre i limiti */
+}
+
+.col-hint {
+  min-height: 18px;
+  font-size: 10px; /* leggermente più piccolo per stare meglio */
+  white-space: normal; /* permette a capo se necessario */
+  word-break: break-word;
+}
+
+/* Per schermi più piccoli, passa a 2 colonne */
+@media (max-width: 1000px) {
+  .quattro-colonne-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .quattro-colonne-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── SELECT GENERAL FIX ─────────────────────────────────────── */
+.select,
+select {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Per i select nella topbar (searchable select) */
+.topbar-select,
+.ss-trigger {
+  max-width: 100%;
+  min-width: auto;
+  width: auto;
+}
