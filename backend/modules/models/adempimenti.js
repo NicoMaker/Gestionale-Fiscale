@@ -9,7 +9,7 @@ function getAdempimenti() {
 function createAdempimento(data) {
   const rl = data.rate_labels ? JSON.stringify(data.rate_labels) : null;
   runQuery(
-    `INSERT INTO adempimenti (codice,nome,descrizione,categoria,scadenza_tipo,is_contabilita,has_rate,rate_labels) VALUES (?,?,?,?,?,?,?,?)`,
+    `INSERT INTO adempimenti (codice,nome,descrizione,categoria,scadenza_tipo,is_contabilita,has_rate,rate_labels,is_checkbox) VALUES (?,?,?,?,?,?,?,?,?)`,
     [
       data.codice,
       data.nome,
@@ -19,6 +19,7 @@ function createAdempimento(data) {
       data.is_contabilita || 0,
       data.has_rate || 0,
       rl,
+      data.is_checkbox || 0,
     ],
   );
   return queryOne(`SELECT last_insert_rowid() as id`).id;
@@ -27,7 +28,7 @@ function createAdempimento(data) {
 function updateAdempimento(data) {
   const rl = data.rate_labels ? JSON.stringify(data.rate_labels) : null;
   runQuery(
-    `UPDATE adempimenti SET codice=?,nome=?,descrizione=?,categoria=?,scadenza_tipo=?,is_contabilita=?,has_rate=?,rate_labels=? WHERE id=?`,
+    `UPDATE adempimenti SET codice=?,nome=?,descrizione=?,categoria=?,scadenza_tipo=?,is_contabilita=?,has_rate=?,rate_labels=?,is_checkbox=? WHERE id=?`,
     [
       data.codice,
       data.nome,
@@ -37,6 +38,7 @@ function updateAdempimento(data) {
       data.is_contabilita || 0,
       data.has_rate || 0,
       rl,
+      data.is_checkbox || 0,
       data.id,
     ],
   );
@@ -47,13 +49,11 @@ function deleteAdempimento(id) {
     `SELECT COUNT(*) as cnt FROM adempimenti_cliente WHERE id_adempimento = ?`,
     [id],
   );
-
   if (count.cnt > 0) {
     throw new Error(
       `Impossibile eliminare l'adempimento: è assegnato a ${count.cnt} clienti. Elimina prima gli adempimenti dai clienti.`,
     );
   }
-
   runQuery(`UPDATE adempimenti SET attivo=0 WHERE id=?`, [id]);
 }
 

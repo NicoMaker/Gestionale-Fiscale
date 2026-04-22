@@ -12,6 +12,7 @@ function getScadenzarioConDettagliCliente(id_cliente, anno, filtri = {}) {
       a.is_contabilita,
       a.has_rate,
       a.rate_labels,
+      a.is_checkbox,
       c.nome as cliente_nome,
       c.codice_fiscale as cliente_cf,
       c.partita_iva as cliente_piva,
@@ -63,6 +64,7 @@ function getScadenzarioGlobale(anno, filtri = {}) {
       a.is_contabilita,
       a.has_rate,
       a.rate_labels,
+      a.is_checkbox,
       c.id as cliente_id,
       c.nome as cliente_nome,
       c.codice_fiscale as cliente_cf,
@@ -152,15 +154,7 @@ function copiaScadenzarioCliente(id_cliente, anno_da, anno_a) {
       try {
         runQuery(
           `INSERT INTO adempimenti_cliente (id_cliente,id_adempimento,anno,mese,trimestre,semestre,stato) VALUES (?,?,?,?,?,?,?)`,
-          [
-            r.id_cliente,
-            r.id_adempimento,
-            anno_a,
-            r.mese,
-            r.trimestre,
-            r.semestre,
-            "da_fare",
-          ],
+          [r.id_cliente, r.id_adempimento, anno_a, r.mese, r.trimestre, r.semestre, "da_fare"],
         );
         tot++;
       } catch (e) {}
@@ -179,7 +173,7 @@ function copiaTuttiClienti(anno_da, anno_a) {
 
 function updateAdempimentoStato(data) {
   runQuery(
-    `UPDATE adempimenti_cliente SET stato=?,data_scadenza=?,data_completamento=?,note=?,importo=?,importo_saldo=?,importo_acconto1=?,importo_acconto2=?,importo_iva=?,importo_contabilita=? WHERE id=?`,
+    `UPDATE adempimenti_cliente SET stato=?,data_scadenza=?,data_completamento=?,note=?,importo=?,importo_saldo=?,importo_acconto1=?,importo_acconto2=?,importo_iva=?,importo_contabilita=?,cont_completata=? WHERE id=?`,
     [
       data.stato,
       data.data_scadenza || null,
@@ -191,6 +185,7 @@ function updateAdempimentoStato(data) {
       data.importo_acconto2 || null,
       data.importo_iva || null,
       data.importo_contabilita || null,
+      data.cont_completata ? 1 : 0,
       data.id,
     ],
   );
@@ -210,22 +205,11 @@ function deleteAdempimentoCliente(id) {
 }
 
 function addAdempimentoCliente(data) {
-  const adp = queryOne(`SELECT * FROM adempimenti WHERE id=?`, [
-    data.id_adempimento,
-  ]);
+  const adp = queryOne(`SELECT * FROM adempimenti WHERE id=?`, [data.id_adempimento]);
   if (!adp) throw new Error("Adempimento non trovato");
-
   runQuery(
     `INSERT INTO adempimenti_cliente (id_cliente,id_adempimento,anno,mese,trimestre,semestre,stato) VALUES (?,?,?,?,?,?,?)`,
-    [
-      data.id_cliente,
-      data.id_adempimento,
-      data.anno,
-      data.mese || null,
-      data.trimestre || null,
-      data.semestre || null,
-      "da_fare",
-    ],
+    [data.id_cliente, data.id_adempimento, data.anno, data.mese || null, data.trimestre || null, data.semestre || null, "da_fare"],
   );
 }
 
