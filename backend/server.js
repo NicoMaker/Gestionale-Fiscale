@@ -44,7 +44,7 @@ app.use(avvioHtmlRouter); // ← SERVE INDEX.HTML PER LE ALTRE ROUTE
 
 setupSocketHandlers(io);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 initDB().then(async () => {
   const localIP = getLocalIP();
