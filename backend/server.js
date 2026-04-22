@@ -7,6 +7,7 @@ const { initDB } = require("./modules/database");
 const { getLocalIP, getPublicIP } = require("./modules/utils/network");
 const setupSocketHandlers = require("./modules/sockets");
 const downloadDbRouter = require("./modules/routes/downloadDb");
+const avvioHtmlRouter = require("./modules/routes/avvioHtml"); // ← NUOVO IMPORT
 
 const app = express();
 const server = http.createServer(app);
@@ -21,10 +22,14 @@ app.set("io", io);
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// Servi file statici dal frontend
 app.use(express.static(path.join(__dirname, "../frontend")));
 
+// Route API
 app.use("/api", downloadDbRouter);
 
+// Health check
 app.get("/api/health", (req, res) => {
   res.json({
     status: "OK",
@@ -33,6 +38,9 @@ app.get("/api/health", (req, res) => {
     socketConnections: io.engine.clientsCount,
   });
 });
+
+// ⭐ IMPORANTE: Il router HTML va DOPO le route API e i file statici
+app.use(avvioHtmlRouter); // ← SERVE INDEX.HTML PER LE ALTRE ROUTE
 
 setupSocketHandlers(io);
 

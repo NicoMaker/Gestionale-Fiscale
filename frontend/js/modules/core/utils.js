@@ -39,19 +39,31 @@ function escAttr(s) {
 }
 
 // ─── AVATAR ADATTIVO ──────────────────────────────────────────
+// ─── AVATAR ADATTIVO ──────────────────────────────────────────
+// ─── AVATAR ADATTIVO ──────────────────────────────────────────
 function getAvatar(nome) {
-  if (!nome) return "??";
-  const words = nome
-    .trim()
-    .split(/\s+/)
-    .filter((w) => w.length > 0);
-  if (words.length === 1) {
-    return words[0].substring(0, 2).toUpperCase();
+  if (!nome || nome.trim() === "") return "??";
+  
+  const words = nome.trim().split(/\s+/).filter(w => w.length > 0);
+  const wordCount = words.length;
+  
+  if (wordCount === 1) {
+    // 1 parola → 1 lettera
+    return words[0][0].toUpperCase();
   }
-  return words
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+  
+  if (wordCount === 2) {
+    // 2 parole → 2 lettere (iniziali di entrambe)
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  
+  // 3+ parole → prendi iniziali delle prime 3 parole
+  const maxLetters = Math.min(wordCount, 3);
+  let result = "";
+  for (let i = 0; i < maxLetters; i++) {
+    result += words[i][0];
+  }
+  return result.toUpperCase();
 }
 
 // ─── FONT SIZE AVATAR ─────────────────────────────────────────
