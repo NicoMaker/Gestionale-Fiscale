@@ -19,12 +19,14 @@ function renderImportoCellCompact(r) {
     return `<span class="imp-empty">—</span>`;
   }
   if (isContabilita(r)) {
-    const iva  = r.importo_iva  ? `€${parseFloat(r.importo_iva).toFixed(2)}`  : null;
+    const iva      = r.importo_iva          ? `€${parseFloat(r.importo_iva).toFixed(2)}`          : null;
+    const acc2     = r.importo_acconto2     ? `€${parseFloat(r.importo_acconto2).toFixed(2)}`     : null;
     const contDone = parseInt(r.cont_completata) === 1;
-    if (!iva && !contDone) return `<span class="imp-empty">—</span>`;
+    if (!iva && !acc2 && !contDone) return `<span class="imp-empty">—</span>`;
     return `<div class="importi-cell">
-      ${iva  ? `<div class="imp-row"><span class="imp-lbl">💰 IVA</span><span class="imp-val">${iva}</span></div>` : ""}
-      ${contDone ? `<div class="imp-row"><span class="imp-lbl">📊 Cont.</span><span class="imp-val">✓</span></div>` : ""}
+      ${iva   ? `<div class="imp-row"><span class="imp-lbl">💰 IVA</span><span class="imp-val">${iva}</span></div>`       : ""}
+      ${acc2  ? `<div class="imp-row"><span class="imp-lbl">📥 2°Acc.</span><span class="imp-val">${acc2}</span></div>`  : ""}
+      ${contDone ? `<div class="imp-row"><span class="imp-lbl">📊 Cont.</span><span class="imp-val">✓</span></div>`      : ""}
     </div>`;
   }
   if (hasRate(r)) {
@@ -45,28 +47,49 @@ function renderImportoCellCompact(r) {
     : `<span class="imp-empty">—</span>`;
 }
 
-// ⭐ NUOVA FUNZIONE PER DETERMINARE COLORE PILLOLA
-// Rate/Checkbox → Verde se completato, altrimenti Blu
-// Contabilità/Normale → Verde se completato, altrimenti Blu
-// Checkbox con N/A → Grigio
+// ─── COLORE PILLOLA ───────────────────────────────────────────
+// CONTABILITÀ: verde=IVA+2°acc+cont✓, blu=IVA+2°acc (parziale), rosso=niente
+// RATE:        verde=tutti e 3 compilati, blu=almeno 1, rosso=nessuno
+// NORMALE:     verde=completato, rosso/blu=da fare
+// CHECKBOX:    verde=completato, grigio=n_a, rosso=da fare
 function getPillColor(r, stato) {
   const isCompletato = stato === "completato";
-  const isNA = stato === "n_a";
-  
-  // Checkbox con N/A → grigio
-  if (isCheckbox(r) && isNA) return "var(--text3)";
-  
-  // Completato → sempre verde
+  const isNA         = stato === "n_a";
+
+  if (isCheckbox(r)) {
+    if (isNA)         return "var(--text3)";
+    if (isCompletato) return "var(--green)";
+    return "var(--red)";
+  }
+
+  if (isContabilita(r)) {
+    const hasIva    = !!(r.importo_iva);
+    const hasAcc2   = !!(r.importo_acconto2);
+    const contDone  = parseInt(r.cont_completata) === 1;
+    if (hasIva && hasAcc2 && contDone) return "var(--green)";
+    if (hasIva || hasAcc2)             return "var(--accent)";
+    return "var(--red)";
+  }
+
+  if (hasRate(r)) {
+    const s  = !!(r.importo_saldo);
+    const a1 = !!(r.importo_acconto1);
+    const a2 = !!(r.importo_acconto2);
+    const filled = [s, a1, a2].filter(Boolean).length;
+    if (filled === 3) return "var(--green)";
+    if (filled > 0)   return "var(--accent)";
+    return "var(--red)";
+  }
+
+  // normale
   if (isCompletato) return "var(--green)";
-  
-  // Non completato → blu per tutti (rate, contabilità, normale)
-  return "var(--accent)";
+  return "var(--red)";
 }
 
-// ⭐ NUOVA CHECKBOX PILL con supporto N/A
+// ─── CHECKBOX PILL ────────────────────────────────────────────
 function renderCheckboxPill(r) {
   const stato = r.stato || "da_fare";
-  const ps = getPeriodoShort(r);
+  const ps    = getPeriodoShort(r);
 
   const isDone  = stato === "completato";
   const isNA    = stato === "n_a";
@@ -75,18 +98,9 @@ function renderCheckboxPill(r) {
   const color = getPillColor(r, stato);
   const icon  = isDone ? "✅" : isNA ? "➖" : "☐";
 
-  const btnDone = `<button
-    class="cbx-btn${isDone ? " cbx-active cbx-green" : ""}"
-    onclick="setCbxStato(event,${r.id},'completato')"
-    title="Segna completato">✅</button>`;
-  const btnNA = `<button
-    class="cbx-btn${isNA ? " cbx-active cbx-gray" : ""}"
-    onclick="setCbxStato(event,${r.id},'n_a')"
-    title="Segna N/A">➖</button>`;
-  const btnReset = `<button
-    class="cbx-btn${isDaFare ? " cbx-active cbx-red" : ""}"
-    onclick="setCbxStato(event,${r.id},'da_fare')"
-    title="Segna da fare">☐</button>`;
+  const btnDone  = `<button class="cbx-btn${isDone  ? " cbx-active cbx-green" : ""}" onclick="setCbxStato(event,${r.id},'completato')" title="Segna completato">✅</button>`;
+  const btnNA    = `<button class="cbx-btn${isNA    ? " cbx-active cbx-gray"  : ""}" onclick="setCbxStato(event,${r.id},'n_a')"        title="Segna N/A">➖</button>`;
+  const btnReset = `<button class="cbx-btn${isDaFare? " cbx-active cbx-red"   : ""}" onclick="setCbxStato(event,${r.id},'da_fare')"    title="Segna da fare">☐</button>`;
 
   return `<div class="periodo-pill checkbox-pill s-${stato}"
     onclick="openAdpById(${r.id})"
@@ -104,38 +118,42 @@ function renderCheckboxPill(r) {
   </div>`;
 }
 
-// ⭐ PERIODO PILL MODIFICATA con nuova logica colori
+// ─── PERIODO PILL ─────────────────────────────────────────────
 function renderPeriodoPill(r) {
   if (isCheckbox(r)) return renderCheckboxPill(r);
 
   const stato = r.stato || "da_fare";
-  const ps = getPeriodoShort(r);
-  
+  const ps    = getPeriodoShort(r);
+
   const pillColor = getPillColor(r, stato);
-  const statoIcon =
-    stato === "da_fare"   ? "⭕" :
-    stato === "in_corso"  ? "🔄" :
-    stato === "completato"? "✅" : "➖";
-  const statoLabel =
-    stato === "da_fare"   ? "Da fare" :
-    stato === "in_corso"  ? "In corso" :
-    stato === "completato"? "Completato" : "N/A";
+
+  // Icona stato
+  const statoIcon  = stato === "da_fare" ? "⭕" : stato === "in_corso" ? "🔄" : stato === "completato" ? "✅" : "➖";
+  const statoLabel = stato === "da_fare" ? "Da fare" : stato === "in_corso" ? "In corso" : stato === "completato" ? "Completato" : "N/A";
 
   const impHtml = renderImportoCellCompact(r);
-  const hasImp = impHtml !== `<span class="imp-empty">—</span>`;
+  const hasImp  = impHtml !== `<span class="imp-empty">—</span>`;
+
+  // ── Label importi inline nella pill ──────────────────────────
+  let importiInline = "";
+  if (isContabilita(r)) {
+    importiInline = _buildContabilitaLabel(r, pillColor);
+  } else if (hasRate(r)) {
+    importiInline = _buildRateLabel(r, pillColor);
+  }
 
   let dateLine = "";
   if (r.data_scadenza || r.data_completamento) {
     dateLine = `<div class="pp-dates">`;
-    if (r.data_scadenza)       dateLine += `<span class="pp-date" title="Data scadenza">📅 ${r.data_scadenza}</span>`;
-    if (r.data_completamento)  dateLine += `<span class="pp-date" style="color:var(--green)" title="Data completamento">✅ ${r.data_completamento}</span>`;
+    if (r.data_scadenza)      dateLine += `<span class="pp-date" title="Data scadenza">📅 ${r.data_scadenza}</span>`;
+    if (r.data_completamento) dateLine += `<span class="pp-date" style="color:var(--green)" title="Data completamento">✅ ${r.data_completamento}</span>`;
     dateLine += `</div>`;
   }
 
   const tooltipText = `${getPeriodoLabel(r)} — ${statoLabel}${r.data_scadenza ? ` | Scad: ${r.data_scadenza}` : ""}${r.data_completamento ? ` | Compl: ${r.data_completamento}` : ""}\nClick sinistro: modifica | Click destro: toggle completato`;
 
-  return `<div class="periodo-pill s-${stato}" 
-    onclick="openAdpById(${r.id})" 
+  return `<div class="periodo-pill s-${stato}"
+    onclick="openAdpById(${r.id})"
     oncontextmenu="toggleAdpCompletato(event,${r.id})"
     title="${escAttr(tooltipText)}"
     style="border-color:${pillColor}">
@@ -143,13 +161,76 @@ function renderPeriodoPill(r) {
       <span class="pp-tag" style="border-color:${pillColor};color:${pillColor}">${ps}</span>
       <span class="pp-stato-icon" title="${escAttr(statoLabel)}">${statoIcon}</span>
     </div>
+    ${importiInline}
     ${dateLine}
-    ${hasImp ? `<div class="pp-imp">${impHtml}</div>` : ""}
+    ${!importiInline && hasImp ? `<div class="pp-imp">${impHtml}</div>` : ""}
     ${r.note ? `<div class="pp-note" title="${escAttr(r.note)}">📝 ${r.note}</div>` : ""}
   </div>`;
 }
 
-// ─── CLIENTE INFO BOX (senza categorie) ───────────────────────
+// ─── HELPER: label con checkbox per contabilità ───────────────
+// Verde = IVA + 2°Acc + Cont✓  |  Blu = parziale  |  Rosso = niente
+function _buildContabilitaLabel(r, pillColor) {
+  const hasIva   = !!(r.importo_iva);
+  const hasAcc2  = !!(r.importo_acconto2);
+  const contDone = parseInt(r.cont_completata) === 1;
+
+  // colori per ogni campo
+  const cIva  = hasIva   ? (contDone && hasAcc2 ? "var(--green)" : "var(--accent)") : "var(--red)";
+  const cAcc2 = hasAcc2  ? (contDone && hasIva  ? "var(--green)" : "var(--accent)") : "var(--red)";
+  const cCont = contDone ? (hasIva && hasAcc2   ? "var(--green)" : "var(--accent)") : "var(--red)";
+
+  const ivaVal  = hasIva  ? `€${parseFloat(r.importo_iva).toFixed(2)}`      : "—";
+  const acc2Val = hasAcc2 ? `€${parseFloat(r.importo_acconto2).toFixed(2)}` : "—";
+
+  return `<div class="pp-cont-labels">
+    <div class="pp-cont-row">
+      <span class="pp-cont-check" style="color:${cIva}">${hasIva ? "✓" : "✗"}</span>
+      <span class="pp-cont-lbl" style="color:${cIva}">💰 IVA</span>
+      <span class="pp-cont-val" style="color:${cIva}">${ivaVal}</span>
+    </div>
+    <div class="pp-cont-row">
+      <span class="pp-cont-check" style="color:${cAcc2}">${hasAcc2 ? "✓" : "✗"}</span>
+      <span class="pp-cont-lbl" style="color:${cAcc2}">📥 2°Acc.</span>
+      <span class="pp-cont-val" style="color:${cAcc2}">${acc2Val}</span>
+    </div>
+    <div class="pp-cont-row">
+      <span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span>
+      <span class="pp-cont-lbl" style="color:${cCont}">📊 Cont.</span>
+      <span class="pp-cont-val" style="color:${cCont}">${contDone ? "fatto" : "—"}</span>
+    </div>
+  </div>`;
+}
+
+// ─── HELPER: label con checkbox per rate ─────────────────────
+// Verde = tutti e 3  |  Blu = almeno 1  |  Rosso = nessuno
+function _buildRateLabel(r, pillColor) {
+  let lb = ["Saldo","1°Acc.","2°Acc."];
+  try { if (r.rate_labels) lb = JSON.parse(r.rate_labels); } catch(e) {}
+
+  const vals = [r.importo_saldo, r.importo_acconto1, r.importo_acconto2];
+  const icons = ["💰","📥","📥"];
+  const filled = vals.filter(v => !!(v)).length;
+
+  // colore per ogni singolo campo
+  const rows = vals.map((v, i) => {
+    const done = !!(v);
+    let c;
+    if (filled === 3) c = "var(--green)";
+    else if (done)    c = "var(--accent)";
+    else              c = "var(--red)";
+    const display = v ? `€${parseFloat(v).toFixed(2)}` : "—";
+    return `<div class="pp-cont-row">
+      <span class="pp-cont-check" style="color:${c}">${done ? "✓" : "✗"}</span>
+      <span class="pp-cont-lbl" style="color:${c}">${icons[i]} ${lb[i]}</span>
+      <span class="pp-cont-val" style="color:${c}">${display}</span>
+    </div>`;
+  }).join("");
+
+  return `<div class="pp-cont-labels">${rows}</div>`;
+}
+
+// ─── CLIENTE INFO BOX ─────────────────────────────────────────
 function renderClienteInfoBox(cliente) {
   if (!cliente) return "";
   const avatar   = getAvatar(cliente.nome);
