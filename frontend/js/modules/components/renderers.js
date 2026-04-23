@@ -75,9 +75,13 @@ function getPillColor(r, stato) {
   if (hasRate(r)) {
     const filled = [r.importo_saldo, r.importo_acconto1, r.importo_acconto2]
       .filter(v => v != null && v !== "" && v !== 0 && parseFloat(v) > 0).length;
-    if (filled >= 3) return "var(--green)";
-    if (filled >= 1) return "var(--accent)";   // 1 o 2 compilate → blu
-    return "var(--red)";
+    const contDone = parseInt(r.cont_completata) === 1;
+    const hasAnyRate = filled >= 1;
+    
+    // Logica combinata rate+contabilità
+    if (hasAnyRate && contDone) return "var(--green)";  // entrambi → verde
+    if (hasAnyRate || contDone) return "var(--accent)"; // uno solo → blu
+    return "var(--red)";  // nessuno → rosso
   }
 
   // normale
@@ -228,23 +232,37 @@ function _buildRateLabel(r, pillColor) {
   // Conta quante rate hanno un valore > 0
   const filled = vals.filter(v => v != null && v !== "" && parseFloat(v) > 0).length;
   const allDone = filled >= 3;
+  const contDone = parseInt(r.cont_completata) === 1;
+  const hasAnyRate = filled >= 1;
+
+  // Colori combinati rate+contabilità
+  let cRate, cCont;
+  if (hasAnyRate && contDone) {
+    cRate = cCont = "var(--green)";  // entrambi → verde
+  } else if (hasAnyRate || contDone) {
+    cRate = cCont = "var(--accent)"; // uno solo → blu
+  } else {
+    cRate = cCont = "var(--red)";    // nessuno → rosso
+  }
 
   const rows = vals.map((v, i) => {
     const done = v != null && v !== "" && parseFloat(v) > 0;
-    let c;
-    if (allDone)    c = "var(--green)";  // tutte 3 → verde
-    else if (done)  c = "var(--accent)"; // questa sì, le altre no → blu
-    else            c = "var(--red)";    // non compilata → rosso
-
     const display = done ? `€${parseFloat(v).toFixed(2)}` : "—";
     return `<div class="pp-cont-row">
-      <span class="pp-cont-check" style="color:${c}">${done ? "✓" : "✗"}</span>
-      <span class="pp-cont-lbl" style="color:${c}">${icons[i]} ${lb[i]}</span>
-      <span class="pp-cont-val" style="color:${c}">${display}</span>
+      <span class="pp-cont-check" style="color:${cRate}">${done ? "✓" : "✗"}</span>
+      <span class="pp-cont-lbl" style="color:${cRate}">${icons[i]} ${lb[i]}</span>
+      <span class="pp-cont-val" style="color:${cRate}">${display}</span>
     </div>`;
   }).join("");
 
-  return `<div class="pp-cont-labels">${rows}</div>`;
+  // Aggiungi riga per la contabilità
+  const contRow = `<div class="pp-cont-row">
+    <span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span>
+    <span class="pp-cont-lbl" style="color:${cCont}">📊 Cont.</span>
+    <span class="pp-cont-val" style="color:${cCont}">${contDone ? "fatto" : "—"}</span>
+  </div>`;
+
+  return `<div class="pp-cont-labels">${rows}${contRow}</div>`;
 }
 
 // ─── CLIENTE INFO BOX ─────────────────────────────────────────

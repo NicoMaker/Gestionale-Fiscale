@@ -238,16 +238,22 @@
           <div class="rate-grid">
             <div class="form-group">
               <label id="rate-l0">💰 Saldo (€)</label>
-              <input class="input" id="adp-imp-saldo" type="number" step="0.01" placeholder="0.00" />
+              <input class="input" id="adp-imp-saldo" type="number" step="0.01" placeholder="0.00" onchange="onRateContabilitaChange()" />
             </div>
             <div class="form-group">
               <label id="rate-l1">1° Acconto (€)</label>
-              <input class="input" id="adp-imp-acc1" type="number" step="0.01" placeholder="0.00" />
+              <input class="input" id="adp-imp-acc1" type="number" step="0.01" placeholder="0.00" onchange="onRateContabilitaChange()" />
             </div>
             <div class="form-group">
               <label id="rate-l2">2° Acconto (€)</label>
-              <input class="input" id="adp-imp-acc2" type="number" step="0.01" placeholder="0.00" />
+              <input class="input" id="adp-imp-acc2" type="number" step="0.01" placeholder="0.00" onchange="onRateContabilitaChange()" />
             </div>
+          </div>
+          <div class="form-group" style="margin-top:16px">
+            <label class="flag-chip" style="margin-top:6px;padding:11px 15px">
+              <input type="checkbox" id="adp-rate-cont-completata" onchange="onRateContabilitaChange()" />
+              <span id="label-rate-cont" style="transition:color 0.2s">📊 Contabilità completata</span>
+            </label>
           </div>
         </div>
 

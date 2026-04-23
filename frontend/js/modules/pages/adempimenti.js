@@ -221,10 +221,10 @@ function openAdpModal(r) {
   const isRate = hasRate(r);
   const isCbx  = isCheckbox(r);
 
-  // Mostra SOLO la sezione corretta — priorità: checkbox > cont > rate > normale
+  // Mostra le sezioni — priorità: checkbox > cont+rate > cont > rate > normale
   setDisplay("sect-importo-normale",  (!isCont && !isRate && !isCbx) ? "" : "none");
   setDisplay("sect-importo-cont",     (isCont && !isCbx)             ? "" : "none");
-  setDisplay("sect-importo-rate",     (isRate && !isCont && !isCbx)  ? "" : "none");
+  setDisplay("sect-importo-rate",     (isRate && !isCbx)             ? "" : "none");
   setDisplay("sect-importo-checkbox", isCbx                          ? "" : "none");
 
   setVal("adp-importo",   r.importo             || "");
@@ -239,6 +239,13 @@ function openAdpModal(r) {
     const contCheck = document.getElementById("adp-cont-completata");
     if (contCheck) contCheck.checked = parseInt(r.cont_completata) === 1;
     _aggiornaColoriContabilita(r);
+  }
+
+  // Rate con contabilità: checkbox cont_completata + colori
+  if (isRate && !isCbx) {
+    const rateContCheck = document.getElementById("adp-rate-cont-completata");
+    if (rateContCheck) rateContCheck.checked = parseInt(r.cont_completata) === 1;
+    _aggiornaColoriRateContabilita(r);
   }
 
   // Rate: personalizza label
@@ -282,6 +289,31 @@ function onContabilitaImportoChange() {
   _aggiornaColoriContabilita(null);
 }
 
+// ─── COLORI RATE + CONTABILITÀ (blu=uno solo, verde=entrambi) ─────
+function _aggiornaColoriRateContabilita(r) {
+  const rateContCheck = document.getElementById("adp-rate-cont-completata");
+  const contDone = rateContCheck ? rateContCheck.checked : parseInt(r?.cont_completata) === 1;
+  
+  // Verifica se almeno una rata è compilata
+  const saldoVal = document.getElementById("adp-imp-saldo")?.value;
+  const acc1Val = document.getElementById("adp-imp-acc1")?.value;
+  const acc2Val = document.getElementById("adp-imp-acc2")?.value;
+  const hasRate = (saldoVal && saldoVal !== "") || (acc1Val && acc1Val !== "") || (acc2Val && acc2Val !== "");
+
+  let color = "none";
+  if (hasRate && contDone) color = "both";
+  else if (hasRate || contDone) color = "one";
+
+  const labelCont = document.getElementById("label-rate-cont");
+  if (labelCont) {
+    labelCont.style.color = color === "both" ? "var(--green)" : color === "one" ? "var(--accent)" : "";
+  }
+}
+
+function onRateContabilitaChange() {
+  _aggiornaColoriRateContabilita(null);
+}
+
 // ─── SALVA STATO ADEMPIMENTO ──────────────────────────────────
 function saveAdpStato() {
   const id     = parseInt(getVal("adp-id"));
@@ -308,6 +340,8 @@ function saveAdpStato() {
     data.importo_saldo    = parseFloat(getVal("adp-imp-saldo")) || null;
     data.importo_acconto1 = parseFloat(getVal("adp-imp-acc1"))  || null;
     data.importo_acconto2 = parseFloat(getVal("adp-imp-acc2"))  || null;
+    // Salva anche la checkbox della contabilità
+    data.cont_completata  = document.getElementById("adp-rate-cont-completata")?.checked ? 1 : 0;
   } else {
     data.importo = parseFloat(getVal("adp-importo")) || null;
   }
