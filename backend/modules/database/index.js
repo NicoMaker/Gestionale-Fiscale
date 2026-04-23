@@ -94,7 +94,7 @@ module.exports = {
   initDB,
   saveDB,
   runQuery,
-  runQueryAndGetId,  // ⭐ ESPORTA LA NUOVA FUNZIONE
+  runQueryAndGetId, // ⭐ ESPORTA LA NUOVA FUNZIONE
   queryAll,
   queryOne,
 };

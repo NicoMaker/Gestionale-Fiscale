@@ -61,7 +61,7 @@ function aggiornaFiltroAdpScad(data) {
 function renderScadenzarioPage() {
   // Carica i clienti con la configurazione per l'anno corrente
   const annoCorrente = state.anno;
-  if (typeof socket !== 'undefined') {
+  if (typeof socket !== "undefined") {
     socket.emit("get:clienti", { anno: annoCorrente });
     socket.once("res:clienti", ({ success, data }) => {
       if (success && data) {
@@ -117,7 +117,7 @@ function renderScadenzarioSelect(clienti) {
 function onClienteChange() {
   const id = parseInt(document.getElementById("sel-cliente").value);
   // Ricarica il cliente con la configurazione per l'anno corrente
-  if (typeof socket !== 'undefined') {
+  if (typeof socket !== "undefined") {
     socket.emit("get:cliente", { id, anno: state.anno });
     socket.once("res:cliente", ({ success, data }) => {
       if (success && data) {
@@ -150,8 +150,11 @@ function changeAnnoScad(d) {
     .forEach((el) => (el.textContent = state.anno));
   if (state.selectedCliente) {
     // Ricarica il cliente con la nuova configurazione per l'anno selezionato
-    if (typeof socket !== 'undefined') {
-      socket.emit("get:cliente", { id: state.selectedCliente.id, anno: state.anno });
+    if (typeof socket !== "undefined") {
+      socket.emit("get:cliente", {
+        id: state.selectedCliente.id,
+        anno: state.anno,
+      });
       socket.once("res:cliente", ({ success, data }) => {
         if (success && data) {
           state.selectedCliente = data;
@@ -167,7 +170,7 @@ function changeAnnoScad(d) {
 function loadScadenzario() {
   const sv = document.getElementById("scad-search")?.value || "";
   const st = document.getElementById("scad-filtro-stato")?.value || "";
-  if (typeof socket !== 'undefined') {
+  if (typeof socket !== "undefined") {
     socket.emit("get:scadenzario", {
       id_cliente: state.selectedCliente.id,
       anno: state.anno,
@@ -250,10 +253,12 @@ function renderScadenzarioTabella(data) {
   let generaBtnIcon = "⚡";
 
   if (!hasDati) {
-    generaBtnTitle = "Nessun adempimento presente. Genera lo scadenzario per l'anno selezionato";
+    generaBtnTitle =
+      "Nessun adempimento presente. Genera lo scadenzario per l'anno selezionato";
   } else if (hasDati && !hasDatiDaGenerare) {
     generaBtnClass = "btn btn-sm btn-success";
-    generaBtnTitle = "✅ Tutti gli adempimenti sono già stati generati per quest'anno";
+    generaBtnTitle =
+      "✅ Tutti gli adempimenti sono già stati generati per quest'anno";
     generaBtnIcon = "✓";
   } else {
     generaBtnTitle = `Genera ${mancanti.length} adempimento/i mancante/i per l'anno selezionato`;
@@ -271,11 +276,12 @@ function renderScadenzarioTabella(data) {
     : "";
 
   // ⭐ Mostra l'anno corrente della configurazione
-  const configAnnoInfo = c.config_anno && c.config_anno !== state.anno
-    ? `<div class="infobox" style="margin-bottom:12px;font-size:12px;background:var(--yellow)18;color:var(--yellow)">
+  const configAnnoInfo =
+    c.config_anno && c.config_anno !== state.anno
+      ? `<div class="infobox" style="margin-bottom:12px;font-size:12px;background:var(--yellow)18;color:var(--yellow)">
         ⚠️ Configurazione ereditata dall'anno ${c.config_anno} (nessuna configurazione specifica per il ${state.anno})
        </div>`
-    : "";
+      : "";
 
   const clienteCard = `<div class="cliente-preview-card" style="border-left-color:${tipColor}">
     <div class="cpc-inner">
@@ -382,7 +388,7 @@ function generaScadenzario() {
     );
     return;
   }
-  if (typeof socket !== 'undefined') {
+  if (typeof socket !== "undefined") {
     socket.emit("genera:scadenzario", {
       id_cliente: state.selectedCliente.id,
       anno: state.anno,
@@ -417,7 +423,7 @@ function eseguiCopia() {
   const a = parseInt(document.getElementById("copia-a").value);
   if (modalita === "singolo") {
     const id = parseInt(document.getElementById("copia-cliente-id").value);
-    if (typeof socket !== 'undefined') {
+    if (typeof socket !== "undefined") {
       socket.emit("copia:scadenzario", {
         id_cliente: id,
         anno_da: da,
@@ -425,7 +431,7 @@ function eseguiCopia() {
       });
     }
   } else {
-    if (typeof socket !== 'undefined') {
+    if (typeof socket !== "undefined") {
       socket.emit("copia:tutti", { anno_da: da, anno_a: a });
     }
   }
@@ -438,7 +444,7 @@ function openGeneraTutti() {
 
 function eseguiGeneraTutti() {
   const anno = parseInt(document.getElementById("genera-tutti-anno").value);
-  if (typeof socket !== 'undefined') {
+  if (typeof socket !== "undefined") {
     socket.emit("genera:tutti", { anno });
   }
 }
@@ -515,7 +521,7 @@ function eseguiAddAdp() {
     data.trimestre = parseInt(periodo.split(":")[1]);
   else if (periodo.startsWith("sem:"))
     data.semestre = parseInt(periodo.split(":")[1]);
-  if (typeof socket !== 'undefined') {
+  if (typeof socket !== "undefined") {
     socket.emit("add:adempimento_cliente", data);
   }
 }

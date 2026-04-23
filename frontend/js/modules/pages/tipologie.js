@@ -6,25 +6,105 @@ function renderTipologiePage() {
   // ─── CONFIGURAZIONE PERCORSI ──────────────────────────────────
   const PERCORSI = {
     PF: [
-      { sepLabel: "PRIVATO", col2Label: "Privato", col3Label: null, codice: "PF_PRIV", hasPer: false },
-      { sepLabel: "SOCIO", col2Label: "Socio", col3Label: null, codice: "PF_SOCIO", hasPer: false },
-      { sepLabel: "DITTA INDIVIDUALE", col2Label: "Ditta Individuale", col3Label: "Ordinario", codice: "PF_DITTA_ORD", hasPer: true },
-      { sepLabel: null, col2Label: "Ditta Individuale", col3Label: "Semplificato", codice: "PF_DITTA_SEM", hasPer: true },
-      { sepLabel: null, col2Label: "Ditta Individuale", col3Label: "Forfettario", codice: "PF_DITTA_FOR", hasPer: false, isForfettario: true },
-      { sepLabel: "PROFESSIONISTA", col2Label: "Professionista", col3Label: "Ordinario", codice: "PF_PROF_ORD", hasPer: true },
-      { sepLabel: null, col2Label: "Professionista", col3Label: "Semplificato", codice: "PF_PROF_SEM", hasPer: true },
-      { sepLabel: null, col2Label: "Professionista", col3Label: "Forfettario", codice: "PF_PROF_FOR", hasPer: false, isForfettario: true },
+      {
+        sepLabel: "PRIVATO",
+        col2Label: "Privato",
+        col3Label: null,
+        codice: "PF_PRIV",
+        hasPer: false,
+      },
+      {
+        sepLabel: "SOCIO",
+        col2Label: "Socio",
+        col3Label: null,
+        codice: "PF_SOCIO",
+        hasPer: false,
+      },
+      {
+        sepLabel: "DITTA INDIVIDUALE",
+        col2Label: "Ditta Individuale",
+        col3Label: "Ordinario",
+        codice: "PF_DITTA_ORD",
+        hasPer: true,
+      },
+      {
+        sepLabel: null,
+        col2Label: "Ditta Individuale",
+        col3Label: "Semplificato",
+        codice: "PF_DITTA_SEM",
+        hasPer: true,
+      },
+      {
+        sepLabel: null,
+        col2Label: "Ditta Individuale",
+        col3Label: "Forfettario",
+        codice: "PF_DITTA_FOR",
+        hasPer: false,
+        isForfettario: true,
+      },
+      {
+        sepLabel: "PROFESSIONISTA",
+        col2Label: "Professionista",
+        col3Label: "Ordinario",
+        codice: "PF_PROF_ORD",
+        hasPer: true,
+      },
+      {
+        sepLabel: null,
+        col2Label: "Professionista",
+        col3Label: "Semplificato",
+        codice: "PF_PROF_SEM",
+        hasPer: true,
+      },
+      {
+        sepLabel: null,
+        col2Label: "Professionista",
+        col3Label: "Forfettario",
+        codice: "PF_PROF_FOR",
+        hasPer: false,
+        isForfettario: true,
+      },
     ],
     SP: [
-      { sepLabel: null, col2Label: null, col3Label: "Ordinaria", codice: "SP_ORD", hasPer: true },
-      { sepLabel: null, col2Label: null, col3Label: "Semplificata", codice: "SP_SEMP", hasPer: true },
+      {
+        sepLabel: null,
+        col2Label: null,
+        col3Label: "Ordinaria",
+        codice: "SP_ORD",
+        hasPer: true,
+      },
+      {
+        sepLabel: null,
+        col2Label: null,
+        col3Label: "Semplificata",
+        codice: "SP_SEMP",
+        hasPer: true,
+      },
     ],
     SC: [
-      { sepLabel: null, col2Label: null, col3Label: "Ordinaria", codice: "SC_ORD", hasPer: true },
+      {
+        sepLabel: null,
+        col2Label: null,
+        col3Label: "Ordinaria",
+        codice: "SC_ORD",
+        hasPer: true,
+      },
     ],
     ASS: [
-      { sepLabel: null, col2Label: null, col3Label: "Ordinaria", codice: "ASS_ORD", hasPer: true },
-      { sepLabel: null, col2Label: null, col3Label: "Semplificata", codice: "ASS_SEMP", hasPer: true },
+      {
+        sepLabel: null,
+        col2Label: null,
+        col3Label: "Ordinaria",
+        codice: "ASS_ORD",
+        hasPer: true,
+      },
+      {
+        sepLabel: null,
+        col2Label: null,
+        col3Label: "Semplificata",
+        codice: "ASS_SEMP",
+        hasPer: true,
+      },
     ],
   };
 
@@ -34,16 +114,42 @@ function renderTipologiePage() {
   ];
 
   const PERIODICITA_ANNUALE = [
-    { value: "annuale", label: "🗓️ Annuale", color: "#94a3b8" }
+    { value: "annuale", label: "🗓️ Annuale", color: "#94a3b8" },
   ];
 
-  const tipColors = { PF: "#5b8df6", SP: "#a78bfa", SC: "#34d399", ASS: "#fbbf24" };
-  const tipDesc = { PF: "Persona Fisica", SP: "Società di Persone", SC: "Società di Capitali", ASS: "Associazione" };
+  const tipColors = {
+    PF: "#5b8df6",
+    SP: "#a78bfa",
+    SC: "#34d399",
+    ASS: "#fbbf24",
+  };
+  const tipDesc = {
+    PF: "Persona Fisica",
+    SP: "Società di Persone",
+    SC: "Società di Capitali",
+    ASS: "Associazione",
+  };
   const tipIcons = { PF: "👤", SP: "🤝", SC: "🏢", ASS: "🏛️" };
 
-  const col2Colors = { "Privato": "#5b8df6", "Socio": "#a78bfa", "Ditta Individuale": "#fb923c", "Professionista": "#34d399" };
-  const col3Colors = { "Ordinario": "#5b8df6", "Ordinaria": "#5b8df6", "Semplificato": "#22d3ee", "Semplificata": "#22d3ee", "Forfettario": "#fbbf24" };
-  const sepColors = { "PRIVATO": "#5b8df6", "SOCIO": "#a78bfa", "DITTA INDIVIDUALE": "#fb923c", "PROFESSIONISTA": "#34d399" };
+  const col2Colors = {
+    Privato: "#5b8df6",
+    Socio: "#a78bfa",
+    "Ditta Individuale": "#fb923c",
+    Professionista: "#34d399",
+  };
+  const col3Colors = {
+    Ordinario: "#5b8df6",
+    Ordinaria: "#5b8df6",
+    Semplificato: "#22d3ee",
+    Semplificata: "#22d3ee",
+    Forfettario: "#fbbf24",
+  };
+  const sepColors = {
+    PRIVATO: "#5b8df6",
+    SOCIO: "#a78bfa",
+    "DITTA INDIVIDUALE": "#fb923c",
+    PROFESSIONISTA: "#34d399",
+  };
 
   // ─── HELPER RENDERING ─────────────────────────────────────────
   function step(num, label, color) {
@@ -55,11 +161,13 @@ function renderTipologiePage() {
       </div>`;
   }
 
-  function arrow() { return `<span class="tp-arr">›</span>`; }
+  function arrow() {
+    return `<span class="tp-arr">›</span>`;
+  }
 
   function buildPercorsoRows(p, tipCodice, tipColor) {
     let html = "";
-    
+
     // Scelta della periodicità:
     // 1. Se è forfettario -> Solo Annuale
     // 2. Se hasPer è true -> Mensile + Trimestrale
@@ -73,22 +181,22 @@ function renderTipologiePage() {
 
     perRows.forEach((per) => {
       const parts = [];
-      
+
       // Col 1: Tipologia
       parts.push(step(1, tipCodice, tipColor));
-      
+
       // Col 2: Sottocategoria (se esiste)
       if (p.col2Label) {
         parts.push(arrow());
         parts.push(step(2, p.col2Label, col2Colors[p.col2Label]));
       }
-      
+
       // Col 3: Regime (se esiste)
       if (p.col3Label) {
         parts.push(arrow());
         parts.push(step(3, p.col3Label, col3Colors[p.col3Label]));
       }
-      
+
       // Col 4: Periodicità (se applicabile)
       if (per) {
         parts.push(arrow());
@@ -100,8 +208,10 @@ function renderTipologiePage() {
       }
 
       // Codice univoco finale
-      parts.push(`<span class="tp-codice" style="background:${tipColor}12;color:${tipColor};border:1px solid ${tipColor}30">${p.codice}</span>`);
-      
+      parts.push(
+        `<span class="tp-codice" style="background:${tipColor}12;color:${tipColor};border:1px solid ${tipColor}30">${p.codice}</span>`,
+      );
+
       html += `<div class="tp-row">${parts.join("")}</div>`;
     });
     return html;
@@ -117,7 +227,7 @@ function renderTipologiePage() {
 
   Object.entries(PERCORSI).forEach(([tipCodice, percorsi]) => {
     const tipColor = tipColors[tipCodice];
-    
+
     // Conteggio totale righe generate
     const totalLines = percorsi.reduce((acc, curr) => {
       if (curr.isForfettario) return acc + 1;

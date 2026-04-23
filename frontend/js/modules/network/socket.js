@@ -42,7 +42,8 @@ socket.on("broadcast:stats_updated", ({ anno }) => {
 socket.on("broadcast:clienti_updated", () => {
   if (state.page === "clienti") {
     // ⭐ Usa l'anno del filtro attivo, non sempre l'anno corrente
-    const annoFiltro = parseInt(document.getElementById("filter-anno")?.value) || state.anno;
+    const annoFiltro =
+      parseInt(document.getElementById("filter-anno")?.value) || state.anno;
     socket.emit("get:clienti", { anno: annoFiltro });
   }
 });
@@ -120,7 +121,8 @@ socket.on("res:create:cliente", ({ success }) => {
   if (success) {
     closeModal("modal-cliente");
     // ⭐ Dopo creazione ricarica con l'anno del filtro attivo (non solo l'anno corrente)
-    const annoFiltro = parseInt(document.getElementById("filter-anno")?.value) || state.anno;
+    const annoFiltro =
+      parseInt(document.getElementById("filter-anno")?.value) || state.anno;
     state._pending = "clienti";
     socket.emit("get:clienti", { anno: annoFiltro });
   }

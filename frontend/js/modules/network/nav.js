@@ -36,26 +36,35 @@ function initSearchableSelect(selectId) {
   panel.appendChild(list);
 
   function getAllOptions() {
-    return Array.from(sel.options).map(o => ({ value: o.value, text: o.text }));
+    return Array.from(sel.options).map((o) => ({
+      value: o.value,
+      text: o.text,
+    }));
   }
 
   function renderList(q) {
     const opts = getAllOptions();
-    const filtered = q ? opts.filter(o => o.text.toLowerCase().includes(q.toLowerCase())) : opts;
+    const filtered = q
+      ? opts.filter((o) => o.text.toLowerCase().includes(q.toLowerCase()))
+      : opts;
     list.innerHTML = "";
     if (!filtered.length) {
       list.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3);font-size:13px">Nessun risultato</div>`;
       return;
     }
-    filtered.forEach(o => {
+    filtered.forEach((o) => {
       const item = document.createElement("div");
       item.className = "ss-item";
       item.dataset.value = o.value;
       const isSelected = String(o.value) === String(sel.value);
       item.style.cssText = `padding:9px 14px;cursor:pointer;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.1s;${isSelected ? "background:var(--accent-dim);color:var(--accent);font-weight:700" : ""}`;
       item.textContent = o.text;
-      item.addEventListener("mouseover", () => { if (!isSelected) item.style.background = "var(--surface3)"; });
-      item.addEventListener("mouseout",  () => { if (!isSelected) item.style.background = ""; });
+      item.addEventListener("mouseover", () => {
+        if (!isSelected) item.style.background = "var(--surface3)";
+      });
+      item.addEventListener("mouseout", () => {
+        if (!isSelected) item.style.background = "";
+      });
       item.addEventListener("click", () => {
         sel.value = o.value;
         sel.dispatchEvent(new Event("change", { bubbles: true }));
@@ -81,12 +90,19 @@ function initSearchableSelect(selectId) {
     trigger.querySelector("span:last-child").textContent = "▼";
   }
 
-  trigger.addEventListener("click", e => { e.stopPropagation(); panel.style.display === "none" ? openPanel() : closePanel(); });
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    panel.style.display === "none" ? openPanel() : closePanel();
+  });
   searchInput.addEventListener("input", () => renderList(searchInput.value));
-  searchInput.addEventListener("keydown", e => { if (e.key === "Escape") closePanel(); });
-  document.addEventListener("click", e => { if (!wrap.contains(e.target)) closePanel(); });
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePanel();
+  });
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target)) closePanel();
+  });
 
-  sel._ssRefresh = function() {
+  sel._ssRefresh = function () {
     const opt = sel.options[sel.selectedIndex];
     if (opt) trigger.querySelector(".ss-trigger-label").textContent = opt.text;
   };
@@ -94,27 +110,33 @@ function initSearchableSelect(selectId) {
 
 // ─── INIT NAV ─────────────────────────────────────────────────
 function initNav() {
-  document.querySelectorAll(".nav-item").forEach(el => {
+  document.querySelectorAll(".nav-item").forEach((el) => {
     if (el.dataset.page)
       el.addEventListener("click", () => {
-        document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((x) => x.classList.remove("active"));
         el.classList.add("active");
         renderPage(el.dataset.page);
       });
   });
 
-  document.getElementById("btn-scarica-db")?.addEventListener("click", e => {
+  document.getElementById("btn-scarica-db")?.addEventListener("click", (e) => {
     e.stopPropagation();
     scaricaDatabase();
   });
 
-  document.querySelectorAll(".modal-overlay").forEach(overlay => {
-    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.classList.remove("open"); });
+  document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.classList.remove("open");
+    });
   });
 
-  document.addEventListener("keydown", e => {
+  document.addEventListener("keydown", (e) => {
     if (e.key === "Escape")
-      document.querySelectorAll(".modal-overlay.open").forEach(m => m.classList.remove("open"));
+      document
+        .querySelectorAll(".modal-overlay.open")
+        .forEach((m) => m.classList.remove("open"));
   });
 }
 
@@ -125,12 +147,12 @@ function renderPage(page) {
   scrollToTop();
 
   const titles = {
-    dashboard:          "Dashboard",
-    clienti:            "Clienti",
-    scadenzario:        "Scadenzario Cliente",
-    scadenzario_globale:"Vista Globale",
-    adempimenti:        "Adempimenti Fiscali",
-    tipologie:          "Tipologie Clienti",
+    dashboard: "Dashboard",
+    clienti: "Clienti",
+    scadenzario: "Scadenzario Cliente",
+    scadenzario_globale: "Vista Globale",
+    adempimenti: "Adempimenti Fiscali",
+    tipologie: "Tipologie Clienti",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
 
@@ -146,7 +168,6 @@ function renderPage(page) {
       <button class="btn btn-cyan btn-sm no-print"   onclick="openCopiaTutti()" style="font-size:13px">📋 Copia Anno</button>
       <button class="btn btn-print btn-sm"           onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>`;
     socket.emit("get:stats", { anno: state.anno });
-
   } else if (page === "clienti") {
     state._pending = "clienti";
     document.getElementById("topbar-actions").innerHTML = `
@@ -158,15 +179,12 @@ function renderPage(page) {
       <button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>
       <button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Nuovo Cliente</button>`;
     socket.emit("get:clienti");
-
   } else if (page === "scadenzario") {
     state._pending = "scadenzario";
     document.getElementById("topbar-actions").innerHTML = "";
     socket.emit("get:clienti");
-
   } else if (page === "scadenzario_globale") {
     renderGlobalePage();
-
   } else if (page === "adempimenti") {
     state._pending = "adempimenti";
     // ⭐ Topbar senza filtro categoria — solo ricerca testo
@@ -178,18 +196,21 @@ function renderPage(page) {
       <button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:13px">⟳ Tutti</button>
       <button class="btn btn-primary no-print" onclick="openNuovoAdpDef()" style="font-size:13px">+ Nuovo</button>`;
     socket.emit("get:adempimenti");
-
   } else if (page === "tipologie") {
     document.getElementById("topbar-actions").innerHTML = "";
     renderTipologiePage();
   }
 }
 
-function refreshPage() { renderPage(state.page); }
+function refreshPage() {
+  renderPage(state.page);
+}
 
 function changeAnno(d) {
   state.anno += d;
-  document.querySelectorAll(".year-num").forEach(el => (el.textContent = state.anno));
+  document
+    .querySelectorAll(".year-num")
+    .forEach((el) => (el.textContent = state.anno));
   if (state.page === "dashboard") {
     state._dashRendered = false;
     socket.emit("get:stats", { anno: state.anno });
