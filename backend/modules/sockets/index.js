@@ -91,6 +91,39 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    // ── COPIA CONFIGURAZIONE CLIENTE ──
+    socket.on("copia:config_cliente", ({ id_cliente, anno_da, anno_a }) => {
+      try {
+        const config = clientiModel.copiaConfigClienteAnno(id_cliente, anno_da, anno_a);
+        io.emit("broadcast:clienti_updated");
+        socket.emit("res:copia:config_cliente", { success: true, config });
+        socket.emit("notify", { type: "success", msg: `Configurazione cliente copiata dall'anno ${anno_da} al ${anno_a}` });
+      } catch (e) {
+        socket.emit("res:copia:config_cliente", { success: false, error: e.message });
+        socket.emit("notify", { type: "error", msg: e.message });
+      }
+    });
+
+    socket.on("copia:config_tutti_clienti", ({ anno_da, anno_a }) => {
+      try {
+        const risultati = clientiModel.copiaTuttiClientiAnno(anno_da, anno_a);
+        const successCount = risultati.filter(r => r.success).length;
+        const errorCount = risultati.filter(r => !r.success).length;
+        
+        io.emit("broadcast:clienti_updated");
+        socket.emit("res:copia:config_tutti_clienti", { success: true, risultati });
+        
+        if (errorCount === 0) {
+          socket.emit("notify", { type: "success", msg: `Configurazione copiata con successo per tutti ${successCount} clienti` });
+        } else {
+          socket.emit("notify", { type: "warning", msg: `Configurazione copiata per ${successCount} clienti, ${errorCount} errori` });
+        }
+      } catch (e) {
+        socket.emit("res:copia:config_tutti_clienti", { success: false, error: e.message });
+        socket.emit("notify", { type: "error", msg: e.message });
+      }
+    });
+
     // ── ADEMPIMENTI (stessi eventi) ──
     socket.on("get:adempimenti", () => {
       try {

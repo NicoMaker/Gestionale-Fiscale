@@ -34,7 +34,7 @@ function getConfigCorrente(id_cliente, anno = new Date().getFullYear()) {
 }
 
 // ⭐ Ottiene tutti i clienti con la loro configurazione per l'anno specificato
-//    Esclude clienti la cui prima configurazione è per un anno > anno richiesto
+//    Mostra tutti i clienti attivi, usando la configurazione più recente come fallback
 function getClientiConDettagli(filtri = {}, anno = new Date().getFullYear()) {
   let sql = `
     SELECT 
@@ -72,18 +72,8 @@ function getClientiConDettagli(filtri = {}, anno = new Date().getFullYear()) {
     LEFT JOIN tipologie_cliente t ON cfg.id_tipologia = t.id
     LEFT JOIN sottotipologie s ON cfg.id_sottotipologia = s.id
     WHERE c.attivo = 1
-    AND (
-      -- Il cliente esiste per questo anno: ha una config nell'anno richiesto...
-      cfg.id IS NOT NULL
-      OR
-      -- ...oppure ha una config in un anno precedente (è un cliente storico)
-      EXISTS (
-        SELECT 1 FROM clienti_config_annuale cca
-        WHERE cca.id_cliente = c.id AND cca.anno <= ?
-      )
-    )
   `;
-  const params = [anno, anno];
+  const params = [anno];
 
   if (filtri.tipologia) {
     sql += ` AND t.codice = ?`;
@@ -287,6 +277,51 @@ function canDeleteCliente(id) {
   return { canDelete: count.cnt === 0, adempimentiCount: count.cnt };
 }
 
+function copiaConfigClienteAnno(id_cliente, anno_da, anno_a) {
+  // Verifica che esista una configurazione per l'anno di origine
+  const configOrigine = getConfigClientePerAnno(id_cliente, anno_da);
+  if (!configOrigine) {
+    throw new Error(`Nessuna configurazione trovata per il cliente ${id_cliente} nell'anno ${anno_da}`);
+  }
+  
+  // Copia la configurazione nel nuovo anno
+  saveConfigCliente({
+    id_cliente: id_cliente,
+    anno: anno_a,
+    id_tipologia: configOrigine.id_tipologia,
+    id_sottotipologia: configOrigine.id_sottotipologia,
+    col2_value: configOrigine.col2_value,
+    col3_value: configOrigine.col3_value,
+    periodicita: configOrigine.periodicita,
+  });
+  
+  return getConfigClientePerAnno(id_cliente, anno_a);
+}
+
+function copiaTuttiClientiAnno(anno_da, anno_a) {
+  const clienti = queryAll(`SELECT id FROM clienti WHERE attivo = 1`);
+  const risultati = [];
+  
+  for (const cliente of clienti) {
+    try {
+      const config = copiaConfigClienteAnno(cliente.id, anno_da, anno_a);
+      risultati.push({ 
+        id_cliente: cliente.id, 
+        success: true, 
+        config: config 
+      });
+    } catch (error) {
+      risultati.push({ 
+        id_cliente: cliente.id, 
+        success: false, 
+        error: error.message 
+      });
+    }
+  }
+  
+  return risultati;
+}
+
 module.exports = {
   getClientiConDettagli,
   getClienteConDettagli,
@@ -297,4 +332,6 @@ module.exports = {
   updateClienteConfig,
   deleteCliente,
   canDeleteCliente,
+  copiaConfigClienteAnno,
+  copiaTuttiClientiAnno,
 };

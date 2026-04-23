@@ -133,9 +133,10 @@ function renderClientiTabella(clienti) {
         </td>
         <td style="padding:12px 16px;color:var(--text2);font-size:13px">${c.email||"—"}</td>
         <td class="no-print" style="padding:12px 16px;white-space:nowrap">
-          <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
+          <div style="display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
             <button class="btn btn-xs btn-secondary" onclick="editCliente(${c.id})"   title="Modifica">✏️</button>
             <button class="btn btn-xs btn-success"   onclick="goScadenzario(${c.id})" title="Scadenzario">📅</button>
+            <button class="btn btn-xs btn-orange"     onclick="openCopiaConfig(${c.id})" title="Copia configurazione">📋</button>
             <button class="btn btn-xs btn-danger"    onclick="deleteCliente(${c.id})" title="Elimina">🗑️</button>
           </div>
         </td>
@@ -147,6 +148,9 @@ function renderClientiTabella(clienti) {
     <div class="table-wrap">
       <div class="table-header no-print">
         <h3>Clienti <span style="font-size:13px;color:var(--text3);margin-left:8px">(${clienti?clienti.length:0})</span></h3>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm btn-orange" onclick="openCopiaConfigTutti()" title="Copia configurazione per tutti i clienti">📋 Copia Config Tutti</button>
+        </div>
       </div>
       <table style="width:100%;border-collapse:collapse">
         <thead>
@@ -687,6 +691,60 @@ function onCol3Change() {
   aggiornaRiepilogoClassificazione();
 }
 
+// ─── FUNZIONI COPIA CONFIGURAZIONE ─────────────────────────────
+function openCopiaConfig(id_cliente = null) {
+  document.getElementById("copia-config-cliente-id").value = id_cliente || "";
+  document.getElementById("copia-config-modalita").value = id_cliente ? "singolo" : "tutti";
+  document.getElementById("copia-config-da").value = new Date().getFullYear() - 1;
+  document.getElementById("copia-config-a").value = new Date().getFullYear();
+  
+  if (id_cliente) {
+    const cliente = state.clienti?.find(c => c.id === id_cliente);
+    document.getElementById("copia-config-info").innerHTML =
+      cliente ? `Copia configurazione per <strong>${cliente.nome}</strong>` : "Copia configurazione cliente";
+  } else {
+    document.getElementById("copia-config-info").innerHTML = 
+      "Copia configurazione per <strong>tutti i clienti attivi</strong>";
+  }
+  
+  openModal("modal-copia-config");
+}
+
+function openCopiaConfigTutti() {
+  openCopiaConfig(); // senza id_cliente = tutti
+}
+
+function eseguiCopiaConfig() {
+  const modalita = document.getElementById("copia-config-modalita").value;
+  const id_cliente = document.getElementById("copia-config-cliente-id").value;
+  const da = parseInt(document.getElementById("copia-config-da").value);
+  const a = parseInt(document.getElementById("copia-config-a").value);
+  
+  if (da >= a) {
+    showNotif("L'anno di partenza deve essere precedente all'anno di destinazione", "error");
+    return;
+  }
+  
+  if (modalita === "singolo" && id_cliente) {
+    if (typeof socket !== 'undefined') {
+      socket.emit("copia:config_cliente", {
+        id_cliente: parseInt(id_cliente),
+        anno_da: da,
+        anno_a: a
+      });
+    }
+  } else {
+    if (typeof socket !== 'undefined') {
+      socket.emit("copia:config_tutti_clienti", {
+        anno_da: da,
+        anno_a: a
+      });
+    }
+  }
+  
+  closeModal("modal-copia-config");
+}
+
 // Esponi globali
 window.editCliente             = editCliente;
 window.editClienteConfig       = editClienteConfig;
@@ -697,6 +755,9 @@ window.onDettaglioAnnoChange   = onDettaglioAnnoChange;
 window.editClienteFromDettaglio= editClienteFromDettaglio;
 window.deleteClienteFromDettaglio= deleteClienteFromDettaglio;
 window.goToClienteScadenzario  = goToClienteScadenzario;
+window.openCopiaConfig         = openCopiaConfig;
+window.openCopiaConfigTutti    = openCopiaConfigTutti;
+window.eseguiCopiaConfig       = eseguiCopiaConfig;
 window.openNuovoCliente        = openNuovoCliente;
 window.saveCliente             = saveCliente;
 window.applyClientiFiltri      = applyClientiFiltri;

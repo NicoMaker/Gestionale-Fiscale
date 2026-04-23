@@ -94,12 +94,24 @@ function renderCheckboxPill(r) {
   const isNA     = stato === "n_a";
   const isDaFare = !isDone && !isNA;
 
-  const color = getPillColor(r, stato);
+  // Logica colori specifica per checkbox: 
+  // - Se uno dei due checkbox è attivo -> blu
+  // - Se entrambi non attivi -> verde 
+  // - Se compilato campo primo da fare -> checkbox contabilità verde
+  let color;
+  if (isDaFare && r.note && r.note.includes("primo da fare")) {
+    color = "var(--green)"; // verde per contabilità quando primo da fare compilato
+  } else if (isDone || isNA) {
+    color = "var(--accent)"; // blu quando almeno un checkbox attivo
+  } else {
+    color = "var(--green)"; // verde quando entrambi non attivi
+  }
+
   const icon  = isDone ? "✅" : isNA ? "➖" : "☐";
 
-  const btnDone  = `<button class="cbx-btn${isDone  ? " cbx-active cbx-green" : ""}" onclick="setCbxStato(event,${r.id},'completato')" title="Segna completato">✅</button>`;
+  const btnDone  = `<button class="cbx-btn${isDone  ? " cbx-active cbx-blue" : ""}" onclick="setCbxStato(event,${r.id},'completato')" title="Segna completato">✅</button>`;
   const btnNA    = `<button class="cbx-btn${isNA    ? " cbx-active cbx-gray"  : ""}" onclick="setCbxStato(event,${r.id},'n_a')"        title="Segna N/A">➖</button>`;
-  const btnReset = `<button class="cbx-btn${isDaFare? " cbx-active cbx-red"   : ""}" onclick="setCbxStato(event,${r.id},'da_fare')"    title="Segna da fare">☐</button>`;
+  const btnReset = `<button class="cbx-btn${isDaFare? " cbx-active cbx-green"   : ""}" onclick="setCbxStato(event,${r.id},'da_fare')"    title="Segna da fare">☐</button>`;
 
   return `<div class="periodo-pill checkbox-pill s-${stato}"
     onclick="openAdpById(${r.id})"
