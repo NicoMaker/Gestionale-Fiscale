@@ -13,7 +13,6 @@ let lastClienteFormValues = {
 };
 
 // ─── ANNO MIN/MAX ─────────────────────────────────────────────
-// ⭐ Anni disponibili: dal 2000 al 2200
 const ANNO_MIN = 2000;
 const ANNO_MAX = 2200;
 
@@ -108,7 +107,6 @@ function renderClientiTabella(clienti) {
       const avatar   = getAvatar(c.nome);
       const sottotipoLabel = c.sottotipologia_nome || "";
 
-      // ⭐ Badge tipologia con colore e descrizione
       const tipInfo  = TIPOLOGIE_INFO[c.tipologia_codice] || {};
       const tipBadge = `<span class="badge b-${(c.tipologia_codice||"").toLowerCase()}"
         style="background:${tipColor}22;color:${tipColor};border:1px solid ${tipColor}44;font-size:12px"
@@ -211,7 +209,6 @@ function renderClienteDettaglio(c, anno) {
   const col3LMap      = { ordinario:"Ordinario", semplificato:"Semplificato", forfettario:"Forfettario", ordinaria:"Ordinaria", semplificata:"Semplificata" };
   const periodicitaMap= { mensile:"📅 Mensile", trimestrale:"📆 Trimestrale", annuale:"📅 Annuale" };
 
-  // ⭐ Anno selector con range completo 2000-2200
   const classificazioneHtml = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div style="display:flex;align-items:center;gap:12px">
@@ -224,7 +221,6 @@ function renderClienteDettaglio(c, anno) {
       <button class="btn btn-sm btn-primary" onclick="editClienteConfig(${c.id},${anno})" title="Modifica configurazione per quest'anno">✏️ Modifica ${anno}</button>
     </div>`;
 
-  // Avviso se nessuna config per quell'anno
   const noConfigWarning = !c.id_tipologia
     ? `<div class="infobox" style="margin-bottom:16px;background:var(--yellow)18;border-color:var(--yellow);color:var(--yellow)">
         ⚠️ Nessuna configurazione registrata per il ${anno}. Clicca <strong>Modifica ${anno}</strong> per crearne una.
@@ -325,7 +321,6 @@ function renderStoricoConfig(storico) {
 }
 
 // ─── NAVIGAZIONE ANNO DETTAGLIO ───────────────────────────────
-// ⭐ Se non esiste configurazione per l'anno selezionato (né ereditata) → avvisa
 function onDettaglioAnnoChange() {
   const anno = parseInt(document.getElementById("det-anno-select").value);
   if (currentClienteId) loadClienteDettaglio(currentClienteId, anno);
@@ -394,6 +389,16 @@ function openEditClienteModal(cliente, anno) {
   setTimeout(() => {
     if (document.getElementById("c-col2")) document.getElementById("c-col2").value = col2Val;
     if (document.getElementById("c-col3")) document.getElementById("c-col3").value = col3Val;
+    
+    lastClienteFormValues.col2 = col2Val;
+    lastClienteFormValues.col3 = col3Val;
+    lastClienteFormValues.col4 = col4Val;
+    
+    localStorage.setItem('clienteForm_tipologia', cliente.id_tipologia);
+    localStorage.setItem('clienteForm_col2', col2Val);
+    localStorage.setItem('clienteForm_col3', col3Val);
+    localStorage.setItem('clienteForm_col4', col4Val);
+    
     aggiornaColonneCliente();
     setTimeout(() => {
       const tipCodice = _getTipologiaCodice();
@@ -406,9 +411,9 @@ function openEditClienteModal(cliente, anno) {
   openModal("modal-cliente");
 }
 
+// ⭐ FUNZIONE PRINCIPALE PER NUOVO CLIENTE
 function openNuovoCliente() {
   console.log("=== APERTURA NUOVO CLIENTE ===");
-  console.log("Valori iniziali delle variabili globali:", lastClienteFormValues);
   console.log("Valori nel localStorage:", {
     tipologia: localStorage.getItem('clienteForm_tipologia'),
     col2: localStorage.getItem('clienteForm_col2'),
@@ -417,82 +422,93 @@ function openNuovoCliente() {
   });
   
   document.getElementById("modal-cliente-title").textContent = "Nuovo Cliente";
-  document.getElementById("cliente-id").value        = "";
+  document.getElementById("cliente-id").value = "";
   document.getElementById("cliente-edit-anno").value = new Date().getFullYear();
   const annoInfo = document.getElementById("cliente-anno-info");
   if (annoInfo) annoInfo.innerHTML = "";
 
-  // NON salvare i valori attuali perché potrebbero essere vuoti o non esistere ancora
-  // Invece, usa solo i valori già salvati nel localStorage
-  
   // Resetta solo i campi anagrafici
-  ["c-nome","c-cf","c-piva","c-email","c-tel","c-indirizzo","c-note","c-pec","c-sdi","c-citta","c-cap","c-prov","c-referente","c-iban"]
+  ["c-nome", "c-cf", "c-piva", "c-email", "c-tel", "c-indirizzo", "c-note", "c-pec", "c-sdi", "c-citta", "c-cap", "c-prov", "c-referente", "c-iban"]
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-  
+
   const badge = document.getElementById("col4-forfettario-badge");
   if (badge) badge.style.display = "none";
-  
-  // Popola la tipologia con il valore salvato dal localStorage
-  const savedTipologia = localStorage.getItem('clienteForm_tipologia') || state.tipologie[0]?.id;
-  populateTipologiaSelect(savedTipologia);
-  
-  // Attendi che il DOM sia pronto e poi ripristina i valori dal localStorage
+
+  // Resetta le variabili globali
+  lastClienteFormValues = {
+    col2: "",
+    col3: "",
+    col4: ""
+  };
+
+  // Carica la tipologia salvata o la prima disponibile
+  const savedTipologia = localStorage.getItem('clienteForm_tipologia');
+  if (savedTipologia && state.tipologie && state.tipologie.some(t => String(t.id) === String(savedTipologia))) {
+    populateTipologiaSelect(savedTipologia);
+  } else if (state.tipologie && state.tipologie.length > 0) {
+    populateTipologiaSelect(state.tipologie[0].id);
+  } else {
+    populateTipologiaSelect("");
+  }
+
+  // Attendi il rendering del DOM
   setTimeout(() => {
-    // Ripristina tipologia
-    if (document.getElementById("c-tipologia")) {
-      document.getElementById("c-tipologia").value = savedTipologia;
-      console.log("Impostata tipologia:", savedTipologia);
-    }
-    
-    // Aggiorna le colonne per caricare le opzioni dipendenti
     aggiornaColonneCliente();
     
-    // Attendi un po' e ripristina gli altri campi dal localStorage
     setTimeout(() => {
-      // Prima aggiorna le colonne per caricare tutte le opzioni
-      aggiornaColonneCliente();
+      // Ripristina col2
+      const savedCol2 = localStorage.getItem('clienteForm_col2');
+      const col2Element = document.getElementById("c-col2");
+      const col2Wrap = document.getElementById("wrap-col2");
       
-      // Poi attendi ancora un po' per assicurarti che le opzioni siano caricate
+      if (savedCol2 && savedCol2 !== "" && col2Element && col2Wrap && col2Wrap.style.display !== "none") {
+        col2Element.value = savedCol2;
+        lastClienteFormValues.col2 = savedCol2;
+        console.log("Ripristinato col2:", savedCol2);
+        
+        const tipCodice = _getTipologiaCodice();
+        _aggiornaCol3(tipCodice, savedCol2);
+      }
+      
       setTimeout(() => {
-        // Ripristina campo 2 solo se esiste nel localStorage
-        const savedCol2 = localStorage.getItem('clienteForm_col2');
-        if (document.getElementById("c-col2") && savedCol2 && savedCol2 !== "") {
-          document.getElementById("c-col2").value = savedCol2;
-          lastClienteFormValues.col2 = savedCol2; // Aggiorna variabile globale
-          console.log("Ripristinato col2:", savedCol2);
-        }
-        
-        // Ripristina campo 3 solo se esiste nel localStorage
+        // Ripristina col3
         const savedCol3 = localStorage.getItem('clienteForm_col3');
-        if (document.getElementById("c-col3") && savedCol3 && savedCol3 !== "") {
-          document.getElementById("c-col3").value = savedCol3;
-          lastClienteFormValues.col3 = savedCol3; // Aggiorna variabile globale
+        const col3Element = document.getElementById("c-col3");
+        const col3Wrap = document.getElementById("wrap-col3");
+        
+        if (savedCol3 && savedCol3 !== "" && col3Element && col3Wrap && col3Wrap.style.display !== "none") {
+          col3Element.value = savedCol3;
+          lastClienteFormValues.col3 = savedCol3;
           console.log("Ripristinato col3:", savedCol3);
+          
+          const tipCodice = _getTipologiaCodice();
+          const col2Val = document.getElementById("c-col2")?.value || "";
+          _aggiornaCol3(tipCodice, col2Val);
+          _aggiornCol4BasedOnCol3(tipCodice, savedCol3);
         }
         
-        // Ripristina campo 4 solo se esiste nel localStorage
+        // Ripristina col4
         const savedCol4 = localStorage.getItem('clienteForm_col4');
-        if (document.getElementById("c-col4") && savedCol4 && savedCol4 !== "") {
-          document.getElementById("c-col4").value = savedCol4;
-          lastClienteFormValues.col4 = savedCol4; // Aggiorna variabile globale
+        const col4Element = document.getElementById("c-col4");
+        const col4Wrap = document.getElementById("wrap-col4");
+        
+        if (savedCol4 && savedCol4 !== "" && col4Element && col4Wrap && col4Wrap.style.display !== "none") {
+          col4Element.value = savedCol4;
+          lastClienteFormValues.col4 = savedCol4;
           console.log("Ripristinato col4:", savedCol4);
         }
         
+        aggiornaRiepilogoClassificazione();
         console.log("Variabili globali dopo ripristino:", lastClienteFormValues);
         
-        // Aggiorna tutto alla fine solo se ci sono valori da ripristinare
-        if ((savedCol2 && savedCol2 !== "") || (savedCol3 && savedCol3 !== "") || (savedCol4 && savedCol4 !== "")) {
-          aggiornaColonneCliente();
-          aggiornaRiepilogoClassificazione();
-          console.log("Aggiornate colonne e riepilogo finale");
-        }
-      }, 150);
-    }, 100);
+      }, 80);
+    }, 80);
   }, 50);
-  
+
   openModal("modal-cliente");
 }
 
+// ⭐ FUNZIONE SALVA CLIENTE
 function saveCliente() {
   const id   = document.getElementById("cliente-id").value;
   const anno = parseInt(document.getElementById("cliente-edit-anno")?.value || new Date().getFullYear());
@@ -500,70 +516,55 @@ function saveCliente() {
   if (!nome) { showNotif("Il nome è obbligatorio", "error"); return; }
   if (!validaClassificazioneCliente()) return;
 
-  // Debug: verifica quali campi sono visibili e accessibili
-  console.log("Stato dei campi prima della lettura:");
-  console.log("c-col2 element:", document.getElementById("c-col2"));
-  console.log("c-col3 element:", document.getElementById("c-col3"));
-  console.log("c-col4 element:", document.getElementById("c-col4"));
-  console.log("c-col2 visibility:", document.getElementById("wrap-col2")?.style.display);
-  console.log("c-col3 visibility:", document.getElementById("wrap-col3")?.style.display);
-  console.log("c-col4 visibility:", document.getElementById("wrap-col4")?.style.display);
-
-  // Usa le variabili globali per mantenere i valori dei campi
-  let col2Val = lastClienteFormValues.col2 || null;
-  let col3Val = lastClienteFormValues.col3 || null;
-  let col4Val = lastClienteFormValues.col4 || null;
+  let col2Val = null;
+  let col3Val = null;
+  let col4Val = null;
   
-  // Se i campi sono visibili, aggiorna i valori globali
-  if (document.getElementById("wrap-col2")?.style.display !== "none") {
+  const col2Wrap = document.getElementById("wrap-col2");
+  const col3Wrap = document.getElementById("wrap-col3");
+  const col4Wrap = document.getElementById("wrap-col4");
+  
+  if (col2Wrap && col2Wrap.style.display !== "none") {
     const val = document.getElementById("c-col2")?.value || "";
     col2Val = val === "" ? null : val;
-    lastClienteFormValues.col2 = col2Val;
-    console.log("Campo col2 visibile, valore letto e salvato:", col2Val);
-  } else {
-    // Se col2 è nascosto, deve essere null (per SP/SC/ASS)
-    col2Val = null;
-    lastClienteFormValues.col2 = null;
-    console.log("Campo col2 nascosto, impostato a null");
   }
   
-  if (document.getElementById("wrap-col3")?.style.display !== "none") {
+  if (col3Wrap && col3Wrap.style.display !== "none") {
     const val = document.getElementById("c-col3")?.value || "";
     col3Val = val === "" ? null : val;
     lastClienteFormValues.col3 = col3Val;
-    console.log("Campo col3 visibile, valore letto e salvato:", col3Val);
   }
   
-  if (document.getElementById("wrap-col4")?.style.display !== "none") {
+  if (col4Wrap && col4Wrap.style.display !== "none") {
     const val = document.getElementById("c-col4")?.value || "";
     col4Val = val === "" ? null : val;
     lastClienteFormValues.col4 = col4Val;
-    console.log("Campo col4 visibile, valore letto e salvato:", col4Val);
   }
   
   // Logica per forfettario
-  if (REGIMI_ANNUALI.includes(col3Val)) {
+  if (col3Val && REGIMI_ANNUALI.includes(col3Val)) {
     col4Val = "annuale";
     lastClienteFormValues.col4 = col4Val;
-    console.log("Regime forfettario rilevato, col4 impostato a 'annuale'");
   }
   
-  console.log("Valori finali usati:", { col2Val, col3Val, col4Val });
-  
   const tipologiaVal = document.getElementById("c-tipologia")?.value || "";
-
-  console.log("Valori letti dal form:", {
-    tipologiaVal,
-    col2Val,
-    col3Val,
-    col4Val
-  });
-
-  // Salva i criteri nel localStorage per persistenza futura
+  
+  console.log("Valori da salvare:", { tipologiaVal, col2Val, col3Val, col4Val });
+  
+  // Salva nel localStorage
   localStorage.setItem('clienteForm_tipologia', tipologiaVal);
-  localStorage.setItem('clienteForm_col2', col2Val);
-  localStorage.setItem('clienteForm_col3', col3Val);
-  localStorage.setItem('clienteForm_col4', col4Val);
+  if (col2Val) localStorage.setItem('clienteForm_col2', col2Val);
+  else localStorage.removeItem('clienteForm_col2');
+  
+  if (col3Val) localStorage.setItem('clienteForm_col3', col3Val);
+  else localStorage.removeItem('clienteForm_col3');
+  
+  if (col4Val) localStorage.setItem('clienteForm_col4', col4Val);
+  else localStorage.removeItem('clienteForm_col4');
+  
+  lastClienteFormValues.col2 = col2Val;
+  lastClienteFormValues.col3 = col3Val;
+  lastClienteFormValues.col4 = col4Val;
 
   const data = {
     id: id ? parseInt(id) : undefined,
@@ -589,14 +590,7 @@ function saveCliente() {
     note:               document.getElementById("c-note")?.value.trim() || null,
   };
 
-  // Debug: mostra i dati che vengono inviati al backend
   console.log("Dati cliente inviati al backend:", data);
-  console.log("Valori dei campi:", {
-    tipologiaVal,
-    col2Val,
-    col3Val,
-    col4Val
-  });
 
   if (typeof socket !== "undefined") {
     if (id) socket.emit("update:cliente", data);
@@ -604,10 +598,6 @@ function saveCliente() {
   }
 
   closeModal("modal-cliente");
-  setTimeout(() => {
-    if (typeof socket !== "undefined")
-      socket.emit("get:clienti", { anno: new Date().getFullYear() });
-  }, 500);
 }
 
 function deleteCliente(id) {
@@ -630,7 +620,7 @@ function goScadenzario(id) {
   }
 }
 
-// ─── TIPOLOGIA SELECT (con stile visivo migliorato) ───────────
+// ─── TIPOLOGIA SELECT ─────────────────────────────────────────
 function populateTipologiaSelect(selectedId) {
   const sel = document.getElementById("c-tipologia");
   if (!sel) return;
@@ -639,13 +629,12 @@ function populateTipologiaSelect(selectedId) {
   const tipDescs  = { PF:"Persona Fisica", SP:"Società di Persone", SC:"Società di Capitali", ASS:"Associazione" };
   const tipColors = { PF:"#5b8df6", SP:"#fbbf24", SC:"#34d399", ASS:"#f472b6" };
 
-  sel.innerHTML = state.tipologie.map(t => {
+  sel.innerHTML = (state.tipologie || []).map(t => {
     const icon  = tipIcons[t.codice]  || "📋";
     const desc  = tipDescs[t.codice]  || t.nome;
     return `<option value="${t.id}" ${String(t.id)===String(selectedId)?"selected":""}>${icon} ${t.codice} — ${desc}</option>`;
   }).join("");
 
-  // Aggiorna colore del bordo in base alla selezione
   _aggiornaTipologiaSelectStyle();
 }
 
@@ -744,7 +733,7 @@ function _nascondiCol4() {
 function _getTipologiaCodice() {
   const sel = document.getElementById("c-tipologia");
   if (!sel || !sel.value) return "";
-  const tip = state.tipologie.find(t => String(t.id) === String(sel.value));
+  const tip = (state.tipologie || []).find(t => String(t.id) === String(sel.value));
   return tip ? tip.codice : "";
 }
 
@@ -754,7 +743,7 @@ function _calcolaSottotipologiaId() {
   const col3 = document.getElementById("c-col3")?.value || "";
   const stCode = getSottotipoCode(tipCodice, col2, col3);
   if (!stCode) return null;
-  for (const t of state.tipologie) {
+  for (const t of (state.tipologie || [])) {
     const sub = (t.sottotipologie||[]).find(s => s.codice === stCode);
     if (sub) return sub.id;
   }
@@ -767,7 +756,7 @@ function aggiornaRiepilogoClassificazione() {
   if (!box || !content) return;
 
   const tipCodice = _getTipologiaCodice();
-  const tip       = state.tipologie.find(t => t.codice === tipCodice);
+  const tip       = (state.tipologie || []).find(t => t.codice === tipCodice);
   const col2      = document.getElementById("c-col2")?.value || "";
   const col3      = document.getElementById("c-col3")?.value || "";
   const col4      = document.getElementById("c-col4")?.value || "";
@@ -821,8 +810,7 @@ function onTipologiaChange() {
 
 function onCol2Change() {
   const col2Val = document.getElementById("c-col2")?.value || "";
-  lastClienteFormValues.col2 = col2Val; // Aggiorna variabile globale
-  console.log("Campo 2 cambiato, salvato in variabile globale:", col2Val);
+  lastClienteFormValues.col2 = col2Val;
   
   const col3Sel = document.getElementById("c-col3"); if (col3Sel) col3Sel.value = "";
   _nascondiCol4();
@@ -836,10 +824,8 @@ function onCol3Change() {
   const col2Val   = document.getElementById("c-col2")?.value || "";
   const col3Val   = document.getElementById("c-col3")?.value || "";
   
-  // Aggiorna le variabili globali
   lastClienteFormValues.col2 = col2Val;
   lastClienteFormValues.col3 = col3Val;
-  console.log("Campo 3 cambiato, salvato in variabili globali:", { col2Val, col3Val });
   
   _aggiornaCol3(tipCodice, col2Val);
   _aggiornCol4BasedOnCol3(tipCodice, col3Val);
@@ -866,7 +852,7 @@ function openCopiaConfig(id_cliente = null) {
 }
 
 function openCopiaConfigTutti() {
-  openCopiaConfig(); // senza id_cliente = tutti
+  openCopiaConfig();
 }
 
 function eseguiCopiaConfig() {
@@ -900,7 +886,7 @@ function eseguiCopiaConfig() {
   closeModal("modal-copia-config");
 }
 
-// Esponi globali
+// Esponi funzioni globali
 window.editCliente             = editCliente;
 window.editClienteConfig       = editClienteConfig;
 window.deleteCliente           = deleteCliente;

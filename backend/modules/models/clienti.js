@@ -17,14 +17,12 @@ function getConfigClientePerAnno(id_cliente, anno) {
   return queryOne(sql, [id_cliente, anno]);
 }
 
-// ⭐ Restituisce la config più recente MA solo per anni <= anno richiesto
-//    (un cliente creato nel 2026 NON appare nel 2025)
 function getConfigCorrente(id_cliente, anno = new Date().getFullYear()) {
   let config = getConfigClientePerAnno(id_cliente, anno);
   if (!config) {
     const lastConfig = queryOne(
       `SELECT * FROM clienti_config_annuale WHERE id_cliente = ? AND anno <= ? ORDER BY anno DESC LIMIT 1`,
-      [id_cliente, anno]  // ← aggiunto "AND anno <= ?" — era senza questo vincolo
+      [id_cliente, anno]
     );
     if (lastConfig) {
       config = getConfigClientePerAnno(id_cliente, lastConfig.anno);
@@ -33,8 +31,6 @@ function getConfigCorrente(id_cliente, anno = new Date().getFullYear()) {
   return config;
 }
 
-// ⭐ Ottiene tutti i clienti con la loro configurazione per l'anno specificato
-//    Mostra tutti i clienti attivi, usando la configurazione più recente come fallback
 function getClientiConDettagli(filtri = {}, anno = new Date().getFullYear()) {
   let sql = `
     SELECT 
@@ -100,8 +96,6 @@ function getClientiConDettagli(filtri = {}, anno = new Date().getFullYear()) {
   sql += ` ORDER BY c.nome`;
   const results = queryAll(sql, params);
 
-  // Per i clienti senza configurazione per l'anno esatto, cerca la più recente
-  // MA solo anni <= anno richiesto (già garantito da getConfigCorrente aggiornato)
   for (const c of results) {
     if (!c.id_tipologia) {
       const lastConfig = getConfigCorrente(c.id, anno);
@@ -129,7 +123,7 @@ function getClienteConDettagli(id, anno = new Date().getFullYear()) {
     SELECT 
       c.id, c.nome, c.codice_fiscale, c.partita_iva, c.email, c.telefono,
       c.indirizzo, c.citta, c.cap, c.provincia, c.pec, c.sdi, c.iban,
-      c.note, c.referente, c.attivo,
+      c.note, c.referente, c.attivo, c.created_at, c.updated_at,
       cfg.anno as config_anno,
       cfg.id_tipologia, cfg.id_sottotipologia,
       cfg.col2_value, cfg.col3_value, cfg.periodicita,
@@ -168,12 +162,26 @@ function getConfigStoricoCliente(id_cliente) {
 }
 
 function saveConfigCliente(data) {
+  console.log("📝 saveConfigCliente chiamato con:", data);
+  
+  if (!data.id_cliente || data.id_cliente <= 0) {
+    console.error("❌ id_cliente non valido:", data.id_cliente);
+    throw new Error("ID cliente non valido");
+  }
+  
+  const anno = parseInt(data.anno);
+  if (isNaN(anno)) {
+    console.error("❌ Anno non valido:", data.anno);
+    throw new Error("Anno non valido");
+  }
+  
   const exists = queryOne(
     `SELECT id FROM clienti_config_annuale WHERE id_cliente = ? AND anno = ?`,
-    [data.id_cliente, data.anno]
+    [data.id_cliente, anno]
   );
 
   if (exists) {
+    console.log("📝 Aggiornamento config esistente per anno", anno);
     runQuery(
       `UPDATE clienti_config_annuale SET 
         id_tipologia = ?, id_sottotipologia = ?,
@@ -182,29 +190,41 @@ function saveConfigCliente(data) {
       [
         data.id_tipologia, data.id_sottotipologia || null,
         data.col2_value || null, data.col3_value || null, data.periodicita || null,
-        data.id_cliente, data.anno
+        data.id_cliente, anno
       ]
     );
   } else {
+    console.log("📝 Creazione nuova config per anno", anno);
     runQuery(
       `INSERT INTO clienti_config_annuale 
         (id_cliente, anno, id_tipologia, id_sottotipologia, col2_value, col3_value, periodicita) 
        VALUES (?,?,?,?,?,?,?)`,
       [
-        data.id_cliente, data.anno, data.id_tipologia,
+        data.id_cliente, anno, data.id_tipologia,
         data.id_sottotipologia || null, data.col2_value || null,
         data.col3_value || null, data.periodicita || null
       ]
     );
   }
+  
+  const verificato = queryOne(
+    `SELECT * FROM clienti_config_annuale WHERE id_cliente = ? AND anno = ?`,
+    [data.id_cliente, anno]
+  );
+  console.log("✅ Verifica salvataggio:", verificato);
 }
 
+// ⭐ FUNZIONE CREATE CLIENTE CORRETTA - senza created_at/updated_at nell'INSERT
 function createCliente(data) {
-  const anno = new Date().getFullYear();
+  const anno = data.anno || new Date().getFullYear();
+  console.log("📝 createCliente con anno:", anno, "data:", data);
 
+  // Inserisci il cliente - SENZA created_at e updated_at espliciti
   runQuery(
-    `INSERT INTO clienti (nome, codice_fiscale, partita_iva, email, telefono, indirizzo, citta, cap, provincia, pec, sdi, iban, note, referente) 
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    `INSERT INTO clienti (
+      nome, codice_fiscale, partita_iva, email, telefono, 
+      indirizzo, citta, cap, provincia, pec, sdi, iban, note, referente
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       data.nome, data.codice_fiscale || null, data.partita_iva || null,
       data.email || null, data.telefono || null, data.indirizzo || null,
@@ -214,8 +234,32 @@ function createCliente(data) {
     ]
   );
 
-  const id = queryOne(`SELECT last_insert_rowid() as id`).id;
+  // Ottieni l'ultimo ID inserito - metodo più affidabile
+  let id = null;
+  
+  // Prova con last_insert_rowid
+  const rowidResult = queryOne(`SELECT last_insert_rowid() as id`);
+  if (rowidResult && rowidResult.id && rowidResult.id > 0) {
+    id = rowidResult.id;
+    console.log("📝 ID da last_insert_rowid:", id);
+  }
+  
+  // Fallback: cerca per nome (il più recente)
+  if (!id || id === 0) {
+    const nuovoCliente = queryOne(
+      `SELECT id FROM clienti WHERE nome = ? ORDER BY rowid DESC LIMIT 1`,
+      [data.nome]
+    );
+    id = nuovoCliente ? nuovoCliente.id : null;
+    console.log("📝 ID da query fallback:", id);
+  }
+  
+  if (!id) {
+    console.error("❌ Impossibile ottenere l'ID del nuovo cliente");
+    throw new Error("Impossibile ottenere l'ID del nuovo cliente");
+  }
 
+  // Salva la configurazione con l'ID corretto
   saveConfigCliente({
     id_cliente: id,
     anno: anno,
@@ -230,6 +274,20 @@ function createCliente(data) {
 }
 
 function updateClienteConfig(data) {
+  console.log("📝 updateClienteConfig chiamato con:", {
+    id: data.id,
+    anno: data.anno,
+    id_tipologia: data.id_tipologia,
+    col2_value: data.col2_value,
+    col3_value: data.col3_value,
+    periodicita: data.periodicita
+  });
+  
+  if (!data.id || data.id <= 0) {
+    console.error("❌ ID cliente non valido in updateClienteConfig:", data.id);
+    throw new Error("ID cliente non valido");
+  }
+  
   saveConfigCliente({
     id_cliente: data.id,
     anno: data.anno,
@@ -278,22 +336,44 @@ function canDeleteCliente(id) {
 }
 
 function copiaConfigClienteAnno(id_cliente, anno_da, anno_a) {
-  // Verifica che esista una configurazione per l'anno di origine
-  const configOrigine = getConfigClientePerAnno(id_cliente, anno_da);
-  if (!configOrigine) {
-    throw new Error(`Nessuna configurazione trovata per il cliente ${id_cliente} nell'anno ${anno_da}`);
+  const configDa = queryOne(
+    `SELECT * FROM clienti_config_annuale WHERE id_cliente = ? AND anno = ?`,
+    [id_cliente, anno_da]
+  );
+  
+  if (!configDa) {
+    throw new Error(`Nessuna configurazione trovata per l'anno ${anno_da}`);
   }
   
-  // Copia la configurazione nel nuovo anno
-  saveConfigCliente({
-    id_cliente: id_cliente,
-    anno: anno_a,
-    id_tipologia: configOrigine.id_tipologia,
-    id_sottotipologia: configOrigine.id_sottotipologia,
-    col2_value: configOrigine.col2_value,
-    col3_value: configOrigine.col3_value,
-    periodicita: configOrigine.periodicita,
-  });
+  const esiste = queryOne(
+    `SELECT id FROM clienti_config_annuale WHERE id_cliente = ? AND anno = ?`,
+    [id_cliente, anno_a]
+  );
+  
+  if (esiste) {
+    runQuery(
+      `UPDATE clienti_config_annuale SET 
+        id_tipologia = ?, id_sottotipologia = ?,
+        col2_value = ?, col3_value = ?, periodicita = ?
+      WHERE id_cliente = ? AND anno = ?`,
+      [
+        configDa.id_tipologia, configDa.id_sottotipologia,
+        configDa.col2_value, configDa.col3_value, configDa.periodicita,
+        id_cliente, anno_a
+      ]
+    );
+  } else {
+    runQuery(
+      `INSERT INTO clienti_config_annuale 
+        (id_cliente, anno, id_tipologia, id_sottotipologia, col2_value, col3_value, periodicita) 
+       VALUES (?,?,?,?,?,?,?)`,
+      [
+        id_cliente, anno_a, configDa.id_tipologia,
+        configDa.id_sottotipologia, configDa.col2_value,
+        configDa.col3_value, configDa.periodicita
+      ]
+    );
+  }
   
   return getConfigClientePerAnno(id_cliente, anno_a);
 }
@@ -304,18 +384,47 @@ function copiaTuttiClientiAnno(anno_da, anno_a) {
   
   for (const cliente of clienti) {
     try {
-      const config = copiaConfigClienteAnno(cliente.id, anno_da, anno_a);
-      risultati.push({ 
-        id_cliente: cliente.id, 
-        success: true, 
-        config: config 
-      });
-    } catch (error) {
-      risultati.push({ 
-        id_cliente: cliente.id, 
-        success: false, 
-        error: error.message 
-      });
+      const configDa = queryOne(
+        `SELECT * FROM clienti_config_annuale WHERE id_cliente = ? AND anno = ?`,
+        [cliente.id, anno_da]
+      );
+      
+      if (configDa) {
+        const esiste = queryOne(
+          `SELECT id FROM clienti_config_annuale WHERE id_cliente = ? AND anno = ?`,
+          [cliente.id, anno_a]
+        );
+        
+        if (esiste) {
+          runQuery(
+            `UPDATE clienti_config_annuale SET 
+              id_tipologia = ?, id_sottotipologia = ?,
+              col2_value = ?, col3_value = ?, periodicita = ?
+            WHERE id_cliente = ? AND anno = ?`,
+            [
+              configDa.id_tipologia, configDa.id_sottotipologia,
+              configDa.col2_value, configDa.col3_value, configDa.periodicita,
+              cliente.id, anno_a
+            ]
+          );
+        } else {
+          runQuery(
+            `INSERT INTO clienti_config_annuale 
+              (id_cliente, anno, id_tipologia, id_sottotipologia, col2_value, col3_value, periodicita) 
+             VALUES (?,?,?,?,?,?,?)`,
+            [
+              cliente.id, anno_a, configDa.id_tipologia,
+              configDa.id_sottotipologia, configDa.col2_value,
+              configDa.col3_value, configDa.periodicita
+            ]
+          );
+        }
+        risultati.push({ id: cliente.id, success: true });
+      } else {
+        risultati.push({ id: cliente.id, success: false, error: `Nessuna config per ${anno_da}` });
+      }
+    } catch (e) {
+      risultati.push({ id: cliente.id, success: false, error: e.message });
     }
   }
   

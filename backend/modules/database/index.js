@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const { createSchema, seedData } = require("./seedData");
 
-const DB_PATH = path.join(__dirname, "../../db", "gestionale.db");
+const DB_PATH = path.join(__dirname, "../../../db", "gestionale.db");
 let db;
 
 function saveDB() {
@@ -16,6 +16,18 @@ function runQuery(sql, params = []) {
   db.run(sql, params);
   saveDB();
   return db;
+}
+
+// ⭐ NUOVA FUNZIONE per eseguire query e ottenere l'ultimo ID
+function runQueryAndGetId(sql, params = []) {
+  db.run(sql, params);
+  saveDB();
+  // Ottieni l'ultimo ID inserito
+  const stmt = db.prepare("SELECT last_insert_rowid() as id");
+  stmt.step();
+  const result = stmt.getAsObject();
+  stmt.free();
+  return result.id;
 }
 
 function queryAll(sql, params = []) {
@@ -34,7 +46,8 @@ function queryOne(sql, params = []) {
 async function initDB() {
   const SQL = await initSqlJs();
   if (fs.existsSync(DB_PATH)) {
-    db = new SQL.Database(fs.readFileSync(DB_PATH));
+    const fileBuffer = fs.readFileSync(DB_PATH);
+    db = new SQL.Database(fileBuffer);
     console.log("✅ Database caricato da file");
     migrateDB();
   } else {
@@ -63,13 +76,13 @@ function migrateDB() {
     `ALTER TABLE clienti ADD COLUMN periodicita TEXT`,
     `ALTER TABLE clienti ADD COLUMN col2_value TEXT`,
     `ALTER TABLE clienti ADD COLUMN col3_value TEXT`,
-    // ⭐ Rimuovi categorie_attive se esiste
-    `ALTER TABLE clienti DROP COLUMN categorie_attive`,
   ];
   migrations.forEach((sql) => {
     try {
       db.run(sql);
-    } catch (e) {}
+    } catch (e) {
+      // Ignora errori di colonna già esistente
+    }
   });
   saveDB();
 }
@@ -81,6 +94,7 @@ module.exports = {
   initDB,
   saveDB,
   runQuery,
+  runQueryAndGetId,  // ⭐ ESPORTA LA NUOVA FUNZIONE
   queryAll,
   queryOne,
 };

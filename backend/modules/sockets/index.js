@@ -67,9 +67,7 @@ module.exports = function setupSocketHandlers(io) {
 
     socket.on("update:cliente", (data) => {
       try {
-        // Aggiorna anagrafica
         clientiModel.updateClienteAnagrafica(data);
-        // Aggiorna configurazione per l'anno specificato
         clientiModel.updateClienteConfig(data);
         io.emit("broadcast:clienti_updated");
         socket.emit("res:update:cliente", { success: true });
@@ -91,7 +89,7 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    // ── COPIA CONFIGURAZIONE CLIENTE ──
+    // ⭐ NUOVI HANDLER PER COPIA CONFIGURAZIONE CLIENTE
     socket.on("copia:config_cliente", ({ id_cliente, anno_da, anno_a }) => {
       try {
         const config = clientiModel.copiaConfigClienteAnno(id_cliente, anno_da, anno_a);
@@ -124,7 +122,7 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    // ── ADEMPIMENTI (stessi eventi) ──
+    // ── ADEMPIMENTI ──
     socket.on("get:adempimenti", () => {
       try {
         const data = adempimentiModel.getAdempimenti();
