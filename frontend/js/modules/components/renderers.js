@@ -48,10 +48,12 @@ function renderImportoCellCompact(r) {
 }
 
 // ─── COLORE PILLOLA ───────────────────────────────────────────
-// CONTABILITÀ: verde=IVA+2°acc+cont✓, blu=IVA+2°acc (parziale), rosso=niente
-// RATE:        verde=tutti e 3 compilati, blu=almeno 1, rosso=nessuno
-// NORMALE:     verde=completato, rosso/blu=da fare
-// CHECKBOX:    verde=completato, grigio=n_a, rosso=da fare
+//
+// CONTABILITÀ: verde = IVA + cont✓  |  blu = solo IVA  |  rosso = niente
+// RATE:        verde = 3 rate        |  blu = 1-2 rate  |  rosso = 0 rate
+// CHECKBOX:    verde = completato    |  grigio = n_a    |  rosso = da fare
+// NORMALE:     verde = completato    |  rosso = da fare
+//
 function getPillColor(r, stato) {
   const isCompletato = stato === "completato";
   const isNA         = stato === "n_a";
@@ -63,21 +65,18 @@ function getPillColor(r, stato) {
   }
 
   if (isContabilita(r)) {
-    const hasIva    = !!(r.importo_iva);
-    const hasAcc2   = !!(r.importo_acconto2);
-    const contDone  = parseInt(r.cont_completata) === 1;
-    if (hasIva && hasAcc2 && contDone) return "var(--green)";
-    if (hasIva || hasAcc2)             return "var(--accent)";
+    const hasIva   = !!(r.importo_iva);
+    const contDone = parseInt(r.cont_completata) === 1;
+    if (hasIva && contDone) return "var(--green)";
+    if (hasIva)             return "var(--accent)";
     return "var(--red)";
   }
 
   if (hasRate(r)) {
-    const s  = !!(r.importo_saldo);
-    const a1 = !!(r.importo_acconto1);
-    const a2 = !!(r.importo_acconto2);
-    const filled = [s, a1, a2].filter(Boolean).length;
-    if (filled === 3) return "var(--green)";
-    if (filled > 0)   return "var(--accent)";
+    const filled = [r.importo_saldo, r.importo_acconto1, r.importo_acconto2]
+      .filter(v => v != null && v !== "" && v !== 0 && parseFloat(v) > 0).length;
+    if (filled >= 3) return "var(--green)";
+    if (filled >= 1) return "var(--accent)";   // 1 o 2 compilate → blu
     return "var(--red)";
   }
 
@@ -91,8 +90,8 @@ function renderCheckboxPill(r) {
   const stato = r.stato || "da_fare";
   const ps    = getPeriodoShort(r);
 
-  const isDone  = stato === "completato";
-  const isNA    = stato === "n_a";
+  const isDone   = stato === "completato";
+  const isNA     = stato === "n_a";
   const isDaFare = !isDone && !isNA;
 
   const color = getPillColor(r, stato);
@@ -127,14 +126,22 @@ function renderPeriodoPill(r) {
 
   const pillColor = getPillColor(r, stato);
 
-  // Icona stato
-  const statoIcon  = stato === "da_fare" ? "⭕" : stato === "in_corso" ? "🔄" : stato === "completato" ? "✅" : "➖";
-  const statoLabel = stato === "da_fare" ? "Da fare" : stato === "in_corso" ? "In corso" : stato === "completato" ? "Completato" : "N/A";
+  // Icona stato (per normali e contabilità; per rate usiamo icona delle rate)
+  let statoIcon, statoLabel;
+  if (hasRate(r)) {
+    // Per le rate, l'icona riflette quante rate sono compilate
+    const filled = [r.importo_saldo, r.importo_acconto1, r.importo_acconto2]
+      .filter(v => v != null && v !== "" && v !== 0 && parseFloat(v) > 0).length;
+    statoIcon  = filled >= 3 ? "✅" : filled >= 1 ? "🔄" : "⭕";
+    statoLabel = filled >= 3 ? "Tutte le rate" : filled >= 1 ? `${filled}/3 rate` : "Nessuna rata";
+  } else {
+    statoIcon  = stato === "da_fare" ? "⭕" : stato === "in_corso" ? "🔄" : stato === "completato" ? "✅" : "➖";
+    statoLabel = stato === "da_fare" ? "Da fare" : stato === "in_corso" ? "In corso" : stato === "completato" ? "Completato" : "N/A";
+  }
 
   const impHtml = renderImportoCellCompact(r);
   const hasImp  = impHtml !== `<span class="imp-empty">—</span>`;
 
-  // ── Label importi inline nella pill ──────────────────────────
   let importiInline = "";
   if (isContabilita(r)) {
     importiInline = _buildContabilitaLabel(r, pillColor);
@@ -169,30 +176,21 @@ function renderPeriodoPill(r) {
 }
 
 // ─── HELPER: label con checkbox per contabilità ───────────────
-// Verde = IVA + 2°Acc + Cont✓  |  Blu = parziale  |  Rosso = niente
+// Verde = IVA + Cont✓  |  Blu = solo IVA  |  Rosso = niente
 function _buildContabilitaLabel(r, pillColor) {
   const hasIva   = !!(r.importo_iva);
-  const hasAcc2  = !!(r.importo_acconto2);
   const contDone = parseInt(r.cont_completata) === 1;
 
-  // colori per ogni campo
-  const cIva  = hasIva   ? (contDone && hasAcc2 ? "var(--green)" : "var(--accent)") : "var(--red)";
-  const cAcc2 = hasAcc2  ? (contDone && hasIva  ? "var(--green)" : "var(--accent)") : "var(--red)";
-  const cCont = contDone ? (hasIva && hasAcc2   ? "var(--green)" : "var(--accent)") : "var(--red)";
+  const cIva  = hasIva   ? (contDone ? "var(--green)" : "var(--accent)") : "var(--red)";
+  const cCont = contDone ? (hasIva   ? "var(--green)" : "var(--accent)") : "var(--red)";
 
-  const ivaVal  = hasIva  ? `€${parseFloat(r.importo_iva).toFixed(2)}`      : "—";
-  const acc2Val = hasAcc2 ? `€${parseFloat(r.importo_acconto2).toFixed(2)}` : "—";
+  const ivaVal = hasIva ? `€${parseFloat(r.importo_iva).toFixed(2)}` : "—";
 
   return `<div class="pp-cont-labels">
     <div class="pp-cont-row">
       <span class="pp-cont-check" style="color:${cIva}">${hasIva ? "✓" : "✗"}</span>
       <span class="pp-cont-lbl" style="color:${cIva}">💰 IVA</span>
       <span class="pp-cont-val" style="color:${cIva}">${ivaVal}</span>
-    </div>
-    <div class="pp-cont-row">
-      <span class="pp-cont-check" style="color:${cAcc2}">${hasAcc2 ? "✓" : "✗"}</span>
-      <span class="pp-cont-lbl" style="color:${cAcc2}">📥 2°Acc.</span>
-      <span class="pp-cont-val" style="color:${cAcc2}">${acc2Val}</span>
     </div>
     <div class="pp-cont-row">
       <span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span>
@@ -203,23 +201,30 @@ function _buildContabilitaLabel(r, pillColor) {
 }
 
 // ─── HELPER: label con checkbox per rate ─────────────────────
-// Verde = tutti e 3  |  Blu = almeno 1  |  Rosso = nessuno
+//
+// Logica colori per ogni singola rata:
+//   • Se tutte e 3 compilate → verde per tutte
+//   • Se questa rata è compilata ma non tutte → blu
+//   • Se questa rata NON è compilata → rosso
+//
 function _buildRateLabel(r, pillColor) {
   let lb = ["Saldo","1°Acc.","2°Acc."];
   try { if (r.rate_labels) lb = JSON.parse(r.rate_labels); } catch(e) {}
 
-  const vals = [r.importo_saldo, r.importo_acconto1, r.importo_acconto2];
-  const icons = ["💰","📥","📥"];
-  const filled = vals.filter(v => !!(v)).length;
+  const vals   = [r.importo_saldo, r.importo_acconto1, r.importo_acconto2];
+  const icons  = ["💰","📥","📥"];
+  // Conta quante rate hanno un valore > 0
+  const filled = vals.filter(v => v != null && v !== "" && parseFloat(v) > 0).length;
+  const allDone = filled >= 3;
 
-  // colore per ogni singolo campo
   const rows = vals.map((v, i) => {
-    const done = !!(v);
+    const done = v != null && v !== "" && parseFloat(v) > 0;
     let c;
-    if (filled === 3) c = "var(--green)";
-    else if (done)    c = "var(--accent)";
-    else              c = "var(--red)";
-    const display = v ? `€${parseFloat(v).toFixed(2)}` : "—";
+    if (allDone)    c = "var(--green)";  // tutte 3 → verde
+    else if (done)  c = "var(--accent)"; // questa sì, le altre no → blu
+    else            c = "var(--red)";    // non compilata → rosso
+
+    const display = done ? `€${parseFloat(v).toFixed(2)}` : "—";
     return `<div class="pp-cont-row">
       <span class="pp-cont-check" style="color:${c}">${done ? "✓" : "✗"}</span>
       <span class="pp-cont-lbl" style="color:${c}">${icons[i]} ${lb[i]}</span>
