@@ -190,7 +190,6 @@ function renderClientiTabella(clienti) {
           <div style="display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
             <button class="btn btn-xs btn-secondary" onclick="editCliente(${c.id})"   title="Modifica">✏️</button>
             <button class="btn btn-xs btn-success"   onclick="goScadenzario(${c.id})" title="Scadenzario">📅</button>
-            <button class="btn btn-xs btn-orange"     onclick="openCopiaConfig(${c.id})" title="Copia configurazione">📋</button>
             <button class="btn btn-xs btn-danger"    onclick="deleteCliente(${c.id})" title="Elimina">🗑️</button>
           </div>
         </td>
