@@ -5,7 +5,7 @@ function createSchema(db) {
   } catch (e) {
     // La colonna esiste già
   }
-  
+
   db.run(`
     CREATE TABLE IF NOT EXISTS tipologie_cliente (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
