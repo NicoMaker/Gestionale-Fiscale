@@ -203,9 +203,6 @@ function renderClientiTabella(clienti) {
     <div class="table-wrap">
       <div class="table-header no-print">
         <h3>Clienti <span style="font-size:13px;color:var(--text3);margin-left:8px">(${clienti ? clienti.length : 0})</span></h3>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-orange" onclick="openCopiaConfigTutti()" title="Copia configurazione per tutti i clienti">📋 Copia Config Tutti</button>
-        </div>
       </div>
       <table style="width:100%;border-collapse:collapse">
         <thead>
