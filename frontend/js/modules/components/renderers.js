@@ -69,10 +69,10 @@ function renderImportoCellCompact(r) {
 
 // ─── COLORE PILLOLA ───────────────────────────────────────────
 //
-// CONTABILITÀ: verde = IVA + cont✓  |  blu = solo IVA  |  rosso = niente
-// RATE:        verde = 3 rate        |  blu = 1-2 rate  |  rosso = 0 rate
-// CHECKBOX:    verde = completato    |  grigio = n_a    |  rosso = da fare
-// NORMALE:     verde = completato    |  rosso = da fare
+// CONTABILITÀ: verde = IVA compilata | rosso = niente
+// RATE:        verde = 3 rate + cont | blu = 1-2 rate | rosso = 0 rate
+// CHECKBOX:    verde = completato    | grigio = n_a   | rosso = da fare
+// NORMALE:     verde = completato    | rosso = da fare
 //
 function getPillColor(r, stato) {
   const isCompletato = stato === "completato";
@@ -86,7 +86,6 @@ function getPillColor(r, stato) {
 
   if (isContabilita(r)) {
     const hasIva = !!r.importo_iva;
-    // Per adempimenti di contabilità: se IVA compilata, bottone esterno diventa verde
     if (hasIva) return "var(--green)";
     return "var(--red)";
   }
@@ -102,10 +101,9 @@ function getPillColor(r, stato) {
     const contDone = parseInt(r.cont_completata) === 1;
     const hasAnyRate = filled >= 1;
 
-    // Logica combinata rate+contabilità
-    if (hasAnyRate && contDone) return "var(--green)"; // entrambi → verde
-    if (hasAnyRate || contDone) return "var(--accent)"; // uno solo → blu
-    return "var(--red)"; // nessuno → rosso
+    if (hasAnyRate && contDone) return "var(--green)";
+    if (hasAnyRate || contDone) return "var(--accent)";
+    return "var(--red)";
   }
 
   // normale
@@ -122,34 +120,33 @@ function renderCheckboxPill(r) {
   const isNA = stato === "n_a";
   const isDaFare = !isDone && !isNA;
 
-  // Logica colori specifica per checkbox:
-  // - Se uno dei due checkbox è attivo -> blu
-  // - Se da fare -> rosso
-  // - Se compilato campo primo da fare -> checkbox contabilità verde
+  // Colori coerenti con getPillColor: verde=completato, grigio=n/a, rosso=da fare
   let color;
-  if (isDaFare && r.note && r.note.includes("primo da fare")) {
-    color = "var(--green)"; // verde per contabilità quando primo da fare compilato
-  } else if (isDone || isNA) {
-    color = "var(--accent)"; // blu quando almeno un checkbox attivo
-  } else {
-    color = "var(--red)"; // rosso quando da fare
-  }
+  if (isDone) color = "var(--green)";
+  else if (isNA) color = "var(--text3)";
+  else color = "var(--red)";
 
   const icon = isDone ? "✅" : isNA ? "➖" : "✗";
 
-  const btnDone = `<button class="cbx-btn${isDone ? " cbx-active cbx-blue" : ""}" onclick="setCbxStato(event,${r.id},'completato')" title="Segna completato">✅</button>`;
+  const btnReset = `<button class="cbx-btn${isDaFare ? " cbx-active cbx-red" : ""}" onclick="setCbxStato(event,${r.id},'da_fare')"    title="Segna da fare">☐</button>`;
   const btnNA = `<button class="cbx-btn${isNA ? " cbx-active cbx-gray" : ""}" onclick="setCbxStato(event,${r.id},'n_a')"        title="Segna N/A">➖</button>`;
-  const btnReset = `<button class="cbx-btn${isDaFare ? " cbx-active cbx-green" : ""}" onclick="setCbxStato(event,${r.id},'da_fare')"    title="Segna da fare">☐</button>`;
+  const btnDone = `<button class="cbx-btn${isDone ? " cbx-active cbx-green" : ""}" onclick="setCbxStato(event,${r.id},'completato')" title="Segna completato">✅</button>`;
+
+  // Nome adempimento (visibile sopra i bottoni)
+  const nomeHtml = r.adempimento_nome
+    ? `<div class="pp-nome" style="color:${color};font-size:11px;line-height:1.3;margin-bottom:2px">${r.adempimento_nome}</div>`
+    : "";
 
   return `<div class="periodo-pill checkbox-pill s-${stato}"
     onclick="openAdpById(${r.id})"
     oncontextmenu="toggleAdpCompletato(event,${r.id})"
     title="${escAttr(getPeriodoLabel(r))} — Click: modifica | Tasto DX: toggle completato"
-    style="border-color:${color};min-width:110px;flex:0 1 110px">
+    style="border-color:${color};min-width:120px;flex:0 1 120px">
     <div class="pp-top" style="justify-content:space-between;gap:4px">
       <span class="pp-tag" style="border-color:${color};color:${color}">${ps}</span>
       <span style="font-size:18px;line-height:1">${icon}</span>
     </div>
+    ${nomeHtml}
     <div class="cbx-btn-row" onclick="event.stopPropagation()">
       ${btnReset}${btnNA}${btnDone}
     </div>
@@ -166,10 +163,9 @@ function renderPeriodoPill(r) {
 
   const pillColor = getPillColor(r, stato);
 
-  // Icona stato (per normali e contabilità; per rate usiamo icona delle rate)
+  // Icona stato
   let statoIcon, statoLabel;
   if (hasRate(r)) {
-    // Per le rate, l'icona riflette quante rate sono compilate
     const filled = [
       r.importo_saldo,
       r.importo_acconto1,
@@ -225,8 +221,8 @@ function renderPeriodoPill(r) {
 
   const tooltipText = `${getPeriodoLabel(r)} — ${statoLabel}${r.data_scadenza ? ` | Scad: ${r.data_scadenza}` : ""}${r.data_completamento ? ` | Compl: ${r.data_completamento}` : ""}\nClick sinistro: modifica | Click destro: toggle completato`;
 
-  // Per adempimenti di contabilità: se IVA compilata, anche la scritta diventa verde
-  const tagColor = isContabilita(r) && r.importo_iva ? "var(--green)" : pillColor;
+  const tagColor =
+    isContabilita(r) && r.importo_iva ? "var(--green)" : pillColor;
 
   return `<div class="periodo-pill s-${stato}"
     onclick="openAdpById(${r.id})"
@@ -237,7 +233,7 @@ function renderPeriodoPill(r) {
       <span class="pp-tag" style="border-color:${tagColor};color:${tagColor}">${ps}</span>
       <span class="pp-stato-icon" title="${escAttr(statoLabel)}">${statoIcon}</span>
     </div>
-    <div class="pp-nome" style="color:${pillColor}">${r.adempimento_nome || ''}</div>
+    <div class="pp-nome" style="color:${pillColor}">${r.adempimento_nome || ""}</div>
     ${importiInline}
     ${dateLine}
     ${!importiInline && hasImp ? `<div class="pp-imp">${impHtml}</div>` : ""}
@@ -246,13 +242,9 @@ function renderPeriodoPill(r) {
 }
 
 // ─── HELPER: label con checkbox per contabilità ───────────────
-// Verde = IVA + Cont✓  |  Blu = solo IVA  |  Rosso = niente
 function _buildContabilitaLabel(r, pillColor) {
   const hasIva = !!r.importo_iva;
-
-  // Per adempimenti di contabilità: IVA compilata = sempre verde
   const cIva = hasIva ? "var(--green)" : "var(--red)";
-
   const ivaVal = hasIva ? `€${parseFloat(r.importo_iva).toFixed(2)}` : "—";
 
   return `<div class="pp-cont-labels">
@@ -265,12 +257,6 @@ function _buildContabilitaLabel(r, pillColor) {
 }
 
 // ─── HELPER: label con checkbox per rate ─────────────────────
-//
-// Logica colori per ogni singola rata:
-//   • Se tutte e 3 compilate → verde per tutte
-//   • Se questa rata è compilata ma non tutte → blu
-//   • Se questa rata NON è compilata → rosso
-//
 function _buildRateLabel(r, pillColor) {
   let lb = ["Saldo", "1°Acc.", "2°Acc."];
   try {
@@ -279,7 +265,6 @@ function _buildRateLabel(r, pillColor) {
 
   const vals = [r.importo_saldo, r.importo_acconto1, r.importo_acconto2];
   const icons = ["💰", "📥", "📥"];
-  // Conta quante rate hanno un valore > 0
   const filled = vals.filter(
     (v) => v != null && v !== "" && parseFloat(v) > 0,
   ).length;
@@ -287,19 +272,13 @@ function _buildRateLabel(r, pillColor) {
   const contDone = parseInt(r.cont_completata) === 1;
   const hasAnyRate = filled >= 1;
 
-  // Colori combinati rate+contabilità
   let cRate, cCont;
-  
-  // Logica unificata per tutti i clienti:
-  // Se tutte le rate compilate E contabilità completata → verde
-  // Se almeno uno dei due è fatto → blu
-  // Se nessuno è fatto → rosso
   if (allDone && contDone) {
-    cRate = cCont = "var(--green)"; // entrambi completati → verde
+    cRate = cCont = "var(--green)";
   } else if (hasAnyRate || contDone) {
-    cRate = cCont = "var(--accent)"; // almeno uno fatto → blu
+    cRate = cCont = "var(--accent)";
   } else {
-    cRate = cCont = "var(--red)"; // nessuno fatto → rosso
+    cRate = cCont = "var(--red)";
   }
 
   const rows = vals
@@ -314,7 +293,6 @@ function _buildRateLabel(r, pillColor) {
     })
     .join("");
 
-  // Aggiungi riga per la contabilità (sempre visibile per le rate)
   const contRow = `<div class="pp-cont-row">
     <span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span>
     <span class="pp-cont-lbl" style="color:${cCont}">📊 Cont.</span>

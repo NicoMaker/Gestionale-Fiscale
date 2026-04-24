@@ -213,7 +213,6 @@ function onAdpFlagsChange() {
     setVal("adp-def-rate", false);
   }
 
-  // Ricalcola dopo le modifiche
   const rateAttivo = !!getVal("adp-def-rate");
   setDisplay("sect-rate-labels", rateAttivo ? "" : "none");
 }
@@ -288,7 +287,7 @@ function openAdpModal(r) {
   const isRate = hasRate(r);
   const isCbx = isCheckbox(r);
 
-  // Mostra le sezioni — priorità: checkbox > cont+rate > cont > rate > normale
+  // ── Visibilità sezioni importo ─────────────────────────────
   setDisplay(
     "sect-importo-normale",
     !isCont && !isRate && !isCbx ? "" : "none",
@@ -304,34 +303,40 @@ function openAdpModal(r) {
   setVal("adp-imp-acc1", r.importo_acconto1 || "");
   setVal("adp-imp-acc2", r.importo_acconto2 || "");
 
-  // Nascondi checkbox contabilità se il cliente ha contabilità attiva
-  const clienteHaContabilita = state.selectedCliente && state.selectedCliente.contabilita === 1;
-  const contCheckboxWrapper = document.getElementById("contabilita-checkbox-wrapper");
-  const rateCheckboxWrapper = document.getElementById("rate-contabilita-checkbox-wrapper");
-  
-  if (contCheckboxWrapper) {
-    contCheckboxWrapper.style.display = clienteHaContabilita ? "none" : "";
-  }
-  if (rateCheckboxWrapper) {
-    rateCheckboxWrapper.style.display = clienteHaContabilita ? "none" : "";
-  }
-
-  // Contabilità: checkbox cont_completata + colori (solo se cliente non ha contabilità attiva)
-  if (isCont && !isCbx && !clienteHaContabilita) {
-    const contCheck = document.getElementById("adp-cont-completata");
-    if (contCheck) contCheck.checked = parseInt(r.cont_completata) === 1;
-    _aggiornaColoriContabilita(r);
+  // ── Checkbox contabilità: SOLO per adempimenti con RATE ───
+  // Per is_contabilita puro NON mostriamo la checkbox (IVA basta a
+  // determinare lo stato); per has_rate invece la checkbox è utile
+  // per segnare separatamente il completamento della contabilità.
+  const rateContWrapper = document.getElementById(
+    "rate-contabilita-checkbox-wrapper",
+  );
+  if (rateContWrapper) {
+    // Visibile solo se è rate (e non checkbox)
+    rateContWrapper.style.display = isRate && !isCbx ? "" : "none";
   }
 
-  // Rate con contabilità: checkbox cont_completata + colori (solo se cliente non ha contabilità attiva)
-  if (isRate && !isCbx && !clienteHaContabilita) {
+  // Per is_contabilita puro: nascondi sempre il wrapper contabilità
+  const contCheckWrapper = document.getElementById(
+    "contabilita-checkbox-wrapper",
+  );
+  if (contCheckWrapper) {
+    contCheckWrapper.style.display = "none";
+  }
+
+  // ── Impostazione valori rate + contabilità ─────────────────
+  if (isRate && !isCbx) {
     const rateContCheck = document.getElementById("adp-rate-cont-completata");
     if (rateContCheck)
       rateContCheck.checked = parseInt(r.cont_completata) === 1;
     _aggiornaColoriRateContabilita(r);
   }
 
-  // Rate: personalizza label
+  // ── Impostazione valori contabilità pura ──────────────────
+  if (isCont && !isCbx) {
+    _aggiornaColoriContabilita(r);
+  }
+
+  // ── Rate: personalizza label ───────────────────────────────
   if (isRate && !isCont && !isCbx) {
     let lb = ["Saldo", "1° Acconto", "2° Acconto"];
     try {
@@ -342,67 +347,89 @@ function openAdpModal(r) {
     setTxt("rate-l2", `📥 ${lb[2]} (€)`);
   }
 
+  // ── Checkbox: aggiorna UI pulsanti ─────────────────────────
+  if (isCbx) {
+    _aggiornaPulsantiCheckbox(r.stato || "da_fare");
+  }
+
   openModal("modal-adempimento");
 }
 
-// ─── COLORI CONTABILITÀ (blu=solo IVA, verde=IVA+cont) ────────
+// ─── CHECKBOX PILL UI ─────────────────────────────────────────
+// Aggiorna l'aspetto visivo dei tre pulsanti nella sezione checkbox del modal
+function _aggiornaPulsantiCheckbox(stato) {
+  const btnDaFare = document.getElementById("cbx-modal-dafare");
+  const btnNA = document.getElementById("cbx-modal-na");
+  const btnCompl = document.getElementById("cbx-modal-completato");
+
+  if (!btnDaFare || !btnNA || !btnCompl) return;
+
+  // Reset tutti
+  [btnDaFare, btnNA, btnCompl].forEach((b) => {
+    b.classList.remove(
+      "cbx-modal-active-red",
+      "cbx-modal-active-gray",
+      "cbx-modal-active-green",
+    );
+    b.style.opacity = "0.5";
+    b.style.transform = "scale(1)";
+  });
+
+  if (stato === "da_fare") {
+    btnDaFare.classList.add("cbx-modal-active-red");
+    btnDaFare.style.opacity = "1";
+    btnDaFare.style.transform = "scale(1.05)";
+  } else if (stato === "n_a") {
+    btnNA.classList.add("cbx-modal-active-gray");
+    btnNA.style.opacity = "1";
+    btnNA.style.transform = "scale(1.05)";
+  } else if (stato === "completato") {
+    btnCompl.classList.add("cbx-modal-active-green");
+    btnCompl.style.opacity = "1";
+    btnCompl.style.transform = "scale(1.05)";
+  }
+}
+
+function setCbxModalStato(nuovoStato) {
+  setVal("adp-stato", nuovoStato);
+  _aggiornaPulsantiCheckbox(nuovoStato);
+}
+
+// ─── COLORI CONTABILITÀ PURA ──────────────────────────────────
+// Blu = IVA compilata | Verde = IVA + cont ✓ (ma cont non mostrata nel modal)
 function _aggiornaColoriContabilita(r) {
-  const contCheck = document.getElementById("adp-cont-completata");
-  const contDone = contCheck
-    ? contCheck.checked
-    : parseInt(r?.cont_completata) === 1;
   const ivaVal = document.getElementById("adp-imp-iva")?.value;
   const hasIva = ivaVal != null && ivaVal !== "";
-
-  // Se il cliente ha contabilità attiva, l'IVA compilata diventa verde
-  const clienteHaContabilita = state.selectedCliente && state.selectedCliente.contabilita === 1;
-  
-  let vs = "none";
-  if (hasIva && contDone && !clienteHaContabilita) vs = "both";
-  else if (hasIva) vs = "iva";
-
-  const colorIva =
-    vs === "both" ? "var(--green)" : vs === "iva" ? (clienteHaContabilita ? "var(--green)" : "var(--accent)") : "";
-  const colorCont = vs === "both" ? "var(--green)" : "";
+  const colorIva = hasIva ? "var(--green)" : "";
 
   const ivaLabel = document.getElementById("label-imp-iva");
   const ivaInput = document.getElementById("adp-imp-iva");
-  const contLabel = document.getElementById("label-imp-cont");
-  const contCbxLabel = document.getElementById("label-cont-completata");
-
   if (ivaLabel) ivaLabel.style.color = colorIva;
-  if (ivaInput)
-    ivaInput.style.borderColor =
-      vs !== "none" ? (vs === "both" ? "var(--green)" : (clienteHaContabilita ? "var(--green)" : "var(--accent)")) : "";
-  if (contLabel) contLabel.style.color = colorCont;
-  if (contCbxLabel)
-    contCbxLabel.style.color =
-      vs === "both" ? "var(--green)" : vs === "iva" ? "var(--text2)" : "";
+  if (ivaInput) ivaInput.style.borderColor = hasIva ? "var(--green)" : "";
 }
 
 function onContabilitaImportoChange() {
   _aggiornaColoriContabilita(null);
 }
 
-// ─── COLORI RATE + CONTABILITÀ (blu=uno solo, verde=entrambi) ─────
+// ─── COLORI RATE + CONTABILITÀ ────────────────────────────────
 function _aggiornaColoriRateContabilita(r) {
   const rateContCheck = document.getElementById("adp-rate-cont-completata");
   const contDone = rateContCheck
     ? rateContCheck.checked
     : parseInt(r?.cont_completata) === 1;
 
-  // Verifica se almeno una rata è compilata
   const saldoVal = document.getElementById("adp-imp-saldo")?.value;
   const acc1Val = document.getElementById("adp-imp-acc1")?.value;
   const acc2Val = document.getElementById("adp-imp-acc2")?.value;
-  const hasRate =
+  const hasAnyRate =
     (saldoVal && saldoVal !== "") ||
     (acc1Val && acc1Val !== "") ||
     (acc2Val && acc2Val !== "");
 
   let color = "none";
-  if (hasRate && contDone) color = "both";
-  else if (hasRate || contDone) color = "one";
+  if (hasAnyRate && contDone) color = "both";
+  else if (hasAnyRate || contDone) color = "one";
 
   const labelCont = document.getElementById("label-rate-cont");
   if (labelCont) {
@@ -436,19 +463,17 @@ function saveAdpStato() {
   };
 
   if (isCbx) {
-    // Checkbox: nessun importo
+    // Checkbox: nessun importo, stato già in data.stato
   } else if (isCont) {
     data.importo_iva = parseFloat(getVal("adp-imp-iva")) || null;
     data.importo_contabilita = parseFloat(getVal("adp-imp-cont")) || null;
-    data.cont_completata = document.getElementById("adp-cont-completata")
-      ?.checked
-      ? 1
-      : 0;
+    // Per contabilità pura non c'è checkbox → cont_completata resta 0
+    data.cont_completata = 0;
   } else if (isRate) {
     data.importo_saldo = parseFloat(getVal("adp-imp-saldo")) || null;
     data.importo_acconto1 = parseFloat(getVal("adp-imp-acc1")) || null;
     data.importo_acconto2 = parseFloat(getVal("adp-imp-acc2")) || null;
-    // Salva anche la checkbox della contabilità
+    // Per le rate la checkbox contabilità è visibile
     data.cont_completata = document.getElementById("adp-rate-cont-completata")
       ?.checked
       ? 1
