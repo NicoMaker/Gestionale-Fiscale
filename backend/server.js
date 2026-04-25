@@ -7,7 +7,7 @@ const { initDB } = require("./modules/database");
 const { getLocalIP, getPublicIP } = require("./modules/utils/network");
 const setupSocketHandlers = require("./modules/sockets");
 const downloadDbRouter = require("./modules/routes/downloadDb");
-const avvioHtmlRouter = require("./modules/routes/avvioHtml"); // ← NUOVO IMPORT
+const avvioHtmlRouter = require("./modules/routes/avviohtml"); // ← NUOVO IMPORT
 
 const app = express();
 const server = http.createServer(app);
