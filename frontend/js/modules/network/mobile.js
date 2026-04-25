@@ -15,10 +15,10 @@
   "use strict";
 
   /* ─── COSTANTI ─────────────────────────────────────────────── */
-  const MOBILE_BP = 768;           // breakpoint px (deve corrispondere al CSS)
-  const SWIPE_OPEN_ZONE  = 24;     // px dal bordo sinistro che attiva lo swipe-open
-  const SWIPE_THRESHOLD  = 60;     // px di swipe minimo per aprire/chiudere
-  const SWIPE_VELOCITY   = 0.3;    // px/ms minima per considerare lo swipe veloce
+  const MOBILE_BP = 768; // breakpoint px (deve corrispondere al CSS)
+  const SWIPE_OPEN_ZONE = 24; // px dal bordo sinistro che attiva lo swipe-open
+  const SWIPE_THRESHOLD = 60; // px di swipe minimo per aprire/chiudere
+  const SWIPE_VELOCITY = 0.3; // px/ms minima per considerare lo swipe veloce
 
   /* ─── STATO ────────────────────────────────────────────────── */
   let _sidebarOpen = false;
@@ -28,7 +28,7 @@
 
   /* ─── INIT ─────────────────────────────────────────────────── */
   function init() {
-    sidebar  = document.querySelector(".sidebar");
+    sidebar = document.querySelector(".sidebar");
     if (!sidebar) return;
 
     _createOverlay();
@@ -110,47 +110,61 @@
 
   /* ─── SWIPE ────────────────────────────────────────────────── */
   function _bindSwipe() {
-    let startX = 0, startY = 0, startTime = 0;
+    let startX = 0,
+      startY = 0,
+      startTime = 0;
     let tracking = false;
 
-    document.addEventListener("touchstart", (e) => {
-      if (!isMobile()) return;
-      const touch = e.touches[0];
-      startX = touch.clientX;
-      startY = touch.clientY;
-      startTime = Date.now();
+    document.addEventListener(
+      "touchstart",
+      (e) => {
+        if (!isMobile()) return;
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        startTime = Date.now();
 
-      // Swipe-open: solo se inizia nel bordo sinistro
-      if (!_sidebarOpen && startX <= SWIPE_OPEN_ZONE) {
-        tracking = true;
-      }
-      // Swipe-close: qualsiasi punto quando sidebar è aperta
-      if (_sidebarOpen) {
-        tracking = true;
-      }
-    }, { passive: true });
+        // Swipe-open: solo se inizia nel bordo sinistro
+        if (!_sidebarOpen && startX <= SWIPE_OPEN_ZONE) {
+          tracking = true;
+        }
+        // Swipe-close: qualsiasi punto quando sidebar è aperta
+        if (_sidebarOpen) {
+          tracking = true;
+        }
+      },
+      { passive: true },
+    );
 
-    document.addEventListener("touchend", (e) => {
-      if (!isMobile() || !tracking) return;
-      tracking = false;
+    document.addEventListener(
+      "touchend",
+      (e) => {
+        if (!isMobile() || !tracking) return;
+        tracking = false;
 
-      const touch = e.changedTouches[0];
-      const dx = touch.clientX - startX;
-      const dy = touch.clientY - startY;
-      const dt = Date.now() - startTime;
-      const velocity = Math.abs(dx) / dt;
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        const dt = Date.now() - startTime;
+        const velocity = Math.abs(dx) / dt;
 
-      // Ignora swipe prevalentemente verticali
-      if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
+        // Ignora swipe prevalentemente verticali
+        if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
 
-      const isFast = velocity > SWIPE_VELOCITY;
+        const isFast = velocity > SWIPE_VELOCITY;
 
-      if (!_sidebarOpen && dx > 0 && (dx > SWIPE_THRESHOLD || isFast)) {
-        openSidebar();
-      } else if (_sidebarOpen && dx < 0 && (Math.abs(dx) > SWIPE_THRESHOLD || isFast)) {
-        closeSidebar();
-      }
-    }, { passive: true });
+        if (!_sidebarOpen && dx > 0 && (dx > SWIPE_THRESHOLD || isFast)) {
+          openSidebar();
+        } else if (
+          _sidebarOpen &&
+          dx < 0 &&
+          (Math.abs(dx) > SWIPE_THRESHOLD || isFast)
+        ) {
+          closeSidebar();
+        }
+      },
+      { passive: true },
+    );
   }
 
   /* ─── HELPERS ──────────────────────────────────────────────── */
@@ -191,7 +205,7 @@
     } else {
       sidebar.classList.remove("open");
       overlay.classList.remove("visible");
-      document.body.style.overflow = "";       // ripristina scroll
+      document.body.style.overflow = ""; // ripristina scroll
     }
 
     if (hamburger) {
@@ -246,8 +260,8 @@
 
   /* ─── ESPOSIZIONE PUBBLICA ─────────────────────────────────── */
   window.mobileSidebar = {
-    open:   openSidebar,
-    close:  closeSidebar,
+    open: openSidebar,
+    close: closeSidebar,
     toggle: toggleSidebar,
     isOpen: () => _sidebarOpen,
   };

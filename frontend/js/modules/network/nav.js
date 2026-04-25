@@ -64,7 +64,10 @@ function initSearchableSelect(selectId) {
 
   /* ── helpers ── */
   function getAllOptions() {
-    return Array.from(sel.options).map((o) => ({ value: o.value, text: o.text }));
+    return Array.from(sel.options).map((o) => ({
+      value: o.value,
+      text: o.text,
+    }));
   }
 
   function renderList(q) {
@@ -83,7 +86,9 @@ function initSearchableSelect(selectId) {
     const frag = document.createDocumentFragment();
     filtered.forEach((o) => {
       const item = document.createElement("div");
-      item.className = "ss-item" + (String(o.value) === String(sel.value) ? " ss-selected" : "");
+      item.className =
+        "ss-item" +
+        (String(o.value) === String(sel.value) ? " ss-selected" : "");
       item.dataset.value = o.value;
       item.setAttribute("role", "option");
       item.setAttribute("aria-selected", String(o.value) === String(sel.value));
@@ -117,14 +122,14 @@ function initSearchableSelect(selectId) {
 
     // Posizionamento intelligente: se lo spazio sotto è insufficiente, apri verso l'alto
     requestAnimationFrame(() => {
-      const wrapRect  = wrap.getBoundingClientRect();
-      const panelH    = panel.offsetHeight;
+      const wrapRect = wrap.getBoundingClientRect();
+      const panelH = panel.offsetHeight;
       const spaceDown = window.innerHeight - wrapRect.bottom;
       if (spaceDown < panelH && wrapRect.top > panelH) {
-        panel.style.top    = "auto";
+        panel.style.top = "auto";
         panel.style.bottom = "calc(100% + 4px)";
       } else {
-        panel.style.top    = "calc(100% + 4px)";
+        panel.style.top = "calc(100% + 4px)";
         panel.style.bottom = "auto";
       }
       searchInput.focus();
@@ -179,9 +184,10 @@ function initSearchableSelect(selectId) {
       const items = list.querySelectorAll(".ss-item");
       const focused = list.querySelector(".ss-item:focus");
       let idx = focused ? Array.from(items).indexOf(focused) : -1;
-      idx = e.key === "ArrowDown"
-        ? Math.min(idx + 1, items.length - 1)
-        : Math.max(idx - 1, 0);
+      idx =
+        e.key === "ArrowDown"
+          ? Math.min(idx + 1, items.length - 1)
+          : Math.max(idx - 1, 0);
       if (items[idx]) items[idx].focus();
     }
   });
@@ -205,7 +211,9 @@ function initNav() {
   document.querySelectorAll(".nav-item").forEach((el) => {
     if (!el.dataset.page) return;
     el.addEventListener("click", () => {
-      document.querySelectorAll(".nav-item").forEach((x) => x.classList.remove("active"));
+      document
+        .querySelectorAll(".nav-item")
+        .forEach((x) => x.classList.remove("active"));
       el.classList.add("active");
       renderPage(el.dataset.page);
 
@@ -247,18 +255,21 @@ function renderPage(page) {
   scrollToTop();
 
   const titles = {
-    dashboard:           "Dashboard",
-    clienti:             "Clienti",
-    scadenzario:         "Scadenzario Cliente",
+    dashboard: "Dashboard",
+    clienti: "Clienti",
+    scadenzario: "Scadenzario Cliente",
     scadenzario_globale: "Vista Globale",
-    adempimenti:         "Adempimenti Fiscali",
-    tipologie:           "Tipologie Clienti",
+    adempimenti: "Adempimenti Fiscali",
+    tipologie: "Tipologie Clienti",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
 
   /* ── aggiorna aria-current nelle nav-item ── */
   document.querySelectorAll(".nav-item").forEach((el) => {
-    el.setAttribute("aria-current", el.dataset.page === page ? "page" : "false");
+    el.setAttribute(
+      "aria-current",
+      el.dataset.page === page ? "page" : "false",
+    );
   });
 
   if (page === "dashboard") {
@@ -273,7 +284,6 @@ function renderPage(page) {
       <button class="btn btn-cyan btn-sm no-print"   onclick="openCopiaTutti()" style="font-size:13px">📋 Copia</button>
       <button class="btn btn-print btn-sm"           onclick="window.print()" style="font-size:13px">🖨️</button>`;
     socket.emit("get:stats", { anno: state.anno });
-
   } else if (page === "clienti") {
     state._pending = "clienti";
     document.getElementById("topbar-actions").innerHTML = `
@@ -285,15 +295,12 @@ function renderPage(page) {
       <button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️</button>
       <button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Cliente</button>`;
     socket.emit("get:clienti");
-
   } else if (page === "scadenzario") {
     state._pending = "scadenzario";
     document.getElementById("topbar-actions").innerHTML = "";
     socket.emit("get:clienti");
-
   } else if (page === "scadenzario_globale") {
     renderGlobalePage();
-
   } else if (page === "adempimenti") {
     state._pending = "adempimenti";
     document.getElementById("topbar-actions").innerHTML = `
@@ -304,7 +311,6 @@ function renderPage(page) {
       <button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:13px">⟳</button>
       <button class="btn btn-primary no-print" onclick="openNuovoAdpDef()" style="font-size:13px">+ Nuovo</button>`;
     socket.emit("get:adempimenti");
-
   } else if (page === "tipologie") {
     document.getElementById("topbar-actions").innerHTML = "";
     renderTipologiePage();
@@ -317,7 +323,9 @@ function refreshPage() {
 
 function changeAnno(d) {
   state.anno += d;
-  document.querySelectorAll(".year-num").forEach((el) => (el.textContent = state.anno));
+  document
+    .querySelectorAll(".year-num")
+    .forEach((el) => (el.textContent = state.anno));
   if (state.page === "dashboard") {
     state._dashRendered = false;
     socket.emit("get:stats", { anno: state.anno });
