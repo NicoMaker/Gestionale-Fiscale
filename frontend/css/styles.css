@@ -345,6 +345,21 @@ body {
     overflow: hidden;
   }
 
+  /* Scroll orizzontale per le card dei clienti nella vista globale */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .glob-cliente-card {
+    min-width: 320px;
+    flex-shrink: 0;
+  }
+  
+  .glob-cliente-periodi.periodi-mensili {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
   .hamburger {
     display: flex;
   }
