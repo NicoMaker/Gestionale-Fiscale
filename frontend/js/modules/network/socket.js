@@ -207,3 +207,13 @@ socket.on("res:add:adempimento_cliente", ({ success }) => {
     loadScadenzario();
   }
 });
+
+socket.on("res:adempimenti_cliente", ({ success, data }) => {
+  if (success) {
+    state.adempimentiCliente = data;
+    // Re-render the scadenzario table to include adempimenti buttons
+    if (state.scadenzario) {
+      renderScadenzarioTabella(state.scadenzario);
+    }
+  }
+});

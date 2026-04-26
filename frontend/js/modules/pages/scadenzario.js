@@ -23,12 +23,33 @@ function renderBtnAddAdp(id_cliente) {
 function filtraScadPerAdp(idAdp) {
   const sel = document.getElementById("scad-filtro-adp");
   if (!sel) return;
+  
+  // Update the select value
   sel.value = idAdp ? String(idAdp) : "";
   if (sel._ssRefresh) sel._ssRefresh();
+  
+  // Apply the filter
   applyScadFiltriAdp();
+  
+  // Scroll to scadenzario content
   const scadContent = document.getElementById("scad-content");
-  if (scadContent)
+  if (scadContent) {
     scadContent.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  
+  // Update button styles to show active filter
+  document.querySelectorAll('.adempimento-filter-btn').forEach(btn => {
+    const btnId = btn.getAttribute('onclick').match(/filtraScadPerAdp\((\d+)\)/)?.[1];
+    if (btnId === String(idAdp)) {
+      btn.style.background = 'var(--accent)';
+      btn.style.borderColor = 'var(--accent)';
+      btn.style.color = 'white';
+    } else {
+      btn.style.background = 'var(--surface3)';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--text1)';
+    }
+  });
 }
 
 function aggiornaFiltroAdpScad(data) {
@@ -176,6 +197,11 @@ function loadScadenzario() {
       anno: state.anno,
       filtri: { search: sv, stato: st },
     });
+    // Load customer adempimenti for the buttons section
+    socket.emit("get:adempimenti_cliente", {
+      id_cliente: state.selectedCliente.id,
+      anno: state.anno,
+    });
   }
 }
 
@@ -203,6 +229,13 @@ function resetScadFiltri() {
     if (adpSelect._ssRefresh) adpSelect._ssRefresh();
   }
   if (searchInput) searchInput.value = "";
+
+  // Reset adempimenti button styles
+  document.querySelectorAll('.adempimento-filter-btn').forEach(btn => {
+    btn.style.background = 'var(--surface3)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--text1)';
+  });
 
   if (state.selectedCliente) loadScadenzario();
 }
@@ -283,6 +316,39 @@ function renderScadenzarioTabella(data) {
        </div>`
       : "";
 
+  // Generate adempimenti buttons section
+  const adempimentiButtons = state.adempimentiCliente && state.adempimentiCliente.length > 0 ? `
+    <div class="adempimenti-buttons-section" style="margin-top:16px;padding:16px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px">
+        📋 Adempimenti del cliente
+        <span style="font-size:11px;color:var(--text3);font-weight:400">(clicca per filtrare)</span>
+      </div>
+      <div class="adempimenti-buttons-grid" style="display:flex;flex-wrap:wrap;gap:8px">
+        ${state.adempimentiCliente.map(adp => `
+          <button 
+            class="btn btn-sm adempimento-filter-btn" 
+            onclick="filtraScadPerAdp(${adp.id})"
+            title="Filtra per ${escAttr(adp.nome)}"
+            style="background:var(--surface3);border:1px solid var(--border);color:var(--text1);font-size:12px;padding:6px 12px;border-radius:6px;transition:all 0.2s"
+            onmouseover="this.style.background='var(--accent)18';this.style.borderColor='var(--accent)44';this.style.color='var(--accent)'"
+            onmouseout="this.style.background='var(--surface3)';this.style.borderColor='var(--border)';this.style.color='var(--text1)'"
+          >
+            <span style="font-weight:600">${adp.codice}</span>
+            <span style="margin-left:4px;opacity:0.8">${adp.nome}</span>
+          </button>
+        `).join('')}
+        <button 
+          class="btn btn-sm" 
+          onclick="resetScadFiltri()"
+          title="Rimuovi tutti i filtri"
+          style="background:var(--red);border:1px solid var(--red);color:white;font-size:12px;padding:6px 12px;border-radius:6px"
+        >
+          ✕ Cancella filtri
+        </button>
+      </div>
+    </div>
+  ` : '';
+
   const clienteCard = `<div class="cliente-preview-card" style="border-left-color:${tipColor}">
     <div class="cpc-inner">
       <div class="cpc-avatar" style="border-color:${tipColor};color:${tipColor};background:${tipColor}22">${avatar}</div>
@@ -323,7 +389,8 @@ function renderScadenzarioTabella(data) {
       <button class="btn btn-print btn-sm" style="margin-left:auto" onclick="window.print()">🖨️ Stampa</button>
     </div>
     ${renderClienteDatiRiferimento(c)}
-  </div>`;
+  </div>
+  ${adempimentiButtons}`;
 
   // Raggruppa per adempimento
   const grouped = {};

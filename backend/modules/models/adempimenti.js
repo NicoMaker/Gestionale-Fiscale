@@ -4,6 +4,18 @@ function getAdempimenti() {
   return queryAll(`SELECT * FROM adempimenti WHERE attivo = 1 ORDER BY nome`);
 }
 
+function getAdempimentiCliente(id_cliente, anno) {
+  return queryAll(`
+    SELECT DISTINCT 
+      a.id, a.codice, a.nome, a.descrizione, a.scadenza_tipo,
+      a.is_contabilita, a.has_rate, a.is_checkbox, a.rate_labels
+    FROM adempimenti a
+    INNER JOIN adempimenti_cliente ac ON a.id = ac.id_adempimento
+    WHERE ac.id_cliente = ? AND ac.anno = ? AND a.attivo = 1
+    ORDER BY a.nome
+  `, [id_cliente, anno]);
+}
+
 function createAdempimento(data) {
   const rl = data.rate_labels ? JSON.stringify(data.rate_labels) : null;
   runQuery(
@@ -137,6 +149,7 @@ function generaAdempimentoPerTutti(id_adp, anno) {
 
 module.exports = {
   getAdempimenti,
+  getAdempimentiCliente,
   createAdempimento,
   updateAdempimento,
   deleteAdempimento,

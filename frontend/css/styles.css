@@ -2789,3 +2789,74 @@ select {
     display: none !important;
   }
 }
+
+/* ─── ADEMPIMENTI BUTTONS SECTION ─────────────────────────────── */
+.adempimenti-buttons-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.adempimenti-buttons-grid {
+  align-items: flex-start;
+}
+
+.adempimento-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sans);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.adempimento-filter-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s;
+}
+
+.adempimento-filter-btn:hover::before {
+  left: 100%;
+}
+
+.adempimento-filter-btn:active {
+  transform: scale(0.98);
+}
+
+.adempimento-filter-btn.active {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(91, 141, 246, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments for adempimenti buttons */
+@media (max-width: 768px) {
+  .adempimenti-buttons-grid {
+    gap: 6px;
+  }
+  
+  .adempimento-filter-btn {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}

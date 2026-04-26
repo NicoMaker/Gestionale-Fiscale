@@ -163,6 +163,15 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    socket.on("get:adempimenti_cliente", ({ id_cliente, anno }) => {
+      try {
+        const data = adempimentiModel.getAdempimentiCliente(id_cliente, anno);
+        socket.emit("res:adempimenti_cliente", { success: true, data });
+      } catch (e) {
+        socket.emit("res:adempimenti_cliente", { success: false, error: e.message });
+      }
+    });
+
     socket.on("create:adempimento", (data) => {
       try {
         const newId = adempimentiModel.createAdempimento(data);
