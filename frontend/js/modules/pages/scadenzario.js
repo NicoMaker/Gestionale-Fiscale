@@ -218,10 +218,31 @@ function applyScadFiltri() {
   if (state.selectedCliente) loadScadenzario();
 }
 
+function filterAdpButtons() {
+  const searchInput = document.getElementById("adp-filter-search");
+  const container = document.getElementById("adp-buttons-container");
+  if (!searchInput || !container) return;
+  
+  const query = searchInput.value.toLowerCase().trim();
+  const buttons = container.querySelectorAll('.adempimento-filter-btn');
+  
+  buttons.forEach(button => {
+    const codice = button.getAttribute('data-adp-codice') || '';
+    const nome = button.getAttribute('data-adp-nome') || '';
+    
+    if (query === '' || codice.includes(query) || nome.includes(query)) {
+      button.style.display = '';
+    } else {
+      button.style.display = 'none';
+    }
+  });
+}
+
 function resetScadFiltri() {
   const statoSelect = document.getElementById("scad-filtro-stato");
   const adpSelect = document.getElementById("scad-filtro-adp");
   const searchInput = document.getElementById("scad-search");
+  const adpFilterSearch = document.getElementById("adp-filter-search");
 
   if (statoSelect) statoSelect.value = "";
   if (adpSelect) {
@@ -229,12 +250,14 @@ function resetScadFiltri() {
     if (adpSelect._ssRefresh) adpSelect._ssRefresh();
   }
   if (searchInput) searchInput.value = "";
+  if (adpFilterSearch) adpFilterSearch.value = "";
 
-  // Reset adempimenti button styles
+  // Reset adempimenti button styles and show all buttons
   document.querySelectorAll('.adempimento-filter-btn').forEach(btn => {
     btn.style.background = 'var(--surface3)';
     btn.style.borderColor = 'var(--border)';
     btn.style.color = 'var(--text1)';
+    btn.style.display = '';
   });
 
   if (state.selectedCliente) loadScadenzario();
@@ -316,17 +339,31 @@ function renderScadenzarioTabella(data) {
        </div>`
       : "";
 
-  // Generate adempimenti buttons section
+  // Generate adempimenti buttons section with search functionality
   const adempimentiButtons = state.adempimentiCliente && state.adempimentiCliente.length > 0 ? `
     <div class="adempimenti-buttons-section" style="margin-top:16px;padding:16px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
-      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px">
-        📋 Adempimenti del cliente
-        <span style="font-size:11px;color:var(--text3);font-weight:400">(clicca per filtrare)</span>
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:6px">
+          📋 Adempimenti del cliente
+          <span style="font-size:11px;color:var(--text3);font-weight:400">(clicca per filtrare)</span>
+        </div>
+        <div class="search-wrap" style="width:200px;margin:0">
+          <input 
+            class="input" 
+            id="adp-filter-search" 
+            placeholder="Cerca adempimenti..." 
+            oninput="filterAdpButtons()" 
+            title="Cerca adempimenti per codice o nome"
+            style="font-size:12px;padding:4px 8px;height:28px"
+          >
+        </div>
       </div>
-      <div class="adempimenti-buttons-grid" style="display:flex;flex-wrap:wrap;gap:8px">
+      <div class="adempimenti-buttons-grid" id="adp-buttons-container" style="display:flex;flex-wrap:wrap;gap:8px">
         ${state.adempimentiCliente.map(adp => `
           <button 
             class="btn btn-sm adempimento-filter-btn" 
+            data-adp-codice="${escAttr(adp.codice.toLowerCase())}"
+            data-adp-nome="${escAttr(adp.nome.toLowerCase())}"
             onclick="filtraScadPerAdp(${adp.id})"
             title="Filtra per ${escAttr(adp.nome)}"
             style="background:var(--surface3);border:1px solid var(--border);color:var(--text1);font-size:12px;padding:6px 12px;border-radius:6px;transition:all 0.2s"
@@ -598,6 +635,7 @@ window.onClienteChange = onClienteChange;
 window.changeAnnoScad = changeAnnoScad;
 window.applyScadFiltriAdp = applyScadFiltriAdp;
 window.applyScadFiltri = applyScadFiltri;
+window.filterAdpButtons = filterAdpButtons;
 window.resetScadFiltri = resetScadFiltri;
 window.generaScadenzario = generaScadenzario;
 window.openCopia = openCopia;
