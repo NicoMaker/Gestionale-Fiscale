@@ -6,37 +6,37 @@
 
 /* ─── TOKENS ─────────────────────────────────────────────────── */
 :root {
-  --bg: #080a0e;
-  --s0: #0d1017;
-  --s1: #121620;
-  --s2: #181d2a;
-  --s3: #1e2435;
+  --bg: #ffffff;
+  --s0: #f8f9fa;
+  --s1: #f1f3f4;
+  --s2: #e8eaed;
+  --s3: #dadce0;
 
-  --b0: #1e2435;
-  --b1: #263047;
-  --b2: #2e3a56;
+  --b0: #dadce0;
+  --b1: #c4c7c5;
+  --b2: #9aa0a6;
 
-  --accent: #5b8df6;
-  --accent-d: rgba(91, 141, 246, 0.14);
-  --accent-b: rgba(91, 141, 246, 0.28);
+  --accent: #1967d2;
+  --accent-d: rgba(25, 103, 210, 0.08);
+  --accent-b: rgba(25, 103, 210, 0.16);
 
-  --green: #34d399;
-  --green-d: rgba(52, 211, 153, 0.12);
-  --red: #f87171;
-  --red-d: rgba(248, 113, 113, 0.12);
-  --yellow: #fbbf24;
-  --yellow-d: rgba(251, 191, 36, 0.12);
-  --purple: #a78bfa;
-  --purple-d: rgba(167, 139, 250, 0.12);
-  --cyan: #22d3ee;
-  --cyan-d: rgba(34, 211, 238, 0.12);
-  --orange: #fb923c;
-  --orange-d: rgba(251, 146, 60, 0.12);
+  --green: #137333;
+  --green-d: rgba(19, 115, 51, 0.08);
+  --red: #d93025;
+  --red-d: rgba(217, 48, 37, 0.08);
+  --yellow: #ea8600;
+  --yellow-d: rgba(234, 134, 0, 0.08);
+  --purple: #9334e6;
+  --purple-d: rgba(147, 52, 230, 0.08);
+  --cyan: #0891b2;
+  --cyan-d: rgba(8, 145, 178, 0.08);
+  --orange: #ea580c;
+  --orange-d: rgba(234, 88, 12, 0.08);
 
-  --t0: #e8edf8;
-  --t1: #c4ccdf;
-  --t2: #8a95b0;
-  --t3: #5a6480;
+  --t0: #202124;
+  --t1: #3c4043;
+  --t2: #5f6368;
+  --t3: #80868b;
 
   --sans: "DM Sans", system-ui, sans-serif;
   --mono: "IBM Plex Mono", monospace;
@@ -93,7 +93,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--s1);
+  background: var(--s2);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--b2);
@@ -570,7 +570,7 @@ body {
   border: 1px solid var(--b1);
   border-radius: var(--r-sm);
   padding: 10px 14px;
-  color: #000 !important;
+  color: #000000 !important;
   font-family: var(--sans);
   font-size: 14px;
   width: 100%;
@@ -585,7 +585,7 @@ body {
   background: #ffffff !important;
 }
 .input::placeholder {
-  color: var(--t3);
+  color: #000000 !important;
 }
 textarea.input {
   resize: vertical;
@@ -654,11 +654,11 @@ textarea.input {
   gap: 4px;
 }
 .select-search-input {
-  background: var(--s3);
+  background: #ffffff;
   border: 1px solid var(--b1);
   border-radius: var(--r-sm);
   padding: 6px 12px;
-  color: var(--t0);
+  color: #000000 !important;
   font-family: var(--sans);
   font-size: 13px;
   outline: none;
@@ -669,7 +669,7 @@ textarea.input {
   border-color: var(--accent);
 }
 .select-search-input::placeholder {
-  color: var(--t3);
+  color: #000000 !important;
 }
 
 /* ─── 4 COLONNE ──────────────────────────────────────────────── */
@@ -2529,6 +2529,9 @@ tr.clickable:hover td {
   display: inline-block;
 }
 .ss-trigger {
+  background: #ffffff;
+  border: 1px solid var(--b1);
+  border-radius: var(--r-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2538,10 +2541,9 @@ tr.clickable:hover td {
   padding: 7px 12px !important;
   font-size: 13px !important;
   width: 100%;
-  box-sizing: border-box;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
+  color: #000000 !important;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
 }
 .ss-trigger:hover {
   border-color: var(--accent) !important;
@@ -2552,7 +2554,7 @@ tr.clickable:hover td {
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
-  color: #f0f0f0 !important;
+  color: #000000 !important;
 }
 .ss-panel {
   display: none;
@@ -2587,7 +2589,7 @@ tr.clickable:hover td {
   border-bottom-color: var(--accent);
 }
 .ss-panel input::placeholder {
-  color: var(--t3);
+  color: #000000 !important;
 }
 .ss-item {
   padding: 9px 14px;
@@ -2597,7 +2599,7 @@ tr.clickable:hover td {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: background 0.1s;
-  color: #f0f0f0 !important;
+  color: #000000 !important;
   border-left: 2px solid transparent;
 }
 .ss-item:hover {
@@ -2606,7 +2608,7 @@ tr.clickable:hover td {
 }
 .ss-item.ss-selected {
   background: var(--accent-d);
-  color: var(--accent);
+  color: #000000 !important;
   font-weight: 700;
   border-left-color: var(--accent);
 }
