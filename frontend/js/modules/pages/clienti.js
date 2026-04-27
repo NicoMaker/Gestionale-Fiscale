@@ -489,7 +489,6 @@ function openEditClienteModal(cliente, anno) {
     if (el) el.value = val || "";
   });
 
-  
   populateTipologiaSelect(cliente.id_tipologia);
   const col2Val = cliente.col2_value || "",
     col3Val = cliente.col3_value || "",
@@ -521,17 +520,14 @@ function openEditClienteModal(cliente, anno) {
   openModal("modal-cliente");
 }
 
-// ⭐ FUNZIONE PRINCIPALE PER NUOVO CLIENTE
+// ─── NUOVO CLIENTE ────────────────────────────────────────────
 function openNuovoCliente() {
-  console.log("=== APERTURA NUOVO CLIENTE ===");
-
   document.getElementById("modal-cliente-title").textContent = "Nuovo Cliente";
   document.getElementById("cliente-id").value = "";
   document.getElementById("cliente-edit-anno").value = new Date().getFullYear();
   const annoInfo = document.getElementById("cliente-anno-info");
   if (annoInfo) annoInfo.innerHTML = "";
 
-  // Resetta tutti i campi del form
   [
     "c-nome",
     "c-cf",
@@ -555,25 +551,17 @@ function openNuovoCliente() {
     if (el) el.value = "";
   });
 
-  
   const badge = document.getElementById("col4-forfettario-badge");
   if (badge) badge.style.display = "none";
 
-  // Resetta le variabili globali
-  lastClienteFormValues = {
-    col2: "",
-    col3: "",
-    col4: "",
-  };
+  lastClienteFormValues = { col2: "", col3: "", col4: "" };
 
-  // Usa sempre la prima tipologia disponibile
   if (state.tipologie && state.tipologie.length > 0) {
     populateTipologiaSelect(state.tipologie[0].id);
   } else {
     populateTipologiaSelect("");
   }
 
-  // Attendi il rendering del DOM
   setTimeout(() => {
     aggiornaColonneCliente();
     aggiornaRiepilogoClassificazione();
@@ -582,7 +570,7 @@ function openNuovoCliente() {
   openModal("modal-cliente");
 }
 
-// ⭐ FUNZIONE SALVA CLIENTE
+// ─── SALVA CLIENTE ────────────────────────────────────────────
 function saveCliente() {
   const id = document.getElementById("cliente-id").value;
   const anno = parseInt(
@@ -621,20 +609,12 @@ function saveCliente() {
     lastClienteFormValues.col4 = col4Val;
   }
 
-  // Logica per forfettario
   if (col3Val && REGIMI_ANNUALI.includes(col3Val)) {
     col4Val = "annuale";
     lastClienteFormValues.col4 = col4Val;
   }
 
   const tipologiaVal = document.getElementById("c-tipologia")?.value || "";
-
-  console.log("Valori da salvare:", {
-    tipologiaVal,
-    col2Val,
-    col3Val,
-    col4Val,
-  });
 
   lastClienteFormValues.col2 = col2Val;
   lastClienteFormValues.col3 = col3Val;
@@ -651,12 +631,27 @@ function saveCliente() {
     periodicita: col4Val || null,
     codice_fiscale:
       document.getElementById("c-cf")?.value.trim().toUpperCase() || null,
-    partita_iva: document.getElementById("c-piva")?.value.trim() || null,
+    // ✅ Partita IVA: solo cifre
+    partita_iva:
+      document
+        .getElementById("c-piva")
+        ?.value.replace(/[^0-9]/g, "")
+        .trim() || null,
     email: document.getElementById("c-email")?.value.trim() || null,
-    telefono: document.getElementById("c-tel")?.value.trim() || null,
+    // ✅ Telefono: solo cifre + simboli telefonici
+    telefono:
+      document
+        .getElementById("c-tel")
+        ?.value.replace(/[^0-9+\s\-]/g, "")
+        .trim() || null,
     indirizzo: document.getElementById("c-indirizzo")?.value.trim() || null,
     citta: document.getElementById("c-citta")?.value.trim() || null,
-    cap: document.getElementById("c-cap")?.value.trim() || null,
+    // ✅ CAP: solo cifre
+    cap:
+      document
+        .getElementById("c-cap")
+        ?.value.replace(/[^0-9]/g, "")
+        .trim() || null,
     provincia:
       document.getElementById("c-prov")?.value.trim().toUpperCase() || null,
     pec: document.getElementById("c-pec")?.value.trim() || null,
@@ -665,8 +660,6 @@ function saveCliente() {
     referente: document.getElementById("c-referente")?.value.trim() || null,
     note: document.getElementById("c-note")?.value.trim() || null,
   };
-
-  console.log("Dati cliente inviati al backend:", data);
 
   if (typeof socket !== "undefined") {
     if (id) socket.emit("update:cliente", data);
@@ -709,12 +702,6 @@ function populateTipologiaSelect(selectedId) {
     SP: "Società di Persone",
     SC: "Società di Capitali",
     ASS: "Associazione",
-  };
-  const tipColors = {
-    PF: "#5b8df6",
-    SP: "#fbbf24",
-    SC: "#34d399",
-    ASS: "#f472b6",
   };
 
   sel.innerHTML = (state.tipologie || [])
@@ -913,11 +900,7 @@ function aggiornaRiepilogoClassificazione() {
 }
 
 function validaClassificazioneCliente() {
-  console.log("=== INIZIO VALIDAZIONE CLASSIFICAZIONE ===");
-
   const tipologia = document.getElementById("c-tipologia").value;
-  console.log("Tipologia:", tipologia);
-
   if (!tipologia) {
     showNotif("La Tipologia è obbligatoria", "error");
     document.getElementById("c-tipologia").focus();
@@ -928,15 +911,8 @@ function validaClassificazioneCliente() {
   const col3Wrap = document.getElementById("wrap-col3");
   const col4Wrap = document.getElementById("wrap-col4");
 
-  console.log("Stato wrap:", {
-    col2Wrap: col2Wrap?.style.display,
-    col3Wrap: col3Wrap?.style.display,
-    col4Wrap: col4Wrap?.style.display,
-  });
-
   if (col2Wrap && col2Wrap.style.display !== "none") {
     const col2Val = document.getElementById("c-col2").value;
-    console.log("Controllo col2 (visibile):", col2Val);
     if (!col2Val) {
       showNotif("La Sottocategoria è obbligatoria", "error");
       document.getElementById("c-col2").focus();
@@ -946,7 +922,6 @@ function validaClassificazioneCliente() {
 
   if (col3Wrap && col3Wrap.style.display !== "none") {
     const col3Val = document.getElementById("c-col3").value;
-    console.log("Controllo col3 (visibile):", col3Val);
     if (!col3Val) {
       showNotif("Il Regime è obbligatorio", "error");
       document.getElementById("c-col3").focus();
@@ -955,20 +930,12 @@ function validaClassificazioneCliente() {
   }
 
   const col3Val = document.getElementById("c-col3")?.value || "";
-  console.log(
-    "Controllo periodicità - col3Val:",
-    col3Val,
-    "REGIMI_ANNUALI:",
-    REGIMI_ANNUALI,
-  );
-
   if (
     !REGIMI_ANNUALI.includes(col3Val) &&
     col4Wrap &&
     col4Wrap.style.display !== "none"
   ) {
     const col4Val = document.getElementById("c-col4").value;
-    console.log("Controllo col4 (visibile):", col4Val);
     if (!col4Val) {
       showNotif("La Periodicità è obbligatoria", "error");
       document.getElementById("c-col4").focus();
@@ -976,7 +943,6 @@ function validaClassificazioneCliente() {
     }
   }
 
-  console.log("=== VALIDAZIONE SUPERATA ===");
   return true;
 }
 
@@ -1016,7 +982,7 @@ function onCol3Change() {
   aggiornaRiepilogoClassificazione();
 }
 
-// ─── FUNZIONI COPIA CONFIGURAZIONE ─────────────────────────────
+// ─── COPIA CONFIGURAZIONE ─────────────────────────────────────
 function openCopiaConfig(id_cliente = null) {
   document.getElementById("copia-config-cliente-id").value = id_cliente || "";
   document.getElementById("copia-config-modalita").value = id_cliente
@@ -1077,7 +1043,7 @@ function eseguiCopiaConfig() {
   closeModal("modal-copia-config");
 }
 
-// Esponi funzioni globali
+// ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
 window.editCliente = editCliente;
 window.editClienteConfig = editClienteConfig;
 window.deleteCliente = deleteCliente;

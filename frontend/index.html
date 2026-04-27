@@ -174,7 +174,16 @@
           </div>
           <div class="form-group">
             <label>Partita IVA</label>
-            <input class="input" id="c-piva" placeholder="12345678901" />
+            <!-- ✅ SOLO NUMERI -->
+            <input
+              class="input"
+              id="c-piva"
+              placeholder="12345678901"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="11"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+            />
           </div>
         </div>
         <div class="form-row">
@@ -189,7 +198,14 @@
           </div>
           <div class="form-group">
             <label>Telefono</label>
-            <input class="input" id="c-tel" placeholder="+39 000 0000000" />
+            <!-- ✅ SOLO NUMERI + simboli telefonici -->
+            <input
+              class="input"
+              id="c-tel"
+              placeholder="+39 000 0000000"
+              inputmode="tel"
+              oninput="this.value=this.value.replace(/[^0-9+\s\-]/g,'')"
+            />
           </div>
         </div>
         <div class="form-row">
@@ -223,7 +239,16 @@
           </div>
           <div class="form-group" style="max-width: 110px">
             <label>CAP</label>
-            <input class="input" id="c-cap" placeholder="00100" />
+            <!-- ✅ SOLO NUMERI -->
+            <input
+              class="input"
+              id="c-cap"
+              placeholder="00100"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="5"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+            />
           </div>
           <div class="form-group" style="max-width: 90px">
             <label>Prov.</label>
@@ -251,7 +276,7 @@
             />
           </div>
         </div>
-                <div class="form-group">
+        <div class="form-group">
           <label>Note</label>
           <textarea
             class="input"
@@ -731,10 +756,6 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- STILI AGGIUNTIVI                                        -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-
-    <!-- ═══════════════════════════════════════════════════════ -->
     <!-- SCRIPT (ordine di dipendenza)                           -->
     <!-- ═══════════════════════════════════════════════════════ -->
     <script src="js/modules/core/constants.js"></script>
@@ -749,7 +770,6 @@
     <script src="js/modules/pages/tipologie.js"></script>
     <script src="js/modules/network/socket.js"></script>
     <script src="js/modules/network/mobile.js"></script>
-    <!-- ← NUOVO -->
     <script src="js/modules/network/nav.js"></script>
     <script src="js/script.js"></script>
   </body>
