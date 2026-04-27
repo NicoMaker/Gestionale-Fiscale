@@ -385,7 +385,7 @@ function renderClienteDatiRiferimento(cliente) {
     add("🏢", "P.IVA:", cliente.partita_iva, "Partita IVA");
   if (cliente.email) add("📧", "Email:", cliente.email, "Indirizzo email");
   if (cliente.telefono)
-    add("📞", "Tel:", cliente.telefono, "Numero di telefono");
+    add("📞", "Tel:", cliente.telefono.replace(/[^0-9]/g, ''), "Numero di telefono");
   if (cliente.pec)
     add("📨", "PEC:", cliente.pec, "Posta Elettronica Certificata");
   if (cliente.sdi)
@@ -393,12 +393,21 @@ function renderClienteDatiRiferimento(cliente) {
   if (cliente.referente)
     add("👤", "Ref.:", cliente.referente, "Referente / Contatto");
   if (cliente.iban) add("🏦", "IBAN:", cliente.iban, "Coordinate bancarie");
+  if (cliente.cap)
+    add("📮", "CAP:", cliente.cap.replace(/[^0-9]/g, ''), "Codice di Avviamento Postale");
   if (cliente.indirizzo)
     add(
       "📍",
       "Indirizzo:",
-      `${cliente.indirizzo}${cliente.citta ? `, ${cliente.citta}` : ""}`,
+      `${cliente.indirizzo}${cliente.citta ? `, ${cliente.citta}` : ""}${cliente.cap ? ` (${cliente.cap.replace(/[^0-9]/g, '')})` : ""}`,
       "Indirizzo completo",
+    );
+  if (cliente.note)
+    add(
+      "📝",
+      "Note:",
+      cliente.note.length > 50 ? cliente.note.substring(0, 50) + "..." : cliente.note,
+      cliente.note,
     );
   if (!items.length) return "";
   return `<div class="cpc-dati-riferimento"><div class="dati-ref-title">📋 Dati di Riferimento</div><div class="dati-ref-grid">${items.join("")}</div></div>`;
