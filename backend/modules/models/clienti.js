@@ -1,4 +1,4 @@
-const { runQuery, queryAll, queryOne } = require("../database");
+const { runQuery, runQueryAndGetId, queryAll, queryOne } = require("../database");
 
 function getConfigClientePerAnno(id_cliente, anno) {
   const sql = `
@@ -226,13 +226,99 @@ function saveConfigCliente(data) {
   console.log("✅ Verifica salvataggio:", verificato);
 }
 
-// ⭐ FUNZIONE CREATE CLIENTE CORRETTA - senza created_at/updated_at nell'INSERT
+// ⭐ NUOVA FUNZIONE: Verifica se un nome esiste già
+function checkNomeExists(nome, excludeId = null) {
+  const nomeNorm = (nome || "").trim().toLowerCase();
+  let sql = `SELECT id, nome FROM clienti WHERE LOWER(TRIM(nome)) = ? AND attivo = 1`;
+  const params = [nomeNorm];
+  
+  if (excludeId) {
+    sql += ` AND id != ?`;
+    params.push(excludeId);
+  }
+  
+  return queryOne(sql, params);
+}
+
+function getClienteInattivoByNome(nome) {
+  const nomeNorm = (nome || "").trim().toLowerCase();
+  return queryOne(
+    `SELECT id, nome
+     FROM clienti
+     WHERE LOWER(TRIM(nome)) = ? AND attivo = 0
+     ORDER BY id DESC
+     LIMIT 1`,
+    [nomeNorm],
+  );
+}
+
+function getClienteAttivoByNome(nome) {
+  const nomeNorm = (nome || "").trim().toLowerCase();
+  return queryOne(
+    `SELECT id, nome
+     FROM clienti
+     WHERE LOWER(TRIM(nome)) = ? AND attivo = 1
+     ORDER BY id DESC
+     LIMIT 1`,
+    [nomeNorm],
+  );
+}
+
+// ⭐ MODIFICATA: createCliente con controllo nome duplicato
 function createCliente(data) {
   const anno = data.anno || new Date().getFullYear();
   console.log("📝 createCliente con anno:", anno, "data:", data);
 
-  // Inserisci il cliente - SENZA created_at e updated_at espliciti
-  runQuery(
+  // Controllo nome duplicato
+  const nomeEsistente = checkNomeExists(data.nome);
+  if (nomeEsistente) {
+    throw new Error(`NOME_DUPLICATO: Esiste già un cliente con nome "${data.nome}"`);
+  }
+
+  const clienteInattivo = getClienteInattivoByNome(data.nome);
+  if (clienteInattivo) {
+    runQuery(
+      `UPDATE clienti SET
+        nome = ?, codice_fiscale = ?, partita_iva = ?, email = ?, telefono = ?,
+        indirizzo = ?, citta = ?, cap = ?, provincia = ?, pec = ?, sdi = ?,
+        iban = ?, note = ?, referente = ?, contabilita = ?, attivo = 1,
+        updated_at = datetime('now')
+      WHERE id = ?`,
+      [
+        data.nome,
+        data.codice_fiscale || null,
+        data.partita_iva || null,
+        data.email || null,
+        data.telefono || null,
+        data.indirizzo || null,
+        data.citta || null,
+        data.cap || null,
+        data.provincia || null,
+        data.pec || null,
+        data.sdi || null,
+        data.iban || null,
+        data.note || null,
+        data.referente || null,
+        data.contabilita || 0,
+        clienteInattivo.id,
+      ],
+    );
+
+    saveConfigCliente({
+      id_cliente: clienteInattivo.id,
+      anno: anno,
+      id_tipologia: data.id_tipologia,
+      id_sottotipologia: data.id_sottotipologia || null,
+      col2_value: data.col2_value || null,
+      col3_value: data.col3_value || null,
+      periodicita: data.periodicita || null,
+    });
+
+    return clienteInattivo.id;
+  }
+
+  // Inserisci il cliente
+  let id = runQueryAndGetId(
     `INSERT INTO clienti (
       nome, codice_fiscale, partita_iva, email, telefono, 
       indirizzo, citta, cap, provincia, pec, sdi, iban, note, referente, contabilita
@@ -256,24 +342,12 @@ function createCliente(data) {
     ],
   );
 
-  // Ottieni l'ultimo ID inserito - metodo più affidabile
-  let id = null;
-
-  // Prova con last_insert_rowid
-  const rowidResult = queryOne(`SELECT last_insert_rowid() as id`);
-  if (rowidResult && rowidResult.id && rowidResult.id > 0) {
-    id = rowidResult.id;
-    console.log("📝 ID da last_insert_rowid:", id);
-  }
-
-  // Fallback: cerca per nome (il più recente)
-  if (!id || id === 0) {
-    const nuovoCliente = queryOne(
-      `SELECT id FROM clienti WHERE nome = ? ORDER BY rowid DESC LIMIT 1`,
-      [data.nome],
-    );
-    id = nuovoCliente ? nuovoCliente.id : null;
-    console.log("📝 ID da query fallback:", id);
+  id = Number(id);
+  if (!Number.isFinite(id) || id <= 0) {
+    const createdCliente = getClienteAttivoByNome(data.nome);
+    if (createdCliente && createdCliente.id) {
+      id = Number(createdCliente.id);
+    }
   }
 
   if (!id) {
@@ -281,7 +355,7 @@ function createCliente(data) {
     throw new Error("Impossibile ottenere l'ID del nuovo cliente");
   }
 
-  // Salva la configurazione con l'ID corretto
+  // Salva la configurazione
   saveConfigCliente({
     id_cliente: id,
     anno: anno,
@@ -321,7 +395,14 @@ function updateClienteConfig(data) {
   });
 }
 
+// ⭐ MODIFICATA: updateClienteAnagrafica con controllo nome duplicato
 function updateClienteAnagrafica(data) {
+  // Controllo nome duplicato (escludendo il cliente corrente)
+  const nomeEsistente = checkNomeExists(data.nome, data.id);
+  if (nomeEsistente) {
+    throw new Error(`NOME_DUPLICATO: Esiste già un cliente con nome "${data.nome}"`);
+  }
+
   runQuery(
     `UPDATE clienti SET 
       nome = ?, codice_fiscale = ?, partita_iva = ?, email = ?, telefono = ?,
@@ -498,4 +579,5 @@ module.exports = {
   canDeleteCliente,
   copiaConfigClienteAnno,
   copiaTuttiClientiAnno,
+  checkNomeExists,
 };

@@ -681,8 +681,6 @@ function saveCliente() {
     if (id) socket.emit("update:cliente", data);
     else socket.emit("create:cliente", data);
   }
-
-  closeModal("modal-cliente");
 }
 
 function deleteCliente(id) {

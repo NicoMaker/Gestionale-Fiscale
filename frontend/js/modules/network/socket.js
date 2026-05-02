@@ -117,7 +117,13 @@ socket.on("res:scadenzario_globale", ({ success, data }) => {
 });
 
 // ─── RISPOSTA CRUD CLIENTI ────────────────────────────────────
-socket.on("res:create:cliente", ({ success }) => {
+function getClienteSaveErrorMessage(error) {
+  if (!error) return "Errore durante il salvataggio del cliente";
+  if (error.includes("NOME_DUPLICATO")) return "Nome gia esistente";
+  return error;
+}
+
+socket.on("res:create:cliente", ({ success, error }) => {
   if (success) {
     closeModal("modal-cliente");
     // ⭐ Dopo creazione ricarica con l'anno del filtro attivo (non solo l'anno corrente)
@@ -125,13 +131,17 @@ socket.on("res:create:cliente", ({ success }) => {
       parseInt(document.getElementById("filter-anno")?.value) || state.anno;
     state._pending = "clienti";
     socket.emit("get:clienti", { anno: annoFiltro });
+  } else {
+    showNotif(getClienteSaveErrorMessage(error), "error");
   }
 });
 
-socket.on("res:update:cliente", ({ success }) => {
+socket.on("res:update:cliente", ({ success, error }) => {
   if (success) {
     closeModal("modal-cliente");
     refreshPage();
+  } else {
+    showNotif(getClienteSaveErrorMessage(error), "error");
   }
 });
 
