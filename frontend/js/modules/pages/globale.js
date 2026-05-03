@@ -2,6 +2,10 @@
 // GLOBALE.JS — Vista Globale scadenzario tutti i clienti
 // ═══════════════════════════════════════════════════════════════
 
+// ─── FILTRO TIPOLOGIE MULTI-SELECT (shared with clienti.js) ──
+// Uses TIPOLOGIE_PERCORSI_DATA defined in clienti.js
+// Uses _activeFiltroKeys, _filtriTipologie from clienti.js
+
 function calcolaGlobaleStats(data) {
   const totale = data.length;
   const comp = data.filter((r) => r.stato === "completato").length;
@@ -17,6 +21,35 @@ function calcolaGlobaleStats(data) {
     clienti: clientiSet.size,
     adempimenti: adpSet,
   };
+}
+
+function renderGlobaleFilterPanel() {
+  // Re-use the same tipologie panel from clienti.js
+  if (typeof renderTipologieFiltroPanel !== 'function') return '';
+  
+  // Clone the panel but wrap it for globale context
+  const activeCount = typeof _activeFiltroKeys !== 'undefined' ? _activeFiltroKeys.size : 0;
+  
+  let html = `<div class="glob-tip-filtro-wrap">
+    <div class="glob-tip-filtro-header" onclick="toggleGlobTipFiltroPanel()">
+      <span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie Clienti</span>
+      <span id="glob-tip-filtro-count" style="display:${activeCount>0?'inline-flex':'none'};align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--accent);color:#fff;border-radius:10px;font-size:11px;font-weight:700">${activeCount||''}</span>
+      <span id="glob-tip-filtro-toggle-icon" style="color:var(--t3);font-size:12px;margin-left:auto">▼ espandi</span>
+    </div>
+    <div id="glob-tip-filtro-container" style="display:none">
+      ${renderTipologieFiltroPanel()}
+    </div>
+  </div>`;
+  return html;
+}
+
+function toggleGlobTipFiltroPanel() {
+  const container = document.getElementById('glob-tip-filtro-container');
+  const icon = document.getElementById('glob-tip-filtro-toggle-icon');
+  if (!container) return;
+  const isOpen = container.style.display !== 'none';
+  container.style.display = isOpen ? 'none' : 'block';
+  if (icon) icon.textContent = isOpen ? '▼ espandi' : '▲ chiudi';
 }
 
 function renderGlobalePage() {
@@ -36,18 +69,6 @@ function renderGlobalePage() {
       <option value="completato">✅ Completato</option>
       <option value="n_a">➖ N/A</option>
     </select>
-    <select class="select" id="glob-filtro-tipo" style="width:125px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per tipologia cliente">
-      <option value="">👥 Tutti tipi</option>
-      <option value="PF">👤 PF</option>
-      <option value="SP">🤝 SP</option>
-      <option value="SC">🏢 SC</option>
-      <option value="ASS">🏛️ ASS</option>
-    </select>
-    <select class="select" id="glob-filtro-periodicita" style="width:155px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per periodicità contabile">
-      <option value="">📅 Periodicità</option>
-      <option value="mensile">📅 Mensile</option>
-      <option value="trimestrale">📆 Trimestrale</option>
-    </select>
     <div class="search-wrap" style="width:200px">
       <span class="search-icon">🔍</span>
       <input class="input" id="glob-search" placeholder="Cerca cliente..." oninput="applyGlobaleFiltriDebounced()" title="Cerca per nome cliente, CF o P.IVA" style="font-size:13px">
@@ -61,9 +82,7 @@ function renderGlobalePage() {
 
 function changeAnnoGlobale(d) {
   state.anno += d;
-  document
-    .querySelectorAll(".year-num")
-    .forEach((el) => (el.textContent = state.anno));
+  document.querySelectorAll(".year-num").forEach((el) => (el.textContent = state.anno));
   loadGlobale();
 }
 
@@ -109,7 +128,37 @@ function resetGlobaleFiltri() {
       if (el._ssRefresh) el._ssRefresh();
     }
   });
+  
+  // Reset tipologie filter
+  if (typeof _activeFiltroKeys !== 'undefined') {
+    _activeFiltroKeys.clear ? _activeFiltroKeys.clear() : (_activeFiltroKeys = new Set());
+  }
+  if (typeof _filtriTipologie !== 'undefined') {
+    _filtriTipologie = { tipologia: new Set(), col2: new Set(), col3: new Set(), periodicita: new Set() };
+  }
+  
+  // Update panel UI
+  const globTipContainer = document.getElementById('glob-tip-filtro-container');
+  if (globTipContainer && globTipContainer.style.display !== 'none' && typeof renderTipologieFiltroPanel === 'function') {
+    const panelEl = globTipContainer.querySelector('#tip-filtro-panel');
+    if (panelEl) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = renderTipologieFiltroPanel();
+      panelEl.parentNode.replaceChild(tmp.firstChild, panelEl);
+    }
+  }
+  _aggiornaGlobTipFiltroCounter();
+  
   loadGlobale();
+}
+
+function _aggiornaGlobTipFiltroCounter() {
+  const badge = document.getElementById('glob-tip-filtro-count');
+  if (badge) {
+    const n = typeof _activeFiltroKeys !== 'undefined' ? _activeFiltroKeys.size : 0;
+    badge.textContent = n > 0 ? n : '';
+    badge.style.display = n > 0 ? 'inline-flex' : 'none';
+  }
 }
 
 function renderGlobaleHeader() {
@@ -155,28 +204,66 @@ function clientePassaFiltroStato(periodi, filtroClienteStato) {
   const hasDaFare = periodi.some((r) => r.stato === "da_fare");
   const hasCompletato = periodi.some((r) => r.stato === "completato");
   const hasNA = periodi.some((r) => r.stato === "n_a");
-  const tuttiComp = periodi.every(
-    (r) => r.stato === "completato" || r.stato === "n_a",
-  );
+  const tuttiComp = periodi.every((r) => r.stato === "completato" || r.stato === "n_a");
   const nessunAvanz = periodi.every((r) => r.stato === "da_fare");
   switch (filtroClienteStato) {
-    case "con_in_corso":
-      return hasInCorso;
-    case "senza_in_corso":
-      return !hasInCorso;
-    case "tutti_completati":
-      return tuttiComp;
-    case "con_da_fare":
-      return hasDaFare;
-    case "solo_da_fare":
-      return nessunAvanz;
-    case "non_completati":
-      return !tuttiComp;
-    case "con_na":
-      return hasNA;
-    default:
-      return true;
+    case "con_in_corso": return hasInCorso;
+    case "senza_in_corso": return !hasInCorso;
+    case "tutti_completati": return tuttiComp;
+    case "con_da_fare": return hasDaFare;
+    case "solo_da_fare": return nessunAvanz;
+    case "non_completati": return !tuttiComp;
+    case "con_na": return hasNA;
+    default: return true;
   }
+}
+
+// Check if a client passes tipologia multi-filter
+function clientePassaFiltroTipologie(c) {
+  if (typeof _activeFiltroKeys === 'undefined' || _activeFiltroKeys.size === 0) return true;
+  
+  const tipCod = c.tipologia_codice || '';
+  const col2 = (c.col2 || '').toLowerCase();
+  const col3 = (c.col3 || '').toLowerCase();
+  const per = c.periodicita || '';
+  
+  // Map col2 back to display value for key matching
+  const col2Map = {
+    'privato': 'Privato',
+    'ditta': 'Ditta Individuale',
+    'socio': 'Socio',
+    'professionista': 'Professionista',
+  };
+  const col3Map = {
+    'ordinario': 'Ordinario',
+    'ordinaria': 'Ordinaria',
+    'semplificato': 'Semplificato',
+    'semplificata': 'Semplificata',
+    'forfettario': 'Forfettario',
+  };
+  
+  const col2Display = col2Map[col2] || '';
+  const col3Display = col3Map[col3] || '';
+  
+  // Check if any active key matches this client
+  for (const key of _activeFiltroKeys) {
+    const [kTip, kCol2, kCol3, kPer] = key.split('|');
+    
+    // Tipologia must match
+    if (kTip !== tipCod) continue;
+    
+    // Col2: if key has col2, client must match
+    if (kCol2 && kCol2 !== col2Display) continue;
+    
+    // Col3: if key has col3, client must match
+    if (kCol3 && kCol3 !== col3Display) continue;
+    
+    // Periodicita: if key has per, client must match
+    if (kPer && kPer !== per) continue;
+    
+    return true;
+  }
+  return false;
 }
 
 // ─── Mappa etichette classificazione ─────────────────────────
@@ -211,10 +298,8 @@ function _renderGlobaleClienteClassBadges(c) {
 function renderGlobaleTabella(rawData) {
   const st = state.globaleStats;
   const filtroTipo = document.getElementById("glob-filtro-tipo")?.value || "";
-  const filtroPer =
-    document.getElementById("glob-filtro-periodicita")?.value || "";
-  const filtroClienteStato =
-    document.getElementById("glob-filtro-cliente-stato")?.value || "";
+  const filtroPer = document.getElementById("glob-filtro-periodicita")?.value || "";
+  const filtroClienteStato = document.getElementById("glob-filtro-cliente-stato")?.value || "";
 
   const data = rawData.filter((r) => {
     if (filtroTipo && r.cliente_tipologia_codice !== filtroTipo) return false;
@@ -262,6 +347,20 @@ function renderGlobaleTabella(rawData) {
       </div>`
       : "";
 
+  // ── Tipologie filter panel ────────────────────────────────
+  const tipFiltroActiveCount = typeof _activeFiltroKeys !== 'undefined' ? _activeFiltroKeys.size : 0;
+  const tipFiltroHtml = typeof renderTipologieFiltroPanel === 'function' ? `
+    <div class="glob-tip-filtro-wrap" style="margin-bottom:14px">
+      <div class="glob-tip-filtro-header" onclick="toggleGlobTipFiltroPanel()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm)">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie Clienti</span>
+        <span id="glob-tip-filtro-count" style="display:${tipFiltroActiveCount>0?'inline-flex':'none'};align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--accent);color:#fff;border-radius:10px;font-size:11px;font-weight:700">${tipFiltroActiveCount||''}</span>
+        <span id="glob-tip-filtro-toggle-icon" style="color:var(--t3);font-size:12px;margin-left:auto">▼ espandi</span>
+      </div>
+      <div id="glob-tip-filtro-container" style="display:none;margin-top:8px">
+        ${renderTipologieFiltroPanel()}
+      </div>
+    </div>` : '';
+
   const headerCard = `<div class="globale-preview-card">
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">
       <div class="gpc-left">
@@ -285,10 +384,10 @@ function renderGlobaleTabella(rawData) {
       </div>
     </div>
     ${navAdpHtml}
-  </div>`;
+  </div>
+  ${tipFiltroHtml}`;
 
-  // ── Raggruppa per adempimento (ordine alfabetico garantito dal backend,
-  //    ma usiamo una Map per preservare l'insertion order) ──────────────
+  // ── Raggruppa per adempimento ──────────────────────────────
   const grouped = new Map();
   data.forEach((r) => {
     storeRow(r);
@@ -318,16 +417,17 @@ function renderGlobaleTabella(rawData) {
     g.clienti.get(cliKey).periodi.push(r);
   });
 
-  // ── Ordina i gruppi adempimento alfabeticamente ────────────────────
+  // ── Ordina i gruppi adempimento alfabeticamente ────────────
   const gruppiOrdinati = Array.from(grouped.values()).sort((a, b) =>
     a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }),
   );
 
   let content = "";
   gruppiOrdinati.forEach((g) => {
-    // ── Ordina i clienti alfabeticamente dentro ogni adempimento ──────
+    // ── Ordina i clienti alfabeticamente con filtro tipologie e stato ──
     const clientiFiltrati = Array.from(g.clienti.values())
       .filter((c) => clientePassaFiltroStato(c.periodi, filtroClienteStato))
+      .filter((c) => clientePassaFiltroTipologie(c))
       .sort((a, b) =>
         a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }),
       );
@@ -341,8 +441,7 @@ function renderGlobaleTabella(rawData) {
 
     const clientiHtml = clientiFiltrati
       .map((c) => {
-        const tipColor =
-          c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
+        const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
         const avatar = getAvatar(c.nome);
         const compC = c.periodi.filter((r) => r.stato === "completato").length;
         const inCC = c.periodi.filter((r) => r.stato === "in_corso").length;
@@ -350,30 +449,17 @@ function renderGlobaleTabella(rawData) {
         const naC = c.periodi.filter((r) => r.stato === "n_a").length;
         const totC = c.periodi.length;
         const pC = totC > 0 ? Math.round((compC / totC) * 100) : 0;
-        const pgColor =
-          pC === 100
-            ? "var(--green)"
-            : pC > 50
-              ? "var(--yellow)"
-              : "var(--red)";
+        const pgColor = pC === 100 ? "var(--green)" : pC > 50 ? "var(--yellow)" : "var(--red)";
 
         const situazioneBadges = [];
         if (compC > 0)
-          situazioneBadges.push(
-            `<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px" title="${compC} completati">✅ ${compC}</span>`,
-          );
+          situazioneBadges.push(`<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px" title="${compC} completati">✅ ${compC}</span>`);
         if (inCC > 0)
-          situazioneBadges.push(
-            `<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px" title="${inCC} in corso">🔄 ${inCC}</span>`,
-          );
+          situazioneBadges.push(`<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px" title="${inCC} in corso">🔄 ${inCC}</span>`);
         if (daFC > 0)
-          situazioneBadges.push(
-            `<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px" title="${daFC} da fare">⭕ ${daFC}</span>`,
-          );
+          situazioneBadges.push(`<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px" title="${daFC} da fare">⭕ ${daFC}</span>`);
         if (naC > 0)
-          situazioneBadges.push(
-            `<span style="font-size:10px;color:var(--text3);background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:1px 6px" title="${naC} N/A">➖ ${naC}</span>`,
-          );
+          situazioneBadges.push(`<span style="font-size:10px;color:var(--text3);background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:1px 6px" title="${naC} N/A">➖ ${naC}</span>`);
 
         const classBadgesHtml = _renderGlobaleClienteClassBadges(c);
         const sottotipoLabel = c.sottotipologia_nome || "";
@@ -407,7 +493,7 @@ function renderGlobaleTabella(rawData) {
         <div style="display:flex;align-items:center;gap:12px;flex:1">
           <strong style="font-size:15px">${g.nome}</strong>
           <span style="font-family:var(--mono);font-size:11px;color:var(--text3)" title="Codice adempimento">${g.codice}</span>
-          ${filtroClienteStato ? `<span style="font-size:11px;color:var(--text3);margin-left:8px">${clientiFiltrati.length} client${clientiFiltrati.length === 1 ? "e" : "i"} visibil${clientiFiltrati.length === 1 ? "e" : "i"}</span>` : ""}
+          ${(filtroClienteStato || tipFiltroActiveCount > 0) ? `<span style="font-size:11px;color:var(--text3);margin-left:8px">${clientiFiltrati.length} client${clientiFiltrati.length === 1 ? "e" : "i"} visibil${clientiFiltrati.length === 1 ? "e" : "i"}</span>` : ""}
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div class="mini-bar" style="width:90px" title="${pG}% completato"><div class="mini-fill" style="width:${pG}%"></div></div>
@@ -423,13 +509,15 @@ function renderGlobaleTabella(rawData) {
       <div class="empty-icon">🌐</div>
       <p style="font-size:15px">
         ${
-          filtroClienteStato
-            ? `Nessun cliente corrisponde al filtro per ${state.anno}`
+          filtroClienteStato || tipFiltroActiveCount > 0
+            ? `Nessun cliente corrisponde ai filtri attivi per ${state.anno}`
             : `Nessun adempimento trovato per ${state.anno}`
         }
       </p>
-      ${filtroClienteStato ? `<button class="btn btn-sm btn-primary" onclick="document.getElementById('glob-filtro-cliente-stato').value='';applyGlobaleFiltriLocali()" style="margin-top:12px">⟳ Rimuovi filtro</button>` : ""}
+      <button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" style="margin-top:12px">⟳ Rimuovi filtri</button>
     </div>`;
 
   document.getElementById("content").innerHTML = headerCard + content;
 }
+
+window.toggleGlobTipFiltroPanel = toggleGlobTipFiltroPanel;

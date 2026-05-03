@@ -12,6 +12,240 @@ let lastClienteFormValues = {
   col4: "",
 };
 
+// ─── FILTRO TIPOLOGIE MULTI-SELECT ────────────────────────────
+// Struttura: { tipologia: Set<string>, col2: Set<string>, col3: Set<string>, periodicita: Set<string> }
+let _filtriTipologie = {
+  tipologia: new Set(),
+  col2: new Set(),
+  col3: new Set(),
+  periodicita: new Set(),
+};
+
+const TIPOLOGIE_PERCORSI_DATA = {
+  PF: {
+    color: "#5b8df6", icon: "👤", desc: "Persona Fisica",
+    percorsi: [
+      { col2: "Privato",           col3: null,          codice: "PF_PRIV",     hasPer: false, isForf: false },
+      { col2: "Socio",             col3: null,          codice: "PF_SOCIO",    hasPer: false, isForf: false },
+      { col2: "Ditta Individuale", col3: "Ordinario",   codice: "PF_DITTA_ORD",hasPer: true,  isForf: false },
+      { col2: "Ditta Individuale", col3: "Semplificato",codice: "PF_DITTA_SEM",hasPer: true,  isForf: false },
+      { col2: "Ditta Individuale", col3: "Forfettario", codice: "PF_DITTA_FOR",hasPer: false, isForf: true  },
+      { col2: "Professionista",    col3: "Ordinario",   codice: "PF_PROF_ORD", hasPer: true,  isForf: false },
+      { col2: "Professionista",    col3: "Semplificato",codice: "PF_PROF_SEM", hasPer: true,  isForf: false },
+      { col2: "Professionista",    col3: "Forfettario", codice: "PF_PROF_FOR", hasPer: false, isForf: true  },
+    ]
+  },
+  SP: {
+    color: "#a78bfa", icon: "🤝", desc: "Società di Persone",
+    percorsi: [
+      { col2: null, col3: "Ordinaria",   codice: "SP_ORD",  hasPer: true, isForf: false },
+      { col2: null, col3: "Semplificata",codice: "SP_SEMP", hasPer: true, isForf: false },
+    ]
+  },
+  SC: {
+    color: "#34d399", icon: "🏢", desc: "Società di Capitali",
+    percorsi: [
+      { col2: null, col3: "Ordinaria", codice: "SC_ORD", hasPer: true, isForf: false },
+    ]
+  },
+  ASS: {
+    color: "#fbbf24", icon: "🏛️", desc: "Associazione",
+    percorsi: [
+      { col2: null, col3: "Ordinaria",   codice: "ASS_ORD",  hasPer: true, isForf: false },
+      { col2: null, col3: "Semplificata",codice: "ASS_SEMP", hasPer: true, isForf: false },
+    ]
+  }
+};
+
+function renderTipologieFiltroPanel() {
+  let html = `<div class="tip-filtro-panel" id="tip-filtro-panel">
+    <div class="tip-filtro-header">
+      <span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtra per Tipologia</span>
+      <div style="display:flex;gap:6px;align-items:center;margin-left:auto">
+        <button class="tip-btn-all" onclick="selezionaTuttiTipFiltro()" title="Seleziona tutto">✦ Tutti</button>
+        <button class="tip-btn-none" onclick="deselezionaTuttiTipFiltro()" title="Deseleziona tutto">✕ Nessuno</button>
+      </div>
+    </div>
+    <div class="tip-filtro-body">`;
+
+  Object.entries(TIPOLOGIE_PERCORSI_DATA).forEach(([tipCod, tip]) => {
+    const allSelected = _isTipCodSelected(tipCod);
+    html += `<div class="tip-gruppo">
+      <div class="tip-gruppo-header" onclick="toggleTipologiaGruppo('${tipCod}')" style="border-color:${tip.color}44;background:${tip.color}0d">
+        <span class="tip-gruppo-badge" style="background:${tip.color}22;color:${tip.color};border-color:${tip.color}44">${tip.icon} ${tipCod}</span>
+        <span class="tip-gruppo-desc">${tip.desc}</span>
+        <span class="tip-gruppo-selall" style="color:${tip.color}" title="Seleziona tutti ${tipCod}">
+          ${allSelected ? '✦' : '○'}
+        </span>
+      </div>
+      <div class="tip-percorsi-grid">`;
+
+    tip.percorsi.forEach(p => {
+      const perList = p.isForf ? ['annuale'] : p.hasPer ? ['mensile','trimestrale'] : ['—'];
+      perList.forEach(per => {
+        const key = _buildFiltroKey(tipCod, p.col2, p.col3, per === '—' ? null : per);
+        const isActive = _isFiltroKeyActive(key);
+        const label = _buildPercorsoLabel(tipCod, p, per);
+        const perColor = per === 'mensile' ? '#22d3ee' : per === 'trimestrale' ? '#a78bfa' : per === 'annuale' ? '#94a3b8' : '#6b7399';
+        html += `<button 
+          class="tip-percorso-chip${isActive ? ' tip-active' : ''}" 
+          onclick="toggleFiltroPercorso('${tipCod}','${p.col2||''}','${p.col3||''}','${per === '—' ? '' : per}')"
+          style="${isActive ? `background:${tip.color}22;border-color:${tip.color};color:${tip.color}` : ''}"
+          title="${p.codice}">
+          <span class="tip-chip-codice">${p.codice}</span>
+          <span class="tip-chip-label">${label}</span>
+          ${per !== '—' ? `<span class="tip-chip-per" style="color:${perColor};background:${perColor}18;border-color:${perColor}44">${per === 'mensile' ? '📅' : per === 'trimestrale' ? '📆' : '🗓️'} ${per}</span>` : ''}
+        </button>`;
+      });
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += `</div></div>`;
+  return html;
+}
+
+function _buildFiltroKey(tipCod, col2, col3, per) {
+  return `${tipCod}|${col2||''}|${col3||''}|${per||''}`;
+}
+
+function _buildPercorsoLabel(tipCod, p, per) {
+  const parts = [];
+  if (p.col2) parts.push(p.col2);
+  if (p.col3) parts.push(p.col3);
+  return parts.join(' · ') || tipCod;
+}
+
+function _isFiltroKeyActive(key) {
+  // key: "TIP|col2|col3|per"
+  const [tip, col2, col3, per] = key.split('|');
+  if (_filtriTipologie.tipologia.size > 0 || _filtriTipologie.col2.size > 0 || _filtriTipologie.col3.size > 0 || _filtriTipologie.periodicita.size > 0) {
+    // Check stored active keys
+  }
+  return _activeFiltroKeys && _activeFiltroKeys.has(key);
+}
+
+let _activeFiltroKeys = new Set();
+
+function toggleFiltroPercorso(tipCod, col2, col3, per) {
+  const key = _buildFiltroKey(tipCod, col2, col3, per);
+  if (_activeFiltroKeys.has(key)) {
+    _activeFiltroKeys.delete(key);
+  } else {
+    _activeFiltroKeys.add(key);
+  }
+  _aggiornaFiltriDaKeys();
+  _aggiornaTipFiltroUI();
+  applyClientiFiltriDB();
+}
+
+function toggleTipologiaGruppo(tipCod) {
+  const tip = TIPOLOGIE_PERCORSI_DATA[tipCod];
+  if (!tip) return;
+  
+  // Collect all keys for this tipologia
+  const allKeys = [];
+  tip.percorsi.forEach(p => {
+    const perList = p.isForf ? ['annuale'] : p.hasPer ? ['mensile','trimestrale'] : [''];
+    perList.forEach(per => allKeys.push(_buildFiltroKey(tipCod, p.col2, p.col3, per)));
+  });
+  
+  const allActive = allKeys.every(k => _activeFiltroKeys.has(k));
+  if (allActive) {
+    allKeys.forEach(k => _activeFiltroKeys.delete(k));
+  } else {
+    allKeys.forEach(k => _activeFiltroKeys.add(k));
+  }
+  
+  _aggiornaFiltriDaKeys();
+  _aggiornaTipFiltroUI();
+  applyClientiFiltriDB();
+}
+
+function selezionaTuttiTipFiltro() {
+  _activeFiltroKeys = new Set();
+  Object.entries(TIPOLOGIE_PERCORSI_DATA).forEach(([tipCod, tip]) => {
+    tip.percorsi.forEach(p => {
+      const perList = p.isForf ? ['annuale'] : p.hasPer ? ['mensile','trimestrale'] : [''];
+      perList.forEach(per => _activeFiltroKeys.add(_buildFiltroKey(tipCod, p.col2, p.col3, per)));
+    });
+  });
+  _aggiornaFiltriDaKeys();
+  _aggiornaTipFiltroUI();
+  applyClientiFiltriDB();
+}
+
+function deselezionaTuttiTipFiltro() {
+  _activeFiltroKeys = new Set();
+  _filtriTipologie = { tipologia: new Set(), col2: new Set(), col3: new Set(), periodicita: new Set() };
+  _aggiornaTipFiltroUI();
+  applyClientiFiltriDB();
+}
+
+function _isTipCodSelected(tipCod) {
+  const tip = TIPOLOGIE_PERCORSI_DATA[tipCod];
+  if (!tip) return false;
+  const allKeys = [];
+  tip.percorsi.forEach(p => {
+    const perList = p.isForf ? ['annuale'] : p.hasPer ? ['mensile','trimestrale'] : [''];
+    perList.forEach(per => allKeys.push(_buildFiltroKey(tipCod, p.col2, p.col3, per)));
+  });
+  return allKeys.length > 0 && allKeys.every(k => _activeFiltroKeys.has(k));
+}
+
+function _aggiornaFiltriDaKeys() {
+  // Reset
+  _filtriTipologie = { tipologia: new Set(), col2: new Set(), col3: new Set(), periodicita: new Set() };
+  _activeFiltroKeys.forEach(key => {
+    const [tip, col2, col3, per] = key.split('|');
+    if (tip) _filtriTipologie.tipologia.add(tip);
+    if (col2) _filtriTipologie.col2.add(col2.toLowerCase());
+    if (col3) _filtriTipologie.col3.add(col3.toLowerCase());
+    if (per) _filtriTipologie.periodicita.add(per);
+  });
+}
+
+function _aggiornaTipFiltroUI() {
+  // Re-render the panel content
+  const panel = document.getElementById('tip-filtro-panel');
+  if (!panel) return;
+  const newPanel = document.createElement('div');
+  newPanel.innerHTML = renderTipologieFiltroPanel();
+  const newContent = newPanel.firstChild;
+  panel.parentNode.replaceChild(newContent, panel);
+  
+  // Update counter badge
+  _aggiornaTipFiltroCounter();
+}
+
+function _aggiornaTipFiltroCounter() {
+  const badge = document.getElementById('tip-filtro-count');
+  if (badge) {
+    const n = _activeFiltroKeys.size;
+    badge.textContent = n > 0 ? n : '';
+    badge.style.display = n > 0 ? 'inline-flex' : 'none';
+  }
+}
+
+function getFiltriPerRequest() {
+  // Build filters to send to server
+  const f = {};
+  if (_filtriTipologie.tipologia.size > 0) {
+    f.tipologie = Array.from(_filtriTipologie.tipologia);
+  }
+  if (_filtriTipologie.col2.size > 0) {
+    f.col2_values = Array.from(_filtriTipologie.col2);
+  }
+  if (_filtriTipologie.col3.size > 0) {
+    f.col3_values = Array.from(_filtriTipologie.col3);
+  }
+  if (_filtriTipologie.periodicita.size > 0) {
+    f.periodicita_values = Array.from(_filtriTipologie.periodicita);
+  }
+  return f;
+}
+
 // ─── ANNO MIN/MAX ─────────────────────────────────────────────
 const ANNO_MIN = 2000;
 const ANNO_MAX = 2200;
@@ -29,14 +263,20 @@ function buildAnniOptions(selectedAnno, includeAll = false) {
 // ─── FILTRI ───────────────────────────────────────────────────
 const applyClientiFiltriDB = debounce(() => {
   const search = document.getElementById("global-search-clienti")?.value || "";
-  const tipologia = document.getElementById("filter-tipo")?.value || "";
-  const col2 = document.getElementById("filter-col2")?.value || "";
-  const col3 = document.getElementById("filter-col3")?.value || "";
-  const periodicita =
-    document.getElementById("filter-periodicita")?.value || "";
   const anno =
     parseInt(document.getElementById("filter-anno")?.value) ||
     new Date().getFullYear();
+  
+  // Build tipologia filter from active keys
+  const filtriTip = getFiltriPerRequest();
+  
+  // Legacy single-value filters (keep for backward compat)
+  const tipologia = filtriTip.tipologie && filtriTip.tipologie.length === 1 ? filtriTip.tipologie[0] : 
+                    (filtriTip.tipologie && filtriTip.tipologie.length > 0 ? filtriTip.tipologie.join(',') : '');
+  const col2 = filtriTip.col2_values && filtriTip.col2_values.length > 0 ? filtriTip.col2_values.join(',') : '';
+  const col3 = filtriTip.col3_values && filtriTip.col3_values.length > 0 ? filtriTip.col3_values.join(',') : '';
+  const periodicita = filtriTip.periodicita_values && filtriTip.periodicita_values.length > 0 ? filtriTip.periodicita_values.join(',') : '';
+
   if (typeof socket !== "undefined") {
     socket.emit("get:clienti", {
       search,
@@ -45,6 +285,7 @@ const applyClientiFiltriDB = debounce(() => {
       col3,
       periodicita,
       anno,
+      filtri_tipologie: filtriTip,
     });
   }
 }, 300);
@@ -54,18 +295,16 @@ function applyClientiFiltri() {
 }
 
 function resetClientiFiltri() {
-  [
-    "global-search-clienti",
-    "filter-tipo",
-    "filter-col2",
-    "filter-col3",
-    "filter-periodicita",
-  ].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
+  const s = document.getElementById("global-search-clienti");
+  if (s) s.value = "";
   const annoSelect = document.getElementById("filter-anno");
   if (annoSelect) annoSelect.value = new Date().getFullYear();
+  
+  // Reset tipologie filter
+  _activeFiltroKeys = new Set();
+  _filtriTipologie = { tipologia: new Set(), col2: new Set(), col3: new Set(), periodicita: new Set() };
+  _aggiornaTipFiltroUI();
+  
   if (typeof socket !== "undefined")
     socket.emit("get:clienti", { anno: new Date().getFullYear() });
 }
@@ -95,48 +334,29 @@ function renderClientiTabella(clienti) {
     annuale: "Annuale",
   };
 
-  const curTipo = document.getElementById("filter-tipo")?.value || "";
-  const curCol2 = document.getElementById("filter-col2")?.value || "";
-  const curCol3 = document.getElementById("filter-col3")?.value || "";
-  const curPeriodicita =
-    document.getElementById("filter-periodicita")?.value || "";
   const currentAnno =
     parseInt(document.getElementById("filter-anno")?.value) ||
     new Date().getFullYear();
 
+  const activeCount = _activeFiltroKeys.size;
+
   const filterBar = `
-    <div class="filtri-avanzati no-print" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:var(--surface2);border-radius:var(--r-sm);">
-      <span style="font-size:11px;color:var(--text3);font-weight:700;">🔍 Filtri:</span>
+    <div class="filtri-avanzati no-print" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:var(--surface2);border-radius:var(--r-sm);">
+      <span style="font-size:11px;color:var(--text3);font-weight:700;">📅 Anno:</span>
       <select id="filter-anno" class="select" style="width:110px" onchange="applyClientiFiltri()" title="Filtra per anno">
         ${buildAnniOptions(currentAnno)}
       </select>
-      <select id="filter-tipo" class="select" style="width:160px" onchange="applyClientiFiltri()" title="Filtra per tipologia cliente">
-        <option value="" ${!curTipo ? "selected" : ""}>📋 Tutti i tipi</option>
-        <option value="PF"  ${curTipo === "PF" ? "selected" : ""}>👤 PF — Persona Fisica</option>
-        <option value="SP"  ${curTipo === "SP" ? "selected" : ""}>🤝 SP — Soc. Persone</option>
-        <option value="SC"  ${curTipo === "SC" ? "selected" : ""}>🏢 SC — Soc. Capitali</option>
-        <option value="ASS" ${curTipo === "ASS" ? "selected" : ""}>🏛️ ASS — Associazione</option>
-      </select>
-      <select id="filter-col2" class="select" style="width:190px" onchange="applyClientiFiltri()" title="Filtra per sottocategoria">
-        <option value="" ${!curCol2 ? "selected" : ""}>📋 Tutte</option>
-        <option value="privato"        ${curCol2 === "privato" ? "selected" : ""}>👤 Privato</option>
-        <option value="ditta"          ${curCol2 === "ditta" ? "selected" : ""}>🏢 Ditta</option>
-        <option value="socio"          ${curCol2 === "socio" ? "selected" : ""}>🤝 Socio</option>
-        <option value="professionista" ${curCol2 === "professionista" ? "selected" : ""}>⚕️ Professionista</option>
-      </select>
-      <select id="filter-col3" class="select" style="width:180px" onchange="applyClientiFiltri()" title="Filtra per regime">
-        <option value="" ${!curCol3 ? "selected" : ""}>📋 Tutti</option>
-        <option value="forfettario" ${curCol3 === "forfettario" ? "selected" : ""}>💰 Forfettario</option>
-        <option value="ordinaria"   ${curCol3 === "ordinaria" ? "selected" : ""}>📊 Ordinaria</option>
-        <option value="semplificata"${curCol3 === "semplificata" ? "selected" : ""}>📄 Semplificata</option>
-      </select>
-      <select id="filter-periodicita" class="select" style="width:170px" onchange="applyClientiFiltri()" title="Filtra per periodicità">
-        <option value="" ${!curPeriodicita ? "selected" : ""}>📋 Tutte</option>
-        <option value="mensile"     ${curPeriodicita === "mensile" ? "selected" : ""}>📅 Mensile</option>
-        <option value="trimestrale" ${curPeriodicita === "trimestrale" ? "selected" : ""}>📆 Trimestrale</option>
-        <option value="annuale"     ${curPeriodicita === "annuale" ? "selected" : ""}>📅 Annuale</option>
-      </select>
-      <button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="margin-left:auto">⟳ Tutti</button>
+      <button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="margin-left:auto">⟳ Reset</button>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer" onclick="toggleTipFiltroPanel()">
+        <span style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie</span>
+        <span id="tip-filtro-count" style="display:${activeCount>0?'inline-flex':'none'};align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--accent);color:#fff;border-radius:10px;font-size:11px;font-weight:700">${activeCount||''}</span>
+        <span id="tip-filtro-toggle-icon" style="color:var(--text3);font-size:12px;margin-left:auto">▼ espandi</span>
+      </div>
+      <div id="tip-filtro-container" style="display:none">
+        ${renderTipologieFiltroPanel()}
+      </div>
     </div>`;
 
   let tableRows = "";
@@ -215,6 +435,15 @@ function renderClientiTabella(clienti) {
     </div>`;
 
   document.getElementById("content").innerHTML = html;
+}
+
+function toggleTipFiltroPanel() {
+  const container = document.getElementById('tip-filtro-container');
+  const icon = document.getElementById('tip-filtro-toggle-icon');
+  if (!container) return;
+  const isOpen = container.style.display !== 'none';
+  container.style.display = isOpen ? 'none' : 'block';
+  if (icon) icon.textContent = isOpen ? '▼ espandi' : '▲ chiudi';
 }
 
 // ─── DETTAGLIO CLIENTE ────────────────────────────────────────
@@ -435,8 +664,6 @@ function deleteClienteFromDettaglio() {
   const cliente = state.clienti.find(c => c.id === currentClienteId);
   const clienteNome = cliente ? cliente.nome : "questo cliente";
   
-  // Per ora, usa la logica semplificata senza verifica degli adempimenti
-  // TODO: Implementare verifica adempimenti quando il backend supporta l'evento
   const message = `Eliminare "${clienteNome}" solo per l'anno ${anno}?
   
 Questa operazione eliminerà il cliente solo dall'anno ${anno}, mantenendo i dati negli altri anni.
@@ -545,23 +772,9 @@ function openNuovoCliente() {
   }
 
   [
-    "c-nome",
-    "c-cf",
-    "c-piva",
-    "c-email",
-    "c-tel",
-    "c-indirizzo",
-    "c-note",
-    "c-pec",
-    "c-sdi",
-    "c-citta",
-    "c-cap",
-    "c-prov",
-    "c-referente",
-    "c-iban",
-    "c-col2",
-    "c-col3",
-    "c-col4",
+    "c-nome","c-cf","c-piva","c-email","c-tel","c-indirizzo","c-note",
+    "c-pec","c-sdi","c-citta","c-cap","c-prov","c-referente","c-iban",
+    "c-col2","c-col3","c-col4",
   ].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = "";
@@ -647,27 +860,15 @@ function saveCliente() {
     periodicita: col4Val || null,
     codice_fiscale:
       document.getElementById("c-cf")?.value.trim().toUpperCase() || null,
-    // ✅ Partita IVA: solo cifre
     partita_iva:
-      document
-        .getElementById("c-piva")
-        ?.value.replace(/[^0-9]/g, "")
-        .trim() || null,
+      document.getElementById("c-piva")?.value.replace(/[^0-9]/g, "").trim() || null,
     email: document.getElementById("c-email")?.value.trim() || null,
-    // ✅ Telefono: solo cifre + simboli telefonici
     telefono:
-      document
-        .getElementById("c-tel")
-        ?.value.replace(/[^0-9+\s\-]/g, "")
-        .trim() || null,
+      document.getElementById("c-tel")?.value.replace(/[^0-9+\s\-]/g, "").trim() || null,
     indirizzo: document.getElementById("c-indirizzo")?.value.trim() || null,
     citta: document.getElementById("c-citta")?.value.trim() || null,
-    // ✅ CAP: solo cifre
     cap:
-      document
-        .getElementById("c-cap")
-        ?.value.replace(/[^0-9]/g, "")
-        .trim() || null,
+      document.getElementById("c-cap")?.value.replace(/[^0-9]/g, "").trim() || null,
     provincia:
       document.getElementById("c-prov")?.value.trim().toUpperCase() || null,
     pec: document.getElementById("c-pec")?.value.trim() || null,
@@ -688,14 +889,11 @@ function deleteCliente(id) {
   const cliente = state.clienti.find(c => c.id === id);
   const clienteNome = cliente ? cliente.nome : "questo cliente";
   
-  // Verifica se il cliente ha adempimenti nell'anno corrente
   if (typeof socket !== "undefined") {
     socket.emit("check:adempimenti_cliente", { id_cliente: id, anno: currentAnno });
     
-    // Aspetta la risposta per decidere il tipo di eliminazione
     socket.once("res:check:adempimenti_cliente", ({ success, hasAdempimenti, count }) => {
       if (!success) {
-        // Se il backend non supporta la verifica, procedi con logica base
         proceedWithBasicDeletion(id, currentAnno, clienteNome);
         return;
       }
@@ -704,14 +902,11 @@ function deleteCliente(id) {
       let deleteAllYears = false;
       
       if (hasAdempimenti && count > 0) {
-        // Ha adempimenti - elimina solo per l'anno corrente
         message = `Eliminare "${clienteNome}" solo per l'anno ${currentAnno}?
         
-Il cliente ha ${count} adempimento/i in questo anno. Questa operazione eliminerà il cliente solo dall'anno ${currentAnno}, mantenendo i dati negli altri anni.
-Se vuoi eliminare il cliente da tutti gli anni, prima elimina tutti gli adempimenti.`;
+Il cliente ha ${count} adempimento/i in questo anno. Questa operazione eliminerà il cliente solo dall'anno ${currentAnno}, mantenendo i dati negli altri anni.`;
         deleteAllYears = false;
       } else {
-        // Non ha adempimenti - chiedi se eliminare da tutti gli anni
         message = `Eliminare "${clienteNome}" da tutti gli anni?
 
 Il cliente non ha adempimenti nell'anno ${currentAnno}. Puoi eliminarlo completamente da tutti gli anni o solo dall'anno corrente.
@@ -726,19 +921,13 @@ Clicca ANNULLA per eliminare solo dall'anno ${currentAnno}`;
       if (confirmed) {
         if (typeof socket !== "undefined") {
           if (deleteAllYears) {
-            // Elimina da tutti gli anni
             socket.emit("delete:cliente", { id, anno: null, deleteAll: true });
           } else {
-            // Elimina solo per l'anno corrente
             socket.emit("delete:cliente", { id, anno: currentAnno });
           }
         }
       } else if (hasAdempimenti && count > 0) {
-        // Se ha adempimenti e l'utente annulla, chiedi se vuole eliminare solo per l'anno corrente
-        const confirmYearOnly = confirm(`Eliminare "${clienteNome}" solo per l'anno ${currentAnno}?
-        
-Questa operazione eliminerà il cliente solo dall'anno ${currentAnno}, mantenendo i dati negli altri anni.`);
-        
+        const confirmYearOnly = confirm(`Eliminare "${clienteNome}" solo per l'anno ${currentAnno}?`);
         if (confirmYearOnly) {
           if (typeof socket !== "undefined") {
             socket.emit("delete:cliente", { id, anno: currentAnno });
@@ -747,15 +936,13 @@ Questa operazione eliminerà il cliente solo dall'anno ${currentAnno}, mantenend
       }
     });
   } else {
-    // Fallback se socket non disponibile
     proceedWithBasicDeletion(id, currentAnno, clienteNome);
   }
 }
 
 function proceedWithBasicDeletion(id, currentAnno, clienteNome) {
   const message = `Eliminare "${clienteNome}" solo per l'anno ${currentAnno}?  
-Questa operazione eliminerà il cliente solo dall'anno ${currentAnno}, mantenendo i dati negli altri anni.
-Se vuoi eliminare il cliente da tutti gli anni, contatta l'amministratore.`;
+Questa operazione eliminerà il cliente solo dall'anno ${currentAnno}, mantenendo i dati negli altri anni.`;
 
   if (confirm(message)) {
     if (typeof socket !== "undefined") {
@@ -768,9 +955,7 @@ function goScadenzario(id) {
   const c = state.clienti.find((x) => x.id === id);
   if (c) {
     state.selectedCliente = c;
-    document
-      .querySelectorAll(".nav-item")
-      .forEach((x) => x.classList.remove("active"));
+    document.querySelectorAll(".nav-item").forEach((x) => x.classList.remove("active"));
     document.querySelector('[data-page="scadenzario"]').classList.add("active");
     renderPage("scadenzario");
   } else {
@@ -808,12 +993,7 @@ function _aggiornaTipologiaSelectStyle() {
   const sel = document.getElementById("c-tipologia");
   if (!sel || !sel.value) return;
   const tipCodice = _getTipologiaCodice();
-  const colors = {
-    PF: "#5b8df6",
-    SP: "#fbbf24",
-    SC: "#34d399",
-    ASS: "#f472b6",
-  };
+  const colors = { PF: "#5b8df6", SP: "#fbbf24", SC: "#34d399", ASS: "#f472b6" };
   const color = colors[tipCodice] || "var(--accent)";
   sel.style.borderColor = color;
   sel.style.boxShadow = `0 0 0 1px ${color}44`;
@@ -903,8 +1083,7 @@ function _aggiornCol4BasedOnCol3(tipCodice, col3Val) {
 }
 
 function _nascondiCol3() {
-  const w = document.getElementById("wrap-col3"),
-    s = document.getElementById("c-col3");
+  const w = document.getElementById("wrap-col3"), s = document.getElementById("c-col3");
   if (w) w.style.display = "none";
   if (s) s.value = "";
   _nascondiCol4();
@@ -912,8 +1091,7 @@ function _nascondiCol3() {
 }
 
 function _nascondiCol4() {
-  const w = document.getElementById("wrap-col4"),
-    s = document.getElementById("c-col4");
+  const w = document.getElementById("wrap-col4"), s = document.getElementById("c-col4");
   if (w) w.style.display = "none";
   if (s) s.value = "";
   aggiornaRiepilogoClassificazione();
@@ -922,9 +1100,7 @@ function _nascondiCol4() {
 function _getTipologiaCodice() {
   const sel = document.getElementById("c-tipologia");
   if (!sel || !sel.value) return "";
-  const tip = (state.tipologie || []).find(
-    (t) => String(t.id) === String(sel.value),
-  );
+  const tip = (state.tipologie || []).find((t) => String(t.id) === String(sel.value));
   return tip ? tip.codice : "";
 }
 
@@ -953,12 +1129,7 @@ function aggiornaRiepilogoClassificazione() {
   const col4 = document.getElementById("c-col4")?.value || "";
   const col4Eff = REGIMI_ANNUALI.includes(col3) ? "annuale" : col4;
 
-  const tipColors = {
-    PF: "#5b8df6",
-    SP: "#fbbf24",
-    SC: "#34d399",
-    ASS: "#f472b6",
-  };
+  const tipColors = { PF: "#5b8df6", SP: "#fbbf24", SC: "#34d399", ASS: "#f472b6" };
   const tipColor = tipColors[tipCodice] || "var(--accent)";
 
   let chips = [];
@@ -969,18 +1140,12 @@ function aggiornaRiepilogoClassificazione() {
   if (col2) {
     const opt = COL2_OPTIONS[tipCodice]?.find((o) => o.value === col2);
     if (opt)
-      chips.push(
-        `<div class="riepilogo-chip"><span class="chip-label">Sottocategoria:</span><span class="chip-value">${opt.label}</span></div>`,
-      );
+      chips.push(`<div class="riepilogo-chip"><span class="chip-label">Sottocategoria:</span><span class="chip-value">${opt.label}</span></div>`);
   }
   if (col3)
-    chips.push(
-      `<div class="riepilogo-chip"><span class="chip-label">Regime:</span><span class="chip-value">${col3}</span></div>`,
-    );
+    chips.push(`<div class="riepilogo-chip"><span class="chip-label">Regime:</span><span class="chip-value">${col3}</span></div>`);
   if (col4Eff)
-    chips.push(
-      `<div class="riepilogo-chip"><span class="chip-label">Periodicità:</span><span class="chip-value">${col4Eff === "mensile" ? "📅 Mensile" : col4Eff === "annuale" ? "📅 Annuale" : "📆 Trimestrale"}</span></div>`,
-    );
+    chips.push(`<div class="riepilogo-chip"><span class="chip-label">Periodicità:</span><span class="chip-value">${col4Eff === "mensile" ? "📅 Mensile" : col4Eff === "annuale" ? "📅 Annuale" : "📆 Trimestrale"}</span></div>`);
 
   if (chips.length > 0) {
     content.innerHTML = chips.join("");
@@ -1019,11 +1184,7 @@ function validaClassificazioneCliente() {
   }
 
   const col3Val = document.getElementById("c-col3")?.value || "";
-  if (
-    !REGIMI_ANNUALI.includes(col3Val) &&
-    col4Wrap &&
-    col4Wrap.style.display !== "none"
-  ) {
+  if (!REGIMI_ANNUALI.includes(col3Val) && col4Wrap && col4Wrap.style.display !== "none") {
     const col4Val = document.getElementById("c-col4").value;
     if (!col4Val) {
       showNotif("La Periodicità è obbligatoria", "error");
@@ -1049,7 +1210,6 @@ function onTipologiaChange() {
 function onCol2Change() {
   const col2Val = document.getElementById("c-col2")?.value || "";
   lastClienteFormValues.col2 = col2Val;
-
   const col3Sel = document.getElementById("c-col3");
   if (col3Sel) col3Sel.value = "";
   _nascondiCol4();
@@ -1062,10 +1222,8 @@ function onCol3Change() {
   const tipCodice = _getTipologiaCodice();
   const col2Val = document.getElementById("c-col2")?.value || "";
   const col3Val = document.getElementById("c-col3")?.value || "";
-
   lastClienteFormValues.col2 = col2Val;
   lastClienteFormValues.col3 = col3Val;
-
   _aggiornaCol3(tipCodice, col2Val);
   _aggiornCol4BasedOnCol3(tipCodice, col3Val);
   aggiornaRiepilogoClassificazione();
@@ -1074,11 +1232,8 @@ function onCol3Change() {
 // ─── COPIA CONFIGURAZIONE ─────────────────────────────────────
 function openCopiaConfig(id_cliente = null) {
   document.getElementById("copia-config-cliente-id").value = id_cliente || "";
-  document.getElementById("copia-config-modalita").value = id_cliente
-    ? "singolo"
-    : "tutti";
-  document.getElementById("copia-config-da").value =
-    new Date().getFullYear() - 1;
+  document.getElementById("copia-config-modalita").value = id_cliente ? "singolo" : "tutti";
+  document.getElementById("copia-config-da").value = new Date().getFullYear() - 1;
   document.getElementById("copia-config-a").value = new Date().getFullYear();
 
   if (id_cliente) {
@@ -1105,27 +1260,17 @@ function eseguiCopiaConfig() {
   const a = parseInt(document.getElementById("copia-config-a").value);
 
   if (da >= a) {
-    showNotif(
-      "L'anno di partenza deve essere precedente all'anno di destinazione",
-      "error",
-    );
+    showNotif("L'anno di partenza deve essere precedente all'anno di destinazione", "error");
     return;
   }
 
   if (modalita === "singolo" && id_cliente) {
     if (typeof socket !== "undefined") {
-      socket.emit("copia:config_cliente", {
-        id_cliente: parseInt(id_cliente),
-        anno_da: da,
-        anno_a: a,
-      });
+      socket.emit("copia:config_cliente", { id_cliente: parseInt(id_cliente), anno_da: da, anno_a: a });
     }
   } else {
     if (typeof socket !== "undefined") {
-      socket.emit("copia:config_tutti_clienti", {
-        anno_da: da,
-        anno_a: a,
-      });
+      socket.emit("copia:config_tutti_clienti", { anno_da: da, anno_a: a });
     }
   }
 
@@ -1152,3 +1297,8 @@ window.resetClientiFiltri = resetClientiFiltri;
 window.onTipologiaChange = onTipologiaChange;
 window.onCol2Change = onCol2Change;
 window.onCol3Change = onCol3Change;
+window.toggleTipFiltroPanel = toggleTipFiltroPanel;
+window.toggleFiltroPercorso = toggleFiltroPercorso;
+window.toggleTipologiaGruppo = toggleTipologiaGruppo;
+window.selezionaTuttiTipFiltro = selezionaTuttiTipFiltro;
+window.deselezionaTuttiTipFiltro = deselezionaTuttiTipFiltro;
