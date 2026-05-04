@@ -99,7 +99,7 @@ function renderClientiSenzaAdempimenti(clienti) {
   container.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 12px;">
       <div style="font-size: 13px; color: var(--orange); padding: 8px 12px; background: var(--orange)08; border-radius: 6px;">
-        ⚠️ ${clienti.length} cliente${clienti.length === 1 ? '' : 'i'} senza alcun adempimento
+        ⚠️ ${clienti.length} clienti senza alcun adempimento
       </div>
       <div style="display: flex; flex-direction: column; gap: 8px;">
         ${clienti.map(cliente => `
