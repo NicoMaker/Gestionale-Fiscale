@@ -287,23 +287,29 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on("create:adempimento_personalizzato", (data) => {
-      try {
-        const risultato =
-          adempimentiModel.createAdempimentoPersonalizzato(data);
-        io.emit("broadcast:adempimenti_updated");
-        socket.emit("res:create:adempimento_personalizzato", {
-          success: true,
-          ...risultato,
-        });
-      } catch (e) {
-        socket.emit("res:create:adempimento_personalizzato", {
-          success: false,
-          error: e.message,
-        });
-      }
+socket.on("create:adempimento_personalizzato", (data) => {
+  try {
+    const risultato = adempimentiModel.createAdempimentoPersonalizzato(data);
+    io.emit("broadcast:adempimenti_updated");
+    
+    // Se sono stati generati adempimenti per clienti, aggiorna anche lo scadenzario
+    if (risultato.generati_per_clienti > 0) {
+      io.emit("broadcast:scadenzario_updated", { anno: data.anno || new Date().getFullYear() });
+      io.emit("broadcast:globale_updated", { anno: data.anno || new Date().getFullYear() });
+      io.emit("broadcast:stats_updated", { anno: data.anno || new Date().getFullYear() });
+    }
+    
+    socket.emit("res:create:adempimento_personalizzato", {
+      success: true,
+      ...risultato,
     });
-
+  } catch (e) {
+    socket.emit("res:create:adempimento_personalizzato", {
+      success: false,
+      error: e.message,
+    });
+  }
+});
     socket.on("check:adempimenti_cliente", ({ id_cliente, anno }) => {
       try {
         const risultato = adempimentiModel.checkAdempimentiClienteEsistenti(
@@ -421,6 +427,33 @@ module.exports = function setupSocketHandlers(io) {
         socket.emit("res:stats", { success: true, data });
       } catch (e) {
         socket.emit("res:stats", { success: false, error: e.message });
+      }
+    });
+
+        // ⭐ NUOVO HANDLER: Applica adempimenti esistenti a clienti multipli
+    socket.on("applica:adempimenti_a_clienti", ({ adempimenti_ids, clienti_ids, anno }) => {
+      try {
+        const risultato = adempimentiModel.applicaAdempimentiAClienti(adempimenti_ids, clienti_ids, anno);
+        
+        // Broadcast degli aggiornamenti
+        io.emit("broadcast:adempimenti_updated");
+        io.emit("broadcast:scadenzario_updated", { anno });
+        io.emit("broadcast:globale_updated", { anno });
+        io.emit("broadcast:stats_updated", { anno });
+        
+        socket.emit("res:applica:adempimenti_a_clienti", {
+          success: true,
+          inseriti: risultato.inseriti,
+          clienti: risultato.clienti,
+          adempimenti: adempimenti_ids.length,
+          dettagli: { skipped: risultato.skipped }
+        });
+      } catch (e) {
+        console.error("Errore in applica:adempimenti_a_clienti:", e);
+        socket.emit("res:applica:adempimenti_a_clienti", {
+          success: false,
+          error: e.message
+        });
       }
     });
 

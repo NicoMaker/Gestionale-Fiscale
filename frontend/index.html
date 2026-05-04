@@ -58,9 +58,9 @@
     <!-- ═══ NOTIFICHE ────────────────────────────────────── -->
     <div class="notif-container" id="notif-container"></div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL CLIENTE (con supporto anno)                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-cliente">
       <div class="modal modal-lg">
         <div class="modal-title">
@@ -296,9 +296,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL ADEMPIMENTO STATO                                 -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-adempimento">
       <div class="modal modal-sm">
         <div class="modal-title">
@@ -516,9 +516,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL ADEMPIMENTO DEF                                   -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-adp-def">
       <div class="modal">
         <div class="modal-title">
@@ -627,9 +627,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL COPIA SCADENZARIO                                 -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-copia">
       <div class="modal modal-sm">
         <div class="modal-title">📋 Copia Scadenzario</div>
@@ -657,9 +657,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL GENERA TUTTI                                      -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-genera-tutti">
       <div class="modal modal-sm">
         <div class="modal-title">⚡ Genera Scadenzario per Tutti</div>
@@ -737,9 +737,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL COPIA CONFIGURAZIONE CLIENTE                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-copia-config">
       <div class="modal modal-sm">
         <div class="modal-title">📋 Copia Configurazione Cliente</div>
@@ -774,9 +774,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL ADEMPIMENTO PERSONALIZZATO                         -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-adempimento-personalizzato">
       <div class="modal modal-sm">
         <div class="modal-title">🎯 Crea Adempimento Personalizzato</div>
@@ -826,10 +826,17 @@
 
         <div class="form-group">
           <label>Genera immediatamente per</label>
-          <select class="input" id="custom-adp-genera-per">
+          <select class="input" id="custom-adp-genera-per" onchange="toggleClienteSelect()">
             <option value="">Non generare ora</option>
             <option value="tutti">Tutti i clienti attivi</option>
-            <option value="selezionati">Clienti selezionati</option>
+            <option value="selezionati">Cliente specifico</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="custom-adp-cliente-div" style="display: none">
+          <label>Seleziona Cliente</label>
+          <select class="input" id="custom-adp-cliente">
+            <option value="">-- Seleziona un cliente --</option>
           </select>
         </div>
 
@@ -839,7 +846,7 @@
             class="input"
             id="custom-adp-anno"
             type="number"
-            value="2025"
+            value="2026"
           />
         </div>
 
@@ -860,9 +867,90 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- MODAL APPLICA ADEMPIMENTI ESISTENTI A CLIENTI (MULTIPLI)   -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modal-applica-adempimenti">
+      <div class="modal modal-lg">
+        <div class="modal-title">📋 Applica Adempimenti Esistenti a Clienti</div>
+        
+        <div class="infobox" style="margin-bottom: 18px">
+          ✅ Seleziona <strong>uno o più adempimenti</strong> e <strong>uno o più clienti</strong>.<br>
+          📌 Gli adempimenti <strong>già presenti</strong> per quel cliente vengono <strong>conservati</strong> (senza duplicati).<br>
+          🔄 Vengono generati automaticamente tutti i periodi previsti (es: 4 trimestri, 12 mesi, ecc.)
+        </div>
+
+        <!-- Sezione ADEMPIMENTI -->
+        <div class="form-group">
+          <label>📋 Adempimenti da applicare <span class="required-star">*</span></label>
+          <div id="applica-adp-list" style="
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--b1);
+            border-radius: var(--r-sm);
+            padding: 10px;
+            margin-bottom: 10px;
+            background: var(--s2);
+          "></div>
+          <div style="margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <label class="flag-chip">
+              <input type="checkbox" id="applica-adp-seleziona-tutti" onchange="toggleSelezionaTuttiAdpApplica()">
+              <span>✅ Seleziona/Deseleziona Tutti gli Adempimenti</span>
+            </label>
+            <button class="btn btn-xs btn-secondary" onclick="resetSelezioneAdpApplica()">⟳ Deseleziona tutto</button>
+          </div>
+        </div>
+
+        <!-- Sezione CLIENTI -->
+        <div class="form-group">
+          <label>👥 Clienti destinatari <span class="required-star">*</span></label>
+          <div id="applica-clienti-list" style="
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--b1);
+            border-radius: var(--r-sm);
+            padding: 10px;
+            margin-bottom: 10px;
+            background: var(--s2);
+          "></div>
+          <div style="margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <label class="flag-chip">
+              <input type="checkbox" id="applica-clienti-seleziona-tutti" onchange="toggleSelezionaTuttiClientiApplica()">
+              <span>✅ Seleziona/Deseleziona Tutti i Clienti</span>
+            </label>
+            <label class="flag-chip">
+              <input type="checkbox" id="applica-clienti-solo-attivi" checked>
+              <span>👥 Mostra solo clienti attivi</span>
+            </label>
+            <div class="search-wrap" style="width: 200px;">
+              <span class="search-icon">🔍</span>
+              <input class="input" id="applica-clienti-search" placeholder="Cerca cliente..." oninput="filtraClientiApplica()" style="font-size: 12px; padding: 5px 10px;">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Anno</label>
+          <input class="input" id="applica-adempimenti-anno" type="number" value="2026" />
+        </div>
+
+        <div class="modal-actions">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('modal-applica-adempimenti')"
+          >
+            Annulla
+          </button>
+          <button class="btn btn-primary" onclick="eseguiApplicaAdempimenti()">
+            📋 Applica a Clienti Selezionati
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL AGGIUNGI ADEMPIMENTO                              -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-add-adp">
       <div class="modal modal-sm">
         <div class="modal-title">➕ Aggiungi Adempimento</div>
@@ -919,9 +1007,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- MODAL DETTAGLIO CLIENTE                                 -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-cliente-dettaglio">
       <div class="modal">
         <div class="modal-title">
@@ -942,9 +1030,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- SCRIPT (ordine di dipendenza)                           -->
-    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <script src="js/modules/core/constants.js"></script>
     <script src="js/modules/core/state.js"></script>
     <script src="js/modules/core/utils.js"></script>

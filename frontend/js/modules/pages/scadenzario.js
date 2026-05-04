@@ -927,6 +927,76 @@ function creaAdempimentoPersonalizzato() {
   }
 }
 
+// ⭐ Funzione per creare adempimento personalizzato (supporta anche cliente specifico)
+function creaAdempimentoPersonalizzato() {
+  const nome = document.getElementById("custom-adp-nome").value.trim();
+  const descrizione = document.getElementById("custom-adp-descrizione").value.trim();
+  const scadenzaTipo = document.getElementById("custom-adp-scadenza-tipo").value;
+  const isContabilita = document.getElementById("custom-adp-is-contabilita").checked;
+  const generaPer = document.getElementById("custom-adp-genera-per").value;
+  const anno = parseInt(document.getElementById("custom-adp-anno").value);
+  const clienteId = document.getElementById("custom-adp-cliente")?.value;
+
+  if (!nome) {
+    showNotif("Il nome dell'adempimento è obbligatorio", "error");
+    return;
+  }
+
+  const data = {
+    nome,
+    descrizione,
+    scadenza_tipo: scadenzaTipo,
+    is_contabilita: isContabilita ? 1 : 0,
+    anno,
+    genera_immediatamente: generaPer !== "",
+    clienti_selezionati: null,
+  };
+
+  if (generaPer === "tutti") {
+    data.clienti_selezionati = "tutti";
+  } else if (generaPer === "selezionati" && clienteId) {
+    data.clienti_selezionati = [parseInt(clienteId)];
+  } else if (generaPer === "selezionati" && !clienteId) {
+    showNotif("Seleziona un cliente", "error");
+    return;
+  }
+
+  if (typeof socket !== "undefined") {
+    socket.emit("create:adempimento_personalizzato", data);
+  }
+}
+
+// Nuova funzione: toggleClienteSelect (portata in scope globale)
+window.toggleClienteSelect = function() {
+  const generaPer = document.getElementById("custom-adp-genera-per")?.value;
+  const clienteDiv = document.getElementById("custom-adp-cliente-div");
+  if (clienteDiv) {
+    clienteDiv.style.display = generaPer === "selezionati" ? "block" : "none";
+  }
+};
+
+// Nuova funzione: openAdempimentoPersonalizzatoFromDashboard
+window.openAdempimentoPersonalizzatoFromDashboard = function() {
+  document.getElementById("custom-adp-anno").value = state.anno;
+  
+  const clientiSelect = document.getElementById("custom-adp-cliente");
+  if (clientiSelect && state.clienti && state.clienti.length > 0) {
+    clientiSelect.innerHTML = `
+      <option value="">-- Seleziona un cliente --</option>
+      ${state.clienti.map(c => `<option value="${c.id}">${c.nome} (${c.tipologia_codice || '-'})</option>`).join('')}
+    `;
+  }
+  
+  document.getElementById("custom-adp-nome").value = "";
+  document.getElementById("custom-adp-descrizione").value = "";
+  document.getElementById("custom-adp-scadenza-tipo").value = "annuale";
+  document.getElementById("custom-adp-is-contabilita").checked = false;
+  document.getElementById("custom-adp-genera-per").value = "tutti";
+  
+  window.toggleClienteSelect();
+  openModal("modal-adempimento-personalizzato");
+};
+
 window.openCopia = openCopia;
 window.openCopiaTutti = openCopiaTutti;
 window.eseguiCopia = eseguiCopia;

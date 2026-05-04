@@ -130,16 +130,25 @@ function createAdempimentoPersonalizzato(data) {
   // Se specificato, genera immediatamente l'adempimento per i clienti selezionati
   if (
     data.genera_immediatamente &&
-    data.clienti_selezionati &&
-    data.clienti_selezionati.length > 0
+    data.clienti_selezionati
   ) {
     const nuovoAdempimento = queryOne(
       `SELECT * FROM adempimenti WHERE id = ?`,
       [newId],
     );
     let generati = 0;
+    let clientiDaProcessare = [];
 
-    data.clienti_selezionati.forEach((clienteId) => {
+    if (data.clienti_selezionati === "tutti") {
+      // Tutti i clienti attivi
+      const tuttiClienti = queryAll(`SELECT id FROM clienti WHERE attivo = 1`);
+      clientiDaProcessare = tuttiClienti.map(c => c.id);
+    } else if (Array.isArray(data.clienti_selezionati) && data.clienti_selezionati.length > 0) {
+      // Clienti specifici
+      clientiDaProcessare = data.clienti_selezionati;
+    }
+
+    clientiDaProcessare.forEach((clienteId) => {
       generati += inserisciAdempimentoSeAssente(
         clienteId,
         nuovoAdempimento,
@@ -151,7 +160,8 @@ function createAdempimentoPersonalizzato(data) {
       id: newId,
       codice: codiceUnivoco,
       generati_per_clienti: generati,
-      messaggio: `Adempimento "${data.nome}" creato con codice "${codiceUnivoco}" e generato per ${generati} clienti`,
+      clienti_elaborati: clientiDaProcessare.length,
+      messaggio: `Adempimento "${data.nome}" creato con codice "${codiceUnivoco}" e generato per ${generati} adempimenti su ${clientiDaProcessare.length} clienti`,
     };
   }
 
@@ -582,6 +592,43 @@ function inserisciAdempimentoForzato(id_cliente, adp, anno) {
   return inseriti;
 }
 
+// ⭐ NUOVA FUNZIONE: Applica adempimenti esistenti a clienti multipli (senza duplicati)
+function applicaAdempimentiAClienti(adempimenti_ids, clienti_ids, anno) {
+  let totaleInseriti = 0;
+  let totaleSkipped = 0;
+  
+  // Per ogni adempimento selezionato
+  for (const adpId of adempimenti_ids) {
+    const adp = queryOne(`SELECT * FROM adempimenti WHERE id = ? AND attivo = 1`, [adpId]);
+    if (!adp) {
+      console.warn(`Adempimento ${adpId} non trovato o non attivo`);
+      continue;
+    }
+    
+    // Per ogni cliente selezionato
+    for (const clienteId of clienti_ids) {
+      // Verifica se il cliente esiste ed è attivo
+      const cliente = queryOne(`SELECT id FROM clienti WHERE id = ? AND attivo = 1`, [clienteId]);
+      if (!cliente) {
+        console.warn(`Cliente ${clienteId} non trovato o non attivo`);
+        continue;
+      }
+      
+      // Usa la funzione esistente che gestisce già il "se assente"
+      const risultato = inserisciAdempimentoSeAssenteConDettagli(clienteId, adp, anno);
+      totaleInseriti += risultato.inseriti;
+      totaleSkipped += risultato.mantenuti;
+    }
+  }
+  
+  return {
+    inseriti: totaleInseriti,
+    skipped: totaleSkipped,
+    clienti: clienti_ids.length,
+    adempimenti: adempimenti_ids.length
+  };
+}
+
 module.exports = {
   getAdempimenti,
   getAdempimentiCliente,
@@ -594,4 +641,5 @@ module.exports = {
   canDeleteAdempimento,
   createAdempimentoPersonalizzato,
   checkAdempimentiClienteEsistenti,
+  applicaAdempimentiAClienti  // ⭐ NUOVA
 };

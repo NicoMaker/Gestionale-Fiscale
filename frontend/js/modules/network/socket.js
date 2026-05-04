@@ -282,3 +282,27 @@ socket.on("res:adempimenti_cliente", ({ success, data }) => {
     }
   }
 });
+
+// ─── RISPOSTA APPLICA ADEMPIMENTI A CLIENTI ───────────────────
+socket.on("res:applica:adempimenti_a_clienti", ({ success, inseriti, clienti, adempimenti, dettagli, error }) => {
+  if (success) {
+    let msg = `✅ Applicati ${inseriti} adempimenti a ${clienti} clienti (${adempimenti} adempimenti diversi)`;
+    if (dettagli && dettagli.skipped > 0) {
+      msg += ` — ${dettagli.skipped} già esistenti (mantenuti)`;
+    }
+    showNotif(msg, "success");
+    
+    // Aggiorna le viste
+    if (state.page === "dashboard") {
+      socket.emit("get:stats", { anno: state.anno });
+    }
+    if (state.page === "scadenzario_globale") {
+      loadGlobale();
+    }
+    if (state.selectedCliente) {
+      loadScadenzario();
+    }
+  } else {
+    showNotif(`❌ Errore: ${error || "Applicazione fallita"}`, "error");
+  }
+});
