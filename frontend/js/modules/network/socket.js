@@ -306,3 +306,26 @@ socket.on("res:applica:adempimenti_a_clienti", ({ success, inseriti, clienti, ad
     showNotif(`❌ Errore: ${error || "Applicazione fallita"}`, "error");
   }
 });
+
+// ─── CLIENTI SENZA ADEMPIMENTI ────────────────────────────────
+socket.on("res:clienti_senza_adempimenti", ({ success, data }) => {
+  console.log("📨 res:clienti_senza_adempimenti", success, data?.length);
+  if (success && window.renderClientiSenzaAdempimenti) {
+    window.renderClientiSenzaAdempimenti(data);
+  }
+});
+
+// ─── APPLICA ADEMPIMENTI A CLIENTI ────────────────────────────
+socket.on("res:applica:adempimenti_a_clienti", ({ success, inseriti, clienti, adempimenti, dettagli, error }) => {
+  if (success) {
+    let msg = `✅ Applicati ${inseriti} adempimenti a ${clienti} clienti`;
+    if (dettagli?.skipped > 0) msg += ` — ${dettagli.skipped} già esistenti`;
+    showNotif(msg, "success");
+    if (state.page === "dashboard") {
+      socket.emit("get:stats", { anno: state.anno });
+      if (window.caricaClientiSenzaAdempimenti) window.caricaClientiSenzaAdempimenti();
+    }
+  } else {
+    showNotif(`❌ Errore: ${error}`, "error");
+  }
+});

@@ -22,3 +22,10 @@ document.addEventListener('change', function(e) {
     renderApplicaClientiList();
   }
 });
+
+// Assicura che le funzioni siano globali
+window.caricaClientiSenzaAdempimenti = window.caricaClientiSenzaAdempimenti || function() {
+  if (socket && state.page === "dashboard") {
+    socket.emit("get:clienti_senza_adempimenti", { anno: state.anno });
+  }
+};

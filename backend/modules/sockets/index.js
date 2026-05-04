@@ -457,8 +457,88 @@ socket.on("create:adempimento_personalizzato", (data) => {
       }
     });
 
+        // ⭐ NUOVO HANDLER: Clienti senza adempimenti per l'anno
+    socket.on("get:clienti_senza_adempimenti", ({ anno }) => {
+      try {
+        const clientiSenzaAdp = clientiModel.getClientiSenzaAdempimenti(anno);
+        socket.emit("res:clienti_senza_adempimenti", { success: true, data: clientiSenzaAdp });
+      } catch (e) {
+        console.error("Errore in get:clienti_senza_adempimenti:", e);
+        socket.emit("res:clienti_senza_adempimenti", { success: false, error: e.message });
+      }
+    });
+
+    // ⭐ NUOVO HANDLER: Applica adempimenti esistenti a clienti multipli
+    socket.on("applica:adempimenti_a_clienti", ({ adempimenti_ids, clienti_ids, anno }) => {
+      try {
+        const risultato = adempimentiModel.applicaAdempimentiAClienti(adempimenti_ids, clienti_ids, anno);
+        
+        // Broadcast degli aggiornamenti
+        io.emit("broadcast:adempimenti_updated");
+        io.emit("broadcast:scadenzario_updated", { anno });
+        io.emit("broadcast:globale_updated", { anno });
+        io.emit("broadcast:stats_updated", { anno });
+        
+        socket.emit("res:applica:adempimenti_a_clienti", {
+          success: true,
+          inseriti: risultato.inseriti,
+          clienti: clienti_ids.length,
+          adempimenti: adempimenti_ids.length,
+          dettagli: { skipped: risultato.skipped }
+        });
+      } catch (e) {
+        console.error("Errore in applica:adempimenti_a_clienti:", e);
+        socket.emit("res:applica:adempimenti_a_clienti", {
+          success: false,
+          error: e.message
+        });
+      }
+    });
+
+        // ⭐ CLIENTI SENZA ADEMPIMENTI
+    socket.on("get:clienti_senza_adempimenti", ({ anno }) => {
+      try {
+        console.log(`🔍 Cerco clienti senza adempimenti per anno ${anno}`);
+        const clientiSenzaAdp = clientiModel.getClientiSenzaAdempimenti(anno);
+        console.log(`✅ Trovati ${clientiSenzaAdp.length} clienti senza adempimenti`);
+        socket.emit("res:clienti_senza_adempimenti", { success: true, data: clientiSenzaAdp });
+      } catch (e) {
+        console.error("❌ Errore in get:clienti_senza_adempimenti:", e);
+        socket.emit("res:clienti_senza_adempimenti", { success: false, error: e.message });
+      }
+    });
+
+    // ⭐ APPLICA ADEMPIMENTI A CLIENTI (MULTIPLI)
+    socket.on("applica:adempimenti_a_clienti", ({ adempimenti_ids, clienti_ids, anno }) => {
+      try {
+        console.log(`📋 Applicazione adempimenti: ${adempimenti_ids.length} adempimenti a ${clienti_ids.length} clienti per anno ${anno}`);
+        const risultato = adempimentiModel.applicaAdempimentiAClienti(adempimenti_ids, clienti_ids, anno);
+        
+        // Broadcast degli aggiornamenti
+        io.emit("broadcast:adempimenti_updated");
+        io.emit("broadcast:scadenzario_updated", { anno });
+        io.emit("broadcast:globale_updated", { anno });
+        io.emit("broadcast:stats_updated", { anno });
+        
+        socket.emit("res:applica:adempimenti_a_clienti", {
+          success: true,
+          inseriti: risultato.inseriti,
+          clienti: clienti_ids.length,
+          adempimenti: adempimenti_ids.length,
+          dettagli: { skipped: risultato.skipped }
+        });
+      } catch (e) {
+        console.error("❌ Errore in applica:adempimenti_a_clienti:", e);
+        socket.emit("res:applica:adempimenti_a_clienti", {
+          success: false,
+          error: e.message
+        });
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log(`❌ Client disconnesso: ${socket.id}`);
     });
   });
 };
+

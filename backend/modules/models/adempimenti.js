@@ -629,6 +629,71 @@ function applicaAdempimentiAClienti(adempimenti_ids, clienti_ids, anno) {
   };
 }
 
+// ⭐ NUOVA FUNZIONE: Applica adempimenti esistenti a clienti multipli (senza duplicati)
+function applicaAdempimentiAClienti(adempimenti_ids, clienti_ids, anno) {
+  let totaleInseriti = 0;
+  let totaleSkipped = 0;
+  
+  // Per ogni adempimento selezionato
+  for (const adpId of adempimenti_ids) {
+    const adp = queryOne(`SELECT * FROM adempimenti WHERE id = ? AND attivo = 1`, [adpId]);
+    if (!adp) {
+      console.warn(`Adempimento ${adpId} non trovato o non attivo`);
+      continue;
+    }
+    
+    // Per ogni cliente selezionato
+    for (const clienteId of clienti_ids) {
+      // Verifica se il cliente esiste ed è attivo
+      const cliente = queryOne(`SELECT id FROM clienti WHERE id = ? AND attivo = 1`, [clienteId]);
+      if (!cliente) {
+        console.warn(`Cliente ${clienteId} non trovato o non attivo`);
+        continue;
+      }
+      
+      // Usa la funzione esistente che gestisce già il "se assente"
+      const risultato = inserisciAdempimentoSeAssenteConDettagli(clienteId, adp, anno);
+      totaleInseriti += risultato.inseriti;
+      totaleSkipped += risultato.mantenuti;
+    }
+  }
+  
+  return {
+    inseriti: totaleInseriti,
+    skipped: totaleSkipped,
+    clienti: clienti_ids.length,
+    adempimenti: adempimenti_ids.length
+  };
+}
+
+// ⭐ APPLICA ADEMPIMENTI ESISTENTI A CLIENTI MULTIPLI
+function applicaAdempimentiAClienti(adempimenti_ids, clienti_ids, anno) {
+  let totaleInseriti = 0;
+  let totaleSkipped = 0;
+  
+  for (const adpId of adempimenti_ids) {
+    const adp = queryOne(`SELECT * FROM adempimenti WHERE id = ? AND attivo = 1`, [adpId]);
+    if (!adp) {
+      console.warn(`Adempimento ${adpId} non trovato o non attivo`);
+      continue;
+    }
+    
+    for (const clienteId of clienti_ids) {
+      const cliente = queryOne(`SELECT id FROM clienti WHERE id = ? AND attivo = 1`, [clienteId]);
+      if (!cliente) {
+        console.warn(`Cliente ${clienteId} non trovato o non attivo`);
+        continue;
+      }
+      
+      const risultato = inserisciAdempimentoSeAssenteConDettagli(clienteId, adp, anno);
+      totaleInseriti += risultato.inseriti;
+      totaleSkipped += risultato.mantenuti;
+    }
+  }
+  
+  return { inseriti: totaleInseriti, skipped: totaleSkipped };
+}
+
 module.exports = {
   getAdempimenti,
   getAdempimentiCliente,
@@ -641,5 +706,5 @@ module.exports = {
   canDeleteAdempimento,
   createAdempimentoPersonalizzato,
   checkAdempimentiClienteEsistenti,
-  applicaAdempimentiAClienti  // ⭐ NUOVA
+  applicaAdempimentiAClienti  // ⭐ AGGIUNGI
 };

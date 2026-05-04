@@ -665,6 +665,74 @@ function copiaTuttiClientiAnno(anno_da, anno_a) {
   return risultati;
 }
 
+// ⭐ NUOVA FUNZIONE: Recupera i clienti che non hanno alcun adempimento per un dato anno
+function getClientiSenzaAdempimenti(anno) {
+  const sql = `
+    SELECT 
+      c.id,
+      c.nome,
+      c.codice_fiscale,
+      c.partita_iva,
+      c.email,
+      c.telefono,
+      c.attivo,
+      COALESCE(cfg.id_tipologia, cfg_last.id_tipologia) as id_tipologia,
+      COALESCE(t.codice, t_last.codice) as tipologia_codice,
+      COALESCE(t.colore, t_last.colore) as tipologia_colore,
+      COALESCE(t.nome, t_last.nome) as tipologia_nome
+    FROM clienti c 
+    LEFT JOIN clienti_config_annuale cfg ON c.id = cfg.id_cliente AND cfg.anno = ?
+    LEFT JOIN clienti_config_annuale cfg_last ON cfg_last.id = (
+      SELECT id FROM clienti_config_annuale 
+      WHERE id_cliente = c.id AND anno <= ?
+      ORDER BY anno DESC LIMIT 1
+    )
+    LEFT JOIN tipologie_cliente t ON cfg.id_tipologia = t.id
+    LEFT JOIN tipologie_cliente t_last ON cfg_last.id_tipologia = t_last.id
+    WHERE c.attivo = 1
+    AND NOT EXISTS (
+      SELECT 1 FROM adempimenti_cliente ac 
+      WHERE ac.id_cliente = c.id AND ac.anno = ?
+    )
+    ORDER BY c.nome
+  `;
+  return queryAll(sql, [anno, anno, anno]);
+}
+
+// ⭐ NUOVA FUNZIONE: Recupera i clienti che non hanno alcun adempimento per un dato anno
+function getClientiSenzaAdempimenti(anno) {
+  const sql = `
+    SELECT 
+      c.id,
+      c.nome,
+      c.codice_fiscale,
+      c.partita_iva,
+      c.email,
+      c.telefono,
+      c.attivo,
+      COALESCE(cfg.id_tipologia, cfg_last.id_tipologia) as id_tipologia,
+      COALESCE(t.codice, t_last.codice) as tipologia_codice,
+      COALESCE(t.colore, t_last.colore) as tipologia_colore,
+      COALESCE(t.nome, t_last.nome) as tipologia_nome
+    FROM clienti c 
+    LEFT JOIN clienti_config_annuale cfg ON c.id = cfg.id_cliente AND cfg.anno = ?
+    LEFT JOIN clienti_config_annuale cfg_last ON cfg_last.id = (
+      SELECT id FROM clienti_config_annuale 
+      WHERE id_cliente = c.id AND anno <= ?
+      ORDER BY anno DESC LIMIT 1
+    )
+    LEFT JOIN tipologie_cliente t ON cfg.id_tipologia = t.id
+    LEFT JOIN tipologie_cliente t_last ON cfg_last.id_tipologia = t_last.id
+    WHERE c.attivo = 1
+    AND NOT EXISTS (
+      SELECT 1 FROM adempimenti_cliente ac 
+      WHERE ac.id_cliente = c.id AND ac.anno = ?
+    )
+    ORDER BY c.nome
+  `;
+  return queryAll(sql, [anno, anno, anno]);
+}
+
 module.exports = {
   getClientiConDettagli,
   getClienteConDettagli,
@@ -678,4 +746,5 @@ module.exports = {
   copiaConfigClienteAnno,
   copiaTuttiClientiAnno,
   checkNomeExists,
+  getClientiSenzaAdempimenti  // ⭐ AGGIUNGI QUESTA
 };
