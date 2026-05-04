@@ -466,13 +466,6 @@ function renderGlobaleTabella(rawData) {
   if (adpFiltroAttivo && adpFiltroAttivo !== "" && adpListaOrdinata.length > 0) {
     var displayName = adpFiltroAttivo;
     var hasMultiple = adpListaOrdinata.length > 1;
-    navAdpHtml = '<div class="glob-nav-adp" style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 16px;background:var(--s3);border-radius:var(--r-sm);border:1px solid var(--b2)">' +
-      (hasMultiple ? '<button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(-1)">&#9664; Prec.</button>' : '') +
-      '<span style="flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--accent)">' + displayName.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m; }) + '</span>' +
-      (hasMultiple ? '<span style="font-size:12px;color:var(--t3)">' + (adpIdx + 1) + ' / ' + adpListaOrdinata.length + '</span>' : '') +
-      (hasMultiple ? '<button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(1)">Succ. &#9654;</button>' : '') +
-      '<button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" style="margin-left:8px">✕ Tutti</button>' +
-      '</div>';
   }
   
   var tipFiltroHtml = "";
