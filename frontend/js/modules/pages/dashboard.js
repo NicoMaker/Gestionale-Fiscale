@@ -76,110 +76,90 @@ function buildDashboardShell(stats) {
 // ⭐ CARICA CLIENTI SENZA ADEMPIMENTI
 function caricaClientiSenzaAdempimenti() {
   if (!socket) return;
-  console.log("📡 Richiedo clienti senza adempimenti per anno:", state.anno);
   socket.emit("get:clienti_senza_adempimenti", { anno: state.anno });
 }
 
 // ⭐ RENDER CLIENTI SENZA ADEMPIMENTI
 function renderClientiSenzaAdempimenti(clienti) {
-  const container = document.getElementById("clienti-senza-adp-list");
+  var container = document.getElementById("clienti-senza-adp-list");
   if (!container) return;
   
-  console.log("🎨 Render clienti senza adempimenti:", clienti?.length);
-  
   if (!clienti || clienti.length === 0) {
-    container.innerHTML = `
-      <div style="text-align: center; padding: 20px; color: var(--green); background: var(--green)08; border-radius: 8px;">
-        ✅ Tutti i clienti hanno almeno un adempimento per l'anno ${state.anno}!
-      </div>
-    `;
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--green); background: var(--green)08; border-radius: 8px;">' +
+      '✅ Tutti i clienti hanno almeno un adempimento per l\'anno ' + state.anno + '!' +
+      '</div>';
     return;
   }
   
-  container.innerHTML = `
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-      <div style="font-size: 13px; color: var(--orange); padding: 8px 12px; background: var(--orange)08; border-radius: 6px;">
-        ⚠️ ${clienti.length} clienti senza alcun adempimento
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        ${clienti.map(cliente => `
-          <div class="cliente-senza-adp-row" style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--s2);
-            border: 1px solid var(--b1);
-            border-radius: 10px;
-            padding: 12px 16px;
-            gap: 12px;
-          ">
-            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-              <div class="cliente-avatar-sm" style="
-                width: 40px;
-                height: 40px;
-                border-radius: 10px;
-                background: ${cliente.tipologia_colore || '#5b8df6'}22;
-                border: 2px solid ${cliente.tipologia_colore || '#5b8df6'};
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 800;
-                font-size: 14px;
-              ">${getAvatar(cliente.nome)}</div>
-              <div>
-                <div style="font-weight: 700; font-size: 15px;">${escAttr(cliente.nome)}</div>
-                <div style="font-size: 12px; color: var(--t2);">${cliente.tipologia_codice || '-'} · ${cliente.email || 'nessuna email'}</div>
-              </div>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="goToClienteScadenzarioDiretto(${cliente.id})" style="white-space: nowrap;">
-              📅 Vai al Cliente
-            </button>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
+  var html = '<div style="display: flex; flex-direction: column; gap: 12px;">' +
+    '<div style="font-size: 13px; color: var(--orange); padding: 8px 12px; background: var(--orange)08; border-radius: 6px;">' +
+    '⚠️ ' + clienti.length + ' clienti senza alcun adempimento' +
+    '</div>' +
+    '<div style="display: flex; flex-direction: column; gap: 8px;">';
+  
+  for (var i = 0; i < clienti.length; i++) {
+    var c = clienti[i];
+    var tipColor = c.tipologia_colore || '#5b8df6';
+    var avatar = getAvatar(c.nome);
+    html += '<div class="cliente-senza-adp-row" style="' +
+      'display: flex; align-items: center; justify-content: space-between; background: var(--s2); border: 1px solid var(--b1); border-radius: 10px; padding: 12px 16px; gap: 12px;">' +
+      '<div style="display: flex; align-items: center; gap: 12px; flex: 1;">' +
+      '<div class="cliente-avatar-sm" style="width: 40px; height: 40px; border-radius: 10px; background: ' + tipColor + '22; border: 2px solid ' + tipColor + '; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;">' + avatar + '</div>' +
+      '<div><div style="font-weight: 700; font-size: 15px;">' + escAttr(c.nome) + '</div>' +
+      '<div style="font-size: 12px; color: var(--t2);">' + (c.tipologia_codice || '-') + ' · ' + (c.email || 'nessuna email') + '</div></div>' +
+      '</div>' +
+      '<button class="btn btn-primary btn-sm" onclick="goToClienteScadenzarioDiretto(' + c.id + ')" style="white-space: nowrap;">📅 Vai al Cliente</button>' +
+      '</div>';
+  }
+  
+  html += '</div></div>';
+  container.innerHTML = html;
 }
 
 // ⭐ VAI DIRETTAMENTE ALLO SCADENZARIO DEL CLIENTE
 function goToClienteScadenzarioDiretto(clienteId) {
-  console.log("🔍 Vai al cliente:", clienteId);
-  
-  // Cerca il cliente nella lista già caricata
-  const cliente = state.clienti?.find(c => c.id === clienteId);
+  var cliente = null;
+  if (state.clienti) {
+    for (var i = 0; i < state.clienti.length; i++) {
+      if (state.clienti[i].id === clienteId) {
+        cliente = state.clienti[i];
+        break;
+      }
+    }
+  }
   
   if (cliente) {
     state.selectedCliente = cliente;
-    // Cambia pagina allo scadenzario
-    document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
-    document.querySelector('[data-page="scadenzario"]').classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(function(x) { x.classList.remove("active"); });
+    var scadNav = document.querySelector('[data-page="scadenzario"]');
+    if (scadNav) scadNav.classList.add("active");
     renderPage("scadenzario");
   } else {
-    // Se non è in stato, lo carichiamo e poi navighiamo
     state._gotoClienteId = clienteId;
     state._pending = "scadenzario";
     socket.emit("get:clienti", { anno: state.anno });
-    document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
-    document.querySelector('[data-page="scadenzario"]').classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(function(x) { x.classList.remove("active"); });
+    var scadNav2 = document.querySelector('[data-page="scadenzario"]');
+    if (scadNav2) scadNav2.classList.add("active");
     renderPage("scadenzario");
   }
 }
 
 // ⭐ APRI MODAL APPLICA ADEMPIMENTI CON CLIENTI VUOTI PRESELEZIONATI
 function apriApplicaAdempimentiPerVuoti() {
-  // Prima recupera i clienti senza adempimenti
   socket.emit("get:clienti_senza_adempimenti", { anno: state.anno });
-  socket.once("res:clienti_senza_adempimenti", ({ success, data }) => {
-    if (success && data && data.length > 0) {
-      // Salva gli ID dei clienti vuoti
-      const clientiVuotiIds = data.map(c => c.id);
+  socket.once("res:clienti_senza_adempimenti", function(data) {
+    if (data.success && data.data && data.data.length > 0) {
+      var clientiVuotiIds = [];
+      for (var i = 0; i < data.data.length; i++) {
+        clientiVuotiIds.push(data.data[i].id);
+      }
       
-      // Carica adempimenti se necessario
       if (!state.adempimenti || state.adempimenti.length === 0) {
         socket.emit("get:adempimenti");
-        socket.once("res:adempimenti", ({ success: adpSuccess, data: adpData }) => {
-          if (adpSuccess) {
-            state.adempimenti = adpData;
+        socket.once("res:adempimenti", function(adpData) {
+          if (adpData.success) {
+            state.adempimenti = adpData.data;
             apriModalConPreselezione(clientiVuotiIds);
           }
         });
@@ -193,31 +173,25 @@ function apriApplicaAdempimentiPerVuoti() {
 }
 
 function apriModalConPreselezione(clientiVuotiIds) {
-  // Carica tutti i clienti
   socket.emit("get:clienti", { anno: state.anno });
-  socket.once("res:clienti", ({ success, data }) => {
-    if (success) {
-      state.clienti = data;
-      
-      // Render del modal
+  socket.once("res:clienti", function(data) {
+    if (data.success) {
+      state.clienti = data.data;
       renderApplicaAdempimentiModal();
       renderApplicaClientiList();
       
-      // Preseleziona i clienti vuoti
-      setTimeout(() => {
-        document.querySelectorAll(".applica-cliente-checkbox").forEach(cb => {
-          if (clientiVuotiIds.includes(parseInt(cb.value))) {
+      setTimeout(function() {
+        var checkboxes = document.querySelectorAll(".applica-cliente-checkbox");
+        for (var i = 0; i < checkboxes.length; i++) {
+          var cb = checkboxes[i];
+          if (clientiVuotiIds.indexOf(parseInt(cb.value)) !== -1) {
             cb.checked = true;
           }
-        });
+        }
         
-        // Aggiorna messaggio informativo
-        const infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
+        var infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
         if (infoBox) {
-          infoBox.innerHTML = `
-            ✅ <strong>${clientiVuotiIds.length} clienti</strong> senza adempimenti sono stati preselezionati.<br>
-            📌 Scegli gli adempimenti da assegnare e premi "Applica".
-          `;
+          infoBox.innerHTML = '✅ <strong>' + clientiVuotiIds.length + '</strong> clienti senza adempimenti sono stati preselezionati.<br>📌 Scegli gli adempimenti da assegnare e premi "Applica".';
           infoBox.style.background = "var(--orange)18";
           infoBox.style.borderColor = "var(--orange)";
           infoBox.style.color = "var(--orange)";
@@ -234,9 +208,9 @@ function apriModalConPreselezione(clientiVuotiIds) {
 function openApplicaAdempimenti() {
   if (!state.adempimenti || state.adempimenti.length === 0) {
     socket.emit("get:adempimenti");
-    socket.once("res:adempimenti", ({ success, data }) => {
-      if (success) {
-        state.adempimenti = data;
+    socket.once("res:adempimenti", function(data) {
+      if (data.success) {
+        state.adempimenti = data.data;
         renderApplicaAdempimentiModal();
       }
     });
@@ -245,20 +219,16 @@ function openApplicaAdempimenti() {
   }
   
   socket.emit("get:clienti", { anno: state.anno });
-  socket.once("res:clienti", ({ success, data }) => {
-    if (success) {
-      state.clienti = data;
+  socket.once("res:clienti", function(data) {
+    if (data.success) {
+      state.clienti = data.data;
       renderApplicaClientiList();
     }
   });
   
-  // Reset messaggio
-  const infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
+  var infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
   if (infoBox) {
-    infoBox.innerHTML = `
-      ✅ Seleziona <strong>uno o più adempimenti</strong> e <strong>uno o più clienti</strong>.<br>
-      📌 Gli adempimenti già presenti vengono conservati.
-    `;
+    infoBox.innerHTML = '✅ Seleziona <strong>uno o più adempimenti</strong> e <strong>uno o più clienti</strong>.<br>📌 Gli adempimenti già presenti vengono conservati.';
     infoBox.style.background = "";
     infoBox.style.borderColor = "";
     infoBox.style.color = "";
@@ -269,188 +239,276 @@ function openApplicaAdempimenti() {
 }
 
 function renderApplicaAdempimentiModal() {
-  const container = document.getElementById("applica-adp-list");
+  var container = document.getElementById("applica-adp-list");
   if (!container) return;
   if (!state.adempimenti || state.adempimenti.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:20px;">📋 Nessun adempimento</div>`;
+    container.innerHTML = '<div style="text-align:center;padding:20px;">📋 Nessun adempimento</div>';
     return;
   }
   
-  const adpOrdinati = [...state.adempimenti].sort((a, b) => a.nome.localeCompare(b.nome));
-  container.innerHTML = `<div style="display:flex;flex-wrap:wrap;">${adpOrdinati.map(adp => `
-    <label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px);">
-      <input type="checkbox" class="applica-adp-checkbox" value="${adp.id}">
-      <span><strong>${adp.codice}</strong> — ${adp.nome}</span>
-    </label>
-  `).join('')}</div>`;
+  var adpOrdinati = [];
+  for (var i = 0; i < state.adempimenti.length; i++) {
+    adpOrdinati.push(state.adempimenti[i]);
+  }
+  adpOrdinati.sort(function(a, b) { return a.nome.localeCompare(b.nome); });
+  
+  var html = '<div style="display:flex;flex-wrap:wrap;">';
+  for (var j = 0; j < adpOrdinati.length; j++) {
+    var adp = adpOrdinati[j];
+    html += '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px);">' +
+      '<input type="checkbox" class="applica-adp-checkbox" value="' + adp.id + '">' +
+      '<span><strong>' + adp.codice + '</strong> — ' + adp.nome + '</span>' +
+      '</label>';
+  }
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 function renderApplicaClientiList() {
-  const container = document.getElementById("applica-clienti-list");
+  var container = document.getElementById("applica-clienti-list");
   if (!container) return;
   if (!state.clienti || state.clienti.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:20px;">👥 Nessun cliente</div>`;
+    container.innerHTML = '<div style="text-align:center;padding:20px;">👥 Nessun cliente</div>';
     return;
   }
   
-  const soloAttivi = document.getElementById("applica-clienti-solo-attivi")?.checked !== false;
-  let clientiFiltrati = state.clienti.filter(c => !soloAttivi || c.attivo === 1);
+  var soloAttivi = true;
+  var attiviCheck = document.getElementById("applica-clienti-solo-attivi");
+  if (attiviCheck && attiviCheck.checked === false) soloAttivi = false;
   
-  const searchTerm = document.getElementById("applica-clienti-search")?.value?.toLowerCase() || "";
-  if (searchTerm) {
-    clientiFiltrati = clientiFiltrati.filter(c => 
-      c.nome?.toLowerCase().includes(searchTerm) || 
-      c.codice_fiscale?.toLowerCase().includes(searchTerm)
-    );
+  var clientiFiltrati = [];
+  for (var i = 0; i < state.clienti.length; i++) {
+    var c = state.clienti[i];
+    if (!soloAttivi || c.attivo === 1) clientiFiltrati.push(c);
   }
   
-  clientiFiltrati.sort((a, b) => a.nome.localeCompare(b.nome));
-  container.innerHTML = `<div style="display:flex;flex-wrap:wrap;">${clientiFiltrati.map(c => `
-    <label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px);">
-      <input type="checkbox" class="applica-cliente-checkbox" value="${c.id}">
-      <span>👤 ${c.nome} ${c.tipologia_codice ? `(${c.tipologia_codice})` : ''}</span>
-    </label>
-  `).join('')}</div>`;
+  var searchInput = document.getElementById("applica-clienti-search");
+  if (searchInput && searchInput.value) {
+    var searchTerm = searchInput.value.toLowerCase();
+    var temp = [];
+    for (var j = 0; j < clientiFiltrati.length; j++) {
+      var cl = clientiFiltrati[j];
+      if ((cl.nome && cl.nome.toLowerCase().indexOf(searchTerm) !== -1) || 
+          (cl.codice_fiscale && cl.codice_fiscale.toLowerCase().indexOf(searchTerm) !== -1)) {
+        temp.push(cl);
+      }
+    }
+    clientiFiltrati = temp;
+  }
+  
+  clientiFiltrati.sort(function(a, b) { return a.nome.localeCompare(b.nome); });
+  
+  var html = '<div style="display:flex;flex-wrap:wrap;">';
+  for (var k = 0; k < clientiFiltrati.length; k++) {
+    var cli = clientiFiltrati[k];
+    html += '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px);">' +
+      '<input type="checkbox" class="applica-cliente-checkbox" value="' + cli.id + '">' +
+      '<span>👤 ' + cli.nome + (cli.tipologia_codice ? ' (' + cli.tipologia_codice + ')' : '') + '</span>' +
+      '</label>';
+  }
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 function filtraClientiApplica() { renderApplicaClientiList(); }
 function toggleSelezionaTuttiAdpApplica() {
-  const sel = document.getElementById("applica-adp-seleziona-tutti").checked;
-  document.querySelectorAll(".applica-adp-checkbox").forEach(cb => cb.checked = sel);
+  var sel = document.getElementById("applica-adp-seleziona-tutti");
+  var checked = sel ? sel.checked : false;
+  var cbs = document.querySelectorAll(".applica-adp-checkbox");
+  for (var i = 0; i < cbs.length; i++) cbs[i].checked = checked;
 }
 function toggleSelezionaTuttiClientiApplica() {
-  const sel = document.getElementById("applica-clienti-seleziona-tutti").checked;
-  document.querySelectorAll(".applica-cliente-checkbox").forEach(cb => cb.checked = sel);
+  var sel = document.getElementById("applica-clienti-seleziona-tutti");
+  var checked = sel ? sel.checked : false;
+  var cbs = document.querySelectorAll(".applica-cliente-checkbox");
+  for (var i = 0; i < cbs.length; i++) cbs[i].checked = checked;
 }
 function resetSelezioneAdpApplica() {
-  document.querySelectorAll(".applica-adp-checkbox").forEach(cb => cb.checked = false);
-  document.getElementById("applica-adp-seleziona-tutti").checked = false;
+  var cbs = document.querySelectorAll(".applica-adp-checkbox");
+  for (var i = 0; i < cbs.length; i++) cbs[i].checked = false;
+  var sel = document.getElementById("applica-adp-seleziona-tutti");
+  if (sel) sel.checked = false;
 }
 function getSelectedAdempimentiApplica() {
-  const selected = [];
-  document.querySelectorAll(".applica-adp-checkbox:checked").forEach(cb => selected.push(parseInt(cb.value)));
+  var selected = [];
+  var cbs = document.querySelectorAll(".applica-adp-checkbox:checked");
+  for (var i = 0; i < cbs.length; i++) selected.push(parseInt(cbs[i].value));
   return selected;
 }
 function getSelectedClientiApplica() {
-  const selected = [];
-  document.querySelectorAll(".applica-cliente-checkbox:checked").forEach(cb => selected.push(parseInt(cb.value)));
+  var selected = [];
+  var cbs = document.querySelectorAll(".applica-cliente-checkbox:checked");
+  for (var i = 0; i < cbs.length; i++) selected.push(parseInt(cbs[i].value));
   return selected;
 }
 function eseguiApplicaAdempimenti() {
-  const adpIds = getSelectedAdempimentiApplica();
-  const clientiIds = getSelectedClientiApplica();
-  const anno = parseInt(document.getElementById("applica-adempimenti-anno").value);
+  var adpIds = getSelectedAdempimentiApplica();
+  var clientiIds = getSelectedClientiApplica();
+  var annoElem = document.getElementById("applica-adempimenti-anno");
+  var anno = annoElem ? parseInt(annoElem.value) : state.anno;
   if (adpIds.length === 0) { showNotif("Seleziona almeno un adempimento", "error"); return; }
   if (clientiIds.length === 0) { showNotif("Seleziona almeno un cliente", "error"); return; }
-  socket.emit("applica:adempimenti_a_clienti", { adempimenti_ids: adpIds, clienti_ids: clientiIds, anno });
+  socket.emit("applica:adempimenti_a_clienti", { adempimenti_ids: adpIds, clienti_ids: clientiIds, anno: anno });
   closeModal("modal-applica-adempimenti");
+}
+
+// ⭐ GO TO VISTA GLOBALE CON FILTRO
+function goVistaGlobaleAdp(nome) {
+  var filterValue = nome;
+  state.globalePreFiltroAdp = filterValue;
+  
+  document.querySelectorAll(".nav-item").forEach(function(x) { x.classList.remove("active"); });
+  var globaleNavItem = document.querySelector('[data-page="scadenzario_globale"]');
+  if (globaleNavItem) globaleNavItem.classList.add("active");
+  
+  state.dashSearch = "";
+  state.dashFiltroStatoAdp = "";
+  
+  renderPage("scadenzario_globale");
 }
 
 // ⭐ STATISTICHE E ALTRO
 function onDashFiltroStatoAdp() {
-  state.dashFiltroStatoAdp = document.getElementById("dash-filtro-stato-adp")?.value || "";
+  var el = document.getElementById("dash-filtro-stato-adp");
+  state.dashFiltroStatoAdp = el ? el.value : "";
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
+
 function resetDashFiltri() {
   state.dashSearch = "";
   state.dashFiltroStatoAdp = "";
-  ["dash-adp-search", "dash-filtro-stato-adp"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  var searchEl = document.getElementById("dash-adp-search");
+  if (searchEl) searchEl.value = "";
+  var statoEl = document.getElementById("dash-filtro-stato-adp");
+  if (statoEl) statoEl.value = "";
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
+
 function adempimentoPassaFiltroStato(a, ss) {
   if (!ss) return true;
-  const inCorso = Math.max(0, a.totale - a.completati - a.da_fare - (a.na || 0));
-  const na = a.na || 0;
-  switch (ss) {
-    case "da_fare": return a.da_fare > 0;
-    case "in_corso": return inCorso > 0;
-    case "completato": return a.completati > 0;
-    case "n_a": return na > 0;
-    default: return true;
-  }
+  var inCorso = a.totale - a.completati - a.da_fare - (a.na || 0);
+  var na = a.na || 0;
+  if (ss === "da_fare") return a.da_fare > 0;
+  if (ss === "in_corso") return inCorso > 0;
+  if (ss === "completato") return a.completati > 0;
+  if (ss === "n_a") return na > 0;
+  return true;
 }
+
 function updateDashboardContent(stats) {
-  const allAdp = stats.adempimentiStats || [];
-  const sq = (state.dashSearch || "").toLowerCase().trim();
-  const ss = state.dashFiltroStatoAdp || "";
-  const adpVis = allAdp.filter(a => {
-    if (sq && !a.nome.toLowerCase().includes(sq) && !a.codice.toLowerCase().includes(sq)) return false;
-    return adempimentoPassaFiltroStato(a, ss);
-  });
-  const fT = adpVis.reduce((s, a) => s + a.totale, 0);
-  const fC = adpVis.reduce((s, a) => s + a.completati, 0);
-  const fD = adpVis.reduce((s, a) => s + a.da_fare, 0);
-  const fI = adpVis.reduce((s, a) => s + Math.max(0, a.totale - a.completati - a.da_fare), 0);
-  const fP = fT > 0 ? Math.round((fC / fT) * 100) : 0;
-  const isF = sq !== "" || ss !== "";
-  document.getElementById("ds-lbl-tot").innerHTML = `Adempimenti ${stats.anno}${isF ? ' <span style="font-size:10px;color:var(--yellow)">(filtro)</span>' : ''}`;
-  document.getElementById("ds-tot").textContent = fT;
-  document.getElementById("ds-comp").textContent = fC;
-  document.getElementById("ds-dafare").textContent = fD;
-  document.getElementById("ds-incorso").textContent = fI;
-  document.getElementById("ds-na").textContent = stats.na || 0;
-  document.getElementById("ds-perc").textContent = fP + "%";
-  const dp = document.getElementById("ds-prog");
-  if (dp) dp.style.width = fP + "%";
-  const title = document.getElementById("dash-adp-count-title");
-  if (title) title.innerHTML = `Adempimenti ${stats.anno} <span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:6px">${adpVis.length}/${allAdp.length}</span>`;
-  const grid = document.getElementById("dash-adp-grid");
+  var allAdp = stats.adempimentiStats || [];
+  var sq = (state.dashSearch || "").toLowerCase();
+  var ss = state.dashFiltroStatoAdp || "";
+  
+  var adpVis = [];
+  for (var i = 0; i < allAdp.length; i++) {
+    var a = allAdp[i];
+    if (sq && a.nome.toLowerCase().indexOf(sq) === -1 && a.codice.toLowerCase().indexOf(sq) === -1) continue;
+    if (!adempimentoPassaFiltroStato(a, ss)) continue;
+    adpVis.push(a);
+  }
+  
+  var fT = 0, fC = 0, fD = 0, fI = 0;
+  for (var j = 0; j < adpVis.length; j++) {
+    var aa = adpVis[j];
+    fT += aa.totale;
+    fC += aa.completati;
+    fD += aa.da_fare;
+    fI += (aa.totale - aa.completati - aa.da_fare);
+  }
+  var fP = fT > 0 ? Math.round((fC / fT) * 100) : 0;
+  var isF = sq !== "" || ss !== "";
+  
+  var lblTot = document.getElementById("ds-lbl-tot");
+  if (lblTot) lblTot.innerHTML = 'Adempimenti ' + stats.anno + (isF ? ' <span style="font-size:10px;color:var(--yellow)">(filtro)</span>' : '');
+  
+  var totEl = document.getElementById("ds-tot");
+  if (totEl) totEl.textContent = fT;
+  var compEl = document.getElementById("ds-comp");
+  if (compEl) compEl.textContent = fC;
+  var dafareEl = document.getElementById("ds-dafare");
+  if (dafareEl) dafareEl.textContent = fD;
+  var incorsoEl = document.getElementById("ds-incorso");
+  if (incorsoEl) incorsoEl.textContent = fI;
+  var percEl = document.getElementById("ds-perc");
+  if (percEl) percEl.textContent = fP + "%";
+  var progEl = document.getElementById("ds-prog");
+  if (progEl) progEl.style.width = fP + "%";
+  
+  var titleEl = document.getElementById("dash-adp-count-title");
+  if (titleEl) titleEl.innerHTML = 'Adempimenti ' + stats.anno + ' <span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:6px">' + adpVis.length + '/' + allAdp.length + '</span>';
+  
+  var grid = document.getElementById("dash-adp-grid");
   if (!grid) return;
-  if (!adpVis.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3)"><div style="font-size:40px;margin-bottom:16px">📋</div><div>Nessun adempimento</div></div>`;
+  
+  if (adpVis.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3)"><div style="font-size:40px;margin-bottom:16px">📋</div><div>Nessun adempimento</div></div>';
     return;
   }
-  let html = "";
-  adpVis.forEach(a => {
-    const p = a.totale > 0 ? Math.round((a.completati / a.totale) * 100) : 0;
-    const iC = Math.max(0, a.totale - a.completati - a.da_fare - (a.na || 0));
-    const pgColor = p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
-    html += `<div class="dash-adp-card" onclick="goVistaGlobaleAdp('${escAttr(a.nome)}')">
-      <div class="dash-adp-card-top">
-        <span class="adp-def-codice">${a.codice}</span>
-        <div class="mini-bar" style="width:60px"><div class="mini-fill" style="width:${p}%;background:${pgColor}"></div></div>
-        <span style="font-size:11px;font-family:var(--mono);color:${pgColor}">${p}%</span>
-      </div>
-      <div class="dash-adp-nome">${a.nome}</div>
-      <div class="dash-adp-stats">
-        <div class="dash-stat-chip"><span class="ds-num">${a.totale}</span><span class="ds-lbl">Tot.</span></div>
-        <div class="dash-stat-chip" style="color:var(--green)"><span class="ds-num">${a.completati}</span><span class="ds-lbl">✓</span></div>
-        <div class="dash-stat-chip" style="color:var(--red)"><span class="ds-num">${a.da_fare}</span><span class="ds-lbl">⭕</span></div>
-        ${iC > 0 ? `<div class="dash-stat-chip" style="color:var(--yellow)"><span class="ds-num">${iC}</span><span class="ds-lbl">🔄</span></div>` : ''}
-      </div>
-    </div>`;
-  });
+  
+  var html = "";
+  for (var k = 0; k < adpVis.length; k++) {
+    var adpItem = adpVis[k];
+    var p = adpItem.totale > 0 ? Math.round((adpItem.completati / adpItem.totale) * 100) : 0;
+    var iC = Math.max(0, adpItem.totale - adpItem.completati - adpItem.da_fare - (adpItem.na || 0));
+    var pgColor = p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
+    html += '<div class="dash-adp-card" onclick="goVistaGlobaleAdp(\'' + adpItem.nome.replace(/'/g, "\\'") + '\')">' +
+      '<div class="dash-adp-card-top">' +
+      '<span class="adp-def-codice">' + adpItem.codice + '</span>' +
+      '<div class="mini-bar" style="width:60px"><div class="mini-fill" style="width:' + p + '%;background:' + pgColor + '"></div></div>' +
+      '<span style="font-size:11px;font-family:var(--mono);color:' + pgColor + '">' + p + '%</span>' +
+      '</div>' +
+      '<div class="dash-adp-nome">' + adpItem.nome + '</div>' +
+      '<div class="dash-adp-stats">' +
+      '<div class="dash-stat-chip"><span class="ds-num">' + adpItem.totale + '</span><span class="ds-lbl">Tot.</span></div>' +
+      '<div class="dash-stat-chip" style="color:var(--green)"><span class="ds-num">' + adpItem.completati + '</span><span class="ds-lbl">✓</span></div>' +
+      '<div class="dash-stat-chip" style="color:var(--red)"><span class="ds-num">' + adpItem.da_fare + '</span><span class="ds-lbl">⭕</span></div>' +
+      (iC > 0 ? '<div class="dash-stat-chip" style="color:var(--yellow)"><span class="ds-num">' + iC + '</span><span class="ds-lbl">🔄</span></div>' : '') +
+      '</div></div>';
+  }
   grid.innerHTML = html;
 }
+
 function renderDashboard(stats) {
   if (!state._dashRendered) buildDashboardShell(stats);
   updateDashboardContent(stats);
 }
-function onDashAdpSearch(val) { state.dashSearch = val; if (state.dashStats) updateDashboardContent(state.dashStats); }
-function goVistaGlobaleAdp(nome) {
-  state.globalePreFiltroAdp = nome;
-  document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
-  document.querySelector('[data-page="scadenzario_globale"]').classList.add("active");
-  renderPage("scadenzario_globale");
+
+function onDashAdpSearch(val) { 
+  state.dashSearch = val; 
+  if (state.dashStats) updateDashboardContent(state.dashStats); 
 }
 
 // ⭐ LISTENER SOCKET
 if (typeof socket !== "undefined") {
-  socket.on("res:clienti_senza_adempimenti", ({ success, data }) => {
-    console.log("📨 Ricevuti clienti senza adempimenti:", success, data?.length);
-    if (success) renderClientiSenzaAdempimenti(data);
+  socket.on("res:clienti_senza_adempimenti", function(data) {
+    if (data.success) renderClientiSenzaAdempimenti(data.data);
   });
-  socket.on("res:applica:adempimenti_a_clienti", ({ success, inseriti, clienti, adempimenti, dettagli, error }) => {
-    if (success) {
-      let msg = `✅ Applicati ${inseriti} adempimenti a ${clienti} clienti`;
-      if (dettagli?.skipped > 0) msg += ` — ${dettagli.skipped} già esistenti`;
+  socket.on("res:applica:adempimenti_a_clienti", function(data) {
+    if (data.success) {
+      var msg = "✅ Applicati " + data.inseriti + " adempimenti a " + data.clienti + " clienti";
+      if (data.dettagli && data.dettagli.skipped > 0) msg += " — " + data.dettagli.skipped + " già esistenti";
       showNotif(msg, "success");
       socket.emit("get:stats", { anno: state.anno });
       caricaClientiSenzaAdempimenti();
     } else {
-      showNotif(`❌ Errore: ${error}`, "error");
+      showNotif("❌ Errore: " + data.error, "error");
     }
   });
+}
+
+function goVistaGlobaleAdp(nome) {
+  var filterValue = nome;
+  state.globalePreFiltroAdp = filterValue;
+  
+  document.querySelectorAll(".nav-item").forEach(function(x) { x.classList.remove("active"); });
+  var globaleNavItem = document.querySelector('[data-page="scadenzario_globale"]');
+  if (globaleNavItem) globaleNavItem.classList.add("active");
+  
+  state.dashSearch = "";
+  state.dashFiltroStatoAdp = "";
+  
+  renderPage("scadenzario_globale");
 }
 
 // Esponi funzioni globali
@@ -463,3 +521,7 @@ window.eseguiApplicaAdempimenti = eseguiApplicaAdempimenti;
 window.apriApplicaAdempimentiPerVuoti = apriApplicaAdempimentiPerVuoti;
 window.goToClienteScadenzarioDiretto = goToClienteScadenzarioDiretto;
 window.caricaClientiSenzaAdempimenti = caricaClientiSenzaAdempimenti;
+window.goVistaGlobaleAdp = goVistaGlobaleAdp;
+window.onDashFiltroStatoAdp = onDashFiltroStatoAdp;
+window.resetDashFiltri = resetDashFiltri;
+window.onDashAdpSearch = onDashAdpSearch;

@@ -1,38 +1,52 @@
 // ═══════════════════════════════════════════════════════════════
 // GLOBALE.JS — Vista Globale scadenzario tutti i clienti
-// Configurazione letta da: json/tipologie-data.json
-// (condivisa con clienti.js tramite window.TIPOLOGIE_CONFIG / window._cfgReady)
 // ═══════════════════════════════════════════════════════════════
 
-let _globTipFiltroPanelOpen = false;
+var _globTipFiltroPanelOpen = false;
 
 function calcolaGlobaleStats(data) {
-  const totale   = data.length;
-  const comp     = data.filter((r) => r.stato === "completato").length;
-  const daF      = data.filter((r) => r.stato === "da_fare").length;
-  const inC      = data.filter((r) => r.stato === "in_corso").length;
-  const clientiSet = new Set(data.map((r) => r.cliente_id));
-  const adpSet     = new Set(data.map((r) => r.adempimento_nome));
-  return { totale, comp, daF, inC, clienti: clientiSet.size, adempimenti: adpSet };
+  var totale = data.length;
+  var comp = 0;
+  var daF = 0;
+  var inC = 0;
+  
+  for (var i = 0; i < data.length; i++) {
+    var r = data[i];
+    if (r.stato === "completato") comp++;
+    else if (r.stato === "da_fare") daF++;
+    else if (r.stato === "in_corso") inC++;
+  }
+  
+  var clientiSet = {};
+  var adpSet = {};
+  for (var j = 0; j < data.length; j++) {
+    var row = data[j];
+    clientiSet[row.cliente_id] = true;
+    adpSet[row.adempimento_nome] = true;
+  }
+  
+  return { 
+    totale: totale, 
+    comp: comp, 
+    daF: daF, 
+    inC: inC, 
+    clienti: Object.keys(clientiSet).length, 
+    adempimenti: Object.keys(adpSet) 
+  };
 }
 
-// ─── HELPER CONFIG ────────────────────────────────────────────
-// Legge da window.TIPOLOGIE_CONFIG (popolato da clienti.js o dal fetch sotto).
-// Se clienti.js non è ancora pronto, avvia un fetch autonomo come fallback.
 function _globCfg() {
   if (window.TIPOLOGIE_CONFIG) return window.TIPOLOGIE_CONFIG;
-  // fallback: fetch autonomo (nel caso globale.js sia caricato prima di clienti.js)
   if (!window._globCfgFetchStarted) {
     window._globCfgFetchStarted = true;
     fetch("json/tipologie-data.json")
-      .then((r) => r.json())
-      .then((data) => { window.TIPOLOGIE_CONFIG = data; })
-      .catch((e) => console.error("[globale.js] fetch tipologie-data.json:", e));
+      .then(function(r) { return r.json(); })
+      .then(function(data) { window.TIPOLOGIE_CONFIG = data; })
+      .catch(function(e) { console.error("[globale.js] fetch tipologie-data.json:", e); });
   }
   return {};
 }
 
-// ─── HELPER FILTRO ────────────────────────────────────────────
 function _getActiveFiltroKeys() {
   if (typeof window._activeFiltroKeys !== "undefined") return window._activeFiltroKeys;
   if (typeof _activeFiltroKeys !== "undefined") return _activeFiltroKeys;
@@ -40,12 +54,9 @@ function _getActiveFiltroKeys() {
 }
 
 function _isManualNessuno() {
-  return typeof window._filtroManualeNessuno !== "undefined"
-    ? window._filtroManualeNessuno
-    : false;
+  return typeof window._filtroManualeNessuno !== "undefined" ? window._filtroManualeNessuno : false;
 }
 
-// ─── TOGGLE PANNELLO ──────────────────────────────────────────
 function toggleGlobTipFiltroPanel(event) {
   if (event) { event.stopPropagation(); event.preventDefault(); }
   _globTipFiltroPanelOpen = !_globTipFiltroPanelOpen;
@@ -59,44 +70,44 @@ function closeGlobTipFiltroPanel(event) {
 }
 
 function _aggiornaGlobPanelVisibility() {
-  const container = document.getElementById("glob-tip-filtro-container");
+  var container = document.getElementById("glob-tip-filtro-container");
   if (!container) return;
   container.style.display = _globTipFiltroPanelOpen ? "block" : "none";
-  const btn = document.getElementById("glob-tip-filtro-toggle-btn");
+  var btn = document.getElementById("glob-tip-filtro-toggle-btn");
   if (btn) {
     btn.innerHTML = _globTipFiltroPanelOpen
-      ? `<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>`
-      : `<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>`;
+      ? '<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
+      : '<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>';
   }
 }
 
 function _aggiornaGlobTipFiltroCounter() {
-  const badge   = document.getElementById("glob-tip-filtro-count");
+  var badge = document.getElementById("glob-tip-filtro-count");
   if (!badge) return;
-  const keys    = _getActiveFiltroKeys();
-  const allKeys = typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
-  const isNone  = _isManualNessuno() || keys.size === 0;
-  const isAll   = !isNone && keys.size === allKeys.length;
-
+  var keys = _getActiveFiltroKeys();
+  var allKeys = typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
+  var isNone = _isManualNessuno() || keys.size === 0;
+  var isAll = !isNone && keys.size === allKeys.length;
+  
   if (isNone) {
-    badge.textContent      = "0";
-    badge.style.display    = "inline-flex";
+    badge.textContent = "0";
+    badge.style.display = "inline-flex";
     badge.style.background = "var(--red)";
   } else if (isAll) {
-    badge.textContent   = "";
+    badge.textContent = "";
     badge.style.display = "none";
   } else {
-    badge.textContent      = keys.size;
-    badge.style.display    = "inline-flex";
+    badge.textContent = keys.size;
+    badge.style.display = "inline-flex";
     badge.style.background = "var(--accent)";
   }
 }
 
 function _refreshGlobTipFiltroPanel() {
-  const container = document.getElementById("glob-tip-filtro-container");
+  var container = document.getElementById("glob-tip-filtro-container");
   if (!container || !_globTipFiltroPanelOpen) return;
   if (typeof renderTipologieFiltroPanel === "function") {
-    const tmp = document.createElement("div");
+    var tmp = document.createElement("div");
     tmp.innerHTML = renderTipologieFiltroPanel();
     container.innerHTML = "";
     container.appendChild(tmp.firstChild);
@@ -105,41 +116,44 @@ function _refreshGlobTipFiltroPanel() {
   _aggiornaGlobTipFiltroCounter();
 }
 
-// ─── CHECK FILTRO TIPOLOGIE SU CLIENTE ───────────────────────
-// Le chiavi filtro usano label display (es. "Ditta Individuale")
-// il DB salva valori raw lowercase (es. "ditta").
 function clientePassaFiltroTipologie(c) {
-  const activeFiltroKeys = _getActiveFiltroKeys();
-  const isNone           = _isManualNessuno();
-
+  var activeFiltroKeys = _getActiveFiltroKeys();
+  var isNone = _isManualNessuno();
+  
   if (isNone || activeFiltroKeys.size === 0) return false;
-
-  const allKeys = typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
+  
+  var allKeys = typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
   if (allKeys.length > 0 && activeFiltroKeys.size === allKeys.length) return true;
-
-  const tipCod = c.tipologia_codice || "";
-
-  // Mappe DB → label (esportate da clienti.js)
-  const col2DbToLabel = window.COL2_DB_TO_LABEL || {
-    privato: "Privato", ditta: "Ditta Individuale", socio: "Socio", professionista: "Professionista",
+  
+  var tipCod = c.tipologia_codice || "";
+  
+  var col2DbToLabel = window.COL2_DB_TO_LABEL || {
+    privato: "Privato", ditta: "Ditta Individuale", socio: "Socio", professionista: "Professionista"
   };
-  const col3DbToLabel = window.COL3_DB_TO_LABEL || {
+  var col3DbToLabel = window.COL3_DB_TO_LABEL || {
     ordinario: "Ordinario", ordinaria: "Ordinaria", semplificato: "Semplificato",
-    semplificata: "Semplificata", forfettario: "Forfettario",
+    semplificata: "Semplificata", forfettario: "Forfettario"
   };
-
-  const col2Raw     = (c.col2 || "").toLowerCase().trim();
-  const col3Raw     = (c.col3 || "").toLowerCase().trim();
-  const col2Display = col2DbToLabel[col2Raw] || "";
-  const col3Display = col3DbToLabel[col3Raw] || "";
-  const per         = c.periodicita || "";
-
-  for (const key of activeFiltroKeys) {
-    const [kTip, kCol2, kCol3, kPer] = key.split("|");
+  
+  var col2Raw = (c.col2 || "").toLowerCase();
+  var col3Raw = (c.col3 || "").toLowerCase();
+  var col2Display = col2DbToLabel[col2Raw] || "";
+  var col3Display = col3DbToLabel[col3Raw] || "";
+  var per = c.periodicita || "";
+  
+  var keysArray = Array.from(activeFiltroKeys);
+  for (var i = 0; i < keysArray.length; i++) {
+    var key = keysArray[i];
+    var parts = key.split("|");
+    var kTip = parts[0];
+    var kCol2 = parts[1] || "";
+    var kCol3 = parts[2] || "";
+    var kPer = parts[3] || "";
+    
     if (kTip !== tipCod) continue;
     if (kCol2 && kCol2 !== col2Display && kCol2.toLowerCase() !== col2Raw) continue;
     if (kCol3 && kCol3 !== col3Display && kCol3.toLowerCase() !== col3Raw) continue;
-    if (kPer  && kPer  !== per) continue;
+    if (kPer && kPer !== per) continue;
     return true;
   }
   return false;
@@ -147,12 +161,19 @@ function clientePassaFiltroTipologie(c) {
 
 function clientePassaFiltroStato(periodi, filtroClienteStato) {
   if (!filtroClienteStato) return true;
-  const hasInCorso   = periodi.some((r) => r.stato === "in_corso");
-  const hasDaFare    = periodi.some((r) => r.stato === "da_fare");
-  const hasCompletato = periodi.some((r) => r.stato === "completato");
-  const hasNA        = periodi.some((r) => r.stato === "n_a");
-  const tuttiComp    = periodi.every((r) => r.stato === "completato" || r.stato === "n_a");
-  const nessunAvanz  = periodi.every((r) => r.stato === "da_fare");
+  var hasInCorso = false, hasDaFare = false, hasCompletato = false, hasNA = false;
+  var tuttiComp = true, nessunAvanz = true;
+  
+  for (var i = 0; i < periodi.length; i++) {
+    var stato = periodi[i].stato;
+    if (stato === "in_corso") hasInCorso = true;
+    if (stato === "da_fare") hasDaFare = true;
+    if (stato === "completato") hasCompletato = true;
+    if (stato === "n_a") hasNA = true;
+    if (stato !== "completato" && stato !== "n_a") tuttiComp = false;
+    if (stato !== "da_fare") nessunAvanz = false;
+  }
+  
   switch (filtroClienteStato) {
     case "con_in_corso":    return hasInCorso;
     case "senza_in_corso":  return !hasInCorso;
@@ -165,379 +186,496 @@ function clientePassaFiltroStato(periodi, filtroClienteStato) {
   }
 }
 
-// ─── MAPPA ETICHETTE (lette dal JSON) ────────────────────────
 function _getCol2DisplayMap() {
-  const cfg = _globCfg();
-  // Costruisce { db_value: "label corta" } per la visualizzazione
-  const map = {};
-  Object.values(cfg.percorsi || {}).flat().forEach((p) => {
-    if (!p.col2Label) return;
-    const db = p.col2Label === "Ditta Individuale" ? "ditta" : p.col2Label.toLowerCase();
-    // Label corta per la tabella
-    const short = p.col2Label === "Ditta Individuale" ? "Ditta Ind."
-                : p.col2Label === "Professionista"    ? "Prof."
-                : p.col2Label;
-    map[db] = short;
-  });
+  var cfg = _globCfg();
+  var map = {};
+  var percorsi = cfg.percorsi || {};
+  var keys = Object.keys(percorsi);
+  for (var k = 0; k < keys.length; k++) {
+    var arr = percorsi[keys[k]];
+    for (var i = 0; i < arr.length; i++) {
+      var p = arr[i];
+      if (!p.col2Label) continue;
+      var db = p.col2Label === "Ditta Individuale" ? "ditta" : p.col2Label.toLowerCase();
+      var short = p.col2Label === "Ditta Individuale" ? "Ditta Ind." : (p.col2Label === "Professionista" ? "Prof." : p.col2Label);
+      map[db] = short;
+    }
+  }
   return map;
 }
 
 function _getCol3DisplayMap() {
-  const cfg = _globCfg();
-  const map = {};
-  Object.values(cfg.percorsi || {}).flat().forEach((p) => {
-    if (!p.col3Label) return;
-    const db    = p.col3Label.toLowerCase();
-    const short = p.col3Label.startsWith("Ordin") ? "Ord."
-                : p.col3Label.startsWith("Sempl")  ? "Sempl."
-                : p.col3Label === "Forfettario"     ? "Forf."
-                : p.col3Label;
-    map[db] = short;
-  });
+  var cfg = _globCfg();
+  var map = {};
+  var percorsi = cfg.percorsi || {};
+  var keys = Object.keys(percorsi);
+  for (var k = 0; k < keys.length; k++) {
+    var arr = percorsi[keys[k]];
+    for (var i = 0; i < arr.length; i++) {
+      var p = arr[i];
+      if (!p.col3Label) continue;
+      var db = p.col3Label.toLowerCase();
+      var short = p.col3Label.indexOf("Ordin") === 0 ? "Ord." : (p.col3Label.indexOf("Sempl") === 0 ? "Sempl." : (p.col3Label === "Forfettario" ? "Forf." : p.col3Label));
+      map[db] = short;
+    }
+  }
   return map;
 }
 
 function _renderGlobaleClienteClassBadges(c) {
-  const cfg       = _globCfg();
-  const col2Map   = _getCol2DisplayMap();
-  const col3Map   = _getCol3DisplayMap();
-  const tipColor  = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
-  const perAll    = [...(cfg.periodicitaIva || []), ...(cfg.periodicitaAnnuale || [])];
-
-  let badges = `<span class="badge b-${(c.tipologia_codice || "").toLowerCase()}"
-    style="font-size:11px" title="${TIPOLOGIE_INFO[c.tipologia_codice]?.desc || ""}">${c.tipologia_codice || "-"}</span>`;
-  if (c.col2) badges += `<span class="badge-info" style="font-size:10px">${col2Map[c.col2] || c.col2}</span>`;
-  if (c.col3) badges += `<span class="badge-info" style="font-size:10px">${col3Map[c.col3] || c.col3}</span>`;
+  var cfg = _globCfg();
+  var col2Map = _getCol2DisplayMap();
+  var col3Map = _getCol3DisplayMap();
+  var tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
+  var perAll = (cfg.periodicitaIva || []).concat(cfg.periodicitaAnnuale || []);
+  
+  var badges = '<span class="badge b-' + (c.tipologia_codice || "").toLowerCase() + '" style="font-size:11px" title="' + ((TIPOLOGIE_INFO[c.tipologia_codice] || {}).desc || "") + '">' + (c.tipologia_codice || "-") + '</span>';
+  if (c.col2) badges += '<span class="badge-info" style="font-size:10px">' + (col2Map[c.col2] || c.col2) + '</span>';
+  if (c.col3) badges += '<span class="badge-info" style="font-size:10px">' + (col3Map[c.col3] || c.col3) + '</span>';
   if (c.periodicita) {
-    const perObj = perAll.find((p) => p.value === c.periodicita);
-    badges += `<span class="badge-per" style="font-size:10px">${perObj ? perObj.label : c.periodicita}</span>`;
+    var perObj = null;
+    for (var i = 0; i < perAll.length; i++) {
+      if (perAll[i].value === c.periodicita) { perObj = perAll[i]; break; }
+    }
+    badges += '<span class="badge-per" style="font-size:10px">' + (perObj ? perObj.label : c.periodicita) + '</span>';
   }
   return badges;
 }
 
-// ─── RENDER PAGINA ────────────────────────────────────────────
+function escapeHtmlForSelect(str) {
+  if (!str) return str;
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER PAGINA PRINCIPALE
+// ═══════════════════════════════════════════════════════════════
+
 function renderGlobalePage() {
-  const activeFiltroKeys = _getActiveFiltroKeys();
+  var activeFiltroKeys = _getActiveFiltroKeys();
   if (activeFiltroKeys.size === 0 && !_isManualNessuno() && typeof initializeTipologieFilter === "function") {
     initializeTipologieFilter();
   }
 
-  document.getElementById("topbar-actions").innerHTML = `
-    <div class="year-sel">
-      <button onclick="changeAnnoGlobale(-1)" title="Anno precedente">&#9664;</button>
-      <span class="year-num">${state.anno}</span>
-      <button onclick="changeAnnoGlobale(1)" title="Anno successivo">&#9654;</button>
-    </div>
-    <select class="select" id="glob-filtro-adp" style="width:210px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per tipo di adempimento">
-      <option value="">📋 Tutti adempimenti</option>
-    </select>
-    <select class="select" id="glob-filtro-stato" style="width:155px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per stato adempimento">
-      <option value="">🔵 Tutti stati</option>
-      <option value="da_fare">⭕ Da fare</option>
-      <option value="in_corso">🔄 In corso</option>
-      <option value="completato">✅ Completato</option>
-      <option value="n_a">➖ N/A</option>
-    </select>
-    <div class="search-wrap" style="width:200px">
-      <span class="search-icon">🔍</span>
-      <input class="input" id="glob-search" placeholder="Cerca cliente..." oninput="applyGlobaleFiltriDebounced()" style="font-size:13px">
-    </div>
-    <button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>
-    <button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>`;
+  document.getElementById("topbar-actions").innerHTML = 
+    '<div class="year-sel">' +
+      '<button onclick="changeAnnoGlobale(-1)" title="Anno precedente">&#9664;</button>' +
+      '<span class="year-num">' + state.anno + '</span>' +
+      '<button onclick="changeAnnoGlobale(1)" title="Anno successivo">&#9654;</button>' +
+    '</div>' +
+    '<select class="select" id="glob-filtro-adp" style="width:210px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per tipo di adempimento">' +
+      '<option value="">📋 Tutti adempimenti</option>' +
+    '</select>' +
+    '<select class="select" id="glob-filtro-stato" style="width:155px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per stato adempimento">' +
+      '<option value="">🔵 Tutti stati</option>' +
+      '<option value="da_fare">⭕ Da fare</option>' +
+      '<option value="in_corso">🔄 In corso</option>' +
+      '<option value="completato">✅ Completato</option>' +
+      '<option value="n_a">➖ N/A</option>' +
+    '</select>' +
+    '<div class="search-wrap" style="width:200px">' +
+      '<span class="search-icon">🔍</span>' +
+      '<input class="input" id="glob-search" placeholder="Cerca cliente..." oninput="applyGlobaleFiltriDebounced()" style="font-size:13px">' +
+    '</div>' +
+    '<button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>' +
+    '<button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>';
 
-  setTimeout(() => initSearchableSelect("glob-filtro-adp"), 50);
-  loadGlobale();
+  setTimeout(function() {
+    initSearchableSelect("glob-filtro-adp");
+    
+    if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "") {
+      var filterValue = state.globalePreFiltroAdp;
+      var adpSel = document.getElementById("glob-filtro-adp");
+      if (adpSel) {
+        setTimeout(function() {
+          adpSel.value = filterValue;
+          if (adpSel._ssRefresh) adpSel._ssRefresh();
+          var filtri = { adempimento: filterValue };
+          socket.emit("get:scadenzario_globale", { anno: state.anno, filtri: filtri });
+        }, 150);
+      }
+    } else {
+      loadGlobale();
+    }
+  }, 50);
 }
 
 function changeAnnoGlobale(d) {
   state.anno += d;
-  document.querySelectorAll(".year-num").forEach((el) => (el.textContent = state.anno));
+  var yearNums = document.querySelectorAll(".year-num");
+  for (var i = 0; i < yearNums.length; i++) yearNums[i].textContent = state.anno;
   loadGlobale();
 }
 
 function loadGlobale() {
-  const filtri   = {};
-  const adpSel   = document.getElementById("glob-filtro-adp")?.value;
-  const statoSel = document.getElementById("glob-filtro-stato")?.value;
-  const search   = document.getElementById("glob-search")?.value;
-  if (adpSel)   filtri.adempimento = adpSel;
-  if (statoSel) filtri.stato       = statoSel;
-  if (search)   filtri.search      = search;
-  if (state.globalePreFiltroAdp) filtri.adempimento = state.globalePreFiltroAdp;
-  socket.emit("get:scadenzario_globale", { anno: state.anno, filtri });
+  var filtri = {};
+  var adpSel = document.getElementById("glob-filtro-adp");
+  var statoSel = document.getElementById("glob-filtro-stato");
+  var search = document.getElementById("glob-search");
+  if (adpSel && adpSel.value) filtri.adempimento = adpSel.value;
+  if (statoSel && statoSel.value) filtri.stato = statoSel.value;
+  if (search && search.value) filtri.search = search.value;
+  if (state.globalePreFiltroAdp && !filtri.adempimento) filtri.adempimento = state.globalePreFiltroAdp;
+  socket.emit("get:scadenzario_globale", { anno: state.anno, filtri: filtri });
 }
 
-const applyGlobaleFiltriDebounced = debounce(() => { state.globalePreFiltroAdp = ""; loadGlobale(); }, 300);
-function applyGlobaleFiltri()       { state.globalePreFiltroAdp = ""; loadGlobale(); }
+var applyGlobaleFiltriDebounced = debounce(function() { state.globalePreFiltroAdp = ""; loadGlobale(); }, 300);
+function applyGlobaleFiltri() { state.globalePreFiltroAdp = ""; loadGlobale(); }
 function applyGlobaleFiltriLocali() { if (state.scadGlobale) renderGlobaleTabella(state.scadGlobale); }
 
 function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
-  ["glob-filtro-adp","glob-filtro-stato","glob-filtro-tipo","glob-filtro-periodicita","glob-filtro-cliente-stato","glob-search"]
-    .forEach((id) => { const el = document.getElementById(id); if (el) { el.value = ""; if (el._ssRefresh) el._ssRefresh(); } });
+  var ids = ["glob-filtro-adp","glob-filtro-stato","glob-filtro-tipo","glob-filtro-periodicita","glob-filtro-cliente-stato","glob-search"];
+  for (var i = 0; i < ids.length; i++) {
+    var el = document.getElementById(ids[i]);
+    if (el) { el.value = ""; if (el._ssRefresh) el._ssRefresh(); }
+  }
   if (typeof initializeTipologieFilter === "function") initializeTipologieFilter();
   _refreshGlobTipFiltroPanel();
   _aggiornaGlobTipFiltroCounter();
   loadGlobale();
 }
 
+// ═══════════════════════════════════════════════════════════════
+// RENDER HEADER CON FILTRO ADEMPIMENTO
+// ═══════════════════════════════════════════════════════════════
+
 function renderGlobaleHeader() {
-  const st = state.globaleStats;
+  var st = state.globaleStats;
   if (!st) return;
-  const adpSel = document.getElementById("glob-filtro-adp");
+  var adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
-    const current = state.globalePreFiltroAdp || adpSel.value;
-    adpSel.innerHTML = `<option value="">📋 Tutti adempimenti</option>` +
-      Array.from(st.adempimenti)
-        .sort((a, b) => a.localeCompare(b, "it", { sensitivity: "base" }))
-        .map((a) => `<option value="${escAttr(a)}" ${current === a ? "selected" : ""}>${a}</option>`)
-        .join("");
+    var currentValue = adpSel.value;
+    
+    if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "") {
+      currentValue = state.globalePreFiltroAdp;
+    }
+    
+    var adpList = Array.from(st.adempimenti);
+    adpList.sort(function(a, b) { return a.localeCompare(b, "it", { sensitivity: "base" }); });
+    
+    var options = '<option value="">📋 Tutti adempimenti</option>';
+    var foundValue = false;
+    for (var i = 0; i < adpList.length; i++) {
+      var adpName = adpList[i];
+      var selected = (currentValue === adpName) ? ' selected' : '';
+      if (currentValue === adpName) foundValue = true;
+      options += '<option value="' + escapeHtmlForSelect(adpName) + '"' + selected + '>' + adpName + '</option>';
+    }
+    adpSel.innerHTML = options;
+    
+    if (!foundValue && state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "") {
+      adpSel.value = state.globalePreFiltroAdp;
+    }
+    
     if (!adpSel.dataset.ssinit) initSearchableSelect("glob-filtro-adp");
     else if (adpSel._ssRefresh) adpSel._ssRefresh();
-    if (state.globalePreFiltroAdp) state.globalePreFiltroAdp = "";
+    
+    if (state.globalePreFiltroAdp) {
+      var tempFilter = state.globalePreFiltroAdp;
+      state.globalePreFiltroAdp = "";
+      if (adpSel.value !== tempFilter) {
+        adpSel.value = tempFilter;
+        if (adpSel._ssRefresh) adpSel._ssRefresh();
+      }
+    }
   }
 }
 
 function navigaAdempimento(direzione) {
-  const adpSel = document.getElementById("glob-filtro-adp");
+  var adpSel = document.getElementById("glob-filtro-adp");
   if (!adpSel || !state.globaleStats) return;
-  const lista   = Array.from(state.globaleStats.adempimenti).sort((a, b) => a.localeCompare(b, "it", { sensitivity: "base" }));
-  const current = adpSel.value;
-  const idx     = lista.indexOf(current);
-  let newIdx;
+  var lista = Array.from(state.globaleStats.adempimenti);
+  lista.sort(function(a, b) { return a.localeCompare(b, "it", { sensitivity: "base" }); });
+  var current = adpSel.value;
+  var idx = lista.indexOf(current);
+  var newIdx;
   if (direzione === -1) newIdx = idx <= 0 ? lista.length - 1 : idx - 1;
-  else                  newIdx = idx >= lista.length - 1 || idx === -1 ? 0 : idx + 1;
+  else newIdx = idx >= lista.length - 1 || idx === -1 ? 0 : idx + 1;
   adpSel.value = lista[newIdx];
   if (adpSel._ssRefresh) adpSel._ssRefresh();
   applyGlobaleFiltri();
 }
 
-// ─── RENDER TABELLA ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// RENDER TABELLA COMPLETO
+// ═══════════════════════════════════════════════════════════════
+
 function renderGlobaleTabella(rawData) {
-  const st                 = state.globaleStats;
-  const filtroTipo         = document.getElementById("glob-filtro-tipo")?.value || "";
-  const filtroPer          = document.getElementById("glob-filtro-periodicita")?.value || "";
-  const filtroClienteStato = document.getElementById("glob-filtro-cliente-stato")?.value || "";
-
-  const data = rawData.filter((r) => {
-    if (filtroTipo && r.cliente_tipologia_codice !== filtroTipo) return false;
-    if (filtroPer  && r.cliente_periodicita       !== filtroPer)  return false;
-    return true;
-  });
-
-  const perc = st.totale > 0 ? Math.round((st.comp / st.totale) * 100) : 0;
-
-  // ── Stato filtro tipologie ────────────────────────────────
-  const activeFiltroKeys   = _getActiveFiltroKeys();
-  const allKeysArr         = typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
-  const isNone             = _isManualNessuno() || activeFiltroKeys.size === 0;
-  const isAll              = !isNone && activeFiltroKeys.size === allKeysArr.length;
-  const tipFiltroIsNone    = isNone;
-  const hasFiltroTipologie = !isAll;
-
-  // ── Badge counter ─────────────────────────────────────────
-  const tipFiltroCountDisplay = isNone ? "0" : (isAll ? "" : activeFiltroKeys.size);
-  const showTipBadge          = isNone || (!isAll && activeFiltroKeys.size > 0);
-
-  const adpSel            = document.getElementById("glob-filtro-adp");
-  const adpFiltroAttivo   = adpSel?.value || "";
-  const adpListaOrdinata  = st.adempimenti
-    ? Array.from(st.adempimenti).sort((a, b) => a.localeCompare(b, "it", { sensitivity: "base" }))
-    : [];
-  const adpIdx = adpListaOrdinata.indexOf(adpFiltroAttivo);
-
-  const filtroClienteStatoLabels = {
-    con_in_corso: "🔄 Con almeno 1 in corso", senza_in_corso: "✅ Senza in corso",
-    tutti_completati: "🏆 Tutto completato",  con_da_fare: "⭕ Con almeno 1 da fare",
-    solo_da_fare: "🚨 Solo da fare",           non_completati: "⚠️ Non al 100%",
-    con_na: "➖ Con almeno 1 N/A",
-  };
-  const filtroClienteStatoBadge = filtroClienteStato
-    ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;background:var(--yellow)18;border:1px solid var(--yellow)44;border-radius:20px;font-size:12px;color:var(--yellow)">
-        <span>Filtro clienti:</span>
-        <strong>${filtroClienteStatoLabels[filtroClienteStato] || filtroClienteStato}</strong>
-        <button onclick="document.getElementById('glob-filtro-cliente-stato').value='';applyGlobaleFiltriLocali()"
-          style="background:none;border:none;color:var(--yellow);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi filtro">✕</button>
-      </div>`
-    : "";
-
-  const navAdpHtml = adpFiltroAttivo && adpListaOrdinata.length > 1
-    ? `<div class="glob-nav-adp" style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 16px;background:var(--s3);border-radius:var(--r-sm);border:1px solid var(--b2)">
-        <button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(-1)">&#9664; Prec.</button>
-        <span style="flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--accent)">${adpFiltroAttivo}</span>
-        <span style="font-size:12px;color:var(--t3)">${adpIdx + 1} / ${adpListaOrdinata.length}</span>
-        <button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(1)">Succ. &#9654;</button>
-        <button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" style="margin-left:8px">✕ Tutti</button>
-      </div>`
-    : "";
-
-  // ── Pannello filtro tipologie ─────────────────────────────
-  const tipFiltroHtml = typeof renderTipologieFiltroPanel === "function"
-    ? `<div class="glob-tip-filtro-wrap" style="margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b0);border-radius:var(--r-sm);cursor:pointer;"
-             onclick="toggleGlobTipFiltroPanel(event)">
-          <span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie Clienti</span>
-          <span id="glob-tip-filtro-count"
-            style="display:${showTipBadge ? "inline-flex" : "none"};align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:${isNone ? "var(--red)" : "var(--accent)"};color:#fff;border-radius:10px;font-size:11px;font-weight:700">
-            ${tipFiltroCountDisplay}
-          </span>
-          ${tipFiltroIsNone ? `<span style="font-size:11px;color:var(--red);font-weight:700">⚠️ Nessuno selezionato</span>` : ""}
-          <div id="glob-tip-filtro-toggle-btn" style="margin-left:auto" onclick="event.stopPropagation()">
-            ${_globTipFiltroPanelOpen
-              ? `<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>`
-              : `<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>`}
-          </div>
-        </div>
-        <div id="glob-tip-filtro-container" style="display:${_globTipFiltroPanelOpen ? "block" : "none"};margin-top:8px">
-          ${renderTipologieFiltroPanel()}
-        </div>
-      </div>`
-    : "";
-
-  const headerCard = `<div class="globale-preview-card">
-    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">
-      <div class="gpc-left">
-        <div class="gpc-globe">🌐</div>
-        <div>
-          <div class="gpc-title">Vista Globale ${state.anno}</div>
-          <div class="gpc-sub">${st.clienti} clienti · ${st.adempimenti.size} tipi adempimenti</div>
-          ${filtroClienteStatoBadge}
-        </div>
-      </div>
-      <div class="gpc-stats">
-        <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--accent)">${st.totale}</div><div class="cpc-stat-lbl">Totale</div></div>
-        <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--green)">${st.comp}</div><div class="cpc-stat-lbl">Comp.</div></div>
-        <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--red)">${st.daF}</div><div class="cpc-stat-lbl">Da fare</div></div>
-        <div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--yellow)">${st.inC}</div><div class="cpc-stat-lbl">In corso</div></div>
-        <div class="cpc-stat-item">
-          <div class="cpc-stat-num" style="color:var(--green)">${perc}%</div>
-          <div class="cpc-stat-lbl">Progresso</div>
-          <div class="mini-bar" style="margin-top:4px;width:70px"><div class="mini-fill" style="width:${perc}%"></div></div>
-        </div>
-      </div>
-    </div>
-    ${navAdpHtml}
-  </div>
-  ${tipFiltroHtml}`;
-
-  // ── Raggruppa per adempimento ─────────────────────────────
-  const grouped = new Map();
-  data.forEach((r) => {
-    storeRow(r);
-    const adpKey = r.adempimento_nome;
-    if (!grouped.has(adpKey))
-      grouped.set(adpKey, { nome: r.adempimento_nome, codice: r.adempimento_codice, clienti: new Map() });
-    const g      = grouped.get(adpKey);
-    const cliKey = r.cliente_id;
-    if (!g.clienti.has(cliKey))
-      g.clienti.set(cliKey, {
-        id: r.cliente_id, nome: r.cliente_nome, cf: r.cliente_cf, piva: r.cliente_piva,
-        tipologia_codice: r.cliente_tipologia_codice, tipologia_colore: r.cliente_tipologia_colore,
-        sottotipologia_nome: r.cliente_sottotipologia_nome, periodicita: r.cliente_periodicita,
-        col2: r.cliente_col2, col3: r.cliente_col3, periodi: [],
-      });
-    g.clienti.get(cliKey).periodi.push(r);
-  });
-
-  const gruppiOrdinati = Array.from(grouped.values())
-    .sort((a, b) => a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }));
-
-  let content = "";
-  gruppiOrdinati.forEach((g) => {
-    const clientiFiltrati = Array.from(g.clienti.values())
-      .filter((c) => clientePassaFiltroStato(c.periodi, filtroClienteStato))
-      .filter((c) => clientePassaFiltroTipologie(c))
-      .sort((a, b) => a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }));
-
-    if (!clientiFiltrati.length) return;
-
-    const allRows = clientiFiltrati.flatMap((c) => c.periodi);
-    const compG   = allRows.filter((r) => r.stato === "completato").length;
-    const totG    = allRows.length;
-    const pG      = totG > 0 ? Math.round((compG / totG) * 100) : 0;
-
-    const clientiHtml = clientiFiltrati.map((c) => {
-      const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
-      const avatar   = getAvatar(c.nome);
-      const compC = c.periodi.filter((r) => r.stato === "completato").length;
-      const inCC  = c.periodi.filter((r) => r.stato === "in_corso").length;
-      const daFC  = c.periodi.filter((r) => r.stato === "da_fare").length;
-      const naC   = c.periodi.filter((r) => r.stato === "n_a").length;
-      const totC  = c.periodi.length;
-      const pC    = totC > 0 ? Math.round((compC / totC) * 100) : 0;
-      const pgColor = pC === 100 ? "var(--green)" : pC > 50 ? "var(--yellow)" : "var(--red)";
-
-      const situazioneBadges = [];
-      if (compC > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px">✅ ${compC}</span>`);
-      if (inCC  > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px">🔄 ${inCC}</span>`);
-      if (daFC  > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px">⭕ ${daFC}</span>`);
-      if (naC   > 0) situazioneBadges.push(`<span style="font-size:10px;color:var(--t3);background:var(--s3);border:1px solid var(--b0);border-radius:10px;padding:1px 6px">➖ ${naC}</span>`);
-
-      const classBadgesHtml  = _renderGlobaleClienteClassBadges(c);
-      const sottotipoLabel   = c.sottotipologia_nome || "";
-      const periodiHtml      = c.periodi.map((r) => renderPeriodoPill(r)).join("");
-      const isMensile        = c.periodi.length > 4;
-
-      return `<div class="glob-cliente-card">
-        <div class="glob-cliente-header">
-          <div class="gcr-avatar" style="border-color:${tipColor};color:${tipColor};background:${tipColor}15">${avatar}</div>
-          <div style="flex:1;min-width:0">
-            <div class="gcr-nome">${escAttr(c.nome)}</div>
-            <div class="gcr-cf">${c.cf || c.piva || "-"}</div>
-            ${sottotipoLabel ? `<div style="font-size:10px;color:var(--t3);margin-top:2px">🏷️ ${sottotipoLabel}</div>` : ""}
-            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${classBadgesHtml}</div>
-            ${situazioneBadges.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${situazioneBadges.join("")}</div>` : ""}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-left:10px">
-            <div class="mini-bar" style="width:56px"><div class="mini-fill" style="width:${pC}%;background:${pgColor}"></div></div>
-            <span style="font-size:11px;font-family:var(--mono);color:${pgColor};min-width:36px;text-align:right">${compC}/${totC}</span>
-          </div>
-        </div>
-        <div class="glob-cliente-periodi${isMensile ? " periodi-mensili" : ""}">${periodiHtml}</div>
-      </div>`;
-    }).join("");
-
-    content += `<div class="table-wrap" style="margin-bottom:16px">
-      <div class="table-header">
-        <div style="display:flex;align-items:center;gap:12px;flex:1">
-          <strong style="font-size:15px">${g.nome}</strong>
-          <span style="font-family:var(--mono);font-size:11px;color:var(--t3)">${g.codice}</span>
-          ${filtroClienteStato || hasFiltroTipologie
-            ? `<span style="font-size:11px;color:var(--t3);margin-left:8px">${clientiFiltrati.length} client${clientiFiltrati.length === 1 ? "e" : "i"} visibil${clientiFiltrati.length === 1 ? "e" : "i"}</span>`
-            : ""}
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="mini-bar" style="width:90px"><div class="mini-fill" style="width:${pG}%"></div></div>
-          <span style="font-size:12px;font-family:var(--mono);color:var(--t2)">${compG}/${totG} (${pG}%)</span>
-        </div>
-      </div>
-      <div style="padding:12px;display:flex;flex-direction:column;gap:8px">${clientiHtml}</div>
-    </div>`;
-  });
-
-  if (!content) {
-    const msgVuoto = tipFiltroIsNone
-      ? `Nessun filtro tipologia selezionato — clicca <strong>✦ Tutti</strong> nel pannello Tipologie per vedere i clienti`
-      : filtroClienteStato || hasFiltroTipologie
-        ? `Nessun cliente corrisponde ai filtri attivi per ${state.anno}`
-        : `Nessun adempimento trovato per ${state.anno}`;
-
-    content = `<div class="empty">
-      <div class="empty-icon">🌐</div>
-      <p style="font-size:15px">${msgVuoto}</p>
-      <button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" style="margin-top:12px">⟳ Rimuovi filtri</button>
-    </div>`;
+  var st = state.globaleStats;
+  var filtroTipoEl = document.getElementById("glob-filtro-tipo");
+  var filtroPerEl = document.getElementById("glob-filtro-periodicita");
+  var filtroClienteStatoEl = document.getElementById("glob-filtro-cliente-stato");
+  var filtroTipo = filtroTipoEl ? filtroTipoEl.value : "";
+  var filtroPer = filtroPerEl ? filtroPerEl.value : "";
+  var filtroClienteStato = filtroClienteStatoEl ? filtroClienteStatoEl.value : "";
+  
+  var data = [];
+  for (var i = 0; i < rawData.length; i++) {
+    var r = rawData[i];
+    if (filtroTipo && r.cliente_tipologia_codice !== filtroTipo) continue;
+    if (filtroPer && r.cliente_periodicita !== filtroPer) continue;
+    data.push(r);
   }
-
+  
+  var perc = st.totale > 0 ? Math.round((st.comp / st.totale) * 100) : 0;
+  
+  var activeFiltroKeys = _getActiveFiltroKeys();
+  var allKeysArr = typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
+  var isNone = _isManualNessuno() || activeFiltroKeys.size === 0;
+  var isAll = !isNone && activeFiltroKeys.size === allKeysArr.length;
+  var tipFiltroIsNone = isNone;
+  var hasFiltroTipologie = !isAll;
+  
+  var tipFiltroCountDisplay = isNone ? "0" : (isAll ? "" : activeFiltroKeys.size);
+  var showTipBadge = isNone || (!isAll && activeFiltroKeys.size > 0);
+  
+  var adpSel = document.getElementById("glob-filtro-adp");
+  var adpFiltroAttivo = adpSel ? adpSel.value : "";
+  
+  if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "" && !adpFiltroAttivo) {
+    adpFiltroAttivo = state.globalePreFiltroAdp;
+  }
+  
+  var adpListaOrdinata = st.adempimenti ? Array.from(st.adempimenti) : [];
+  adpListaOrdinata.sort(function(a, b) { return a.localeCompare(b, "it", { sensitivity: "base" }); });
+  var adpIdx = adpListaOrdinata.indexOf(adpFiltroAttivo);
+  
+  var filtroClienteStatoLabels = {
+    con_in_corso: "🔄 Con almeno 1 in corso", senza_in_corso: "✅ Senza in corso",
+    tutti_completati: "🏆 Tutto completato", con_da_fare: "⭕ Con almeno 1 da fare",
+    solo_da_fare: "🚨 Solo da fare", non_completati: "⚠️ Non al 100%",
+    con_na: "➖ Con almeno 1 N/A"
+  };
+  
+  var filtroClienteStatoBadge = "";
+  if (filtroClienteStato) {
+    filtroClienteStatoBadge = '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;background:var(--yellow)18;border:1px solid var(--yellow)44;border-radius:20px;font-size:12px;color:var(--yellow)">' +
+      '<span>Filtro clienti:</span>' +
+      '<strong>' + (filtroClienteStatoLabels[filtroClienteStato] || filtroClienteStato) + '</strong>' +
+      '<button onclick="document.getElementById(\'glob-filtro-cliente-stato\').value=\'\';applyGlobaleFiltriLocali()" style="background:none;border:none;color:var(--yellow);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi filtro">✕</button>' +
+      '</div>';
+  }
+  
+  var navAdpHtml = "";
+  if (adpFiltroAttivo && adpFiltroAttivo !== "" && adpListaOrdinata.length > 0) {
+    var displayName = adpFiltroAttivo;
+    var hasMultiple = adpListaOrdinata.length > 1;
+    navAdpHtml = '<div class="glob-nav-adp" style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 16px;background:var(--s3);border-radius:var(--r-sm);border:1px solid var(--b2)">' +
+      (hasMultiple ? '<button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(-1)">&#9664; Prec.</button>' : '') +
+      '<span style="flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--accent)">' + displayName.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m; }) + '</span>' +
+      (hasMultiple ? '<span style="font-size:12px;color:var(--t3)">' + (adpIdx + 1) + ' / ' + adpListaOrdinata.length + '</span>' : '') +
+      (hasMultiple ? '<button class="btn btn-sm btn-secondary" onclick="navigaAdempimento(1)">Succ. &#9654;</button>' : '') +
+      '<button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" style="margin-left:8px">✕ Tutti</button>' +
+      '</div>';
+  }
+  
+  var tipFiltroHtml = "";
+  if (typeof renderTipologieFiltroPanel === "function") {
+    tipFiltroHtml = '<div class="glob-tip-filtro-wrap" style="margin-bottom:14px">' +
+      '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b0);border-radius:var(--r-sm);cursor:pointer;" onclick="toggleGlobTipFiltroPanel(event)">' +
+        '<span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie Clienti</span>' +
+        '<span id="glob-tip-filtro-count" style="display:' + (showTipBadge ? "inline-flex" : "none") + ';align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:' + (isNone ? "var(--red)" : "var(--accent)") + ';color:#fff;border-radius:10px;font-size:11px;font-weight:700">' + tipFiltroCountDisplay + '</span>' +
+        (tipFiltroIsNone ? '<span style="font-size:11px;color:var(--red);font-weight:700">⚠️ Nessuno selezionato</span>' : '') +
+        '<div id="glob-tip-filtro-toggle-btn" style="margin-left:auto" onclick="event.stopPropagation()">' +
+          (_globTipFiltroPanelOpen
+            ? '<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
+            : '<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>') +
+        '</div>' +
+      '</div>' +
+      '<div id="glob-tip-filtro-container" style="display:' + (_globTipFiltroPanelOpen ? "block" : "none") + ';margin-top:8px">' + renderTipologieFiltroPanel() + '</div>' +
+      '</div>';
+  }
+  
+  var headerCard = '<div class="globale-preview-card">' +
+    '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">' +
+      '<div class="gpc-left">' +
+        '<div class="gpc-globe">🌐</div>' +
+        '<div>' +
+          '<div class="gpc-title">Vista Globale ' + state.anno + '</div>' +
+          '<div class="gpc-sub">' + st.clienti + ' clienti · ' + st.adempimenti.length + ' tipi adempimenti</div>' +
+          filtroClienteStatoBadge +
+        '</div>' +
+      '</div>' +
+      '<div class="gpc-stats">' +
+        '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--accent)">' + st.totale + '</div><div class="cpc-stat-lbl">Totale</div></div>' +
+        '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--green)">' + st.comp + '</div><div class="cpc-stat-lbl">Comp.</div></div>' +
+        '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--red)">' + st.daF + '</div><div class="cpc-stat-lbl">Da fare</div></div>' +
+        '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--yellow)">' + st.inC + '</div><div class="cpc-stat-lbl">In corso</div></div>' +
+        '<div class="cpc-stat-item">' +
+          '<div class="cpc-stat-num" style="color:var(--green)">' + perc + '%</div>' +
+          '<div class="cpc-stat-lbl">Progresso</div>' +
+          '<div class="mini-bar" style="margin-top:4px;width:70px"><div class="mini-fill" style="width:' + perc + '%"></div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    navAdpHtml +
+  '</div>' + tipFiltroHtml;
+  
+  // ═══════════════════════════════════════════════════════════════
+  // RAGGRUPPA PER ADEMPIMENTO E CLIENTE
+  // ═══════════════════════════════════════════════════════════════
+  
+  var grouped = {};
+  for (var idxData = 0; idxData < data.length; idxData++) {
+    var rowData = data[idxData];
+    storeRow(rowData);
+    var adpKey = rowData.adempimento_nome;
+    if (!grouped[adpKey]) {
+      grouped[adpKey] = { nome: rowData.adempimento_nome, codice: rowData.adempimento_codice, clienti: {} };
+    }
+    var group = grouped[adpKey];
+    var cliKey = rowData.cliente_id;
+    if (!group.clienti[cliKey]) {
+      group.clienti[cliKey] = {
+        id: rowData.cliente_id, nome: rowData.cliente_nome, cf: rowData.cliente_cf, piva: rowData.cliente_piva,
+        tipologia_codice: rowData.cliente_tipologia_codice, tipologia_colore: rowData.cliente_tipologia_colore,
+        sottotipologia_nome: rowData.cliente_sottotipologia_nome, periodicita: rowData.cliente_periodicita,
+        col2: rowData.cliente_col2, col3: rowData.cliente_col3, periodi: []
+      };
+    }
+    group.clienti[cliKey].periodi.push(rowData);
+  }
+  
+  var gruppi = [];
+  for (var key in grouped) {
+    if (grouped.hasOwnProperty(key)) gruppi.push(grouped[key]);
+  }
+  gruppi.sort(function(a, b) { return a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }); });
+  
+  var content = "";
+  for (var gIdx = 0; gIdx < gruppi.length; gIdx++) {
+    var g = gruppi[gIdx];
+    var clientiArray = [];
+    for (var cKey in g.clienti) {
+      if (g.clienti.hasOwnProperty(cKey)) clientiArray.push(g.clienti[cKey]);
+    }
+    
+    var clientiFiltrati = [];
+    for (var cIdx = 0; cIdx < clientiArray.length; cIdx++) {
+      var c = clientiArray[cIdx];
+      if (!clientePassaFiltroStato(c.periodi, filtroClienteStato)) continue;
+      if (!clientePassaFiltroTipologie(c)) continue;
+      clientiFiltrati.push(c);
+    }
+    clientiFiltrati.sort(function(a, b) { return a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }); });
+    
+    if (clientiFiltrati.length === 0) continue;
+    
+    var allRows = [];
+    for (var cfIdx = 0; cfIdx < clientiFiltrati.length; cfIdx++) {
+      var periodi = clientiFiltrati[cfIdx].periodi;
+      for (var pIdx = 0; pIdx < periodi.length; pIdx++) allRows.push(periodi[pIdx]);
+    }
+    var compG = 0;
+    for (var arIdx = 0; arIdx < allRows.length; arIdx++) {
+      if (allRows[arIdx].stato === "completato") compG++;
+    }
+    var totG = allRows.length;
+    var pG = totG > 0 ? Math.round((compG / totG) * 100) : 0;
+    
+    var clientiHtml = "";
+    for (var cFilIdx = 0; cFilIdx < clientiFiltrati.length; cFilIdx++) {
+      var client = clientiFiltrati[cFilIdx];
+      var tipColor = client.tipologia_colore || getTipologiaColor(client.tipologia_codice);
+      var avatar = getAvatar(client.nome);
+      var compC = 0, inCC = 0, daFC = 0, naC = 0;
+      for (var perIdx = 0; perIdx < client.periodi.length; perIdx++) {
+        var statoPer = client.periodi[perIdx].stato;
+        if (statoPer === "completato") compC++;
+        else if (statoPer === "in_corso") inCC++;
+        else if (statoPer === "da_fare") daFC++;
+        else if (statoPer === "n_a") naC++;
+      }
+      var totC = client.periodi.length;
+      var pC = totC > 0 ? Math.round((compC / totC) * 100) : 0;
+      var pgColor = pC === 100 ? "var(--green)" : pC > 50 ? "var(--yellow)" : "var(--red)";
+      
+      var situazioneBadges = "";
+      if (compC > 0) situazioneBadges += '<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px">✅ ' + compC + '</span>';
+      if (inCC > 0) situazioneBadges += '<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px">🔄 ' + inCC + '</span>';
+      if (daFC > 0) situazioneBadges += '<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px">⭕ ' + daFC + '</span>';
+      if (naC > 0) situazioneBadges += '<span style="font-size:10px;color:var(--t3);background:var(--s3);border:1px solid var(--b0);border-radius:10px;padding:1px 6px">➖ ' + naC + '</span>';
+      
+      var classBadgesHtml = _renderGlobaleClienteClassBadges(client);
+      var sottotipoLabel = client.sottotipologia_nome || "";
+      var periodiHtml = "";
+      for (var perHtmlIdx = 0; perHtmlIdx < client.periodi.length; perHtmlIdx++) {
+        periodiHtml += renderPeriodoPill(client.periodi[perHtmlIdx]);
+      }
+      var isMensile = client.periodi.length > 4;
+      
+      clientiHtml += '<div class="glob-cliente-card">' +
+        '<div class="glob-cliente-header">' +
+          '<div class="gcr-avatar" style="border-color:' + tipColor + ';color:' + tipColor + ';background:' + tipColor + '15">' + avatar + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="gcr-nome">' + escAttr(client.nome) + '</div>' +
+            '<div class="gcr-cf">' + (client.cf || client.piva || "-") + '</div>' +
+            (sottotipoLabel ? '<div style="font-size:10px;color:var(--t3);margin-top:2px">🏷️ ' + sottotipoLabel + '</div>' : '') +
+            '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">' + classBadgesHtml + '</div>' +
+            (situazioneBadges ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">' + situazioneBadges + '</div>' : '') +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-left:10px">' +
+            '<div class="mini-bar" style="width:56px"><div class="mini-fill" style="width:' + pC + '%;background:' + pgColor + '"></div></div>' +
+            '<span style="font-size:11px;font-family:var(--mono);color:' + pgColor + ';min-width:36px;text-align:right">' + compC + '/' + totC + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="glob-cliente-periodi' + (isMensile ? " periodi-mensili" : "") + '">' + periodiHtml + '</div>' +
+      '</div>';
+    }
+    
+    content += '<div class="table-wrap" style="margin-bottom:16px">' +
+      '<div class="table-header">' +
+        '<div style="display:flex;align-items:center;gap:12px;flex:1">' +
+          '<strong style="font-size:15px">' + g.nome + '</strong>' +
+          '<span style="font-family:var(--mono);font-size:11px;color:var(--t3)">' + g.codice + '</span>' +
+          (filtroClienteStato || hasFiltroTipologie ? '<span style="font-size:11px;color:var(--t3);margin-left:8px">' + clientiFiltrati.length + ' client' + (clientiFiltrati.length === 1 ? "e" : "i") + ' visibil' + (clientiFiltrati.length === 1 ? "e" : "i") + '</span>' : '') +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
+          '<div class="mini-bar" style="width:90px"><div class="mini-fill" style="width:' + pG + '%"></div></div>' +
+          '<span style="font-size:12px;font-family:var(--mono);color:var(--t2)">' + compG + '/' + totG + ' (' + pG + '%)</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:12px;display:flex;flex-direction:column;gap:8px">' + clientiHtml + '</div>' +
+    '</div>';
+  }
+  
+  if (!content) {
+    var msgVuoto = tipFiltroIsNone
+      ? 'Nessun filtro tipologia selezionato — clicca <strong>✦ Tutti</strong> nel pannello Tipologie per vedere i clienti'
+      : (filtroClienteStato || hasFiltroTipologie
+        ? 'Nessun cliente corrisponde ai filtri attivi per ' + state.anno
+        : 'Nessun adempimento trovato per ' + state.anno);
+    
+    content = '<div class="empty">' +
+      '<div class="empty-icon">🌐</div>' +
+      '<p style="font-size:15px">' + msgVuoto + '</p>' +
+      '<button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" style="margin-top:12px">⟳ Rimuovi filtri</button>' +
+    '</div>';
+  }
+  
   document.getElementById("content").innerHTML = headerCard + content;
+  
+  // ⭐ Resetta il filtro preimpostato dopo il render
+  if (state.globalePreFiltroAdp) {
+    state.globalePreFiltroAdp = "";
+  }
 }
 
-// ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
-window.toggleGlobTipFiltroPanel      = toggleGlobTipFiltroPanel;
-window.closeGlobTipFiltroPanel       = closeGlobTipFiltroPanel;
-window.resetGlobaleFiltri            = resetGlobaleFiltri;
-window.applyGlobaleFiltri            = applyGlobaleFiltri;
-window.applyGlobaleFiltriLocali      = applyGlobaleFiltriLocali;
-window.applyGlobaleFiltriDebounced   = applyGlobaleFiltriDebounced;
-window.navigaAdempimento             = navigaAdempimento;
-window.changeAnnoGlobale             = changeAnnoGlobale;
+// ═══════════════════════════════════════════════════════════════
+// ESPOSIZIONE GLOBALE
+// ═══════════════════════════════════════════════════════════════
+
+window.toggleGlobTipFiltroPanel = toggleGlobTipFiltroPanel;
+window.closeGlobTipFiltroPanel = closeGlobTipFiltroPanel;
+window.resetGlobaleFiltri = resetGlobaleFiltri;
+window.applyGlobaleFiltri = applyGlobaleFiltri;
+window.applyGlobaleFiltriLocali = applyGlobaleFiltriLocali;
+window.applyGlobaleFiltriDebounced = applyGlobaleFiltriDebounced;
+window.navigaAdempimento = navigaAdempimento;
+window.changeAnnoGlobale = changeAnnoGlobale;
