@@ -63,8 +63,8 @@ function getScadenzarioConDettagliCliente(id_cliente, anno, filtri = {}) {
     params.push(s, s);
   }
 
-  // ORDINAMENTO: data_scadenza ASC (più vecchio prima), poi nome adempimento, poi nome cliente
-  sql += ` ORDER BY ac.data_scadenza ASC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
+  // ORDINAMENTO: data_scadenza DESC (più recente prima), poi nome adempimento, poi nome cliente
+  sql += ` ORDER BY ac.data_scadenza DESC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
   return queryAll(sql, params);
 }
 
@@ -126,8 +126,8 @@ function getScadenzarioGlobale(anno, filtri = {}) {
     params.push(s, s, s, s);
   }
 
-  // ORDINAMENTO: data_scadenza ASC (più vecchio prima), poi nome adempimento, poi nome cliente
-  sql += ` ORDER BY ac.data_scadenza ASC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
+  // ORDINAMENTO: data_scadenza DESC (più recente prima), poi nome adempimento, poi nome cliente
+  sql += ` ORDER BY ac.data_scadenza DESC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
   return queryAll(sql, params);
 }
 
