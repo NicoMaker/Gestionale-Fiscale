@@ -266,13 +266,28 @@ function openAdpModal(r) {
   setVal("adp-id", r.id);
   setTxt("adp-nome-label", `${r.adempimento_nome} — ${getPeriodoLabel(r)}`);
   setVal("adp-stato", r.stato || "da_fare");
-  setVal("adp-scadenza", r.data_scadenza || "");
-  setVal("adp-data", r.data_completamento || "");
+  setVal("adp-scadenza", formattaDataItaliana(r.data_scadenza) || "");
+  setVal("adp-data", formattaDataItaliana(r.data_completamento) || "");
   setVal("adp-note", r.note || "");
   setVal("adp-is-contabilita", r.is_contabilita || 0);
   setVal("adp-has-rate", r.has_rate || 0);
   setVal("adp-is-checkbox", r.is_checkbox || 0);
   setVal("adp-rate-labels-json", r.rate_labels || "");
+  
+  // Inizializza i campi data con formattazione automatica e date picker
+  setTimeout(() => {
+    const campoScadenza = document.getElementById("adp-scadenza");
+    const campoCompletamento = document.getElementById("adp-data");
+    
+    if (campoScadenza) {
+      gestisciInputData(campoScadenza);
+      creaDatePicker(campoScadenza);
+    }
+    if (campoCompletamento) {
+      gestisciInputData(campoCompletamento);
+      creaDatePicker(campoCompletamento);
+    }
+  }, 100);
 
   const clienteInfo = document.getElementById("adp-cliente-info");
   if (clienteInfo) {
@@ -292,33 +307,13 @@ function openAdpModal(r) {
   const isRate = hasRate(r);
   const isCbx = isCheckbox(r);
 
-  // ── Visibilità sezioni importo ─────────────────────────────
-  setDisplay(
-    "sect-importo-normale",
-    !isCont && !isRate && !isCbx ? "" : "none",
-  );
-  setDisplay("sect-importo-cont", isCont && !isCbx ? "" : "none");
-  setDisplay("sect-importo-rate", isRate && !isCbx ? "" : "none");
-  setDisplay("sect-importo-checkbox", isCbx ? "" : "none");
-
-  setVal("adp-importo", formattaNumeroItaliano(r.importo));
-  setVal("adp-imp-iva", formattaNumeroItaliano(r.importo_iva));
-  setVal("adp-imp-cont", formattaNumeroItaliano(r.importo_contabilita));
-  setVal("adp-imp-saldo", formattaNumeroItaliano(r.importo_saldo));
-  setVal("adp-imp-acc1", formattaNumeroItaliano(r.importo_acconto1));
-  setVal("adp-imp-acc2", formattaNumeroItaliano(r.importo_acconto2));
-
-  // ── Colora subito tutti gli input importo all'apertura ────
-  [
-    "adp-importo",
-    "adp-imp-iva",
-    "adp-imp-cont",
-    "adp-imp-saldo",
-    "adp-imp-acc1",
-    "adp-imp-acc2",
-  ].forEach((id) => {
-    coloraInputImporto(document.getElementById(id));
-  });
+  // ── IMPORTO NORMALE ───────────────────────────────────────
+  if (!isCbx) {
+    document.getElementById("sect-importo-normale").style.display = "block";
+    setVal("adp-importo", parseItalianoFloat(r.importo) || "");
+  } else {
+    document.getElementById("sect-importo-normale").style.display = "none";
+  }
 
   // ── Checkbox contabilità: SOLO per adempimenti con RATE ───
   const rateContWrapper = document.getElementById(
@@ -622,8 +617,8 @@ function saveAdpStato() {
   const data = {
     id,
     stato: getVal("adp-stato"),
-    data_scadenza: getVal("adp-scadenza") || null,
-    data_completamento: getVal("adp-data") || null,
+    data_scadenza: daItalianaAISO(getVal("adp-scadenza")) || null,
+    data_completamento: daItalianaAISO(getVal("adp-data")) || null,
     note: getVal("adp-note") || null,
     cont_completata: 0,
   };

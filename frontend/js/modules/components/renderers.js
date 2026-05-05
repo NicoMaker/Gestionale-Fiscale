@@ -288,13 +288,13 @@ function renderPeriodoPill(r) {
   if (r.data_scadenza || r.data_completamento) {
     dateLine = `<div class="pp-dates">`;
     if (r.data_scadenza)
-      dateLine += `<span class="pp-date" title="Data scadenza">📅 ${r.data_scadenza}</span>`;
+      dateLine += `<span class="pp-date" title="Data scadenza">📅 ${formattaDataItaliana(r.data_scadenza)}</span>`;
     if (r.data_completamento)
-      dateLine += `<span class="pp-date" style="color:var(--green)" title="Data completamento">✅ ${r.data_completamento}</span>`;
+      dateLine += `<span class="pp-date" style="color:var(--green)" title="Data completamento">✅ ${formattaDataItaliana(r.data_completamento)}</span>`;
     dateLine += `</div>`;
   }
 
-  const tooltipText = `${getPeriodoLabel(r)} — ${statoLabel}${r.data_scadenza ? ` | Scad: ${r.data_scadenza}` : ""}${r.data_completamento ? ` | Compl: ${r.data_completamento}` : ""}\nClick sinistro: modifica | Click destro: toggle completato`;
+  const tooltipText = `${getPeriodoLabel(r)} — ${statoLabel}${r.data_scadenza ? ` | Scad: ${formattaDataItaliana(r.data_scadenza)}` : ""}${r.data_completamento ? ` | Compl: ${formattaDataItaliana(r.data_completamento)}` : ""}\nClick sinistro: modifica | Click destro: toggle completato`;
 
   const tagColor =
     isContabilita(r) && r.importo_iva ? "var(--green)" : pillColor;

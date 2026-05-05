@@ -80,7 +80,7 @@ function toggleAdpCompletato(event, id) {
     data_scadenza: r.data_scadenza || null,
     data_completamento:
       nuovoStato === "completato"
-        ? new Date().toISOString().split("T")[0]
+        ? daItalianaAISO(oggiItaliano())
         : null,
     note: r.note || null,
     importo: r.importo || null,
@@ -118,7 +118,7 @@ function setCbxStato(event, id, nuovoStato) {
     data_scadenza: r.data_scadenza || null,
     data_completamento:
       nuovoStato === "completato"
-        ? new Date().toISOString().split("T")[0]
+        ? daItalianaAISO(oggiItaliano())
         : null,
     note: r.note || null,
     importo: null,
@@ -156,7 +156,7 @@ function toggleCheckboxAdp(event, id) {
     data_scadenza: r.data_scadenza || null,
     data_completamento:
       nuovoStato === "completato"
-        ? new Date().toISOString().split("T")[0]
+        ? daItalianaAISO(oggiItaliano())
         : null,
     note: r.note || null,
     importo: null,
