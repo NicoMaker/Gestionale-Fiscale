@@ -37,10 +37,8 @@ function getScadenzarioConDettagliCliente(id_cliente, anno, filtri = {}) {
     FROM adempimenti_cliente ac
     JOIN adempimenti a ON ac.id_adempimento = a.id
     JOIN clienti c ON ac.id_cliente = c.id
-    -- Config per l'anno richiesto
     LEFT JOIN clienti_config_annuale cfg 
       ON cfg.id_cliente = c.id AND cfg.anno = ?
-    -- Config più recente come fallback
     LEFT JOIN clienti_config_annuale cfg_last 
       ON cfg_last.id = (
         SELECT id FROM clienti_config_annuale 
@@ -65,8 +63,8 @@ function getScadenzarioConDettagliCliente(id_cliente, anno, filtri = {}) {
     params.push(s, s);
   }
 
-  // MODIFICA: Ordina per data_scadenza (prima le date più vicine), poi per nome adempimento, poi per periodo
-  sql += ` ORDER BY ac.data_scadenza ASC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
+  // MODIFICA: Ordina per data_scadenza DESC (più recente prima), poi per nome adempimento
+  sql += ` ORDER BY ac.data_scadenza DESC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
   return queryAll(sql, params);
 }
 
@@ -98,10 +96,8 @@ function getScadenzarioGlobale(anno, filtri = {}) {
     FROM adempimenti_cliente ac
     JOIN adempimenti a ON ac.id_adempimento = a.id
     JOIN clienti c ON ac.id_cliente = c.id
-    -- Config per l'anno richiesto
     LEFT JOIN clienti_config_annuale cfg 
       ON cfg.id_cliente = c.id AND cfg.anno = ?
-    -- Config più recente come fallback
     LEFT JOIN clienti_config_annuale cfg_last 
       ON cfg_last.id = (
         SELECT id FROM clienti_config_annuale 
@@ -130,12 +126,12 @@ function getScadenzarioGlobale(anno, filtri = {}) {
     params.push(s, s, s, s);
   }
 
-  // MODIFICA: Ordina per data_scadenza (prima le date più vicine), poi per nome adempimento, poi per cliente, poi per periodo
-  sql += ` ORDER BY ac.data_scadenza ASC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
+  // MODIFICA: Ordina per data_scadenza DESC (più recente prima), poi per nome adempimento, poi per cliente
+  sql += ` ORDER BY ac.data_scadenza DESC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
   return queryAll(sql, params);
 }
 
-// ... resto del file invariato ...
+// ... resto del file invariato (tutte le altre funzioni rimangono uguali)
 function generaScadenzarioInterno(id_cliente, anno) {
   const adps = queryAll(`SELECT * FROM adempimenti WHERE attivo = 1`);
   let tot = 0;
@@ -305,15 +301,12 @@ function addAdempimentoCliente(data) {
     data.id_adempimento,
   ]);
   if (!adp) throw new Error("Adempimento non trovato");
-
   return inserisciAdempimentoSeAssente(data.id_cliente, adp, data.anno);
 }
 
-// Funzione helper per inserire forzatamente (usata in rigenera)
 function inserisciAdempimentoForzato(id_cliente, adp, anno) {
   let inseriti = 0;
 
-  // Prima elimina gli adempimenti esistenti per questo cliente/adempimento/anno
   if (adp.scadenza_tipo === "trimestrale") {
     runQuery(
       `DELETE FROM adempimenti_cliente WHERE id_cliente = ? AND id_adempimento = ? AND anno = ?`,

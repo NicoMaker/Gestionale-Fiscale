@@ -37,19 +37,22 @@ function getVal(id) {
   return el.type === "checkbox" ? el.checked : (el.value ?? "");
 }
 
+// ─── HELPERS PER TIPO ─────────────────────────────────────────
+function isContabilita(r) {
+  return parseInt(r.is_contabilita) === 1 || r.is_contabilita === true;
+}
+function hasRate(r) {
+  return parseInt(r.has_rate) === 1 || r.has_rate === true;
+}
+function isCheckbox(r) {
+  return parseInt(r.is_checkbox) === 1 || r.is_checkbox === true;
+}
+
 // ─── LISTA ADEMPIMENTI ────────────────────────────────────────
 const applyAdempimentiFiltriSearch = debounce(() => {
-  const q =
-    document
-      .getElementById("global-search-adempimenti")
-      ?.value?.toLowerCase() || "";
+  const q = document.getElementById("global-search-adempimenti")?.value?.toLowerCase() || "";
   const filtered = state.adempimenti.filter((a) => {
-    if (
-      q &&
-      !a.codice.toLowerCase().includes(q) &&
-      !a.nome.toLowerCase().includes(q)
-    )
-      return false;
+    if (q && !a.codice.toLowerCase().includes(q) && !a.nome.toLowerCase().includes(q)) return false;
     return true;
   });
   renderAdempimentiTabella(filtered);
@@ -66,24 +69,9 @@ function renderAdempimentiPage() {
 }
 
 function renderAdempimentiTabella(adempimenti) {
-  const scadIcons = {
-    annuale: "📅",
-    semestrale: "📆",
-    trimestrale: "📊",
-    mensile: "🗓️",
-  };
-  const scadFreq = {
-    annuale: "1×/anno",
-    semestrale: "2×/anno",
-    trimestrale: "4×/anno",
-    mensile: "12×/anno",
-  };
-  const scadDesc = {
-    annuale: "Scadenza annuale",
-    semestrale: "Scadenza semestrale",
-    trimestrale: "Scadenza trimestrale",
-    mensile: "Scadenza mensile",
-  };
+  const scadIcons = { annuale: "📅", semestrale: "📆", trimestrale: "📊", mensile: "🗓️" };
+  const scadFreq = { annuale: "1×/anno", semestrale: "2×/anno", trimestrale: "4×/anno", mensile: "12×/anno" };
+  const scadDesc = { annuale: "Scadenza annuale", semestrale: "Scadenza semestrale", trimestrale: "Scadenza trimestrale", mensile: "Scadenza mensile" };
 
   const totAdp = adempimenti.length;
   const totAll = state.adempimenti.length;
@@ -91,45 +79,26 @@ function renderAdempimentiTabella(adempimenti) {
 
   let html = `<div style="margin-bottom:16px;display:flex;align-items:center;gap:10px">
     <span style="font-size:14px;color:var(--text2)">
-      ${
-        isFiltrato
-          ? `<span style="color:var(--yellow)">⚠️ Filtro attivo:</span> ${totAdp} di ${totAll} adempimenti`
-          : `<span style="color:var(--text3)">${totAll} adempimenti totali</span>`
-      }
+      ${isFiltrato ? `<span style="color:var(--yellow)">⚠️ Filtro attivo:</span> ${totAdp} di ${totAll} adempimenti` : `<span style="color:var(--text3)">${totAll} adempimenti totali</span>`}
     </span>
     ${isFiltrato ? `<button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:12px">⟳ Tutti</button>` : ""}
   </div>`;
 
-  const adempimentiOrdinati = [...adempimenti].sort((a, b) =>
-    a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }),
-  );
+  const adempimentiOrdinati = [...adempimenti].sort((a, b) => a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }));
 
-  const cards = adempimentiOrdinati
-    .map((a) => {
-      const flagsBadges = [];
-      if (a.is_contabilita)
-        flagsBadges.push(
-          `<span class="adp-flag-badge" style="color:#22d3ee;background:#22d3ee15;border-color:#22d3ee33;font-size:11px" title="IVA + Contabilità separati">📊 Cont.</span>`,
-        );
-      if (a.has_rate)
-        flagsBadges.push(
-          `<span class="adp-flag-badge" style="color:#34d399;background:#34d39915;border-color:#34d39933;font-size:11px" title="Con rate">💰 Rate</span>`,
-        );
-      if (a.is_checkbox)
-        flagsBadges.push(
-          `<span class="adp-flag-badge" style="color:#a78bfa;background:#a78bfa15;border-color:#a78bfa33;font-size:11px" title="Checkbox semplice ✓/✗">☑️ Check</span>`,
-        );
-      if (!a.is_contabilita && !a.has_rate && !a.is_checkbox)
-        flagsBadges.push(
-          `<span class="adp-flag-badge" style="color:#5b8df6;background:#5b8df615;border-color:#5b8df633;font-size:11px" title="Solo data scadenza">📅 Solo Scad.</span>`,
-        );
+  const cards = adempimentiOrdinati.map((a) => {
+    const flagsBadges = [];
+    if (a.is_contabilita) flagsBadges.push(`<span class="adp-flag-badge" style="color:#22d3ee;background:#22d3ee15;border-color:#22d3ee33;font-size:11px" title="IVA + Contabilità separati">📊 Cont.</span>`);
+    if (a.has_rate) flagsBadges.push(`<span class="adp-flag-badge" style="color:#34d399;background:#34d39915;border-color:#34d39933;font-size:11px" title="Con rate">💰 Rate</span>`);
+    if (a.is_checkbox) flagsBadges.push(`<span class="adp-flag-badge" style="color:#a78bfa;background:#a78bfa15;border-color:#a78bfa33;font-size:11px" title="Checkbox semplice ✓/✗">☑️ Check</span>`);
+    if (!a.is_contabilita && !a.has_rate && !a.is_checkbox) flagsBadges.push(`<span class="adp-flag-badge" style="color:#5b8df6;background:#5b8df615;border-color:#5b8df633;font-size:11px" title="Solo data scadenza">📅 Solo Scad.</span>`);
 
-      return `<div class="adp-def-card" title="${escAttr(a.nome)} — ${scadDesc[a.scadenza_tipo] || a.scadenza_tipo}">
+    return `<div class="adp-def-card" title="${escAttr(a.nome)} — ${scadDesc[a.scadenza_tipo] || a.scadenza_tipo}">
       <div class="adp-def-card-top">
         <div class="adp-def-codice" style="font-size:13px">${a.codice}</div>
         <div style="display:flex;gap:5px">
-          <button class="btn btn-xs btn-secondary" onclick="editAdpDef(${a.id})"   title="Modifica">✏️</button>
-          <button class="btn btn-xs btn-danger"    onclick="deleteAdpDef(${a.id})" title="Elimina">🗑️</button>
+          <button class="btn btn-xs btn-secondary" onclick="editAdpDef(${a.id})" title="Modifica">✏️</button>
+          <button class="btn btn-xs btn-danger" onclick="deleteAdpDef(${a.id})" title="Elimina">🗑️</button>
         </div>
       </div>
       <div class="adp-def-nome" style="font-size:15px">${a.nome}</div>
@@ -143,8 +112,7 @@ function renderAdempimentiTabella(adempimenti) {
         ${flagsBadges.join("")}
       </div>
     </div>`;
-    })
-    .join("");
+  }).join("");
 
   if (!adempimenti.length) {
     html += `<div class="empty"><div class="empty-icon">📋</div><p style="font-size:15px">Nessun adempimento trovato</p></div>`;
@@ -274,11 +242,7 @@ function saveAdpDef() {
   }
 
   if (data.has_rate) {
-    data.rate_labels = [
-      getVal("adp-rate-l1"),
-      getVal("adp-rate-l2"),
-      getVal("adp-rate-l3"),
-    ];
+    data.rate_labels = [getVal("adp-rate-l1"), getVal("adp-rate-l2"), getVal("adp-rate-l3")];
   }
 
   if (id) {
@@ -288,8 +252,7 @@ function saveAdpDef() {
 }
 
 function deleteAdpDef(id) {
-  if (confirm("Eliminare questo adempimento?"))
-    socket.emit("delete:adempimento", { id });
+  if (confirm("Eliminare questo adempimento?")) socket.emit("delete:adempimento", { id });
 }
 
 // ─── MODAL STATO ADEMPIMENTO ──────────────────────────────────
@@ -308,28 +271,17 @@ function openAdpModal(r) {
   setTimeout(() => {
     const campoScadenza = document.getElementById("adp-scadenza");
     const campoCompletamento = document.getElementById("adp-data");
-    
-    if (campoScadenza) {
-      gestisciInputData(campoScadenza);
-      creaDatePicker(campoScadenza);
-    }
-    if (campoCompletamento) {
-      gestisciInputData(campoCompletamento);
-      creaDatePicker(campoCompletamento);
-    }
+    if (campoScadenza) { gestisciInputData(campoScadenza); creaDatePicker(campoScadenza); }
+    if (campoCompletamento) { gestisciInputData(campoCompletamento); creaDatePicker(campoCompletamento); }
   }, 100);
 
   const clienteInfo = document.getElementById("adp-cliente-info");
   if (clienteInfo) {
     clienteInfo.innerHTML = renderClienteInfoBox({
-      nome: r.cliente_nome,
-      tipologia_codice: r.cliente_tipologia_codice,
-      sottotipologia_nome: r.cliente_sottotipologia_nome,
-      codice_fiscale: r.cliente_cf,
-      partita_iva: r.cliente_piva,
-      periodicita: r.cliente_periodicita,
-      col2_value: r.cliente_col2,
-      col3_value: r.cliente_col3,
+      nome: r.cliente_nome, tipologia_codice: r.cliente_tipologia_codice,
+      sottotipologia_nome: r.cliente_sottotipologia_nome, codice_fiscale: r.cliente_cf,
+      partita_iva: r.cliente_piva, periodicita: r.cliente_periodicita,
+      col2_value: r.cliente_col2, col3_value: r.cliente_col3,
     });
   }
 
@@ -340,65 +292,45 @@ function openAdpModal(r) {
 
   // Nascondi DATA COMPLETAMENTO per tipo Semplice
   const dataCompletamentoGroup = document.getElementById("data-completamento-group");
-  if (dataCompletamentoGroup) {
-    dataCompletamentoGroup.style.display = isSemplice ? "none" : "";
-  }
-  
-  // Cambia etichetta per tipo Semplice
-  const scadenzaLabel = document.querySelector('#modal-adempimento .form-row:first-child .form-group:first-child label');
-  if (scadenzaLabel && isSemplice) {
-    scadenzaLabel.textContent = "📅 Data Scadenza";
-  } else if (scadenzaLabel) {
-    scadenzaLabel.textContent = "Data Scadenza";
-  }
+  if (dataCompletamentoGroup) dataCompletamentoGroup.style.display = isSemplice ? "none" : "";
 
-  // NASCONDI IMPORTO per tipo Semplice
-  if (isSemplice) {
-    document.getElementById("sect-importo-normale").style.display = "none";
-    const importoInput = document.getElementById("adp-importo");
-    if (importoInput) importoInput.removeAttribute("required");
-  } else if (isCbx) {
-    document.getElementById("sect-importo-normale").style.display = "none";
-  } else {
-    document.getElementById("sect-importo-normale").style.display = "block";
-    setVal("adp-importo", parseItalianoFloat(r.importo) || "");
-  }
+  // CHIUDI TUTTE LE SEZIONI prima di mostrarne una
+  document.getElementById("sect-importo-normale").style.display = "none";
+  document.getElementById("sect-importo-cont").style.display = "none";
+  document.getElementById("sect-importo-rate").style.display = "none";
+  document.getElementById("sect-importo-checkbox").style.display = "none";
 
-  const rateContWrapper = document.getElementById("rate-contabilita-checkbox-wrapper");
-  if (rateContWrapper) {
-    rateContWrapper.style.display = isRate && !isCbx ? "" : "none";
-  }
-
-  const contCheckWrapper = document.getElementById("contabilita-checkbox-wrapper");
-  if (contCheckWrapper) {
-    contCheckWrapper.style.display = isCont && !isCbx ? "" : "none";
-  }
-
-  if (isRate && !isCbx) {
-    const rateContCheck = document.getElementById("adp-rate-cont-completata");
-    if (rateContCheck)
-      rateContCheck.checked = parseInt(r.cont_completata) === 1;
-    _aggiornaColoriRateContabilita(r);
-  }
-
-  if (isCont && !isCbx) {
+  // Mostra la sezione corretta in base al tipo
+  if (isCbx) {
+    document.getElementById("sect-importo-checkbox").style.display = "block";
+    _aggiornaPulsantiCheckbox(r.stato || "da_fare");
+  } else if (isCont) {
+    document.getElementById("sect-importo-cont").style.display = "block";
+    setVal("adp-imp-iva", parseItalianoFloat(r.importo_iva) || "");
+    setVal("adp-imp-cont", parseItalianoFloat(r.importo_contabilita) || "");
     const contCheck = document.getElementById("adp-cont-completata");
     if (contCheck) contCheck.checked = parseInt(r.cont_completata) === 1;
     _aggiornaColoriContabilita(r);
-  }
-
-  if (isRate && !isCont && !isCbx) {
+  } else if (isRate) {
+    document.getElementById("sect-importo-rate").style.display = "block";
+    setVal("adp-imp-saldo", parseItalianoFloat(r.importo_saldo) || "");
+    setVal("adp-imp-acc1", parseItalianoFloat(r.importo_acconto1) || "");
+    setVal("adp-imp-acc2", parseItalianoFloat(r.importo_acconto2) || "");
+    
     let lb = ["Saldo", "1° Acconto", "2° Acconto"];
-    try {
-      if (r.rate_labels) lb = JSON.parse(r.rate_labels);
-    } catch (e) {}
+    try { if (r.rate_labels) lb = JSON.parse(r.rate_labels); } catch (e) {}
     setTxt("rate-l0", `💰 ${lb[0]} (€)`);
     setTxt("rate-l1", `📥 ${lb[1]} (€)`);
     setTxt("rate-l2", `📥 ${lb[2]} (€)`);
-  }
-
-  if (isCbx) {
-    _aggiornaPulsantiCheckbox(r.stato || "da_fare");
+    
+    const rateContWrapper = document.getElementById("rate-contabilita-checkbox-wrapper");
+    if (rateContWrapper) rateContWrapper.style.display = "";
+    const rateContCheck = document.getElementById("adp-rate-cont-completata");
+    if (rateContCheck) rateContCheck.checked = parseInt(r.cont_completata) === 1;
+    _aggiornaColoriRateContabilita(r);
+  } else if (isSemplice) {
+    document.getElementById("sect-importo-normale").style.display = "block";
+    setVal("adp-importo", parseItalianoFloat(r.importo) || "");
   }
 
   openModal("modal-adempimento");
@@ -409,15 +341,10 @@ function _aggiornaPulsantiCheckbox(stato) {
   const btnDaFare = document.getElementById("cbx-modal-dafare");
   const btnNA = document.getElementById("cbx-modal-na");
   const btnCompl = document.getElementById("cbx-modal-completato");
-
   if (!btnDaFare || !btnNA || !btnCompl) return;
 
   [btnDaFare, btnNA, btnCompl].forEach((b) => {
-    b.classList.remove(
-      "cbx-modal-active-red",
-      "cbx-modal-active-gray",
-      "cbx-modal-active-green",
-    );
+    b.classList.remove("cbx-modal-active-red", "cbx-modal-active-gray", "cbx-modal-active-green");
     b.style.opacity = "0.5";
     b.style.transform = "scale(1)";
   });
@@ -446,25 +373,16 @@ function setCbxModalStato(nuovoStato) {
 function _aggiornaColoriContabilita(r) {
   const ivaVal = document.getElementById("adp-imp-iva")?.value;
   const hasIva = ivaVal != null && ivaVal !== "";
-
   const contCheck = document.getElementById("adp-cont-completata");
-  const contDone = contCheck
-    ? contCheck.checked
-    : parseInt(r?.cont_completata) === 1;
+  const contDone = contCheck ? contCheck.checked : (parseInt(r?.cont_completata) === 1);
 
-  let colorIva = "";
-  let colorCont = "";
-
-  if (hasIva && contDone) {
-    colorIva = colorCont = "var(--green)";
-  } else if (hasIva || contDone) {
-    colorIva = colorCont = "var(--accent)";
-  }
+  let colorIva = "", colorCont = "";
+  if (hasIva && contDone) colorIva = colorCont = "var(--green)";
+  else if (hasIva || contDone) colorIva = colorCont = "var(--accent)";
 
   const ivaLabel = document.getElementById("label-imp-iva");
   const contLabel = document.getElementById("label-cont-completata");
   const contSpan = document.getElementById("label-imp-cont");
-
   if (ivaLabel) ivaLabel.style.color = colorIva;
   if (contLabel) contLabel.style.color = colorCont;
   if (contSpan) contSpan.style.color = colorCont;
@@ -494,9 +412,7 @@ function coloraInputImporto(input) {
 function formattaNumeroItaliano(valore) {
   if (valore === null || valore === undefined || valore === "") return "";
   const s = String(valore);
-  const normalizzato = s.includes(",")
-    ? s.replace(/\./g, "").replace(",", ".")
-    : s;
+  const normalizzato = s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : s;
   const numero = parseFloat(normalizzato);
   if (isNaN(numero)) return "";
   const negativo = numero < 0;
@@ -504,33 +420,6 @@ function formattaNumeroItaliano(valore) {
   const interoFormattato = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   const risultato = interoFormattato + "," + dec;
   return negativo ? "-" + risultato : risultato;
-}
-
-function formattaNumeroConColore(valore, elemento) {
-  if (valore === null || valore === undefined || valore === "") {
-    if (elemento) {
-      elemento.textContent = "";
-      elemento.style.color = "";
-    }
-    return "";
-  }
-  const _sc = String(valore);
-  const numero = parseFloat(
-    _sc.includes(",") ? _sc.replace(/\./g, "").replace(",", ".") : _sc,
-  );
-  if (isNaN(numero)) {
-    if (elemento) {
-      elemento.textContent = valore;
-      elemento.style.color = "";
-    }
-    return valore;
-  }
-  const formattato = formattaNumeroItaliano(numero);
-  if (elemento) {
-    elemento.textContent = formattato;
-    elemento.style.color = numero < 0 ? "var(--red)" : "var(--green)";
-  }
-  return formattato;
 }
 
 function parseItalianoFloat(str) {
@@ -543,98 +432,57 @@ function formattaInputConSeparatori(input) {
   if (!input) return;
   const raw = input.value;
   if (!raw) return;
-
   const posCursore = input.selectionStart;
   const lunghezzaOriginale = raw.length;
-
   const negativo = raw.startsWith("-");
   let pulito = raw.replace(/[^0-9,-]/g, "");
-
   const parti = pulito.split(",");
   let intero = parti[0];
-  let decimale =
-    parti.length > 1 ? parti.slice(1).join("").substring(0, 2) : null;
-
+  let decimale = parti.length > 1 ? parti.slice(1).join("").substring(0, 2) : null;
   intero = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
   let formattato = negativo ? "-" + intero : intero;
   if (decimale !== null) formattato += "," + decimale;
-
   if (raw !== formattato) {
     input.value = formattato;
     const delta = formattato.length - lunghezzaOriginale;
     const nuovaPos = Math.max(0, posCursore + delta);
-    try {
-      input.setSelectionRange(nuovaPos, nuovaPos);
-    } catch (e) {}
+    try { input.setSelectionRange(nuovaPos, nuovaPos); } catch (e) {}
   }
 }
 
-function bloccaPuntoInput(e) {
-  if (e.key === ".") e.preventDefault();
-}
-
-function validaInputNumerico(input) {
-  formattaInputConSeparatori(input);
-  coloraInputImporto(input);
-}
+function bloccaPuntoInput(e) { if (e.key === ".") e.preventDefault(); }
+function validaInputNumerico(input) { formattaInputConSeparatori(input); coloraInputImporto(input); }
 
 function convertiVirgolaInPunto(input) {
   const raw = input.value.trim();
-  if (!raw) {
-    input.value = "";
-    coloraInputImporto(input);
-    return;
-  }
-
+  if (!raw) { input.value = ""; coloraInputImporto(input); return; }
   const negativo = raw.startsWith("-");
   let pulito = raw.replace(/[^0-9,-]/g, "");
-
   const parti = pulito.split(",");
   let intero = parti[0] || "0";
-  let decimale =
-    parti.length > 1 ? parti[1].substring(0, 2).padEnd(2, "0") : "00";
-
+  let decimale = parti.length > 1 ? parti[1].substring(0, 2).padEnd(2, "0") : "00";
   intero = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
   input.value = (negativo ? "-" : "") + intero + "," + decimale;
   coloraInputImporto(input);
 }
 
 function _aggiornaColoriRateContabilita(r) {
   const rateContCheck = document.getElementById("adp-rate-cont-completata");
-  const contDone = rateContCheck
-    ? rateContCheck.checked
-    : parseInt(r?.cont_completata) === 1;
-
+  const contDone = rateContCheck ? rateContCheck.checked : (parseInt(r?.cont_completata) === 1);
   const saldoVal = document.getElementById("adp-imp-saldo")?.value;
   const acc1Val = document.getElementById("adp-imp-acc1")?.value;
   const acc2Val = document.getElementById("adp-imp-acc2")?.value;
-  const hasAnyRate =
-    (saldoVal && saldoVal !== "") ||
-    (acc1Val && acc1Val !== "") ||
-    (acc2Val && acc2Val !== "");
-
+  const hasAnyRate = (saldoVal && saldoVal !== "") || (acc1Val && acc1Val !== "") || (acc2Val && acc2Val !== "");
   let color = "none";
   if (hasAnyRate && contDone) color = "both";
   else if (hasAnyRate || contDone) color = "one";
-
   const labelCont = document.getElementById("label-rate-cont");
-  if (labelCont) {
-    labelCont.style.color =
-      color === "both"
-        ? "var(--green)"
-        : color === "one"
-          ? "var(--accent)"
-          : "";
-  }
+  if (labelCont) labelCont.style.color = color === "both" ? "var(--green)" : (color === "one" ? "var(--accent)" : "");
 }
 
 function onRateContabilitaChange() {
   _aggiornaColoriRateContabilita(null);
-  ["adp-imp-saldo", "adp-imp-acc1", "adp-imp-acc2"].forEach((id) => {
-    coloraInputImporto(document.getElementById(id));
-  });
+  ["adp-imp-saldo", "adp-imp-acc1", "adp-imp-acc2"].forEach((id) => coloraInputImporto(document.getElementById(id)));
 }
 
 function saveAdpStato() {
@@ -659,19 +507,14 @@ function saveAdpStato() {
     data.importo_iva = parseItalianoFloat(getVal("adp-imp-iva"));
     data.importo_contabilita = parseItalianoFloat(getVal("adp-imp-cont"));
     data.cont_completata = document.getElementById("adp-cont-completata")?.checked ? 1 : 0;
-    if (data.stato === "completato") {
-      data.data_completamento = daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
-    }
+    if (data.stato === "completato") data.data_completamento = daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
   } else if (isRate) {
     data.importo_saldo = parseItalianoFloat(getVal("adp-imp-saldo"));
     data.importo_acconto1 = parseItalianoFloat(getVal("adp-imp-acc1"));
     data.importo_acconto2 = parseItalianoFloat(getVal("adp-imp-acc2"));
     data.cont_completata = document.getElementById("adp-rate-cont-completata")?.checked ? 1 : 0;
-    if (data.stato === "completato") {
-      data.data_completamento = daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
-    }
+    if (data.stato === "completato") data.data_completamento = daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
   } else if (isSemplice) {
-    // Solo Scadenza: nessun importo, nessuna data completamento
     data.importo = null;
     data.data_completamento = null;
   }
