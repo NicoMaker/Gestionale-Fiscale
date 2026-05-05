@@ -455,13 +455,13 @@ function renderScadenzarioTabella(data) {
     const pgColorG =
       pG === 100 ? "var(--green)" : pG > 50 ? "var(--yellow)" : "var(--red)";
     
-    // ⭐ ORDINA i periodi: data_scadenza ASC (più vecchio prima), poi nome alfabetico
+    // ⭐ ORDINA i periodi: data_scadenza DESC (più recente prima), poi nome alfabetico
     const rowsOrdinati = [...g.rows].sort((a, b) => {
-      // Prima ordina per data_scadenza ASC (più vecchio prima)
+      // Prima ordina per data_scadenza DESC (più recente prima)
       if (a.data_scadenza && b.data_scadenza) {
         const dateA = new Date(a.data_scadenza);
         const dateB = new Date(b.data_scadenza);
-        return dateA - dateB;
+        return dateB - dateA;
       }
       // Chi ha data va prima di chi non ha data
       if (a.data_scadenza) return -1;

@@ -395,9 +395,12 @@ function renderGlobaleTabella(rawData) {
   var st = state.globaleStats;
   var filtroClienteStatoEl = document.getElementById("glob-filtro-cliente-stato");
   var filtroClienteStato = filtroClienteStatoEl ? filtroClienteStatoEl.value : "";
+  
   var clienteSearch = document.getElementById("glob-search-cliente");
   var searchTerm = clienteSearch ? clienteSearch.value.toLowerCase() : "";
-  var selectedClienteId = (state.globaleSelectedCliente && state.globaleSelectedCliente !== "") ? parseInt(state.globaleSelectedCliente) : null;
+  var selectedClienteId = (state.globaleSelectedCliente && state.globaleSelectedCliente !== "")
+    ? parseInt(state.globaleSelectedCliente)
+    : null;
 
   var data = [];
   for (var i = 0; i < rawData.length; i++) {
@@ -407,23 +410,33 @@ function renderGlobaleTabella(rawData) {
       var clienteNome = (r.cliente_nome || "").toLowerCase();
       var clienteCf = (r.cliente_cf || "").toLowerCase();
       var clientePiva = (r.cliente_piva || "").toLowerCase();
-      if (clienteNome.indexOf(searchTerm) === -1 && clienteCf.indexOf(searchTerm) === -1 && clientePiva.indexOf(searchTerm) === -1) continue;
+      if (clienteNome.indexOf(searchTerm) === -1 && 
+          clienteCf.indexOf(searchTerm) === -1 && 
+          clientePiva.indexOf(searchTerm) === -1) {
+        continue;
+      }
     }
     data.push(r);
   }
   
   var perc = st.totale > 0 ? Math.round((st.comp / st.totale) * 100) : 0;
+  
   var activeFiltroKeys = _getActiveFiltroKeys();
   var allKeysArr = typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
   var isNone = _isManualNessuno() || activeFiltroKeys.size === 0;
   var isAll = !isNone && activeFiltroKeys.size === allKeysArr.length;
   var tipFiltroIsNone = isNone;
   var hasFiltroTipologie = !isAll;
+  
   var tipFiltroCountDisplay = isNone ? "0" : (isAll ? "" : activeFiltroKeys.size);
   var showTipBadge = isNone || (!isAll && activeFiltroKeys.size > 0);
+  
   var adpSel = document.getElementById("glob-filtro-adp");
   var adpFiltroAttivo = adpSel ? adpSel.value : "";
-  if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "" && !adpFiltroAttivo) adpFiltroAttivo = state.globalePreFiltroAdp;
+  
+  if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "" && !adpFiltroAttivo) {
+    adpFiltroAttivo = state.globalePreFiltroAdp;
+  }
   
   var filtroClienteStatoLabels = {
     con_in_corso: "🔄 Con almeno 1 in corso", senza_in_corso: "✅ Senza in corso",
@@ -445,7 +458,10 @@ function renderGlobaleTabella(rawData) {
   if (selectedClienteId && state.clienti) {
     var clienteTrovato = null;
     for (var ci = 0; ci < state.clienti.length; ci++) {
-      if (parseInt(state.clienti[ci].id) === selectedClienteId) { clienteTrovato = state.clienti[ci]; break; }
+      if (parseInt(state.clienti[ci].id) === selectedClienteId) {
+        clienteTrovato = state.clienti[ci];
+        break;
+      }
     }
     if (clienteTrovato) {
       clienteSelBadge = '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:10px;padding:5px 12px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">' +
@@ -480,7 +496,9 @@ function renderGlobaleTabella(rawData) {
         '<span id="glob-tip-filtro-count" style="display:' + (showTipBadge ? "inline-flex" : "none") + ';align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:' + (isNone ? "var(--red)" : "var(--accent)") + ';color:#fff;border-radius:10px;font-size:11px;font-weight:700">' + tipFiltroCountDisplay + '</span>' +
         (tipFiltroIsNone ? '<span style="font-size:11px;color:var(--red);font-weight:700">⚠️ Nessuno selezionato</span>' : '') +
         '<div id="glob-tip-filtro-toggle-btn" style="margin-left:auto" onclick="event.stopPropagation()">' +
-          (_globTipFiltroPanelOpen ? '<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>' : '<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>') +
+          (_globTipFiltroPanelOpen
+            ? '<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
+            : '<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>') +
         '</div>' +
       '</div>' +
       '<div id="glob-tip-filtro-container" style="display:' + (_globTipFiltroPanelOpen ? "block" : "none") + ';margin-top:8px">' + renderTipologieFiltroPanel() + '</div>' +
@@ -495,7 +513,9 @@ function renderGlobaleTabella(rawData) {
           '<div class="gpc-title">Vista Globale ' + state.anno + '</div>' +
           '<div class="gpc-sub">' + st.clienti + ' clienti · ' + st.adempimenti.length + ' tipi adempimenti</div>' +
           '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px">' +
-            filtroClienteStatoBadge + clienteSelBadge + searchBadge +
+            filtroClienteStatoBadge +
+            clienteSelBadge +
+            searchBadge +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -510,7 +530,9 @@ function renderGlobaleTabella(rawData) {
           '<div class="mini-bar" style="margin-top:4px;width:70px"><div class="mini-fill" style="width:' + perc + '%"></div></div>' +
         '</div>' +
       '</div>' +
-    '</div>' + navAdpHtml + '</div>' + tipFiltroHtml;
+    '</div>' +
+    navAdpHtml +
+  '</div>' + tipFiltroHtml;
   
   // RAGGRUPPA PER ADEMPIMENTO E CLIENTE
   var grouped = {};
@@ -518,7 +540,9 @@ function renderGlobaleTabella(rawData) {
     var rowData = data[idxData];
     storeRow(rowData);
     var adpKey = rowData.adempimento_nome;
-    if (!grouped[adpKey]) grouped[adpKey] = { nome: rowData.adempimento_nome, codice: rowData.adempimento_codice, clienti: {} };
+    if (!grouped[adpKey]) {
+      grouped[adpKey] = { nome: rowData.adempimento_nome, codice: rowData.adempimento_codice, clienti: {} };
+    }
     var group = grouped[adpKey];
     var cliKey = rowData.cliente_id;
     if (!group.clienti[cliKey]) {
@@ -533,14 +557,18 @@ function renderGlobaleTabella(rawData) {
   }
   
   var gruppi = [];
-  for (var key in grouped) { if (grouped.hasOwnProperty(key)) gruppi.push(grouped[key]); }
+  for (var key in grouped) {
+    if (grouped.hasOwnProperty(key)) gruppi.push(grouped[key]);
+  }
   gruppi.sort(function(a, b) { return a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }); });
   
   var content = "";
   for (var gIdx = 0; gIdx < gruppi.length; gIdx++) {
     var g = gruppi[gIdx];
     var clientiArray = [];
-    for (var cKey in g.clienti) { if (g.clienti.hasOwnProperty(cKey)) clientiArray.push(g.clienti[cKey]); }
+    for (var cKey in g.clienti) {
+      if (g.clienti.hasOwnProperty(cKey)) clientiArray.push(g.clienti[cKey]);
+    }
     
     var clientiFiltrati = [];
     for (var cIdx = 0; cIdx < clientiArray.length; cIdx++) {
@@ -550,6 +578,7 @@ function renderGlobaleTabella(rawData) {
       clientiFiltrati.push(c);
     }
     clientiFiltrati.sort(function(a, b) { return a.nome.localeCompare(b.nome, "it", { sensitivity: "base" }); });
+    
     if (clientiFiltrati.length === 0) continue;
     
     var allRows = [];
@@ -558,7 +587,9 @@ function renderGlobaleTabella(rawData) {
       for (var pIdx = 0; pIdx < periodi.length; pIdx++) allRows.push(periodi[pIdx]);
     }
     var compG = 0;
-    for (var arIdx = 0; arIdx < allRows.length; arIdx++) { if (allRows[arIdx].stato === "completato") compG++; }
+    for (var arIdx = 0; arIdx < allRows.length; arIdx++) {
+      if (allRows[arIdx].stato === "completato") compG++;
+    }
     var totG = allRows.length;
     var pG = totG > 0 ? Math.round((compG / totG) * 100) : 0;
     
@@ -588,13 +619,13 @@ function renderGlobaleTabella(rawData) {
       var classBadgesHtml = _renderGlobaleClienteClassBadges(client);
       var sottotipoLabel = client.sottotipologia_nome || "";
       
-      // ⭐ ORDINA i periodi: data_scadenza ASC (più vecchio prima), poi nome adempimento
+      // ⭐ ORDINA i periodi: data_scadenza DESC (più recente prima), poi nome adempimento
       var periodiOrdinati = client.periodi.slice().sort(function(a, b) {
-        // Prima ordina per data_scadenza ASC (più vecchio prima)
+        // Prima ordina per data_scadenza DESC (più recente prima)
         if (a.data_scadenza && b.data_scadenza) {
           var dateA = new Date(a.data_scadenza);
           var dateB = new Date(b.data_scadenza);
-          return dateA - dateB;
+          return dateB - dateA;
         }
         // Chi ha data va prima di chi non ha data
         if (a.data_scadenza) return -1;
@@ -645,7 +676,12 @@ function renderGlobaleTabella(rawData) {
   }
   
   if (!content) {
-    var msgVuoto = tipFiltroIsNone ? 'Nessun filtro tipologia selezionato — clicca <strong>✦ Tutti</strong> nel pannello Tipologie per vedere i clienti' : (filtroClienteStato || hasFiltroTipologie || searchTerm || selectedClienteId ? 'Nessun cliente corrisponde ai filtri attivi per ' + state.anno : 'Nessun adempimento trovato per ' + state.anno);
+    var msgVuoto = tipFiltroIsNone
+      ? 'Nessun filtro tipologia selezionato — clicca <strong>✦ Tutti</strong> nel pannello Tipologie per vedere i clienti'
+      : (filtroClienteStato || hasFiltroTipologie || searchTerm || selectedClienteId
+        ? 'Nessun cliente corrisponde ai filtri attivi per ' + state.anno
+        : 'Nessun adempimento trovato per ' + state.anno);
+    
     content = '<div class="empty">' +
       '<div class="empty-icon">🌐</div>' +
       '<p style="font-size:15px">' + msgVuoto + '</p>' +
@@ -654,7 +690,10 @@ function renderGlobaleTabella(rawData) {
   }
   
   document.getElementById("content").innerHTML = headerCard + content;
-  if (state.globalePreFiltroAdp) state.globalePreFiltroAdp = "";
+  
+  if (state.globalePreFiltroAdp) {
+    state.globalePreFiltroAdp = "";
+  }
 }
 
 function renderGlobaleTabella(rawData) {
