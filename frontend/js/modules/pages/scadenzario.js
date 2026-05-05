@@ -437,6 +437,9 @@ function renderScadenzarioTabella(data) {
         nome: r.adempimento_nome,
         codice: r.adempimento_codice,
         scadenza_tipo: r.scadenza_tipo,
+        is_contabilita: r.is_contabilita,
+        has_rate: r.has_rate,
+        is_checkbox: r.is_checkbox,
         rows: [],
       };
     grouped[key].rows.push(r);
@@ -455,13 +458,16 @@ function renderScadenzarioTabella(data) {
     const pgColorG =
       pG === 100 ? "var(--green)" : pG > 50 ? "var(--yellow)" : "var(--red)";
 
-    // ⭐ ORDINA i periodi: data_scadenza DESC (più recente prima), poi nome alfabetico
+    // ⭐ ORDINA i periodi: data_scadenza DESC (30/05 prima di 29/05), parità → alfabetico
     const rowsOrdinati = [...g.rows].sort((a, b) => {
-      // Prima ordina per data_scadenza DESC (più recente prima)
+      // Ordine DESC: data più lontana (es. 30/05) prima di data più vicina (es. 29/05)
       if (a.data_scadenza && b.data_scadenza) {
         const dateA = new Date(a.data_scadenza);
         const dateB = new Date(b.data_scadenza);
-        return dateB - dateA;
+        if (dateA - dateB !== 0) return dateB - dateA;
+        return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
+          sensitivity: "base",
+        });
       }
       // Chi ha data va prima di chi non ha data
       if (a.data_scadenza) return -1;
