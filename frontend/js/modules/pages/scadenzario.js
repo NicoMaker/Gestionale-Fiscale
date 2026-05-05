@@ -454,7 +454,7 @@ function renderScadenzarioTabella(data) {
     const pG = totG > 0 ? Math.round((compG / totG) * 100) : 0;
     const pgColorG =
       pG === 100 ? "var(--green)" : pG > 50 ? "var(--yellow)" : "var(--red)";
-    
+
     // ⭐ ORDINA i periodi: data_scadenza DESC (più recente prima), poi nome alfabetico
     const rowsOrdinati = [...g.rows].sort((a, b) => {
       // Prima ordina per data_scadenza DESC (più recente prima)
@@ -467,9 +467,11 @@ function renderScadenzarioTabella(data) {
       if (a.data_scadenza) return -1;
       if (b.data_scadenza) return 1;
       // Se nessuna data, ordina per nome adempimento (alfabetico)
-      return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", { sensitivity: "base" });
+      return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
+        sensitivity: "base",
+      });
     });
-    
+
     const periodiHtml = rowsOrdinati.map((r) => renderPeriodoPill(r)).join("");
     const isMensile = g.rows.length > 4;
     content += `<div class="adp-card">
@@ -851,9 +853,15 @@ function openAdempimentoPersonalizzato() {
 
 function creaAdempimentoPersonalizzato() {
   const nome = document.getElementById("custom-adp-nome").value.trim();
-  const descrizione = document.getElementById("custom-adp-descrizione").value.trim();
-  const scadenzaTipo = document.getElementById("custom-adp-scadenza-tipo").value;
-  const isContabilita = document.getElementById("custom-adp-is-contabilita").checked;
+  const descrizione = document
+    .getElementById("custom-adp-descrizione")
+    .value.trim();
+  const scadenzaTipo = document.getElementById(
+    "custom-adp-scadenza-tipo",
+  ).value;
+  const isContabilita = document.getElementById(
+    "custom-adp-is-contabilita",
+  ).checked;
   const generaPer = document.getElementById("custom-adp-genera-per").value;
   const anno = parseInt(document.getElementById("custom-adp-anno").value);
   const clienteId = document.getElementById("custom-adp-cliente")?.value;
@@ -910,30 +918,30 @@ window.toggleSelezionaTuttiAdempimenti = toggleSelezionaTuttiAdempimenti;
 window.saveAdpSelection = saveAdpSelection;
 window.toggleSelezionaTuttiAddAdp = toggleSelezionaTuttiAddAdp;
 window.saveAddAdpSelection = saveAddAdpSelection;
-window.toggleClienteSelect = function() {
+window.toggleClienteSelect = function () {
   const generaPer = document.getElementById("custom-adp-genera-per")?.value;
   const clienteDiv = document.getElementById("custom-adp-cliente-div");
   if (clienteDiv) {
     clienteDiv.style.display = generaPer === "selezionati" ? "block" : "none";
   }
 };
-window.openAdempimentoPersonalizzatoFromDashboard = function() {
+window.openAdempimentoPersonalizzatoFromDashboard = function () {
   document.getElementById("custom-adp-anno").value = state.anno;
-  
+
   const clientiSelect = document.getElementById("custom-adp-cliente");
   if (clientiSelect && state.clienti && state.clienti.length > 0) {
     clientiSelect.innerHTML = `
       <option value="">-- Seleziona un cliente --</option>
-      ${state.clienti.map(c => `<option value="${c.id}">${c.nome} (${c.tipologia_codice || '-'})</option>`).join('')}
+      ${state.clienti.map((c) => `<option value="${c.id}">${c.nome} (${c.tipologia_codice || "-"})</option>`).join("")}
     `;
   }
-  
+
   document.getElementById("custom-adp-nome").value = "";
   document.getElementById("custom-adp-descrizione").value = "";
   document.getElementById("custom-adp-scadenza-tipo").value = "annuale";
   document.getElementById("custom-adp-is-contabilita").checked = false;
   document.getElementById("custom-adp-genera-per").value = "tutti";
-  
+
   window.toggleClienteSelect();
   openModal("modal-adempimento-personalizzato");
 };

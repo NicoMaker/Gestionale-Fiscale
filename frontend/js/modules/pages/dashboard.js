@@ -91,7 +91,8 @@ function buildDashboardShell(stats) {
 
   // Inizializza filtri tipologie e pannello dashboard
   setTimeout(function () {
-    if (typeof initializeTipologieFilter === "function") initializeTipologieFilter();
+    if (typeof initializeTipologieFilter === "function")
+      initializeTipologieFilter();
     _refreshDashTipFiltroPanel();
     _aggiornaDashTipFiltroCounter();
   }, 100);
@@ -111,32 +112,50 @@ function renderClientiSenzaAdempimenti(clienti) {
   if (!clienti || clienti.length === 0) {
     container.innerHTML =
       '<div style="text-align:center;padding:20px;color:var(--green);background:var(--green)08;border-radius:8px">' +
-      '✅ Tutti i clienti hanno almeno un adempimento per l\'anno ' + state.anno + '!' +
-      '</div>';
+      "✅ Tutti i clienti hanno almeno un adempimento per l'anno " +
+      state.anno +
+      "!" +
+      "</div>";
     return;
   }
 
   var html =
     '<div style="display:flex;flex-direction:column;gap:12px">' +
     '<div style="font-size:13px;color:var(--orange);padding:8px 12px;background:var(--orange)08;border-radius:6px">' +
-    '⚠️ ' + clienti.length + ' clienti senza alcun adempimento</div>' +
+    "⚠️ " +
+    clienti.length +
+    " clienti senza alcun adempimento</div>" +
     '<div style="display:flex;flex-direction:column;gap:8px">';
 
   for (var i = 0; i < clienti.length; i++) {
     var c = clienti[i];
-    var tipColor = c.tipologia_colore || '#5b8df6';
-    var avatar   = getAvatar(c.nome);
+    var tipColor = c.tipologia_colore || "#5b8df6";
+    var avatar = getAvatar(c.nome);
     html +=
       '<div class="cliente-senza-adp-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:12px 16px;gap:12px">' +
       '<div style="display:flex;align-items:center;gap:12px;flex:1">' +
-      '<div class="cliente-avatar-sm" style="width:40px;height:40px;border-radius:10px;background:' + tipColor + '22;border:2px solid ' + tipColor + ';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">' + avatar + '</div>' +
-      '<div><div style="font-weight:700;font-size:15px">' + escAttr(c.nome) + '</div>' +
-      '<div style="font-size:12px;color:var(--t2)">' + (c.tipologia_codice || '-') + ' · ' + (c.email || 'nessuna email') + '</div></div>' +
-      '</div>' +
-      '<button class="btn btn-primary btn-sm" onclick="goToClienteScadenzarioDiretto(' + c.id + ')" style="white-space:nowrap">📅 Vai al Cliente</button>' +
-      '</div>';
+      '<div class="cliente-avatar-sm" style="width:40px;height:40px;border-radius:10px;background:' +
+      tipColor +
+      "22;border:2px solid " +
+      tipColor +
+      ';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">' +
+      avatar +
+      "</div>" +
+      '<div><div style="font-weight:700;font-size:15px">' +
+      escAttr(c.nome) +
+      "</div>" +
+      '<div style="font-size:12px;color:var(--t2)">' +
+      (c.tipologia_codice || "-") +
+      " · " +
+      (c.email || "nessuna email") +
+      "</div></div>" +
+      "</div>" +
+      '<button class="btn btn-primary btn-sm" onclick="goToClienteScadenzarioDiretto(' +
+      c.id +
+      ')" style="white-space:nowrap">📅 Vai al Cliente</button>' +
+      "</div>";
   }
-  html += '</div></div>';
+  html += "</div></div>";
   container.innerHTML = html;
 }
 
@@ -144,20 +163,27 @@ function goToClienteScadenzarioDiretto(clienteId) {
   var cliente = null;
   if (state.clienti) {
     for (var i = 0; i < state.clienti.length; i++) {
-      if (state.clienti[i].id === clienteId) { cliente = state.clienti[i]; break; }
+      if (state.clienti[i].id === clienteId) {
+        cliente = state.clienti[i];
+        break;
+      }
     }
   }
   if (cliente) {
     state.selectedCliente = cliente;
-    document.querySelectorAll(".nav-item").forEach(function (x) { x.classList.remove("active"); });
+    document.querySelectorAll(".nav-item").forEach(function (x) {
+      x.classList.remove("active");
+    });
     var nav = document.querySelector('[data-page="scadenzario"]');
     if (nav) nav.classList.add("active");
     renderPage("scadenzario");
   } else {
     state._gotoClienteId = clienteId;
-    state._pending       = "scadenzario";
+    state._pending = "scadenzario";
     socket.emit("get:clienti", { anno: state.anno });
-    document.querySelectorAll(".nav-item").forEach(function (x) { x.classList.remove("active"); });
+    document.querySelectorAll(".nav-item").forEach(function (x) {
+      x.classList.remove("active");
+    });
     var nav2 = document.querySelector('[data-page="scadenzario"]');
     if (nav2) nav2.classList.add("active");
     renderPage("scadenzario");
@@ -170,11 +196,16 @@ function apriApplicaAdempimentiPerVuoti() {
   socket.emit("get:clienti_senza_adempimenti", { anno: state.anno });
   socket.once("res:clienti_senza_adempimenti", function (data) {
     if (data.success && data.data && data.data.length > 0) {
-      var clientiVuotiIds = data.data.map(function (c) { return c.id; });
+      var clientiVuotiIds = data.data.map(function (c) {
+        return c.id;
+      });
       if (!state.adempimenti || state.adempimenti.length === 0) {
         socket.emit("get:adempimenti");
         socket.once("res:adempimenti", function (adpData) {
-          if (adpData.success) { state.adempimenti = adpData.data; apriModalConPreselezione(clientiVuotiIds); }
+          if (adpData.success) {
+            state.adempimenti = adpData.data;
+            apriModalConPreselezione(clientiVuotiIds);
+          }
         });
       } else {
         apriModalConPreselezione(clientiVuotiIds);
@@ -193,15 +224,23 @@ function apriModalConPreselezione(clientiVuotiIds) {
       renderApplicaAdempimentiModal();
       renderApplicaClientiList();
       setTimeout(function () {
-        document.querySelectorAll(".applica-cliente-checkbox").forEach(function (cb) {
-          if (clientiVuotiIds.indexOf(parseInt(cb.value)) !== -1) cb.checked = true;
-        });
-        var infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
+        document
+          .querySelectorAll(".applica-cliente-checkbox")
+          .forEach(function (cb) {
+            if (clientiVuotiIds.indexOf(parseInt(cb.value)) !== -1)
+              cb.checked = true;
+          });
+        var infoBox = document.querySelector(
+          "#modal-applica-adempimenti .infobox",
+        );
         if (infoBox) {
-          infoBox.innerHTML = '✅ <strong>' + clientiVuotiIds.length + '</strong> clienti senza adempimenti preselezionati.<br>📌 Scegli gli adempimenti da assegnare e premi "Applica".';
-          infoBox.style.background   = "var(--orange)18";
-          infoBox.style.borderColor  = "var(--orange)";
-          infoBox.style.color        = "var(--orange)";
+          infoBox.innerHTML =
+            "✅ <strong>" +
+            clientiVuotiIds.length +
+            '</strong> clienti senza adempimenti preselezionati.<br>📌 Scegli gli adempimenti da assegnare e premi "Applica".';
+          infoBox.style.background = "var(--orange)18";
+          infoBox.style.borderColor = "var(--orange)";
+          infoBox.style.color = "var(--orange)";
         }
       }, 100);
       document.getElementById("applica-adempimenti-anno").value = state.anno;
@@ -214,21 +253,28 @@ function openApplicaAdempimenti() {
   if (!state.adempimenti || state.adempimenti.length === 0) {
     socket.emit("get:adempimenti");
     socket.once("res:adempimenti", function (data) {
-      if (data.success) { state.adempimenti = data.data; renderApplicaAdempimentiModal(); }
+      if (data.success) {
+        state.adempimenti = data.data;
+        renderApplicaAdempimentiModal();
+      }
     });
   } else {
     renderApplicaAdempimentiModal();
   }
   socket.emit("get:clienti", { anno: state.anno });
   socket.once("res:clienti", function (data) {
-    if (data.success) { state.clienti = data.data; renderApplicaClientiList(); }
+    if (data.success) {
+      state.clienti = data.data;
+      renderApplicaClientiList();
+    }
   });
   var infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
   if (infoBox) {
-    infoBox.innerHTML    = '✅ Seleziona <strong>uno o più adempimenti</strong> e <strong>uno o più clienti</strong>.<br>📌 Gli adempimenti già presenti vengono conservati.';
-    infoBox.style.background  = "";
+    infoBox.innerHTML =
+      "✅ Seleziona <strong>uno o più adempimenti</strong> e <strong>uno o più clienti</strong>.<br>📌 Gli adempimenti già presenti vengono conservati.";
+    infoBox.style.background = "";
     infoBox.style.borderColor = "";
-    infoBox.style.color       = "";
+    infoBox.style.color = "";
   }
   document.getElementById("applica-adempimenti-anno").value = state.anno;
   openModal("modal-applica-adempimenti");
@@ -238,17 +284,27 @@ function renderApplicaAdempimentiModal() {
   var container = document.getElementById("applica-adp-list");
   if (!container) return;
   if (!state.adempimenti || state.adempimenti.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:20px">📋 Nessun adempimento</div>';
+    container.innerHTML =
+      '<div style="text-align:center;padding:20px">📋 Nessun adempimento</div>';
     return;
   }
-  var adpOrdinati = state.adempimenti.slice().sort(function (a, b) { return a.nome.localeCompare(b.nome); });
+  var adpOrdinati = state.adempimenti.slice().sort(function (a, b) {
+    return a.nome.localeCompare(b.nome);
+  });
   var html = '<div style="display:flex;flex-wrap:wrap">';
   adpOrdinati.forEach(function (adp) {
-    html += '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px)">' +
-      '<input type="checkbox" class="applica-adp-checkbox" value="' + adp.id + '">' +
-      '<span><strong>' + adp.codice + '</strong> — ' + adp.nome + '</span></label>';
+    html +=
+      '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px)">' +
+      '<input type="checkbox" class="applica-adp-checkbox" value="' +
+      adp.id +
+      '">' +
+      "<span><strong>" +
+      adp.codice +
+      "</strong> — " +
+      adp.nome +
+      "</span></label>";
   });
-  html += '</div>';
+  html += "</div>";
   container.innerHTML = html;
 }
 
@@ -256,57 +312,102 @@ function renderApplicaClientiList() {
   var container = document.getElementById("applica-clienti-list");
   if (!container) return;
   if (!state.clienti || state.clienti.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:20px">👥 Nessun cliente</div>';
+    container.innerHTML =
+      '<div style="text-align:center;padding:20px">👥 Nessun cliente</div>';
     return;
   }
   var attiviCheck = document.getElementById("applica-clienti-solo-attivi");
-  var soloAttivi  = !attiviCheck || attiviCheck.checked !== false;
-  var clientiFiltrati = state.clienti.filter(function (c) { return !soloAttivi || c.attivo === 1; });
+  var soloAttivi = !attiviCheck || attiviCheck.checked !== false;
+  var clientiFiltrati = state.clienti.filter(function (c) {
+    return !soloAttivi || c.attivo === 1;
+  });
   var searchInput = document.getElementById("applica-clienti-search");
   if (searchInput && searchInput.value) {
     var q = searchInput.value.toLowerCase();
     clientiFiltrati = clientiFiltrati.filter(function (c) {
-      return (c.nome && c.nome.toLowerCase().indexOf(q) !== -1) ||
-             (c.codice_fiscale && c.codice_fiscale.toLowerCase().indexOf(q) !== -1);
+      return (
+        (c.nome && c.nome.toLowerCase().indexOf(q) !== -1) ||
+        (c.codice_fiscale && c.codice_fiscale.toLowerCase().indexOf(q) !== -1)
+      );
     });
   }
-  clientiFiltrati.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
+  clientiFiltrati.sort(function (a, b) {
+    return a.nome.localeCompare(b.nome);
+  });
   var html = '<div style="display:flex;flex-wrap:wrap">';
   clientiFiltrati.forEach(function (cli) {
-    html += '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px)">' +
-      '<input type="checkbox" class="applica-cliente-checkbox" value="' + cli.id + '">' +
-      '<span>👤 ' + cli.nome + (cli.tipologia_codice ? ' (' + cli.tipologia_codice + ')' : '') + '</span></label>';
+    html +=
+      '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px)">' +
+      '<input type="checkbox" class="applica-cliente-checkbox" value="' +
+      cli.id +
+      '">' +
+      "<span>👤 " +
+      cli.nome +
+      (cli.tipologia_codice ? " (" + cli.tipologia_codice + ")" : "") +
+      "</span></label>";
   });
-  html += '</div>';
+  html += "</div>";
   container.innerHTML = html;
 }
 
-function filtraClientiApplica()              { renderApplicaClientiList(); }
-function toggleSelezionaTuttiAdpApplica()    {
-  var checked = document.getElementById("applica-adp-seleziona-tutti")?.checked || false;
-  document.querySelectorAll(".applica-adp-checkbox").forEach(function (cb) { cb.checked = checked; });
+function filtraClientiApplica() {
+  renderApplicaClientiList();
+}
+function toggleSelezionaTuttiAdpApplica() {
+  var checked =
+    document.getElementById("applica-adp-seleziona-tutti")?.checked || false;
+  document.querySelectorAll(".applica-adp-checkbox").forEach(function (cb) {
+    cb.checked = checked;
+  });
 }
 function toggleSelezionaTuttiClientiApplica() {
-  var checked = document.getElementById("applica-clienti-seleziona-tutti")?.checked || false;
-  document.querySelectorAll(".applica-cliente-checkbox").forEach(function (cb) { cb.checked = checked; });
+  var checked =
+    document.getElementById("applica-clienti-seleziona-tutti")?.checked ||
+    false;
+  document.querySelectorAll(".applica-cliente-checkbox").forEach(function (cb) {
+    cb.checked = checked;
+  });
 }
 function resetSelezioneAdpApplica() {
-  document.querySelectorAll(".applica-adp-checkbox").forEach(function (cb) { cb.checked = false; });
-  var sel = document.getElementById("applica-adp-seleziona-tutti"); if (sel) sel.checked = false;
+  document.querySelectorAll(".applica-adp-checkbox").forEach(function (cb) {
+    cb.checked = false;
+  });
+  var sel = document.getElementById("applica-adp-seleziona-tutti");
+  if (sel) sel.checked = false;
 }
 function getSelectedAdempimentiApplica() {
-  return Array.from(document.querySelectorAll(".applica-adp-checkbox:checked")).map(function (cb) { return parseInt(cb.value); });
+  return Array.from(
+    document.querySelectorAll(".applica-adp-checkbox:checked"),
+  ).map(function (cb) {
+    return parseInt(cb.value);
+  });
 }
 function getSelectedClientiApplica() {
-  return Array.from(document.querySelectorAll(".applica-cliente-checkbox:checked")).map(function (cb) { return parseInt(cb.value); });
+  return Array.from(
+    document.querySelectorAll(".applica-cliente-checkbox:checked"),
+  ).map(function (cb) {
+    return parseInt(cb.value);
+  });
 }
 function eseguiApplicaAdempimenti() {
-  var adpIds     = getSelectedAdempimentiApplica();
+  var adpIds = getSelectedAdempimentiApplica();
   var clientiIds = getSelectedClientiApplica();
-  var anno       = parseInt(document.getElementById("applica-adempimenti-anno")?.value || state.anno);
-  if (adpIds.length === 0)     { showNotif("Seleziona almeno un adempimento", "error"); return; }
-  if (clientiIds.length === 0) { showNotif("Seleziona almeno un cliente", "error");     return; }
-  socket.emit("applica:adempimenti_a_clienti", { adempimenti_ids: adpIds, clienti_ids: clientiIds, anno });
+  var anno = parseInt(
+    document.getElementById("applica-adempimenti-anno")?.value || state.anno,
+  );
+  if (adpIds.length === 0) {
+    showNotif("Seleziona almeno un adempimento", "error");
+    return;
+  }
+  if (clientiIds.length === 0) {
+    showNotif("Seleziona almeno un cliente", "error");
+    return;
+  }
+  socket.emit("applica:adempimenti_a_clienti", {
+    adempimenti_ids: adpIds,
+    clienti_ids: clientiIds,
+    anno,
+  });
   closeModal("modal-applica-adempimenti");
 }
 
@@ -314,10 +415,12 @@ function eseguiApplicaAdempimenti() {
 
 function goVistaGlobaleAdp(nome) {
   state.globalePreFiltroAdp = nome;
-  document.querySelectorAll(".nav-item").forEach(function (x) { x.classList.remove("active"); });
+  document.querySelectorAll(".nav-item").forEach(function (x) {
+    x.classList.remove("active");
+  });
   var nav = document.querySelector('[data-page="scadenzario_globale"]');
   if (nav) nav.classList.add("active");
-  state.dashSearch        = "";
+  state.dashSearch = "";
   state.dashFiltroStatoAdp = "";
   renderPage("scadenzario_globale");
 }
@@ -336,11 +439,14 @@ function onDashAdpSearch(val) {
 }
 
 function resetDashFiltri() {
-  state.dashSearch         = "";
+  state.dashSearch = "";
   state.dashFiltroStatoAdp = "";
-  var searchEl = document.getElementById("dash-adp-search");   if (searchEl) searchEl.value = "";
-  var statoEl  = document.getElementById("dash-filtro-stato-adp"); if (statoEl) statoEl.value  = "";
-  if (typeof initializeTipologieFilter === "function") initializeTipologieFilter();
+  var searchEl = document.getElementById("dash-adp-search");
+  if (searchEl) searchEl.value = "";
+  var statoEl = document.getElementById("dash-filtro-stato-adp");
+  if (statoEl) statoEl.value = "";
+  if (typeof initializeTipologieFilter === "function")
+    initializeTipologieFilter();
   _refreshDashTipFiltroPanel();
   _aggiornaDashTipFiltroCounter();
   if (state.dashStats) updateDashboardContent(state.dashStats);
@@ -351,18 +457,24 @@ function resetDashFiltri() {
 // Un MutationObserver intercetta ogni re-render del pannello (causato dai
 // toggle di clienti.js) e aggiorna i contatori + le card della dashboard.
 
-var _dashTipFiltroPanelOpen  = false;
-var _dashFiltroObserver      = null;   // MutationObserver attivo
+var _dashTipFiltroPanelOpen = false;
+var _dashFiltroObserver = null; // MutationObserver attivo
 
 function toggleDashTipFiltroPanel(event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
   _dashTipFiltroPanelOpen = !_dashTipFiltroPanelOpen;
   _aggiornaDashPanelVisibility();
   if (_dashTipFiltroPanelOpen) _refreshDashTipFiltroPanel();
 }
 
 function closeDashTipFiltroPanel(event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
   _dashTipFiltroPanelOpen = false;
   _aggiornaDashPanelVisibility();
 }
@@ -380,27 +492,31 @@ function _aggiornaDashPanelVisibility() {
 }
 
 function _aggiornaDashTipFiltroCounter() {
-  var badge   = document.getElementById("dash-tip-filtro-count");
+  var badge = document.getElementById("dash-tip-filtro-count");
   var warning = document.getElementById("dash-tip-filtro-warning");
   if (!badge) return;
 
-  var keys    = typeof _getActiveFiltroKeys === "function" ? _getActiveFiltroKeys() : new Set();
-  var allKeys = typeof window._getAllKeys   === "function" ? window._getAllKeys()    : [];
-  var isNone  = (window._filtroManualeNessuno) || keys.size === 0;
-  var isAll   = !isNone && keys.size === allKeys.length;
+  var keys =
+    typeof _getActiveFiltroKeys === "function"
+      ? _getActiveFiltroKeys()
+      : new Set();
+  var allKeys =
+    typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
+  var isNone = window._filtroManualeNessuno || keys.size === 0;
+  var isAll = !isNone && keys.size === allKeys.length;
 
   if (isNone) {
-    badge.textContent      = "0";
-    badge.style.display    = "inline-flex";
+    badge.textContent = "0";
+    badge.style.display = "inline-flex";
     badge.style.background = "var(--red)";
     if (warning) warning.style.display = "inline";
   } else if (isAll) {
-    badge.textContent   = "";
+    badge.textContent = "";
     badge.style.display = "none";
     if (warning) warning.style.display = "none";
   } else {
-    badge.textContent      = keys.size;
-    badge.style.display    = "inline-flex";
+    badge.textContent = keys.size;
+    badge.style.display = "inline-flex";
     badge.style.background = "var(--accent)";
     if (warning) warning.style.display = "none";
   }
@@ -412,7 +528,10 @@ function _refreshDashTipFiltroPanel() {
   if (typeof renderTipologieFiltroPanel !== "function") return;
 
   // Smonta il vecchio observer prima di ricostruire il DOM
-  if (_dashFiltroObserver) { _dashFiltroObserver.disconnect(); _dashFiltroObserver = null; }
+  if (_dashFiltroObserver) {
+    _dashFiltroObserver.disconnect();
+    _dashFiltroObserver = null;
+  }
 
   // Renderizza il pannello identico a clienti.js
   var tmp = document.createElement("div");
@@ -427,8 +546,10 @@ function _refreshDashTipFiltroPanel() {
     if (state.dashStats) updateDashboardContent(state.dashStats);
   });
   _dashFiltroObserver.observe(container, {
-    childList: true, subtree: true,
-    attributes: true, attributeFilter: ["class", "style"]
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class", "style"],
   });
 
   container.style.display = _dashTipFiltroPanelOpen ? "block" : "none";
@@ -440,26 +561,32 @@ function _refreshDashTipFiltroPanel() {
 function adempimentoPassaFiltroStato(a, ss) {
   if (!ss) return true;
   var inCorso = a.totale - a.completati - a.da_fare - (a.na || 0);
-  if (ss === "da_fare")    return a.da_fare > 0;
-  if (ss === "in_corso")   return inCorso > 0;
+  if (ss === "da_fare") return a.da_fare > 0;
+  if (ss === "in_corso") return inCorso > 0;
   if (ss === "completato") return a.completati > 0;
-  if (ss === "n_a")        return (a.na || 0) > 0;
+  if (ss === "n_a") return (a.na || 0) > 0;
   return true;
 }
 
 function clientePassaFiltroTipologieDashboard(adempimento) {
-  var keys    = typeof _getActiveFiltroKeys === "function" ? _getActiveFiltroKeys() : new Set();
-  var allKeys = typeof window._getAllKeys   === "function" ? window._getAllKeys()    : [];
-  var isNone  = window._filtroManualeNessuno || keys.size === 0;
-  var isAll   = !isNone && keys.size === allKeys.length;
+  var keys =
+    typeof _getActiveFiltroKeys === "function"
+      ? _getActiveFiltroKeys()
+      : new Set();
+  var allKeys =
+    typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
+  var isNone = window._filtroManualeNessuno || keys.size === 0;
+  var isAll = !isNone && keys.size === allKeys.length;
 
   if (isNone) return false;
-  if (isAll)  return true;
+  if (isAll) return true;
 
   // Se l'adempimento porta il codice tipologia del cliente, filtriamo su quello
   if (adempimento.cliente_tipologia_codice) {
     var tipCod = adempimento.cliente_tipologia_codice;
-    return Array.from(keys).some(function (key) { return key.split("|")[0] === tipCod; });
+    return Array.from(keys).some(function (key) {
+      return key.split("|")[0] === tipCod;
+    });
   }
   return true;
 }
@@ -468,39 +595,65 @@ function clientePassaFiltroTipologieDashboard(adempimento) {
 
 function updateDashboardContent(stats) {
   var allAdp = stats.adempimentiStats || [];
-  var sq     = (state.dashSearch        || "").toLowerCase();
-  var ss     = (state.dashFiltroStatoAdp || "");
+  var sq = (state.dashSearch || "").toLowerCase();
+  var ss = state.dashFiltroStatoAdp || "";
 
   var adpVis = allAdp.filter(function (a) {
-    if (sq && a.nome.toLowerCase().indexOf(sq) === -1 && a.codice.toLowerCase().indexOf(sq) === -1) return false;
-    if (!adempimentoPassaFiltroStato(a, ss))              return false;
-    if (!clientePassaFiltroTipologieDashboard(a))         return false;
+    if (
+      sq &&
+      a.nome.toLowerCase().indexOf(sq) === -1 &&
+      a.codice.toLowerCase().indexOf(sq) === -1
+    )
+      return false;
+    if (!adempimentoPassaFiltroStato(a, ss)) return false;
+    if (!clientePassaFiltroTipologieDashboard(a)) return false;
     return true;
   });
 
-  var fT = 0, fC = 0, fD = 0, fI = 0;
+  var fT = 0,
+    fC = 0,
+    fD = 0,
+    fI = 0;
   adpVis.forEach(function (aa) {
     fT += aa.totale;
     fC += aa.completati;
     fD += aa.da_fare;
     fI += Math.max(0, aa.totale - aa.completati - aa.da_fare - (aa.na || 0));
   });
-  var fP   = fT > 0 ? Math.round((fC / fT) * 100) : 0;
-  var isF  = sq !== "" || ss !== "";
+  var fP = fT > 0 ? Math.round((fC / fT) * 100) : 0;
+  var isF = sq !== "" || ss !== "";
 
-  var lblTot    = document.getElementById("ds-lbl-tot");
-  if (lblTot)   lblTot.innerHTML = 'Adempimenti ' + stats.anno + (isF ? ' <span style="font-size:10px;color:var(--yellow)">(filtro)</span>' : '');
-  var totEl     = document.getElementById("ds-tot");    if (totEl)    totEl.textContent  = fT;
-  var compEl    = document.getElementById("ds-comp");   if (compEl)   compEl.textContent = fC;
-  var dafareEl  = document.getElementById("ds-dafare"); if (dafareEl) dafareEl.textContent = fD;
-  var incorsoEl = document.getElementById("ds-incorso");if (incorsoEl)incorsoEl.textContent = fI;
-  var percEl    = document.getElementById("ds-perc");   if (percEl)   percEl.textContent  = fP + "%";
-  var progEl    = document.getElementById("ds-prog");   if (progEl)   progEl.style.width  = fP + "%";
+  var lblTot = document.getElementById("ds-lbl-tot");
+  if (lblTot)
+    lblTot.innerHTML =
+      "Adempimenti " +
+      stats.anno +
+      (isF
+        ? ' <span style="font-size:10px;color:var(--yellow)">(filtro)</span>'
+        : "");
+  var totEl = document.getElementById("ds-tot");
+  if (totEl) totEl.textContent = fT;
+  var compEl = document.getElementById("ds-comp");
+  if (compEl) compEl.textContent = fC;
+  var dafareEl = document.getElementById("ds-dafare");
+  if (dafareEl) dafareEl.textContent = fD;
+  var incorsoEl = document.getElementById("ds-incorso");
+  if (incorsoEl) incorsoEl.textContent = fI;
+  var percEl = document.getElementById("ds-perc");
+  if (percEl) percEl.textContent = fP + "%";
+  var progEl = document.getElementById("ds-prog");
+  if (progEl) progEl.style.width = fP + "%";
 
-  var titleEl   = document.getElementById("dash-adp-count-title");
-  if (titleEl)  titleEl.innerHTML = 'Adempimenti ' + stats.anno +
-    ' <span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:6px">' +
-    adpVis.length + '/' + allAdp.length + '</span>';
+  var titleEl = document.getElementById("dash-adp-count-title");
+  if (titleEl)
+    titleEl.innerHTML =
+      "Adempimenti " +
+      stats.anno +
+      ' <span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:6px">' +
+      adpVis.length +
+      "/" +
+      allAdp.length +
+      "</span>";
 
   var grid = document.getElementById("dash-adp-grid");
   if (!grid) return;
@@ -514,23 +667,54 @@ function updateDashboardContent(stats) {
 
   var html = "";
   adpVis.forEach(function (adpItem) {
-    var p       = adpItem.totale > 0 ? Math.round((adpItem.completati / adpItem.totale) * 100) : 0;
-    var iC      = Math.max(0, adpItem.totale - adpItem.completati - adpItem.da_fare - (adpItem.na || 0));
-    var pgColor = p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
+    var p =
+      adpItem.totale > 0
+        ? Math.round((adpItem.completati / adpItem.totale) * 100)
+        : 0;
+    var iC = Math.max(
+      0,
+      adpItem.totale - adpItem.completati - adpItem.da_fare - (adpItem.na || 0),
+    );
+    var pgColor =
+      p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
     html +=
-      '<div class="dash-adp-card" onclick="goVistaGlobaleAdp(\'' + adpItem.nome.replace(/'/g, "\\'") + '\')">' +
+      '<div class="dash-adp-card" onclick="goVistaGlobaleAdp(\'' +
+      adpItem.nome.replace(/'/g, "\\'") +
+      "')\">" +
       '<div class="dash-adp-card-top">' +
-      '<span class="adp-def-codice">' + adpItem.codice + '</span>' +
-      '<div class="mini-bar" style="width:60px"><div class="mini-fill" style="width:' + p + '%;background:' + pgColor + '"></div></div>' +
-      '<span style="font-size:11px;font-family:var(--mono);color:' + pgColor + '">' + p + '%</span>' +
-      '</div>' +
-      '<div class="dash-adp-nome">' + adpItem.nome + '</div>' +
+      '<span class="adp-def-codice">' +
+      adpItem.codice +
+      "</span>" +
+      '<div class="mini-bar" style="width:60px"><div class="mini-fill" style="width:' +
+      p +
+      "%;background:" +
+      pgColor +
+      '"></div></div>' +
+      '<span style="font-size:11px;font-family:var(--mono);color:' +
+      pgColor +
+      '">' +
+      p +
+      "%</span>" +
+      "</div>" +
+      '<div class="dash-adp-nome">' +
+      adpItem.nome +
+      "</div>" +
       '<div class="dash-adp-stats">' +
-      '<div class="dash-stat-chip"><span class="ds-num">' + adpItem.totale + '</span><span class="ds-lbl">Tot.</span></div>' +
-      '<div class="dash-stat-chip" style="color:var(--green)"><span class="ds-num">' + adpItem.completati + '</span><span class="ds-lbl">✓</span></div>' +
-      '<div class="dash-stat-chip" style="color:var(--red)"><span class="ds-num">' + adpItem.da_fare + '</span><span class="ds-lbl">⭕</span></div>' +
-      (iC > 0 ? '<div class="dash-stat-chip" style="color:var(--yellow)"><span class="ds-num">' + iC + '</span><span class="ds-lbl">🔄</span></div>' : '') +
-      '</div></div>';
+      '<div class="dash-stat-chip"><span class="ds-num">' +
+      adpItem.totale +
+      '</span><span class="ds-lbl">Tot.</span></div>' +
+      '<div class="dash-stat-chip" style="color:var(--green)"><span class="ds-num">' +
+      adpItem.completati +
+      '</span><span class="ds-lbl">✓</span></div>' +
+      '<div class="dash-stat-chip" style="color:var(--red)"><span class="ds-num">' +
+      adpItem.da_fare +
+      '</span><span class="ds-lbl">⭕</span></div>' +
+      (iC > 0
+        ? '<div class="dash-stat-chip" style="color:var(--yellow)"><span class="ds-num">' +
+          iC +
+          '</span><span class="ds-lbl">🔄</span></div>'
+        : "") +
+      "</div></div>";
   });
   grid.innerHTML = html;
 }
@@ -541,7 +725,8 @@ function renderDashboard(stats) {
   if (!state._dashRendered) buildDashboardShell(stats);
   state.dashStats = stats;
   updateDashboardContent(stats);
-  if (typeof initializeTipologieFilter === "function") initializeTipologieFilter();
+  if (typeof initializeTipologieFilter === "function")
+    initializeTipologieFilter();
   _refreshDashTipFiltroPanel();
   _aggiornaDashTipFiltroCounter();
 }
@@ -554,8 +739,14 @@ if (typeof socket !== "undefined") {
   });
   socket.on("res:applica:adempimenti_a_clienti", function (data) {
     if (data.success) {
-      var msg = "✅ Applicati " + data.inseriti + " adempimenti a " + data.clienti + " clienti";
-      if (data.dettagli && data.dettagli.skipped > 0) msg += " — " + data.dettagli.skipped + " già esistenti";
+      var msg =
+        "✅ Applicati " +
+        data.inseriti +
+        " adempimenti a " +
+        data.clienti +
+        " clienti";
+      if (data.dettagli && data.dettagli.skipped > 0)
+        msg += " — " + data.dettagli.skipped + " già esistenti";
       showNotif(msg, "success");
       socket.emit("get:stats", { anno: state.anno });
       caricaClientiSenzaAdempimenti();
@@ -567,21 +758,21 @@ if (typeof socket !== "undefined") {
 
 // ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
 
-window.openApplicaAdempimenti              = openApplicaAdempimenti;
-window.filtraClientiApplica                = filtraClientiApplica;
-window.toggleSelezionaTuttiAdpApplica      = toggleSelezionaTuttiAdpApplica;
-window.toggleSelezionaTuttiClientiApplica  = toggleSelezionaTuttiClientiApplica;
-window.resetSelezioneAdpApplica            = resetSelezioneAdpApplica;
-window.eseguiApplicaAdempimenti            = eseguiApplicaAdempimenti;
-window.apriApplicaAdempimentiPerVuoti      = apriApplicaAdempimentiPerVuoti;
-window.goToClienteScadenzarioDiretto       = goToClienteScadenzarioDiretto;
-window.caricaClientiSenzaAdempimenti       = caricaClientiSenzaAdempimenti;
-window.goVistaGlobaleAdp                   = goVistaGlobaleAdp;
-window.onDashFiltroStatoAdp                = onDashFiltroStatoAdp;
-window.resetDashFiltri                     = resetDashFiltri;
-window.onDashAdpSearch                     = onDashAdpSearch;
-window.toggleDashTipFiltroPanel            = toggleDashTipFiltroPanel;
-window.closeDashTipFiltroPanel             = closeDashTipFiltroPanel;
-window._aggiornaDashPanelVisibility        = _aggiornaDashPanelVisibility;
-window._aggiornaDashTipFiltroCounter       = _aggiornaDashTipFiltroCounter;
-window._refreshDashTipFiltroPanel          = _refreshDashTipFiltroPanel;
+window.openApplicaAdempimenti = openApplicaAdempimenti;
+window.filtraClientiApplica = filtraClientiApplica;
+window.toggleSelezionaTuttiAdpApplica = toggleSelezionaTuttiAdpApplica;
+window.toggleSelezionaTuttiClientiApplica = toggleSelezionaTuttiClientiApplica;
+window.resetSelezioneAdpApplica = resetSelezioneAdpApplica;
+window.eseguiApplicaAdempimenti = eseguiApplicaAdempimenti;
+window.apriApplicaAdempimentiPerVuoti = apriApplicaAdempimentiPerVuoti;
+window.goToClienteScadenzarioDiretto = goToClienteScadenzarioDiretto;
+window.caricaClientiSenzaAdempimenti = caricaClientiSenzaAdempimenti;
+window.goVistaGlobaleAdp = goVistaGlobaleAdp;
+window.onDashFiltroStatoAdp = onDashFiltroStatoAdp;
+window.resetDashFiltri = resetDashFiltri;
+window.onDashAdpSearch = onDashAdpSearch;
+window.toggleDashTipFiltroPanel = toggleDashTipFiltroPanel;
+window.closeDashTipFiltroPanel = closeDashTipFiltroPanel;
+window._aggiornaDashPanelVisibility = _aggiornaDashPanelVisibility;
+window._aggiornaDashTipFiltroCounter = _aggiornaDashTipFiltroCounter;
+window._refreshDashTipFiltroPanel = _refreshDashTipFiltroPanel;

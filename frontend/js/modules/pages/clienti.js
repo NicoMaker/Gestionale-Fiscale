@@ -19,7 +19,7 @@ let _TIPOLOGIE_DATA = null;
 
 const _cfgReady = (async () => {
   try {
-    const res  = await fetch("json/tipologie-data.json");
+    const res = await fetch("json/tipologie-data.json");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     _TIPOLOGIE_DATA = await res.json();
     // Esponi anche globalmente per globale.js (caricato separatamente)
@@ -28,7 +28,10 @@ const _cfgReady = (async () => {
     initializeTipologieFilter();
     _syncGlobalFiltroKeys();
   } catch (e) {
-    console.error("[clienti.js] Impossibile caricare json/tipologie-data.json:", e);
+    console.error(
+      "[clienti.js] Impossibile caricare json/tipologie-data.json:",
+      e,
+    );
     _TIPOLOGIE_DATA = {};
     window.TIPOLOGIE_CONFIG = {};
   }
@@ -58,15 +61,15 @@ function _buildTipologiePercorsiData() {
   Object.entries(cfg.percorsi).forEach(([tipCod, percorsiArr]) => {
     const tipMeta = cfg.tipologie[tipCod] || {};
     out[tipCod] = {
-      color:   tipMeta.color || "#888",
-      icon:    tipMeta.icon  || "📋",
-      desc:    tipMeta.desc  || tipCod,
+      color: tipMeta.color || "#888",
+      icon: tipMeta.icon || "📋",
+      desc: tipMeta.desc || tipCod,
       percorsi: percorsiArr.map((p) => ({
-        col2:    p.col2Label,
-        col3:    p.col3Label,
-        codice:  p.codice,
-        hasPer:  p.hasPer,
-        isForf:  p.isForfettario,
+        col2: p.col2Label,
+        col3: p.col3Label,
+        codice: p.codice,
+        hasPer: p.hasPer,
+        isForf: p.isForfettario,
       })),
     };
   });
@@ -85,13 +88,17 @@ function _buildCol2Maps() {
   const cfg = _cfg();
   const label2db = {};
   const db2label = {};
-  Object.values(cfg.percorsi || {}).flat().forEach((p) => {
-    if (!p.col2Label) return;
-    const db = p.col2Label === "Ditta Individuale" ? "ditta"
-             : p.col2Label.toLowerCase();
-    label2db[p.col2Label] = db;
-    db2label[db]          = p.col2Label;
-  });
+  Object.values(cfg.percorsi || {})
+    .flat()
+    .forEach((p) => {
+      if (!p.col2Label) return;
+      const db =
+        p.col2Label === "Ditta Individuale"
+          ? "ditta"
+          : p.col2Label.toLowerCase();
+      label2db[p.col2Label] = db;
+      db2label[db] = p.col2Label;
+    });
   return { label2db, db2label };
 }
 
@@ -99,20 +106,30 @@ function _buildCol3Maps() {
   const cfg = _cfg();
   const label2db = {};
   const db2label = {};
-  Object.values(cfg.percorsi || {}).flat().forEach((p) => {
-    if (!p.col3Label) return;
-    const db = p.col3Label.toLowerCase();
-    label2db[p.col3Label] = db;
-    db2label[db]          = p.col3Label;
-  });
+  Object.values(cfg.percorsi || {})
+    .flat()
+    .forEach((p) => {
+      if (!p.col3Label) return;
+      const db = p.col3Label.toLowerCase();
+      label2db[p.col3Label] = db;
+      db2label[db] = p.col3Label;
+    });
   return { label2db, db2label };
 }
 
 // Esposti globalmente (usati anche da globale.js)
-function _col2LabelToDb() { return _buildCol2Maps().label2db; }
-function _col2DbToLabel() { return _buildCol2Maps().db2label; }
-function _col3LabelToDb() { return _buildCol3Maps().label2db; }
-function _col3DbToLabel() { return _buildCol3Maps().db2label; }
+function _col2LabelToDb() {
+  return _buildCol2Maps().label2db;
+}
+function _col2DbToLabel() {
+  return _buildCol2Maps().db2label;
+}
+function _col3LabelToDb() {
+  return _buildCol3Maps().label2db;
+}
+function _col3DbToLabel() {
+  return _buildCol3Maps().db2label;
+}
 
 // ─── STATO FILTRO ─────────────────────────────────────────────
 // Set di chiavi attive: "TIP|col2Label|col3Label|periodicita"
@@ -131,19 +148,17 @@ function _buildFiltroKey(tipCod, col2, col3, per) {
 }
 
 function _getAllKeys() {
-  const data  = _getTipologiePercorsiData();
-  const cfg   = _cfg();
-  const ivaPer  = (cfg.periodicitaIva     || []).map((p) => p.value);
-  const annPer  = (cfg.periodicitaAnnuale || []).map((p) => p.value);
+  const data = _getTipologiePercorsiData();
+  const cfg = _cfg();
+  const ivaPer = (cfg.periodicitaIva || []).map((p) => p.value);
+  const annPer = (cfg.periodicitaAnnuale || []).map((p) => p.value);
 
   const keys = [];
   Object.entries(data).forEach(([tipCod, tip]) => {
     tip.percorsi.forEach((p) => {
-      const perList = p.isForf ? annPer
-                    : p.hasPer ? ivaPer
-                    : [""];
+      const perList = p.isForf ? annPer : p.hasPer ? ivaPer : [""];
       perList.forEach((per) =>
-        keys.push(_buildFiltroKey(tipCod, p.col2, p.col3, per))
+        keys.push(_buildFiltroKey(tipCod, p.col2, p.col3, per)),
       );
     });
   });
@@ -153,7 +168,7 @@ function _getAllKeys() {
 // ─── INIT FILTRO: seleziona tutto ────────────────────────────
 function initializeTipologieFilter() {
   _filtroManualeNessuno = false;
-  _activeFiltroKeys     = new Set(_getAllKeys());
+  _activeFiltroKeys = new Set(_getAllKeys());
   _syncGlobalFiltroKeys();
 }
 
@@ -161,48 +176,48 @@ function initializeTipologieFilter() {
 // dalla _cfgReady Promise appena il JSON è caricato. ─────────
 
 function _syncGlobalFiltroKeys() {
-  window._activeFiltroKeys      = _activeFiltroKeys;
-  window.COL2_DB_TO_LABEL       = _col2DbToLabel();
-  window.COL3_DB_TO_LABEL       = _col3DbToLabel();
-  window.COL2_LABEL_TO_DB       = _col2LabelToDb();
-  window.COL3_LABEL_TO_DB       = _col3LabelToDb();
+  window._activeFiltroKeys = _activeFiltroKeys;
+  window.COL2_DB_TO_LABEL = _col2DbToLabel();
+  window.COL3_DB_TO_LABEL = _col3DbToLabel();
+  window.COL2_LABEL_TO_DB = _col2LabelToDb();
+  window.COL3_LABEL_TO_DB = _col3LabelToDb();
 }
 
 function _isTipCodAllSelected(tipCod) {
   const data = _getTipologiePercorsiData();
-  const tip  = data[tipCod];
+  const tip = data[tipCod];
   if (!tip) return false;
-  const cfg    = _cfg();
-  const ivaPer = (cfg.periodicitaIva     || []).map((p) => p.value);
+  const cfg = _cfg();
+  const ivaPer = (cfg.periodicitaIva || []).map((p) => p.value);
   const annPer = (cfg.periodicitaAnnuale || []).map((p) => p.value);
   return tip.percorsi.every((p) => {
     const perList = p.isForf ? annPer : p.hasPer ? ivaPer : [""];
     return perList.every((per) =>
-      _activeFiltroKeys.has(_buildFiltroKey(tipCod, p.col2, p.col3, per))
+      _activeFiltroKeys.has(_buildFiltroKey(tipCod, p.col2, p.col3, per)),
     );
   });
 }
 
 // ─── RENDER PANNELLO ──────────────────────────────────────────
 function renderTipologieFiltroPanel() {
-  const data      = _getTipologiePercorsiData();
-  const cfg       = _cfg();
-  const ivaPer    = cfg.periodicitaIva     || [];
-  const annPer    = cfg.periodicitaAnnuale || [];
-  const allKeys   = _getAllKeys();
+  const data = _getTipologiePercorsiData();
+  const cfg = _cfg();
+  const ivaPer = cfg.periodicitaIva || [];
+  const annPer = cfg.periodicitaAnnuale || [];
+  const allKeys = _getAllKeys();
   const totalKeys = allKeys.length;
   // ── Counter: mostra numero effettivo solo se parziale ─────
   const activeCount = _filtroManualeNessuno ? 0 : _activeFiltroKeys.size;
-  const isAll       = !_filtroManualeNessuno && activeCount === totalKeys;
-  const isNone      = _filtroManualeNessuno || activeCount === 0;
+  const isAll = !_filtroManualeNessuno && activeCount === totalKeys;
+  const isNone = _filtroManualeNessuno || activeCount === 0;
   // Badge numerico: visibile solo se parziale (né tutto né niente)
-  const showBadge   = !isAll && !isNone;
-  const badgeNum    = isNone ? "" : (isAll ? "" : activeCount);
+  const showBadge = !isAll && !isNone;
+  const badgeNum = isNone ? "" : isAll ? "" : activeCount;
 
   let html = `<div class="tip-filtro-panel" id="tip-filtro-panel">
     <div class="tip-filtro-header">
       <span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtra per Tipologia</span>
-      <span style="font-size:11px;color:var(--t3);margin-left:4px">(${isNone ? 0 : (isAll ? totalKeys : activeCount)}/${totalKeys} selezionati)</span>
+      <span style="font-size:11px;color:var(--t3);margin-left:4px">(${isNone ? 0 : isAll ? totalKeys : activeCount}/${totalKeys} selezionati)</span>
       <div style="display:flex;gap:6px;align-items:center;margin-left:auto">
         <button class="tip-btn-all"  onclick="selezionaTuttiTipFiltro(event)"   title="Seleziona tutto">✦ Tutti</button>
         <button class="tip-btn-none" onclick="deselezionaTuttiTipFiltro(event)" title="Deseleziona tutto">✕ Nessuno</button>
@@ -211,15 +226,19 @@ function renderTipologieFiltroPanel() {
     <div class="tip-filtro-body">`;
 
   Object.entries(data).forEach(([tipCod, tip]) => {
-    const allSelected  = !isNone && _isTipCodAllSelected(tipCod);
-    const someSelected = !isNone && tip.percorsi.some((p) => {
-      const perList = p.isForf ? annPer.map((x) => x.value)
-                    : p.hasPer ? ivaPer.map((x) => x.value)
-                    : [""];
-      return perList.some((per) =>
-        _activeFiltroKeys.has(_buildFiltroKey(tipCod, p.col2, p.col3, per))
-      );
-    });
+    const allSelected = !isNone && _isTipCodAllSelected(tipCod);
+    const someSelected =
+      !isNone &&
+      tip.percorsi.some((p) => {
+        const perList = p.isForf
+          ? annPer.map((x) => x.value)
+          : p.hasPer
+            ? ivaPer.map((x) => x.value)
+            : [""];
+        return perList.some((per) =>
+          _activeFiltroKeys.has(_buildFiltroKey(tipCod, p.col2, p.col3, per)),
+        );
+      });
 
     html += `<div class="tip-gruppo">
       <div class="tip-gruppo-header" onclick="toggleTipologiaGruppo(event,'${tipCod}')"
@@ -233,11 +252,15 @@ function renderTipologieFiltroPanel() {
       <div class="tip-percorsi-grid">`;
 
     tip.percorsi.forEach((p) => {
-      const perList = p.isForf ? annPer : p.hasPer ? ivaPer : [{ value: "", color: "" }];
+      const perList = p.isForf
+        ? annPer
+        : p.hasPer
+          ? ivaPer
+          : [{ value: "", color: "" }];
       perList.forEach((perObj) => {
-        const per      = typeof perObj === "string" ? perObj : (perObj.value || "");
-        const perColor = typeof perObj === "object"  ? (perObj.color || "") : "";
-        const key      = _buildFiltroKey(tipCod, p.col2, p.col3, per);
+        const per = typeof perObj === "string" ? perObj : perObj.value || "";
+        const perColor = typeof perObj === "object" ? perObj.color || "" : "";
+        const key = _buildFiltroKey(tipCod, p.col2, p.col3, per);
         const isActive = !isNone && _activeFiltroKeys.has(key);
 
         let labelParts = [];
@@ -245,10 +268,14 @@ function renderTipologieFiltroPanel() {
         if (p.col3) labelParts.push(p.col3);
         const label = labelParts.join(" · ") || tipCod;
 
-        const perIcon = per === "mensile" ? "📅"
-                      : per === "trimestrale" ? "📆"
-                      : per === "annuale" ? "🗓️"
-                      : "";
+        const perIcon =
+          per === "mensile"
+            ? "📅"
+            : per === "trimestrale"
+              ? "📆"
+              : per === "annuale"
+                ? "🗓️"
+                : "";
 
         html += `<button
           class="tip-percorso-chip${isActive ? " tip-active" : ""}"
@@ -271,13 +298,19 @@ function renderTipologieFiltroPanel() {
 
 // ─── TOGGLE PANNELLO ──────────────────────────────────────────
 function toggleTipFiltroPanel(event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
   _tipFiltroPanelOpen = !_tipFiltroPanelOpen;
   _aggiornaTipFiltroPanelVisibility();
 }
 
 function closeTipFiltroPanel(event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
   _tipFiltroPanelOpen = false;
   _aggiornaTipFiltroPanelVisibility();
 }
@@ -300,13 +333,16 @@ function _aggiornaTipFiltroPanelVisibility() {
 // ─── AZIONI FILTRO ────────────────────────────────────────────
 
 function toggleFiltroPercorso(event, tipCod, col2, col3, per) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
   const key = _buildFiltroKey(tipCod, col2, col3, per);
 
   if (_filtroManualeNessuno) {
     // Prima selezione dopo "Nessuno": attiva solo questo chip
     _filtroManualeNessuno = false;
-    _activeFiltroKeys     = new Set([key]);
+    _activeFiltroKeys = new Set([key]);
   } else {
     if (_activeFiltroKeys.has(key)) {
       _activeFiltroKeys.delete(key);
@@ -323,19 +359,22 @@ function toggleFiltroPercorso(event, tipCod, col2, col3, per) {
 }
 
 function toggleTipologiaGruppo(event, tipCod) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
-  const data   = _getTipologiePercorsiData();
-  const tip    = data[tipCod];
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const data = _getTipologiePercorsiData();
+  const tip = data[tipCod];
   if (!tip) return;
-  const cfg    = _cfg();
-  const ivaPer = (cfg.periodicitaIva     || []).map((p) => p.value);
+  const cfg = _cfg();
+  const ivaPer = (cfg.periodicitaIva || []).map((p) => p.value);
   const annPer = (cfg.periodicitaAnnuale || []).map((p) => p.value);
 
   const allKeys = [];
   tip.percorsi.forEach((p) => {
     const perList = p.isForf ? annPer : p.hasPer ? ivaPer : [""];
     perList.forEach((per) =>
-      allKeys.push(_buildFiltroKey(tipCod, p.col2, p.col3, per))
+      allKeys.push(_buildFiltroKey(tipCod, p.col2, p.col3, per)),
     );
   });
 
@@ -360,9 +399,12 @@ function toggleTipologiaGruppo(event, tipCod) {
 
 // ── "✦ Tutti": seleziona tutto (resetta flag nessuno) ────────
 function selezionaTuttiTipFiltro(event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
   _filtroManualeNessuno = false;
-  _activeFiltroKeys     = new Set(_getAllKeys());
+  _activeFiltroKeys = new Set(_getAllKeys());
   _syncGlobalFiltroKeys();
   _refreshTipFiltroPanel();
   applyClientiFiltriDB();
@@ -371,9 +413,12 @@ function selezionaTuttiTipFiltro(event) {
 // ── "✕ Nessuno": deseleziona tutto, rimane nessuno finché
 //    l'utente non clicca singolarmente o "Tutti"  ────────────
 function deselezionaTuttiTipFiltro(event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
   _filtroManualeNessuno = true;
-  _activeFiltroKeys     = new Set();
+  _activeFiltroKeys = new Set();
   _syncGlobalFiltroKeys();
   _refreshTipFiltroPanel();
   applyClientiFiltriDB();
@@ -391,21 +436,22 @@ function _refreshTipFiltroPanel() {
 }
 
 function _aggiornaTipFiltroCounter() {
-  const badge     = document.getElementById("tip-filtro-count");
+  const badge = document.getElementById("tip-filtro-count");
   if (!badge) return;
-  const allKeys   = _getAllKeys();
-  const isAll     = !_filtroManualeNessuno && _activeFiltroKeys.size === allKeys.length;
-  const isNone    = _filtroManualeNessuno  || _activeFiltroKeys.size === 0;
+  const allKeys = _getAllKeys();
+  const isAll =
+    !_filtroManualeNessuno && _activeFiltroKeys.size === allKeys.length;
+  const isNone = _filtroManualeNessuno || _activeFiltroKeys.size === 0;
   // Mostra numero solo se parziale; se tutto → nasconde badge; se nessuno → "0" in rosso
   if (isNone) {
-    badge.textContent   = "0";
+    badge.textContent = "0";
     badge.style.display = "inline-flex";
     badge.style.background = "var(--red)";
   } else if (isAll) {
-    badge.textContent   = "";
+    badge.textContent = "";
     badge.style.display = "none";
   } else {
-    badge.textContent   = _activeFiltroKeys.size;
+    badge.textContent = _activeFiltroKeys.size;
     badge.style.display = "inline-flex";
     badge.style.background = "var(--accent)";
   }
@@ -423,29 +469,29 @@ function getFiltriPerRequest() {
     return {};
   }
 
-  const tipologie         = new Set();
-  const col2Values        = new Set();
-  const col3Values        = new Set();
+  const tipologie = new Set();
+  const col2Values = new Set();
+  const col3Values = new Set();
   const periodicitaValues = new Set();
-  const chiavi            = [];
-  const col2L2Db          = _col2LabelToDb();
-  const col3L2Db          = _col3LabelToDb();
+  const chiavi = [];
+  const col2L2Db = _col2LabelToDb();
+  const col3L2Db = _col3LabelToDb();
 
   _activeFiltroKeys.forEach((key) => {
     const [tip, col2, col3, per] = key.split("|");
-    if (tip)  tipologie.add(tip);
+    if (tip) tipologie.add(tip);
     if (col2) col2Values.add(col2L2Db[col2] || col2.toLowerCase());
     if (col3) col3Values.add(col3L2Db[col3] || col3.toLowerCase());
-    if (per)  periodicitaValues.add(per);
+    if (per) periodicitaValues.add(per);
     chiavi.push(key);
   });
 
   return {
-    tipologie:          Array.from(tipologie),
-    col2_values:        Array.from(col2Values),
-    col3_values:        Array.from(col3Values),
+    tipologie: Array.from(tipologie),
+    col2_values: Array.from(col2Values),
+    col3_values: Array.from(col3Values),
     periodicita_values: Array.from(periodicitaValues),
-    chiavi_attive:      chiavi,
+    chiavi_attive: chiavi,
   };
 }
 
@@ -456,7 +502,9 @@ const ANNO_MAX = 2200;
 function buildAnniOptions(selectedAnno) {
   const opts = [];
   for (let y = ANNO_MIN; y <= ANNO_MAX; y++) {
-    opts.push(`<option value="${y}" ${y === selectedAnno ? "selected" : ""}>${y}</option>`);
+    opts.push(
+      `<option value="${y}" ${y === selectedAnno ? "selected" : ""}>${y}</option>`,
+    );
   }
   return opts.join("");
 }
@@ -464,7 +512,9 @@ function buildAnniOptions(selectedAnno) {
 // ─── FILTRI DB ────────────────────────────────────────────────
 const applyClientiFiltriDB = debounce(() => {
   const search = document.getElementById("global-search-clienti")?.value || "";
-  const anno   = parseInt(document.getElementById("filter-anno")?.value) || new Date().getFullYear();
+  const anno =
+    parseInt(document.getElementById("filter-anno")?.value) ||
+    new Date().getFullYear();
   const filtriTip = getFiltriPerRequest();
 
   if (typeof socket !== "undefined") {
@@ -472,16 +522,20 @@ const applyClientiFiltriDB = debounce(() => {
       search,
       anno,
       filtri_tipologie: filtriTip,
-      tipologia:   filtriTip.tipologie        ? filtriTip.tipologie.join(",")        : "",
-      col2:        filtriTip.col2_values      ? filtriTip.col2_values.join(",")      : "",
-      col3:        filtriTip.col3_values      ? filtriTip.col3_values.join(",")      : "",
-      periodicita: filtriTip.periodicita_values ? filtriTip.periodicita_values.join(",") : "",
-      nessuno:     filtriTip.nessuno || false,
+      tipologia: filtriTip.tipologie ? filtriTip.tipologie.join(",") : "",
+      col2: filtriTip.col2_values ? filtriTip.col2_values.join(",") : "",
+      col3: filtriTip.col3_values ? filtriTip.col3_values.join(",") : "",
+      periodicita: filtriTip.periodicita_values
+        ? filtriTip.periodicita_values.join(",")
+        : "",
+      nessuno: filtriTip.nessuno || false,
     });
   }
 }, 300);
 
-function applyClientiFiltri() { applyClientiFiltriDB(); }
+function applyClientiFiltri() {
+  applyClientiFiltriDB();
+}
 
 function resetClientiFiltri() {
   const s = document.getElementById("global-search-clienti");
@@ -496,23 +550,45 @@ function resetClientiFiltri() {
 
 // ─── RENDER LISTA ─────────────────────────────────────────────
 function renderClientiPage() {
-  if (_activeFiltroKeys.size === 0 && !_filtroManualeNessuno && _getAllKeys().length > 0) {
+  if (
+    _activeFiltroKeys.size === 0 &&
+    !_filtroManualeNessuno &&
+    _getAllKeys().length > 0
+  ) {
     initializeTipologieFilter();
   }
   renderClientiTabella(state.clienti);
 }
 
 function renderClientiTabella(clienti) {
-  const col2Map = { privato: "Ditta Ind.", ditta: "Ditta Ind.", socio: "Socio", professionista: "Prof." };
-  const col3Map = { ordinario: "Ord.", semplificato: "Sempl.", forfettario: "Forf.", ordinaria: "Ord.", semplificata: "Sempl." };
-  const periodicitaMap = { mensile: "Mensile", trimestrale: "Trimestrale", annuale: "Annuale" };
+  const col2Map = {
+    privato: "Ditta Ind.",
+    ditta: "Ditta Ind.",
+    socio: "Socio",
+    professionista: "Prof.",
+  };
+  const col3Map = {
+    ordinario: "Ord.",
+    semplificato: "Sempl.",
+    forfettario: "Forf.",
+    ordinaria: "Ord.",
+    semplificata: "Sempl.",
+  };
+  const periodicitaMap = {
+    mensile: "Mensile",
+    trimestrale: "Trimestrale",
+    annuale: "Annuale",
+  };
 
-  const currentAnno = parseInt(document.getElementById("filter-anno")?.value) || new Date().getFullYear();
-  const allKeys     = _getAllKeys();
-  const isAll       = !_filtroManualeNessuno && _activeFiltroKeys.size === allKeys.length;
-  const isNone      = _filtroManualeNessuno  || _activeFiltroKeys.size === 0;
+  const currentAnno =
+    parseInt(document.getElementById("filter-anno")?.value) ||
+    new Date().getFullYear();
+  const allKeys = _getAllKeys();
+  const isAll =
+    !_filtroManualeNessuno && _activeFiltroKeys.size === allKeys.length;
+  const isNone = _filtroManualeNessuno || _activeFiltroKeys.size === 0;
   const activeCount = isNone ? 0 : _activeFiltroKeys.size;
-  const totalKeys   = allKeys.length;
+  const totalKeys = allKeys.length;
 
   const filterBar = `
     <div class="filtri-avanzati no-print" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:var(--surface2);border-radius:var(--r-sm);">
@@ -526,12 +602,14 @@ function renderClientiTabella(clienti) {
     <div style="margin-bottom:16px">
       <div id="tip-filtro-header-row" style="display:flex;align-items:center;gap:10px;margin-bottom:6px;padding:10px 14px;background:var(--s2);border:1px solid var(--b0);border-radius:var(--r-sm);cursor:pointer;" onclick="toggleTipFiltroPanel(event)">
         <span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie</span>
-        <span id="tip-filtro-count" style="display:${isNone ? "inline-flex" : (!isAll ? "inline-flex" : "none")};align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:${isNone ? "var(--red)" : "var(--accent)"};color:#fff;border-radius:10px;font-size:11px;font-weight:700">${isNone ? "0" : activeCount}</span>
+        <span id="tip-filtro-count" style="display:${isNone ? "inline-flex" : !isAll ? "inline-flex" : "none"};align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:${isNone ? "var(--red)" : "var(--accent)"};color:#fff;border-radius:10px;font-size:11px;font-weight:700">${isNone ? "0" : activeCount}</span>
         ${isNone ? `<span style="font-size:11px;color:var(--red);font-weight:700">⚠️ Nessuno selezionato</span>` : ""}
         <div class="tip-filtro-toggle-btn" style="margin-left:auto" onclick="event.stopPropagation()">
-          ${_tipFiltroPanelOpen
-            ? `<button class="btn btn-xs btn-secondary" onclick="closeTipFiltroPanel(event)">✕ Chiudi</button>`
-            : `<button class="btn btn-xs btn-secondary" onclick="toggleTipFiltroPanel(event)">▼ Espandi</button>`}
+          ${
+            _tipFiltroPanelOpen
+              ? `<button class="btn btn-xs btn-secondary" onclick="closeTipFiltroPanel(event)">✕ Chiudi</button>`
+              : `<button class="btn btn-xs btn-secondary" onclick="toggleTipFiltroPanel(event)">▼ Espandi</button>`
+          }
         </div>
       </div>
       <div id="tip-filtro-container" style="display:${_tipFiltroPanelOpen ? "block" : "none"}">
@@ -547,25 +625,31 @@ function renderClientiTabella(clienti) {
       tableRows = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">👥</div><p>Nessun cliente trovato per l'anno ${currentAnno}</p></div></td></tr>`;
     }
   } else {
-    tableRows = clienti.map((c) => {
-      const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
-      const avatar   = getAvatar(c.nome);
-      const sottotipoLabel = c.sottotipologia_nome || "";
-      const tipInfo  = TIPOLOGIE_INFO[c.tipologia_codice] || {};
-      const tipBadge = `<span class="badge b-${(c.tipologia_codice || "").toLowerCase()}"
+    tableRows = clienti
+      .map((c) => {
+        const tipColor =
+          c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
+        const avatar = getAvatar(c.nome);
+        const sottotipoLabel = c.sottotipologia_nome || "";
+        const tipInfo = TIPOLOGIE_INFO[c.tipologia_codice] || {};
+        const tipBadge = `<span class="badge b-${(c.tipologia_codice || "").toLowerCase()}"
         style="background:${tipColor}22;color:${tipColor};border:1px solid ${tipColor}44;font-size:12px"
         title="${tipInfo.desc || c.tipologia_codice}">${tipInfo.icon || ""} ${c.tipologia_codice || "-"}</span>`;
 
-      let colBadges = "";
-      if (c.col2_value) colBadges += `<span class="badge-info" style="font-size:11px">📁 ${col2Map[c.col2_value] || c.col2_value}</span>`;
-      if (c.col3_value) colBadges += `<span class="badge-info" style="font-size:11px">⚙️ ${col3Map[c.col3_value] || c.col3_value}</span>`;
-      if (c.periodicita) colBadges += `<span class="badge-per" style="font-size:11px">📅 ${periodicitaMap[c.periodicita] || c.periodicita}</span>`;
+        let colBadges = "";
+        if (c.col2_value)
+          colBadges += `<span class="badge-info" style="font-size:11px">📁 ${col2Map[c.col2_value] || c.col2_value}</span>`;
+        if (c.col3_value)
+          colBadges += `<span class="badge-info" style="font-size:11px">⚙️ ${col3Map[c.col3_value] || c.col3_value}</span>`;
+        if (c.periodicita)
+          colBadges += `<span class="badge-per" style="font-size:11px">📅 ${periodicitaMap[c.periodicita] || c.periodicita}</span>`;
 
-      const configInfo = c.config_anno && c.config_anno !== currentAnno
-        ? `<div style="font-size:9px;color:var(--yellow);margin-top:3px" title="Configurazione ereditata dal ${c.config_anno}">📌 eredita ${c.config_anno}</div>`
-        : "";
+        const configInfo =
+          c.config_anno && c.config_anno !== currentAnno
+            ? `<div style="font-size:9px;color:var(--yellow);margin-top:3px" title="Configurazione ereditata dal ${c.config_anno}">📌 eredita ${c.config_anno}</div>`
+            : "";
 
-      return `<tr class="clickable" onclick="showClienteDettaglio(${c.id})" style="cursor:pointer">
+        return `<tr class="clickable" onclick="showClienteDettaglio(${c.id})" style="cursor:pointer">
         <td style="padding:12px 16px">
           <div style="display:flex;align-items:center;gap:12px">
             <div class="cliente-avatar-sm" style="background:${tipColor}22;border-color:${tipColor};color:${tipColor};width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-weight:800;font-size:${avatarFontSize(avatar, 13)}">${avatar}</div>
@@ -589,7 +673,8 @@ function renderClientiTabella(clienti) {
           </div>
         </td>
       </tr>`;
-    }).join("");
+      })
+      .join("");
   }
 
   const html = `${filterBar}
@@ -615,7 +700,7 @@ function renderClientiTabella(clienti) {
 
 // ─── DETTAGLIO CLIENTE ────────────────────────────────────────
 function showClienteDettaglio(id) {
-  currentClienteId   = id;
+  currentClienteId = id;
   currentClienteAnno = new Date().getFullYear();
   loadClienteDettaglio(id, currentClienteAnno);
 }
@@ -642,12 +727,16 @@ if (typeof socket !== "undefined") {
 
 function renderClienteDettaglio(c, anno) {
   const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
-  const avatar   = getAvatar(c.nome);
-  const tipInfo  = TIPOLOGIE_INFO[c.tipologia_codice] || {};
+  const avatar = getAvatar(c.nome);
+  const tipInfo = TIPOLOGIE_INFO[c.tipologia_codice] || {};
 
-  const col2LMap     = _col2DbToLabel();
-  const col3LMap     = _col3DbToLabel();
-  const periodicitaMap = { mensile: "📅 Mensile", trimestrale: "📆 Trimestrale", annuale: "📅 Annuale" };
+  const col2LMap = _col2DbToLabel();
+  const col3LMap = _col3DbToLabel();
+  const periodicitaMap = {
+    mensile: "📅 Mensile",
+    trimestrale: "📆 Trimestrale",
+    annuale: "📅 Annuale",
+  };
 
   const classificazioneHtml = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -656,9 +745,11 @@ function renderClienteDettaglio(c, anno) {
         <select id="det-anno-select" class="select" style="width:110px" onchange="onDettaglioAnnoChange()">
           ${buildAnniOptions(anno)}
         </select>
-        ${c.config_anno && c.config_anno !== anno
-          ? `<span class="badge-info" style="background:var(--yellow)18;color:var(--yellow)">⚠️ Ereditata dal ${c.config_anno}</span>`
-          : ""}
+        ${
+          c.config_anno && c.config_anno !== anno
+            ? `<span class="badge-info" style="background:var(--yellow)18;color:var(--yellow)">⚠️ Ereditata dal ${c.config_anno}</span>`
+            : ""
+        }
       </div>
       <button class="btn btn-sm btn-primary" onclick="editClienteConfig(${c.id},${anno})" title="Modifica configurazione per quest'anno">✏️ Modifica ${anno}</button>
     </div>`;
@@ -669,25 +760,39 @@ function renderClienteDettaglio(c, anno) {
        </div>`
     : "";
 
-  const configCards = c.id_tipologia ? `
+  const configCards = c.id_tipologia
+    ? `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
       <div style="background:var(--s2);border-radius:var(--r-sm);padding:14px;border-left:3px solid ${tipColor}">
         <div style="font-size:11px;color:var(--t3);text-transform:uppercase">Tipologia</div>
         <div style="font-size:15px;font-weight:700;margin-top:4px">${tipInfo.icon || ""} ${c.tipologia_codice || "-"} — ${c.tipologia_nome || ""}</div>
       </div>
-      ${c.col2_value ? `<div style="background:var(--s2);border-radius:var(--r-sm);padding:14px;border-left:3px solid #fb923c">
+      ${
+        c.col2_value
+          ? `<div style="background:var(--s2);border-radius:var(--r-sm);padding:14px;border-left:3px solid #fb923c">
         <div style="font-size:11px;color:var(--t3);text-transform:uppercase">Sottocategoria</div>
         <div style="font-size:15px;font-weight:700;margin-top:4px">${col2LMap[c.col2_value] || c.col2_value}</div>
-      </div>` : ""}
-      ${c.col3_value ? `<div style="background:var(--s2);border-radius:var(--r-sm);padding:14px;border-left:3px solid #5b8df6">
+      </div>`
+          : ""
+      }
+      ${
+        c.col3_value
+          ? `<div style="background:var(--s2);border-radius:var(--r-sm);padding:14px;border-left:3px solid #5b8df6">
         <div style="font-size:11px;color:var(--t3);text-transform:uppercase">Regime</div>
         <div style="font-size:15px;font-weight:700;margin-top:4px">${col3LMap[c.col3_value] || c.col3_value}</div>
-      </div>` : ""}
-      ${c.periodicita ? `<div style="background:var(--s2);border-radius:var(--r-sm);padding:14px;border-left:3px solid #22d3ee">
+      </div>`
+          : ""
+      }
+      ${
+        c.periodicita
+          ? `<div style="background:var(--s2);border-radius:var(--r-sm);padding:14px;border-left:3px solid #22d3ee">
         <div style="font-size:11px;color:var(--t3);text-transform:uppercase">Periodicità</div>
         <div style="font-size:15px;font-weight:700;margin-top:4px">${periodicitaMap[c.periodicita] || c.periodicita}</div>
-      </div>` : ""}
-    </div>` : "";
+      </div>`
+          : ""
+      }
+    </div>`
+    : "";
 
   document.getElementById("modal-cliente-det-title").textContent = c.nome;
   document.getElementById("cliente-dettaglio-content").innerHTML = `
@@ -723,16 +828,26 @@ function renderStoricoConfig(storico) {
     container.innerHTML = `<div class="infobox" style="font-size:12px">📋 Nessuna configurazione storica.</div>`;
     return;
   }
-  const col3Map = { ordinario:"Ord.", semplificato:"Sempl.", forfettario:"Forf.", ordinaria:"Ord.", semplificata:"Sempl." };
-  const periodicitaMap = { mensile:"Mensile", trimestrale:"Trimestrale", annuale:"Annuale" };
+  const col3Map = {
+    ordinario: "Ord.",
+    semplificato: "Sempl.",
+    forfettario: "Forf.",
+    ordinaria: "Ord.",
+    semplificata: "Sempl.",
+  };
+  const periodicitaMap = {
+    mensile: "Mensile",
+    trimestrale: "Trimestrale",
+    annuale: "Annuale",
+  };
   let rows = "";
   storico.forEach((cfg) => {
     rows += `<tr style="border-bottom:1px solid var(--b0)">
       <td style="padding:8px 12px;font-weight:700;color:var(--accent)">${cfg.anno}</td>
       <td style="padding:8px 12px"><span class="badge b-${(cfg.tipologia_codice || "").toLowerCase()}">${cfg.tipologia_codice || "-"}</span></td>
       <td style="padding:8px 12px">${cfg.col2_value || "-"}</td>
-      <td style="padding:8px 12px">${cfg.col3_value ? (col3Map[cfg.col3_value] || cfg.col3_value) : "-"}</td>
-      <td style="padding:8px 12px">${cfg.periodicita ? (periodicitaMap[cfg.periodicita] || cfg.periodicita) : "-"}</td>
+      <td style="padding:8px 12px">${cfg.col3_value ? col3Map[cfg.col3_value] || cfg.col3_value : "-"}</td>
+      <td style="padding:8px 12px">${cfg.periodicita ? periodicitaMap[cfg.periodicita] || cfg.periodicita : "-"}</td>
       <td style="padding:8px 12px"><button class="btn btn-xs btn-secondary" onclick="editClienteConfig(${cfg.id_cliente},${cfg.anno})">✏️</button></td>
     </tr>`;
   });
@@ -771,14 +886,19 @@ function editClienteConfig(id, anno) {
 }
 
 function editClienteFromDettaglio() {
-  const anno = parseInt(document.getElementById("det-anno-select")?.value || new Date().getFullYear());
+  const anno = parseInt(
+    document.getElementById("det-anno-select")?.value ||
+      new Date().getFullYear(),
+  );
   if (currentClienteId) editClienteConfig(currentClienteId, anno);
 }
 
 function deleteClienteFromDettaglio() {
   if (!currentClienteId) return;
-  const anno = parseInt(document.getElementById("det-anno-select")?.value) || new Date().getFullYear();
-  const cliente    = state.clienti.find((c) => c.id === currentClienteId);
+  const anno =
+    parseInt(document.getElementById("det-anno-select")?.value) ||
+    new Date().getFullYear();
+  const cliente = state.clienti.find((c) => c.id === currentClienteId);
   const clienteNome = cliente ? cliente.nome : "questo cliente";
   if (confirm(`Eliminare "${clienteNome}" solo per l'anno ${anno}?`)) {
     closeModal("modal-cliente-dettaglio");
@@ -795,12 +915,15 @@ function goToClienteScadenzario() {
 }
 
 function editCliente(id) {
-  const anno = parseInt(document.getElementById("filter-anno")?.value) || new Date().getFullYear();
+  const anno =
+    parseInt(document.getElementById("filter-anno")?.value) ||
+    new Date().getFullYear();
   editClienteConfig(id, anno);
 }
 
 function openEditClienteModal(cliente, anno) {
-  document.getElementById("modal-cliente-title").textContent = `Modifica Cliente — ${anno}`;
+  document.getElementById("modal-cliente-title").textContent =
+    `Modifica Cliente — ${anno}`;
   document.getElementById("cliente-id").value = cliente.id;
   document.getElementById("cliente-edit-anno").value = anno;
   const annoInfo = document.getElementById("cliente-anno-info");
@@ -809,29 +932,44 @@ function openEditClienteModal(cliente, anno) {
       📅 Configurazione per <strong>${anno}</strong>. Le modifiche non influenzeranno gli anni precedenti.</div>`;
   }
   const fields = {
-    "c-nome": cliente.nome, "c-cf": cliente.codice_fiscale, "c-piva": cliente.partita_iva,
-    "c-email": cliente.email, "c-tel": cliente.telefono, "c-indirizzo": cliente.indirizzo,
-    "c-note": cliente.note, "c-pec": cliente.pec, "c-sdi": cliente.sdi,
-    "c-citta": cliente.citta, "c-cap": cliente.cap, "c-prov": cliente.provincia,
-    "c-referente": cliente.referente, "c-iban": cliente.iban,
+    "c-nome": cliente.nome,
+    "c-cf": cliente.codice_fiscale,
+    "c-piva": cliente.partita_iva,
+    "c-email": cliente.email,
+    "c-tel": cliente.telefono,
+    "c-indirizzo": cliente.indirizzo,
+    "c-note": cliente.note,
+    "c-pec": cliente.pec,
+    "c-sdi": cliente.sdi,
+    "c-citta": cliente.citta,
+    "c-cap": cliente.cap,
+    "c-prov": cliente.provincia,
+    "c-referente": cliente.referente,
+    "c-iban": cliente.iban,
   };
   Object.entries(fields).forEach(([elId, val]) => {
     const el = document.getElementById(elId);
     if (el) el.value = val || "";
   });
   populateTipologiaSelect(cliente.id_tipologia);
-  const col2Val = cliente.col2_value || "", col3Val = cliente.col3_value || "", col4Val = cliente.periodicita || "";
+  const col2Val = cliente.col2_value || "",
+    col3Val = cliente.col3_value || "",
+    col4Val = cliente.periodicita || "";
   const badge = document.getElementById("col4-forfettario-badge");
   if (badge) badge.style.display = "none";
   setTimeout(() => {
-    if (document.getElementById("c-col2")) document.getElementById("c-col2").value = col2Val;
-    if (document.getElementById("c-col3")) document.getElementById("c-col3").value = col3Val;
+    if (document.getElementById("c-col2"))
+      document.getElementById("c-col2").value = col2Val;
+    if (document.getElementById("c-col3"))
+      document.getElementById("c-col3").value = col3Val;
     lastClienteFormValues = { col2: col2Val, col3: col3Val, col4: col4Val };
     aggiornaColonneCliente();
     setTimeout(() => {
       const tipCodice = _getTipologiaCodice();
-      if (REGIMI_ANNUALI.includes(col3Val)) _aggiornCol4BasedOnCol3(tipCodice, col3Val);
-      else if (document.getElementById("c-col4")) document.getElementById("c-col4").value = col4Val;
+      if (REGIMI_ANNUALI.includes(col3Val))
+        _aggiornCol4BasedOnCol3(tipCodice, col3Val);
+      else if (document.getElementById("c-col4"))
+        document.getElementById("c-col4").value = col4Val;
       aggiornaRiepilogoClassificazione();
     }, 50);
   }, 60);
@@ -839,8 +977,11 @@ function openEditClienteModal(cliente, anno) {
 }
 
 function openNuovoCliente() {
-  const currentAnno = parseInt(document.getElementById("filter-anno")?.value) || new Date().getFullYear();
-  document.getElementById("modal-cliente-title").textContent = `Nuovo Cliente — ${currentAnno}`;
+  const currentAnno =
+    parseInt(document.getElementById("filter-anno")?.value) ||
+    new Date().getFullYear();
+  document.getElementById("modal-cliente-title").textContent =
+    `Nuovo Cliente — ${currentAnno}`;
   document.getElementById("cliente-id").value = "";
   document.getElementById("cliente-edit-anno").value = currentAnno;
   const annoInfo = document.getElementById("cliente-anno-info");
@@ -848,25 +989,57 @@ function openNuovoCliente() {
     annoInfo.innerHTML = `<div class="infobox" style="margin-bottom:16px;background:var(--accent-d);border-color:var(--accent)">
       📅 Creazione cliente per l'anno <strong>${currentAnno}</strong>.</div>`;
   }
-  ["c-nome","c-cf","c-piva","c-email","c-tel","c-indirizzo","c-note","c-pec","c-sdi","c-citta","c-cap","c-prov","c-referente","c-iban","c-col2","c-col3","c-col4"]
-    .forEach((id) => { const el = document.getElementById(id); if (el) el.value = ""; });
+  [
+    "c-nome",
+    "c-cf",
+    "c-piva",
+    "c-email",
+    "c-tel",
+    "c-indirizzo",
+    "c-note",
+    "c-pec",
+    "c-sdi",
+    "c-citta",
+    "c-cap",
+    "c-prov",
+    "c-referente",
+    "c-iban",
+    "c-col2",
+    "c-col3",
+    "c-col4",
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
   const badge = document.getElementById("col4-forfettario-badge");
   if (badge) badge.style.display = "none";
   lastClienteFormValues = { col2: "", col3: "", col4: "" };
-  if (state.tipologie && state.tipologie.length > 0) populateTipologiaSelect(state.tipologie[0].id);
+  if (state.tipologie && state.tipologie.length > 0)
+    populateTipologiaSelect(state.tipologie[0].id);
   else populateTipologiaSelect("");
-  setTimeout(() => { aggiornaColonneCliente(); aggiornaRiepilogoClassificazione(); }, 50);
+  setTimeout(() => {
+    aggiornaColonneCliente();
+    aggiornaRiepilogoClassificazione();
+  }, 50);
   openModal("modal-cliente");
 }
 
 function saveCliente() {
-  const id   = document.getElementById("cliente-id").value;
-  const anno = parseInt(document.getElementById("cliente-edit-anno")?.value || new Date().getFullYear());
+  const id = document.getElementById("cliente-id").value;
+  const anno = parseInt(
+    document.getElementById("cliente-edit-anno")?.value ||
+      new Date().getFullYear(),
+  );
   const nome = document.getElementById("c-nome").value.trim();
-  if (!nome) { showNotif("Il nome è obbligatorio", "error"); return; }
+  if (!nome) {
+    showNotif("Il nome è obbligatorio", "error");
+    return;
+  }
   if (!validaClassificazioneCliente()) return;
 
-  let col2Val = null, col3Val = null, col4Val = null;
+  let col2Val = null,
+    col3Val = null,
+    col4Val = null;
   const col2Wrap = document.getElementById("wrap-col2");
   const col3Wrap = document.getElementById("wrap-col3");
   const col4Wrap = document.getElementById("wrap-col4");
@@ -896,54 +1069,83 @@ function saveCliente() {
   lastClienteFormValues.col4 = col4Val;
 
   const data = {
-    id:               id ? parseInt(id) : undefined,
+    id: id ? parseInt(id) : undefined,
     anno,
     nome,
-    id_tipologia:     parseInt(tipologiaVal),
+    id_tipologia: parseInt(tipologiaVal),
     id_sottotipologia: _calcolaSottotipologiaId() || null,
-    col2_value:       col2Val || null,
-    col3_value:       col3Val || null,
-    periodicita:      col4Val || null,
-    codice_fiscale:   document.getElementById("c-cf")?.value.trim().toUpperCase() || null,
-    partita_iva:      document.getElementById("c-piva")?.value.replace(/[^0-9]/g, "").trim() || null,
-    email:            document.getElementById("c-email")?.value.trim() || null,
-    telefono:         document.getElementById("c-tel")?.value.replace(/[^0-9+\s\-]/g, "").trim() || null,
-    indirizzo:        document.getElementById("c-indirizzo")?.value.trim() || null,
-    citta:            document.getElementById("c-citta")?.value.trim() || null,
-    cap:              document.getElementById("c-cap")?.value.replace(/[^0-9]/g, "").trim() || null,
-    provincia:        document.getElementById("c-prov")?.value.trim().toUpperCase() || null,
-    pec:              document.getElementById("c-pec")?.value.trim() || null,
-    sdi:              document.getElementById("c-sdi")?.value.trim().toUpperCase() || null,
-    iban:             document.getElementById("c-iban")?.value.trim().toUpperCase() || null,
-    referente:        document.getElementById("c-referente")?.value.trim() || null,
-    note:             document.getElementById("c-note")?.value.trim() || null,
+    col2_value: col2Val || null,
+    col3_value: col3Val || null,
+    periodicita: col4Val || null,
+    codice_fiscale:
+      document.getElementById("c-cf")?.value.trim().toUpperCase() || null,
+    partita_iva:
+      document
+        .getElementById("c-piva")
+        ?.value.replace(/[^0-9]/g, "")
+        .trim() || null,
+    email: document.getElementById("c-email")?.value.trim() || null,
+    telefono:
+      document
+        .getElementById("c-tel")
+        ?.value.replace(/[^0-9+\s\-]/g, "")
+        .trim() || null,
+    indirizzo: document.getElementById("c-indirizzo")?.value.trim() || null,
+    citta: document.getElementById("c-citta")?.value.trim() || null,
+    cap:
+      document
+        .getElementById("c-cap")
+        ?.value.replace(/[^0-9]/g, "")
+        .trim() || null,
+    provincia:
+      document.getElementById("c-prov")?.value.trim().toUpperCase() || null,
+    pec: document.getElementById("c-pec")?.value.trim() || null,
+    sdi: document.getElementById("c-sdi")?.value.trim().toUpperCase() || null,
+    iban: document.getElementById("c-iban")?.value.trim().toUpperCase() || null,
+    referente: document.getElementById("c-referente")?.value.trim() || null,
+    note: document.getElementById("c-note")?.value.trim() || null,
   };
 
   if (typeof socket !== "undefined") {
     if (id) socket.emit("update:cliente", data);
-    else    socket.emit("create:cliente", data);
+    else socket.emit("create:cliente", data);
   }
 }
 
 function deleteCliente(id) {
-  const currentAnno = parseInt(document.getElementById("filter-anno")?.value) || new Date().getFullYear();
-  const cliente     = state.clienti.find((c) => c.id === id);
+  const currentAnno =
+    parseInt(document.getElementById("filter-anno")?.value) ||
+    new Date().getFullYear();
+  const cliente = state.clienti.find((c) => c.id === id);
   const clienteNome = cliente ? cliente.nome : "questo cliente";
 
   if (typeof socket !== "undefined") {
-    socket.emit("check:adempimenti_cliente", { id_cliente: id, anno: currentAnno });
-    socket.once("res:check:adempimenti_cliente", ({ success, hasAdempimenti, count }) => {
-      if (!success) { proceedWithBasicDeletion(id, currentAnno, clienteNome); return; }
-      if (hasAdempimenti && count > 0) {
-        if (confirm(`Eliminare "${clienteNome}" solo per l'anno ${currentAnno}? Il cliente ha ${count} adempimento/i.`))
-          socket.emit("delete:cliente", { id, anno: currentAnno });
-      } else {
-        if (confirm(`Eliminare "${clienteNome}" da tutti gli anni?`))
-          socket.emit("delete:cliente", { id, anno: null, deleteAll: true });
-        else if (confirm(`Eliminare solo dall'anno ${currentAnno}?`))
-          socket.emit("delete:cliente", { id, anno: currentAnno });
-      }
+    socket.emit("check:adempimenti_cliente", {
+      id_cliente: id,
+      anno: currentAnno,
     });
+    socket.once(
+      "res:check:adempimenti_cliente",
+      ({ success, hasAdempimenti, count }) => {
+        if (!success) {
+          proceedWithBasicDeletion(id, currentAnno, clienteNome);
+          return;
+        }
+        if (hasAdempimenti && count > 0) {
+          if (
+            confirm(
+              `Eliminare "${clienteNome}" solo per l'anno ${currentAnno}? Il cliente ha ${count} adempimento/i.`,
+            )
+          )
+            socket.emit("delete:cliente", { id, anno: currentAnno });
+        } else {
+          if (confirm(`Eliminare "${clienteNome}" da tutti gli anni?`))
+            socket.emit("delete:cliente", { id, anno: null, deleteAll: true });
+          else if (confirm(`Eliminare solo dall'anno ${currentAnno}?`))
+            socket.emit("delete:cliente", { id, anno: currentAnno });
+        }
+      },
+    );
   } else {
     proceedWithBasicDeletion(id, currentAnno, clienteNome);
   }
@@ -959,12 +1161,14 @@ function goScadenzario(id) {
   const c = state.clienti.find((x) => x.id === id);
   if (c) {
     state.selectedCliente = c;
-    document.querySelectorAll(".nav-item").forEach((x) => x.classList.remove("active"));
+    document
+      .querySelectorAll(".nav-item")
+      .forEach((x) => x.classList.remove("active"));
     document.querySelector('[data-page="scadenzario"]').classList.add("active");
     renderPage("scadenzario");
   } else {
     state._gotoClienteId = id;
-    state._pending       = "scadenzario";
+    state._pending = "scadenzario";
     if (typeof socket !== "undefined") socket.emit("get:clienti");
   }
 }
@@ -974,10 +1178,12 @@ function populateTipologiaSelect(selectedId) {
   const sel = document.getElementById("c-tipologia");
   if (!sel) return;
   const cfg = _cfg();
-  sel.innerHTML = (state.tipologie || []).map((t) => {
-    const meta = (cfg.tipologie || {})[t.codice] || {};
-    return `<option value="${t.id}" ${String(t.id) === String(selectedId) ? "selected" : ""}>${meta.icon || "📋"} ${t.codice} — ${meta.desc || t.nome}</option>`;
-  }).join("");
+  sel.innerHTML = (state.tipologie || [])
+    .map((t) => {
+      const meta = (cfg.tipologie || {})[t.codice] || {};
+      return `<option value="${t.id}" ${String(t.id) === String(selectedId) ? "selected" : ""}>${meta.icon || "📋"} ${t.codice} — ${meta.desc || t.nome}</option>`;
+    })
+    .join("");
   _aggiornaTipologiaSelectStyle();
 }
 
@@ -985,18 +1191,18 @@ function _aggiornaTipologiaSelectStyle() {
   const sel = document.getElementById("c-tipologia");
   if (!sel || !sel.value) return;
   const tipCodice = _getTipologiaCodice();
-  const cfg       = _cfg();
-  const color     = (cfg.tipologie || {})[tipCodice]?.color || "var(--accent)";
+  const cfg = _cfg();
+  const color = (cfg.tipologie || {})[tipCodice]?.color || "var(--accent)";
   sel.style.borderColor = color;
-  sel.style.boxShadow   = `0 0 0 1px ${color}44`;
+  sel.style.boxShadow = `0 0 0 1px ${color}44`;
 }
 
 // ─── 4 COLONNE ────────────────────────────────────────────────
 function aggiornaColonneCliente() {
   const tipCodice = _getTipologiaCodice();
-  const col2Wrap  = document.getElementById("wrap-col2");
-  const col2Sel   = document.getElementById("c-col2");
-  const col2Opts  = COL2_OPTIONS[tipCodice];
+  const col2Wrap = document.getElementById("wrap-col2");
+  const col2Sel = document.getElementById("c-col2");
+  const col2Opts = COL2_OPTIONS[tipCodice];
   _aggiornaTipologiaSelectStyle();
   if (!col2Opts) {
     col2Wrap.style.display = "none";
@@ -1005,8 +1211,14 @@ function aggiornaColonneCliente() {
   } else {
     col2Wrap.style.display = "";
     const col2Current = col2Sel.value;
-    col2Sel.innerHTML = `<option value="">— Seleziona —</option>` +
-      col2Opts.map((o) => `<option value="${o.value}" ${col2Current === o.value ? "selected" : ""}>${o.label}</option>`).join("");
+    col2Sel.innerHTML =
+      `<option value="">— Seleziona —</option>` +
+      col2Opts
+        .map(
+          (o) =>
+            `<option value="${o.value}" ${col2Current === o.value ? "selected" : ""}>${o.label}</option>`,
+        )
+        .join("");
     if (!col2Current) col2Sel.value = "";
     _aggiornaCol3(tipCodice, col2Sel.value);
   }
@@ -1016,24 +1228,33 @@ function aggiornaColonneCliente() {
 function _aggiornaCol3(tipCodice, col2Val) {
   const col3Opts = getCol3Options(tipCodice, col2Val);
   const col3Wrap = document.getElementById("wrap-col3");
-  const col3Sel  = document.getElementById("c-col3");
-  if (!col3Opts) { _nascondiCol3(); return; }
+  const col3Sel = document.getElementById("c-col3");
+  if (!col3Opts) {
+    _nascondiCol3();
+    return;
+  }
   col3Wrap.style.display = "";
   const col3Current = col3Sel.value;
-  col3Sel.innerHTML = `<option value="">— Seleziona —</option>` +
-    col3Opts.map((o) => `<option value="${o.value}" ${col3Current === o.value ? "selected" : ""}>${o.label}</option>`).join("");
+  col3Sel.innerHTML =
+    `<option value="">— Seleziona —</option>` +
+    col3Opts
+      .map(
+        (o) =>
+          `<option value="${o.value}" ${col3Current === o.value ? "selected" : ""}>${o.label}</option>`,
+      )
+      .join("");
   if (!col3Current) col3Sel.value = "";
   _aggiornCol4BasedOnCol3(tipCodice, col3Sel.value);
   aggiornaRiepilogoClassificazione();
 }
 
 function _aggiornCol4BasedOnCol3(tipCodice, col3Val) {
-  const cfg    = _cfg();
+  const cfg = _cfg();
   const annPer = (cfg.periodicitaAnnuale || []).map((p) => p.value);
   const ivaPer = cfg.periodicitaIva || [];
 
   const col4Wrap = document.getElementById("wrap-col4");
-  const col4Sel  = document.getElementById("c-col4");
+  const col4Sel = document.getElementById("c-col4");
 
   if (REGIMI_ANNUALI.includes(col3Val)) {
     col4Wrap.style.display = "none";
@@ -1042,7 +1263,8 @@ function _aggiornCol4BasedOnCol3(tipCodice, col3Val) {
     if (!badge) {
       badge = document.createElement("div");
       badge.id = "col4-forfettario-badge";
-      badge.style.cssText = "font-size:12px;color:var(--yellow);background:var(--yellow)18;border:1px solid var(--yellow)33;border-radius:var(--r-sm);padding:7px 12px;margin-top:8px;grid-column:1/-1";
+      badge.style.cssText =
+        "font-size:12px;color:var(--yellow);background:var(--yellow)18;border:1px solid var(--yellow)33;border-radius:var(--r-sm);padding:7px 12px;margin-top:8px;grid-column:1/-1";
       badge.innerHTML = `<span style="font-size:14px">📅</span> Regime <strong>Forfettario</strong> — periodicità automatica: <strong>Annuale</strong>`;
       document.querySelector(".quattro-colonne-grid")?.appendChild(badge);
     }
@@ -1052,8 +1274,14 @@ function _aggiornCol4BasedOnCol3(tipCodice, col3Val) {
     // Popola le opzioni IVA dal JSON
     if (col4Sel && col4Sel.tagName === "SELECT" && ivaPer.length > 0) {
       const current = col4Sel.value;
-      col4Sel.innerHTML = `<option value="">— Seleziona —</option>` +
-        ivaPer.map((p) => `<option value="${p.value}" ${current === p.value ? "selected" : ""}>${p.label}</option>`).join("");
+      col4Sel.innerHTML =
+        `<option value="">— Seleziona —</option>` +
+        ivaPer
+          .map(
+            (p) =>
+              `<option value="${p.value}" ${current === p.value ? "selected" : ""}>${p.label}</option>`,
+          )
+          .join("");
     }
     const badge = document.getElementById("col4-forfettario-badge");
     if (badge) badge.style.display = "none";
@@ -1067,7 +1295,8 @@ function _aggiornCol4BasedOnCol3(tipCodice, col3Val) {
 }
 
 function _nascondiCol3() {
-  const w = document.getElementById("wrap-col3"), s = document.getElementById("c-col3");
+  const w = document.getElementById("wrap-col3"),
+    s = document.getElementById("c-col3");
   if (w) w.style.display = "none";
   if (s) s.value = "";
   _nascondiCol4();
@@ -1075,7 +1304,8 @@ function _nascondiCol3() {
 }
 
 function _nascondiCol4() {
-  const w = document.getElementById("wrap-col4"), s = document.getElementById("c-col4");
+  const w = document.getElementById("wrap-col4"),
+    s = document.getElementById("c-col4");
   if (w) w.style.display = "none";
   if (s) s.value = "";
   aggiornaRiepilogoClassificazione();
@@ -1084,17 +1314,19 @@ function _nascondiCol4() {
 function _getTipologiaCodice() {
   const sel = document.getElementById("c-tipologia");
   if (!sel || !sel.value) return "";
-  const tip = (state.tipologie || []).find((t) => String(t.id) === String(sel.value));
+  const tip = (state.tipologie || []).find(
+    (t) => String(t.id) === String(sel.value),
+  );
   return tip ? tip.codice : "";
 }
 
 function _calcolaSottotipologiaId() {
   const tipCodice = _getTipologiaCodice();
-  const col2      = document.getElementById("c-col2")?.value || "";
-  const col3      = document.getElementById("c-col3")?.value || "";
-  const stCode    = getSottotipoCode(tipCodice, col2, col3);
+  const col2 = document.getElementById("c-col2")?.value || "";
+  const col3 = document.getElementById("c-col3")?.value || "";
+  const stCode = getSottotipoCode(tipCodice, col2, col3);
   if (!stCode) return null;
-  for (const t of (state.tipologie || [])) {
+  for (const t of state.tipologie || []) {
     const sub = (t.sottotipologie || []).find((s) => s.codice === stCode);
     if (sub) return sub.id;
   }
@@ -1102,57 +1334,93 @@ function _calcolaSottotipologiaId() {
 }
 
 function aggiornaRiepilogoClassificazione() {
-  const box     = document.getElementById("cliente-riepilogo-box");
+  const box = document.getElementById("cliente-riepilogo-box");
   const content = document.getElementById("riepilogo-classificazione");
   if (!box || !content) return;
   const tipCodice = _getTipologiaCodice();
-  const tip       = (state.tipologie || []).find((t) => t.codice === tipCodice);
-  const cfg       = _cfg();
-  const col2      = document.getElementById("c-col2")?.value || "";
-  const col3      = document.getElementById("c-col3")?.value || "";
-  const col4      = document.getElementById("c-col4")?.value || "";
-  const annPer    = (cfg.periodicitaAnnuale || []).map((p) => p.value);
-  const col4Eff   = annPer.includes(col3) ? (annPer[0] || "annuale") : col4;
-  const tipColor  = (cfg.tipologie || {})[tipCodice]?.color || "var(--accent)";
+  const tip = (state.tipologie || []).find((t) => t.codice === tipCodice);
+  const cfg = _cfg();
+  const col2 = document.getElementById("c-col2")?.value || "";
+  const col3 = document.getElementById("c-col3")?.value || "";
+  const col4 = document.getElementById("c-col4")?.value || "";
+  const annPer = (cfg.periodicitaAnnuale || []).map((p) => p.value);
+  const col4Eff = annPer.includes(col3) ? annPer[0] || "annuale" : col4;
+  const tipColor = (cfg.tipologie || {})[tipCodice]?.color || "var(--accent)";
 
   let chips = [];
   if (tip)
-    chips.push(`<div class="riepilogo-chip" style="border-color:${tipColor}44;background:${tipColor}12"><span class="chip-label">Tipologia:</span><span class="chip-value" style="color:${tipColor}">${tip.codice} — ${tip.nome}</span></div>`);
+    chips.push(
+      `<div class="riepilogo-chip" style="border-color:${tipColor}44;background:${tipColor}12"><span class="chip-label">Tipologia:</span><span class="chip-value" style="color:${tipColor}">${tip.codice} — ${tip.nome}</span></div>`,
+    );
   if (col2) {
     const opt = COL2_OPTIONS[tipCodice]?.find((o) => o.value === col2);
-    if (opt) chips.push(`<div class="riepilogo-chip"><span class="chip-label">Sottocategoria:</span><span class="chip-value">${opt.label}</span></div>`);
+    if (opt)
+      chips.push(
+        `<div class="riepilogo-chip"><span class="chip-label">Sottocategoria:</span><span class="chip-value">${opt.label}</span></div>`,
+      );
   }
   if (col3)
-    chips.push(`<div class="riepilogo-chip"><span class="chip-label">Regime:</span><span class="chip-value">${col3}</span></div>`);
+    chips.push(
+      `<div class="riepilogo-chip"><span class="chip-label">Regime:</span><span class="chip-value">${col3}</span></div>`,
+    );
   if (col4Eff) {
-    const perObj = [...(cfg.periodicitaIva || []), ...(cfg.periodicitaAnnuale || [])].find((p) => p.value === col4Eff);
-    chips.push(`<div class="riepilogo-chip"><span class="chip-label">Periodicità:</span><span class="chip-value">${perObj ? perObj.label : col4Eff}</span></div>`);
+    const perObj = [
+      ...(cfg.periodicitaIva || []),
+      ...(cfg.periodicitaAnnuale || []),
+    ].find((p) => p.value === col4Eff);
+    chips.push(
+      `<div class="riepilogo-chip"><span class="chip-label">Periodicità:</span><span class="chip-value">${perObj ? perObj.label : col4Eff}</span></div>`,
+    );
   }
-  if (chips.length > 0) { content.innerHTML = chips.join(""); box.style.display = ""; }
-  else box.style.display = "none";
+  if (chips.length > 0) {
+    content.innerHTML = chips.join("");
+    box.style.display = "";
+  } else box.style.display = "none";
 }
 
 function validaClassificazioneCliente() {
   const tipologia = document.getElementById("c-tipologia").value;
-  if (!tipologia) { showNotif("La Tipologia è obbligatoria", "error"); document.getElementById("c-tipologia").focus(); return false; }
+  if (!tipologia) {
+    showNotif("La Tipologia è obbligatoria", "error");
+    document.getElementById("c-tipologia").focus();
+    return false;
+  }
   const col2Wrap = document.getElementById("wrap-col2");
   const col3Wrap = document.getElementById("wrap-col3");
   const col4Wrap = document.getElementById("wrap-col4");
   if (col2Wrap && col2Wrap.style.display !== "none")
-    if (!document.getElementById("c-col2").value) { showNotif("La Sottocategoria è obbligatoria", "error"); document.getElementById("c-col2").focus(); return false; }
+    if (!document.getElementById("c-col2").value) {
+      showNotif("La Sottocategoria è obbligatoria", "error");
+      document.getElementById("c-col2").focus();
+      return false;
+    }
   if (col3Wrap && col3Wrap.style.display !== "none")
-    if (!document.getElementById("c-col3").value) { showNotif("Il Regime è obbligatorio", "error"); document.getElementById("c-col3").focus(); return false; }
-  const col3Val  = document.getElementById("c-col3")?.value || "";
-  const cfg      = _cfg();
-  const annPer   = (cfg.periodicitaAnnuale || []).map((p) => p.value);
-  if (!annPer.includes(col3Val) && col4Wrap && col4Wrap.style.display !== "none")
-    if (!document.getElementById("c-col4").value) { showNotif("La Periodicità è obbligatoria", "error"); document.getElementById("c-col4").focus(); return false; }
+    if (!document.getElementById("c-col3").value) {
+      showNotif("Il Regime è obbligatorio", "error");
+      document.getElementById("c-col3").focus();
+      return false;
+    }
+  const col3Val = document.getElementById("c-col3")?.value || "";
+  const cfg = _cfg();
+  const annPer = (cfg.periodicitaAnnuale || []).map((p) => p.value);
+  if (
+    !annPer.includes(col3Val) &&
+    col4Wrap &&
+    col4Wrap.style.display !== "none"
+  )
+    if (!document.getElementById("c-col4").value) {
+      showNotif("La Periodicità è obbligatoria", "error");
+      document.getElementById("c-col4").focus();
+      return false;
+    }
   return true;
 }
 
 function onTipologiaChange() {
-  const col2Sel = document.getElementById("c-col2"); if (col2Sel) col2Sel.value = "";
-  const col3Sel = document.getElementById("c-col3"); if (col3Sel) col3Sel.value = "";
+  const col2Sel = document.getElementById("c-col2");
+  if (col2Sel) col2Sel.value = "";
+  const col3Sel = document.getElementById("c-col3");
+  if (col3Sel) col3Sel.value = "";
   _nascondiCol4();
   const badge = document.getElementById("col4-forfettario-badge");
   if (badge) badge.style.display = "none";
@@ -1162,7 +1430,8 @@ function onTipologiaChange() {
 function onCol2Change() {
   const col2Val = document.getElementById("c-col2")?.value || "";
   lastClienteFormValues.col2 = col2Val;
-  const col3Sel = document.getElementById("c-col3"); if (col3Sel) col3Sel.value = "";
+  const col3Sel = document.getElementById("c-col3");
+  if (col3Sel) col3Sel.value = "";
   _nascondiCol4();
   const badge = document.getElementById("col4-forfettario-badge");
   if (badge) badge.style.display = "none";
@@ -1171,8 +1440,8 @@ function onCol2Change() {
 
 function onCol3Change() {
   const tipCodice = _getTipologiaCodice();
-  const col2Val   = document.getElementById("c-col2")?.value || "";
-  const col3Val   = document.getElementById("c-col3")?.value || "";
+  const col2Val = document.getElementById("c-col2")?.value || "";
+  const col3Val = document.getElementById("c-col3")?.value || "";
   lastClienteFormValues.col2 = col2Val;
   lastClienteFormValues.col3 = col3Val;
   _aggiornaCol3(tipCodice, col2Val);
@@ -1183,9 +1452,12 @@ function onCol3Change() {
 // ─── COPIA CONFIGURAZIONE ─────────────────────────────────────
 function openCopiaConfig(id_cliente = null) {
   document.getElementById("copia-config-cliente-id").value = id_cliente || "";
-  document.getElementById("copia-config-modalita").value   = id_cliente ? "singolo" : "tutti";
-  document.getElementById("copia-config-da").value         = new Date().getFullYear() - 1;
-  document.getElementById("copia-config-a").value          = new Date().getFullYear();
+  document.getElementById("copia-config-modalita").value = id_cliente
+    ? "singolo"
+    : "tutti";
+  document.getElementById("copia-config-da").value =
+    new Date().getFullYear() - 1;
+  document.getElementById("copia-config-a").value = new Date().getFullYear();
   if (id_cliente) {
     const cliente = state.clienti?.find((c) => c.id === id_cliente);
     document.getElementById("copia-config-info").innerHTML = cliente
@@ -1198,17 +1470,29 @@ function openCopiaConfig(id_cliente = null) {
   openModal("modal-copia-config");
 }
 
-function openCopiaConfigTutti() { openCopiaConfig(); }
+function openCopiaConfigTutti() {
+  openCopiaConfig();
+}
 
 function eseguiCopiaConfig() {
-  const modalita  = document.getElementById("copia-config-modalita").value;
+  const modalita = document.getElementById("copia-config-modalita").value;
   const id_cliente = document.getElementById("copia-config-cliente-id").value;
   const da = parseInt(document.getElementById("copia-config-da").value);
-  const a  = parseInt(document.getElementById("copia-config-a").value);
-  if (da >= a) { showNotif("L'anno di partenza deve essere precedente all'anno di destinazione", "error"); return; }
+  const a = parseInt(document.getElementById("copia-config-a").value);
+  if (da >= a) {
+    showNotif(
+      "L'anno di partenza deve essere precedente all'anno di destinazione",
+      "error",
+    );
+    return;
+  }
   if (modalita === "singolo" && id_cliente) {
     if (typeof socket !== "undefined")
-      socket.emit("copia:config_cliente", { id_cliente: parseInt(id_cliente), anno_da: da, anno_a: a });
+      socket.emit("copia:config_cliente", {
+        id_cliente: parseInt(id_cliente),
+        anno_da: da,
+        anno_a: a,
+      });
   } else {
     if (typeof socket !== "undefined")
       socket.emit("copia:config_tutti_clienti", { anno_da: da, anno_a: a });
@@ -1217,41 +1501,43 @@ function eseguiCopiaConfig() {
 }
 
 // ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
-window.editCliente                  = editCliente;
-window.editClienteConfig            = editClienteConfig;
-window.deleteCliente                = deleteCliente;
-window.goScadenzario                = goScadenzario;
-window.showClienteDettaglio         = showClienteDettaglio;
-window.onDettaglioAnnoChange        = onDettaglioAnnoChange;
-window.editClienteFromDettaglio     = editClienteFromDettaglio;
-window.deleteClienteFromDettaglio   = deleteClienteFromDettaglio;
-window.goToClienteScadenzario       = goToClienteScadenzario;
-window.openCopiaConfig              = openCopiaConfig;
-window.openCopiaConfigTutti         = openCopiaConfigTutti;
-window.eseguiCopiaConfig            = eseguiCopiaConfig;
-window.openNuovoCliente             = openNuovoCliente;
-window.saveCliente                  = saveCliente;
-window.applyClientiFiltri           = applyClientiFiltri;
-window.resetClientiFiltri           = resetClientiFiltri;
-window.onTipologiaChange            = onTipologiaChange;
-window.onCol2Change                 = onCol2Change;
-window.onCol3Change                 = onCol3Change;
-window.toggleTipFiltroPanel         = toggleTipFiltroPanel;
-window.closeTipFiltroPanel          = closeTipFiltroPanel;
-window.toggleFiltroPercorso         = toggleFiltroPercorso;
-window.toggleTipologiaGruppo        = toggleTipologiaGruppo;
-window.selezionaTuttiTipFiltro      = selezionaTuttiTipFiltro;
-window.deselezionaTuttiTipFiltro    = deselezionaTuttiTipFiltro;
-window.initializeTipologieFilter    = initializeTipologieFilter;
-window.renderTipologieFiltroPanel   = renderTipologieFiltroPanel;
-window.getFiltriPerRequest          = getFiltriPerRequest;
+window.editCliente = editCliente;
+window.editClienteConfig = editClienteConfig;
+window.deleteCliente = deleteCliente;
+window.goScadenzario = goScadenzario;
+window.showClienteDettaglio = showClienteDettaglio;
+window.onDettaglioAnnoChange = onDettaglioAnnoChange;
+window.editClienteFromDettaglio = editClienteFromDettaglio;
+window.deleteClienteFromDettaglio = deleteClienteFromDettaglio;
+window.goToClienteScadenzario = goToClienteScadenzario;
+window.openCopiaConfig = openCopiaConfig;
+window.openCopiaConfigTutti = openCopiaConfigTutti;
+window.eseguiCopiaConfig = eseguiCopiaConfig;
+window.openNuovoCliente = openNuovoCliente;
+window.saveCliente = saveCliente;
+window.applyClientiFiltri = applyClientiFiltri;
+window.resetClientiFiltri = resetClientiFiltri;
+window.onTipologiaChange = onTipologiaChange;
+window.onCol2Change = onCol2Change;
+window.onCol3Change = onCol3Change;
+window.toggleTipFiltroPanel = toggleTipFiltroPanel;
+window.closeTipFiltroPanel = closeTipFiltroPanel;
+window.toggleFiltroPercorso = toggleFiltroPercorso;
+window.toggleTipologiaGruppo = toggleTipologiaGruppo;
+window.selezionaTuttiTipFiltro = selezionaTuttiTipFiltro;
+window.deselezionaTuttiTipFiltro = deselezionaTuttiTipFiltro;
+window.initializeTipologieFilter = initializeTipologieFilter;
+window.renderTipologieFiltroPanel = renderTipologieFiltroPanel;
+window.getFiltriPerRequest = getFiltriPerRequest;
 // Esposizioni per globale.js
-window.TIPOLOGIE_PERCORSI_DATA      = _getTipologiePercorsiData(); // snapshot iniziale
-window._getAllKeys                   = _getAllKeys;
-window._getActiveFiltroKeys         = () => _activeFiltroKeys;
-window._filtroManualeNessuno        = false; // getter live sotto
+window.TIPOLOGIE_PERCORSI_DATA = _getTipologiePercorsiData(); // snapshot iniziale
+window._getAllKeys = _getAllKeys;
+window._getActiveFiltroKeys = () => _activeFiltroKeys;
+window._filtroManualeNessuno = false; // getter live sotto
 Object.defineProperty(window, "_filtroManualeNessuno", {
   get: () => _filtroManualeNessuno,
-  set: (v) => { _filtroManualeNessuno = v; },
+  set: (v) => {
+    _filtroManualeNessuno = v;
+  },
   configurable: true,
 });

@@ -9,21 +9,21 @@
  */
 function formattaDataItaliana(data) {
   if (!data) return "";
-  
+
   let dataObj;
-  
+
   // Se è una stringa, prova a convertirla in oggetto Date
-  if (typeof data === 'string') {
+  if (typeof data === "string") {
     // Gestione formati comuni: YYYY-MM-DD, YYYY/MM/DD, DD/MM/YYYY
-    if (data.includes('-')) {
+    if (data.includes("-")) {
       // Formato ISO: YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss
-      const parts = data.split('T')[0].split('-');
+      const parts = data.split("T")[0].split("-");
       if (parts.length === 3) {
         dataObj = new Date(parts[0], parts[1] - 1, parts[2]);
       }
-    } else if (data.includes('/')) {
+    } else if (data.includes("/")) {
       // Formato europeo: DD/MM/YYYY
-      const parts = data.split('/');
+      const parts = data.split("/");
       if (parts.length === 3) {
         const giorno = parseInt(parts[0], 10);
         const mese = parseInt(parts[1], 10);
@@ -39,17 +39,17 @@ function formattaDataItaliana(data) {
   } else {
     return "";
   }
-  
+
   // Verifica che la data sia valida
   if (isNaN(dataObj.getTime())) {
     return "";
   }
-  
+
   // Formatta in GG/MM/AAAA
-  const giorno = String(dataObj.getDate()).padStart(2, '0');
-  const mese = String(dataObj.getMonth() + 1).padStart(2, '0');
+  const giorno = String(dataObj.getDate()).padStart(2, "0");
+  const mese = String(dataObj.getMonth() + 1).padStart(2, "0");
   const anno = dataObj.getFullYear();
-  
+
   return `${giorno}/${mese}/${anno}`;
 }
 
@@ -60,27 +60,27 @@ function formattaDataItaliana(data) {
  */
 function formattaDataOraItaliana(data) {
   if (!data) return "";
-  
+
   let dataObj;
-  
-  if (typeof data === 'string') {
+
+  if (typeof data === "string") {
     dataObj = new Date(data);
   } else if (data instanceof Date) {
     dataObj = data;
   } else {
     return "";
   }
-  
+
   if (isNaN(dataObj.getTime())) {
     return "";
   }
-  
-  const giorno = String(dataObj.getDate()).padStart(2, '0');
-  const mese = String(dataObj.getMonth() + 1).padStart(2, '0');
+
+  const giorno = String(dataObj.getDate()).padStart(2, "0");
+  const mese = String(dataObj.getMonth() + 1).padStart(2, "0");
   const anno = dataObj.getFullYear();
-  const ore = String(dataObj.getHours()).padStart(2, '0');
-  const minuti = String(dataObj.getMinutes()).padStart(2, '0');
-  
+  const ore = String(dataObj.getHours()).padStart(2, "0");
+  const minuti = String(dataObj.getMinutes()).padStart(2, "0");
+
   return `${giorno}/${mese}/${anno} ${ore}:${minuti}`;
 }
 
@@ -91,14 +91,14 @@ function formattaDataOraItaliana(data) {
  */
 function daItalianaAISO(dataItaliana) {
   if (!dataItaliana) return "";
-  
-  const parts = dataItaliana.split('/');
+
+  const parts = dataItaliana.split("/");
   if (parts.length !== 3) return "";
-  
-  const giorno = parts[0].padStart(2, '0');
-  const mese = parts[1].padStart(2, '0');
+
+  const giorno = parts[0].padStart(2, "0");
+  const mese = parts[1].padStart(2, "0");
   const anno = parts[2];
-  
+
   return `${anno}-${mese}-${giorno}`;
 }
 
@@ -134,5 +134,5 @@ module.exports = {
   daItalianaAISO,
   oggiItaliano,
   oraOggiItaliano,
-  formattaTimestampItaliano
+  formattaTimestampItaliano,
 };

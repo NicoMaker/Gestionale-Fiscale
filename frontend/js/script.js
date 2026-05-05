@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Aggiungi la funzione toggleClienteSelect globalmente
-window.toggleClienteSelect = function() {
+window.toggleClienteSelect = function () {
   const generaPer = document.getElementById("custom-adp-genera-per")?.value;
   const clienteDiv = document.getElementById("custom-adp-cliente-div");
   if (clienteDiv) {
@@ -17,15 +17,17 @@ window.toggleClienteSelect = function() {
 };
 
 // Ascolta i cambiamenti del checkbox "solo attivi" nel modal applica adempimenti
-document.addEventListener('change', function(e) {
-  if (e.target.id === 'applica-clienti-solo-attivi') {
+document.addEventListener("change", function (e) {
+  if (e.target.id === "applica-clienti-solo-attivi") {
     renderApplicaClientiList();
   }
 });
 
 // Assicura che le funzioni siano globali
-window.caricaClientiSenzaAdempimenti = window.caricaClientiSenzaAdempimenti || function() {
-  if (socket && state.page === "dashboard") {
-    socket.emit("get:clienti_senza_adempimenti", { anno: state.anno });
-  }
-};
+window.caricaClientiSenzaAdempimenti =
+  window.caricaClientiSenzaAdempimenti ||
+  function () {
+    if (socket && state.page === "dashboard") {
+      socket.emit("get:clienti_senza_adempimenti", { anno: state.anno });
+    }
+  };

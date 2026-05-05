@@ -746,5 +746,5 @@ module.exports = {
   copiaConfigClienteAnno,
   copiaTuttiClientiAnno,
   checkNomeExists,
-  getClientiSenzaAdempimenti  // ⭐ AGGIUNGI QUESTA
+  getClientiSenzaAdempimenti, // ⭐ AGGIUNGI QUESTA
 };

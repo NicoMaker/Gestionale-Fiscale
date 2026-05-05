@@ -79,9 +79,7 @@ function toggleAdpCompletato(event, id) {
     stato: nuovoStato,
     data_scadenza: r.data_scadenza || null,
     data_completamento:
-      nuovoStato === "completato"
-        ? daItalianaAISO(oggiItaliano())
-        : null,
+      nuovoStato === "completato" ? daItalianaAISO(oggiItaliano()) : null,
     note: r.note || null,
     importo: r.importo || null,
     importo_saldo: r.importo_saldo || null,
@@ -117,9 +115,7 @@ function setCbxStato(event, id, nuovoStato) {
     stato: nuovoStato,
     data_scadenza: r.data_scadenza || null,
     data_completamento:
-      nuovoStato === "completato"
-        ? daItalianaAISO(oggiItaliano())
-        : null,
+      nuovoStato === "completato" ? daItalianaAISO(oggiItaliano()) : null,
     note: r.note || null,
     importo: null,
     importo_saldo: null,
@@ -155,9 +151,7 @@ function toggleCheckboxAdp(event, id) {
     stato: nuovoStato,
     data_scadenza: r.data_scadenza || null,
     data_completamento:
-      nuovoStato === "completato"
-        ? daItalianaAISO(oggiItaliano())
-        : null,
+      nuovoStato === "completato" ? daItalianaAISO(oggiItaliano()) : null,
     note: r.note || null,
     importo: null,
     importo_saldo: null,
@@ -416,7 +410,6 @@ function aprireDialogoNuovoAnno(annoNuovo, annoPrecedente) {
   openModal("modal-nuovo-anno");
 }
 
-
 // ─── VALIDAZIONE INPUT NUMERICO (PERMETTE NEGATIVI) ──────────────
 function validaInputNumerico(input) {
   let value = input.value;
@@ -424,31 +417,31 @@ function validaInputNumerico(input) {
     coloraInputImporto(input);
     return;
   }
-  
+
   // Permetti il segno meno all'inizio
   let negativo = false;
   if (value.startsWith("-")) {
     negativo = true;
     value = value.substring(1);
   }
-  
+
   // Sostituisci virgole con punti
   value = value.replace(/,/g, ".");
-  
+
   // Rimuovi tutto tranne numeri e punto
   value = value.replace(/[^0-9.]/g, "");
-  
+
   // Assicura un solo punto decimale
   const parts = value.split(".");
   if (parts.length > 2) {
     value = parts[0] + "." + parts.slice(1).join("");
   }
-  
+
   // Riaggiungi il segno meno se necessario e se c'è un numero
   if (negativo && value !== "") {
     value = "-" + value;
   }
-  
+
   input.value = value;
   coloraInputImporto(input);
 }
@@ -472,24 +465,25 @@ function convertiVirgolaInPunto(input) {
   // Sostituisci virgole con punti e rimuovi caratteri non numerici tranne punto
   let pulito = raw.replace(/,/g, ".");
   pulito = pulito.replace(/[^0-9.]/g, "");
-  
+
   const parti = pulito.split(".");
   let intero = parti[0] || "0";
-  let decimale = parti.length > 1 ? parti[1].substring(0, 2).padEnd(2, "0") : "00";
-  
+  let decimale =
+    parti.length > 1 ? parti[1].substring(0, 2).padEnd(2, "0") : "00";
+
   // Rimuovi zeri non significativi dall'intero per evitare "000" → "0"
   intero = intero.replace(/^0+/, "");
   if (intero === "") intero = "0";
-  
+
   // Formatta l'intero con i separatori delle migliaia
   intero = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  
+
   // Ricostruisci il valore
   let risultato = intero + "," + decimale;
   if (negativo && parseFloat(intero.replace(/\./g, "")) > 0) {
     risultato = "-" + risultato;
   }
-  
+
   input.value = risultato;
   coloraInputImporto(input);
 }
@@ -498,40 +492,40 @@ function convertiVirgolaInPunto(input) {
 function formattaInputConSeparatori(input) {
   let raw = input.value;
   if (!raw) return;
-  
+
   // Salva posizione cursore
   const posCursore = input.selectionStart;
   const lunghezzaOriginale = raw.length;
-  
+
   // Gestisci segno meno
   let negativo = false;
   if (raw.startsWith("-")) {
     negativo = true;
     raw = raw.substring(1);
   }
-  
+
   // Pulisci: rimuovi tutto tranne numeri e virgola/punto
   let pulito = raw.replace(/[^0-9,.]/g, "");
-  
+
   // Sostituisci virgole con punti per parsing
   pulito = pulito.replace(/,/g, ".");
-  
+
   const parti = pulito.split(".");
   let intero = parti[0];
   let decimale = parti.length > 1 ? parti[1].substring(0, 2) : null;
-  
+
   // Rimuovi zeri non significativi dall'intero
   intero = intero.replace(/^0+/, "");
   if (intero === "") intero = "0";
-  
+
   // Formatta intero con separatori migliaia
   intero = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  
+
   let formattato = negativo ? "-" + intero : intero;
   if (decimale !== null) {
     formattato += "," + decimale;
   }
-  
+
   if (raw !== formattato) {
     input.value = formattato;
     // Aggiusta posizione cursore
@@ -567,18 +561,18 @@ function coloraInputImporto(input) {
     input.style.borderColor = "";
     return;
   }
-  
+
   // Gestisci il segno meno
   let negativo = false;
   if (raw.startsWith("-")) {
     negativo = true;
     raw = raw.substring(1);
   }
-  
+
   // Converti formato italiano in numero
   let normalized = raw.replace(/\./g, "").replace(",", ".");
   const num = parseFloat(normalized);
-  
+
   if (isNaN(num)) {
     input.style.color = "";
     input.style.borderColor = "";
@@ -596,7 +590,7 @@ function setupDecimalInput(input) {
   const newInput = input.cloneNode(true);
   input.parentNode.replaceChild(newInput, input);
   input = newInput;
-  
+
   input.addEventListener("input", function (e) {
     let value = e.target.value;
 
@@ -649,9 +643,9 @@ function setupDecimalInput(input) {
       e.target.value = num.toFixed(2);
     }
   });
-  
+
   // Aggiungi listener per il tasto meno
-  input.addEventListener("keydown", function(e) {
+  input.addEventListener("keydown", function (e) {
     if (e.key === "-") {
       // Permetti il meno solo all'inizio
       if (this.selectionStart !== 0 || this.value.includes("-")) {
