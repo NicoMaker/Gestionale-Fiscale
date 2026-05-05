@@ -165,7 +165,6 @@ function openNuovoAdpDef() {
   setVal("adp-def-desc", "");
   setVal("adp-def-scadenza", "annuale");
   
-  // Resetta i radio button - default "Semplice"
   const sempliceRadio = document.getElementById("adp-def-semplice");
   const contRadio = document.getElementById("adp-def-contabilita");
   const rateRadio = document.getElementById("adp-def-rate");
@@ -194,7 +193,6 @@ function editAdpDef(id) {
   setVal("adp-def-desc", a.descrizione || "");
   setVal("adp-def-scadenza", a.scadenza_tipo || "annuale");
   
-  // Imposta il tipo corretto in base ai flag
   const isCont = a.is_contabilita === 1;
   const isRate = a.has_rate === 1;
   const isCheck = a.is_checkbox === 1;
@@ -274,7 +272,6 @@ function saveAdpDef() {
   } else if (isCheck) {
     data.is_checkbox = 1;
   }
-  // else isSemplice: tutti i flag rimangono 0
 
   if (data.has_rate) {
     data.rate_labels = [
@@ -341,31 +338,42 @@ function openAdpModal(r) {
   const isCbx = isCheckbox(r);
   const isSemplice = !isCont && !isRate && !isCbx;
 
-  // ── IMPORTO NORMALE (solo per tipo semplice) ─────────────────
-  if (isSemplice && !isCbx) {
-    document.getElementById("sect-importo-normale").style.display = "block";
-    setVal("adp-importo", parseItalianoFloat(r.importo) || "");
-  } else {
-    document.getElementById("sect-importo-normale").style.display = "none";
+  // Nascondi DATA COMPLETAMENTO per tipo Semplice
+  const dataCompletamentoGroup = document.getElementById("data-completamento-group");
+  if (dataCompletamentoGroup) {
+    dataCompletamentoGroup.style.display = isSemplice ? "none" : "";
+  }
+  
+  // Cambia etichetta per tipo Semplice
+  const scadenzaLabel = document.querySelector('#modal-adempimento .form-row:first-child .form-group:first-child label');
+  if (scadenzaLabel && isSemplice) {
+    scadenzaLabel.textContent = "📅 Data Scadenza";
+  } else if (scadenzaLabel) {
+    scadenzaLabel.textContent = "Data Scadenza";
   }
 
-  // ── Checkbox contabilità: SOLO per adempimenti con RATE ───
-  const rateContWrapper = document.getElementById(
-    "rate-contabilita-checkbox-wrapper",
-  );
+  // NASCONDI IMPORTO per tipo Semplice
+  if (isSemplice) {
+    document.getElementById("sect-importo-normale").style.display = "none";
+    const importoInput = document.getElementById("adp-importo");
+    if (importoInput) importoInput.removeAttribute("required");
+  } else if (isCbx) {
+    document.getElementById("sect-importo-normale").style.display = "none";
+  } else {
+    document.getElementById("sect-importo-normale").style.display = "block";
+    setVal("adp-importo", parseItalianoFloat(r.importo) || "");
+  }
+
+  const rateContWrapper = document.getElementById("rate-contabilita-checkbox-wrapper");
   if (rateContWrapper) {
     rateContWrapper.style.display = isRate && !isCbx ? "" : "none";
   }
 
-  // ── Checkbox contabilità: MOSTRIAMO per adempimenti contabilità puri
-  const contCheckWrapper = document.getElementById(
-    "contabilita-checkbox-wrapper",
-  );
+  const contCheckWrapper = document.getElementById("contabilita-checkbox-wrapper");
   if (contCheckWrapper) {
     contCheckWrapper.style.display = isCont && !isCbx ? "" : "none";
   }
 
-  // ── Impostazione valori rate + contabilità ─────────────────
   if (isRate && !isCbx) {
     const rateContCheck = document.getElementById("adp-rate-cont-completata");
     if (rateContCheck)
@@ -373,14 +381,12 @@ function openAdpModal(r) {
     _aggiornaColoriRateContabilita(r);
   }
 
-  // ── Impostazione valori contabilità pura ──────────────────
   if (isCont && !isCbx) {
     const contCheck = document.getElementById("adp-cont-completata");
     if (contCheck) contCheck.checked = parseInt(r.cont_completata) === 1;
     _aggiornaColoriContabilita(r);
   }
 
-  // ── Rate: personalizza label ───────────────────────────────
   if (isRate && !isCont && !isCbx) {
     let lb = ["Saldo", "1° Acconto", "2° Acconto"];
     try {
@@ -391,7 +397,6 @@ function openAdpModal(r) {
     setTxt("rate-l2", `📥 ${lb[2]} (€)`);
   }
 
-  // ── Checkbox: aggiorna UI pulsanti ─────────────────────────
   if (isCbx) {
     _aggiornaPulsantiCheckbox(r.stato || "da_fare");
   }
@@ -470,7 +475,6 @@ function onContabilitaImportoChange() {
   coloraInputImporto(document.getElementById("adp-imp-iva"));
 }
 
-// ─── COLORAZIONE INPUT IN BASE AL SEGNO ──────────────────────
 function coloraInputImporto(input) {
   if (!input) return;
   const raw = (input.value || "").replace(/\./g, "").replace(",", ".").trim();
@@ -487,7 +491,6 @@ function coloraInputImporto(input) {
   }
 }
 
-// ─── FORMATTAZIONE NUMERO IN FORMATO ITALIANO ────────────────
 function formattaNumeroItaliano(valore) {
   if (valore === null || valore === undefined || valore === "") return "";
   const s = String(valore);
@@ -503,7 +506,6 @@ function formattaNumeroItaliano(valore) {
   return negativo ? "-" + risultato : risultato;
 }
 
-// ─── FORMATTA NUMERO CON COLORE PER DISPLAY ──────────────────
 function formattaNumeroConColore(valore, elemento) {
   if (valore === null || valore === undefined || valore === "") {
     if (elemento) {
@@ -531,14 +533,12 @@ function formattaNumeroConColore(valore, elemento) {
   return formattato;
 }
 
-// ─── HELPER: converte stringa italiana in numero JS ──────────
 function parseItalianoFloat(str) {
   if (str === null || str === undefined || str === "") return null;
   const n = parseFloat(String(str).replace(/\./g, "").replace(",", "."));
   return isNaN(n) ? null : n;
 }
 
-// ─── FORMATTA INPUT NUMERICO CON SEPARATORI MIGLIAIA ─────────
 function formattaInputConSeparatori(input) {
   if (!input) return;
   const raw = input.value;
@@ -570,18 +570,15 @@ function formattaInputConSeparatori(input) {
   }
 }
 
-// ─── BLOCCA IL PUNTO NEGLI INPUT NUMERICI ────────────────────
 function bloccaPuntoInput(e) {
   if (e.key === ".") e.preventDefault();
 }
 
-// ─── VALIDAZIONE INPUT NUMERICO ──────────────────────────────
 function validaInputNumerico(input) {
   formattaInputConSeparatori(input);
   coloraInputImporto(input);
 }
 
-// ─── FORMATTAZIONE FINALE AL BLUR ────────────────────────────
 function convertiVirgolaInPunto(input) {
   const raw = input.value.trim();
   if (!raw) {
@@ -604,7 +601,6 @@ function convertiVirgolaInPunto(input) {
   coloraInputImporto(input);
 }
 
-// ─── COLORI RATE + CONTABILITÀ ────────────────────────────────
 function _aggiornaColoriRateContabilita(r) {
   const rateContCheck = document.getElementById("adp-rate-cont-completata");
   const contDone = rateContCheck
@@ -641,7 +637,6 @@ function onRateContabilitaChange() {
   });
 }
 
-// ─── SALVA STATO ADEMPIMENTO ──────────────────────────────────
 function saveAdpStato() {
   const id = parseInt(getVal("adp-id"));
   const isCont = getVal("adp-is-contabilita") === "1";
@@ -653,36 +648,38 @@ function saveAdpStato() {
     id,
     stato: getVal("adp-stato"),
     data_scadenza: daItalianaAISO(getVal("adp-scadenza")) || null,
-    data_completamento: daItalianaAISO(getVal("adp-data")) || null,
+    data_completamento: null,
     note: getVal("adp-note") || null,
     cont_completata: 0,
   };
 
   if (isCbx) {
-    // Checkbox: nessun importo, stato già in data.stato
+    // Checkbox: nessun importo, solo stato
   } else if (isCont) {
     data.importo_iva = parseItalianoFloat(getVal("adp-imp-iva"));
     data.importo_contabilita = parseItalianoFloat(getVal("adp-imp-cont"));
-    data.cont_completata = document.getElementById("adp-cont-completata")
-      ?.checked
-      ? 1
-      : 0;
+    data.cont_completata = document.getElementById("adp-cont-completata")?.checked ? 1 : 0;
+    if (data.stato === "completato") {
+      data.data_completamento = daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
+    }
   } else if (isRate) {
     data.importo_saldo = parseItalianoFloat(getVal("adp-imp-saldo"));
     data.importo_acconto1 = parseItalianoFloat(getVal("adp-imp-acc1"));
     data.importo_acconto2 = parseItalianoFloat(getVal("adp-imp-acc2"));
-    data.cont_completata = document.getElementById("adp-rate-cont-completata")
-      ?.checked
-      ? 1
-      : 0;
+    data.cont_completata = document.getElementById("adp-rate-cont-completata")?.checked ? 1 : 0;
+    if (data.stato === "completato") {
+      data.data_completamento = daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
+    }
   } else if (isSemplice) {
-    data.importo = parseItalianoFloat(getVal("adp-importo"));
+    // Solo Scadenza: nessun importo, nessuna data completamento
+    data.importo = null;
+    data.data_completamento = null;
   }
 
   socket.emit("update:adempimento_stato", data);
+  closeModal("modal-adempimento");
 }
 
-// ─── ELIMINA ADEMPIMENTO CLIENTE ──────────────────────────────
 function deleteAdpCliente() {
   if (!confirm("Rimuovere questo adempimento dallo scadenzario?")) return;
   const id = parseInt(getVal("adp-id"));
