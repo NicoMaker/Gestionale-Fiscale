@@ -300,7 +300,17 @@ function renderPage(page) {
       <button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="font-size:13px">⟳</button>
       <button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️</button>
       <button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Cliente</button>`;
-    socket.emit("get:clienti");
+    
+    // Apply current filters to ensure all data is loaded correctly
+    setTimeout(() => {
+      if (typeof applyClientiFiltriImmediate === 'function') {
+        applyClientiFiltriImmediate();
+      } else {
+        // Fallback to basic call with current year
+        const anno = parseInt(document.getElementById("filter-anno")?.value) || new Date().getFullYear();
+        socket.emit("get:clienti", { anno });
+      }
+    }, 50);
   } else if (page === "scadenzario") {
     state._pending = "scadenzario";
     document.getElementById("topbar-actions").innerHTML = "";

@@ -176,6 +176,12 @@ function getTipologiaColor(tipCodice) {
 
 // ─── SOTTOTIPO HELPERS ────────────────────────────────────────
 function getCol3Options(tipCodice, col2Value) {
+  // Try to get data from JSON configuration first
+  if (typeof window !== 'undefined' && window.TIPOLOGIE_CONFIG) {
+    return _getCol3OptionsFromJson(tipCodice, col2Value);
+  }
+  
+  // Fallback to hardcoded values for backward compatibility
   if (tipCodice === "SP" || tipCodice === "ASS")
     return [
       { value: "ordinaria", label: "Ordinaria" },
@@ -192,6 +198,32 @@ function getCol3Options(tipCodice, col2Value) {
     ];
   }
   return null;
+}
+
+// Helper function to generate col3 options from JSON
+function _getCol3OptionsFromJson(tipCodice, col2Value) {
+  const cfg = window.TIPOLOGIE_CONFIG || {};
+  const percorsi = cfg.percorsi?.[tipCodice] || [];
+  const uniqueCol3 = new Map();
+  
+  percorsi.forEach(p => {
+    if (p.col3Label) {
+      const col2Match = !col2Value || 
+        (p.col2Label === "Ditta Individuale" && col2Value === "ditta") ||
+        (p.col2Label && p.col2Label.toLowerCase() === col2Value);
+      
+      if (col2Match) {
+        uniqueCol3.set(p.col3Label.toLowerCase(), p.col3Label);
+      }
+    }
+  });
+  
+  if (uniqueCol3.size === 0) return null;
+  
+  return Array.from(uniqueCol3.entries()).map(([value, label]) => ({
+    value,
+    label
+  }));
 }
 
 function getSottotipoCode(tipCodice, col2, col3) {

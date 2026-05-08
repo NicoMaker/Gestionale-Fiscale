@@ -41,10 +41,17 @@ socket.on("broadcast:stats_updated", ({ anno }) => {
 
 socket.on("broadcast:clienti_updated", () => {
   if (state.page === "clienti") {
-    // ⭐ Usa l'anno del filtro attivo, non sempre l'anno corrente
-    const annoFiltro =
-      parseInt(document.getElementById("filter-anno")?.value) || state.anno;
-    socket.emit("get:clienti", { anno: annoFiltro });
+    // Apply all current filters to ensure complete data loading
+    setTimeout(() => {
+      if (typeof applyClientiFiltriImmediate === 'function') {
+        applyClientiFiltriImmediate();
+      } else {
+        // Fallback: at least include year and search
+        const search = document.getElementById("global-search-clienti")?.value || "";
+        const annoFiltro = parseInt(document.getElementById("filter-anno")?.value) || state.anno;
+        socket.emit("get:clienti", { search, anno: annoFiltro });
+      }
+    }, 100);
   }
 });
 

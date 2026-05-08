@@ -209,6 +209,15 @@ function initializeTipologieFilter() {
     // Se non ci sono filtri salvati, seleziona tutto
     _filtroManualeNessuno = false;
     _activeFiltroKeys = new Set(_getAllKeys());
+  } else {
+    // Also ensure we have all keys even if loaded from storage
+    const allKeys = _getAllKeys();
+    if (_activeFiltroKeys.size === 0 || (_activeFiltroKeys.size === 1 && _filtroManualeNessuno)) {
+      // If filters are empty or only "nessuno", select all
+      _filtroManualeNessuno = false;
+      _activeFiltroKeys = new Set(allKeys);
+      salvaFiltriSuStorage(); // Save the corrected state
+    }
   }
   _syncGlobalFiltroKeys();
 }
@@ -608,7 +617,7 @@ function buildAnniOptions(selectedAnno) {
 }
 
 // ─── FILTRI DB ────────────────────────────────────────────────
-const applyClientiFiltriDB = debounce(() => {
+function applyClientiFiltriImmediate() {
   const search = document.getElementById("global-search-clienti")?.value || "";
   const anno =
     parseInt(document.getElementById("filter-anno")?.value) ||
@@ -629,7 +638,9 @@ const applyClientiFiltriDB = debounce(() => {
       nessuno: filtriTip.nessuno || false,
     });
   }
-}, 300);
+}
+
+const applyClientiFiltriDB = debounce(applyClientiFiltriImmediate, 300);
 
 function applyClientiFiltri() {
   applyClientiFiltriDB();
@@ -649,13 +660,29 @@ function resetClientiFiltri() {
 
 // ─── RENDER LISTA ─────────────────────────────────────────────
 function renderClientiPage() {
+  // Ensure filters are properly initialized before rendering
   if (
     _activeFiltroKeys.size === 0 &&
     !_filtroManualeNessuno &&
     _getAllKeys().length > 0
   ) {
     initializeTipologieFilter();
+    // Force a filter refresh to ensure all clients are loaded
+    setTimeout(() => {
+      applyClientiFiltriImmediate();
+    }, 100);
+    return; // Exit early, will be called again after filters are ready
   }
+  
+  // Double-check that we have valid filter state
+  if (_activeFiltroKeys.size === 0 && !_filtroManualeNessuno && _cfg()) {
+    initializeTipologieFilter();
+    setTimeout(() => {
+      renderClientiPage();
+    }, 50);
+    return;
+  }
+  
   renderClientiTabella(state.clienti);
 }
 
@@ -1056,19 +1083,27 @@ function openEditClienteModal(cliente, anno) {
     col4Val = cliente.periodicita || "";
   const badge = document.getElementById("col4-forfettario-badge");
   if (badge) badge.style.display = "none";
+  
+  // Store the values that need to be set after the columns are updated
+  lastClienteFormValues = { col2: col2Val, col3: col3Val, col4: col4Val };
+  
   setTimeout(() => {
-    if (document.getElementById("c-col2"))
-      document.getElementById("c-col2").value = col2Val;
-    if (document.getElementById("c-col3"))
-      document.getElementById("c-col3").value = col3Val;
-    lastClienteFormValues = { col2: col2Val, col3: col3Val, col4: col4Val };
+    // First update the columns structure
     aggiornaColonneCliente();
+    
     setTimeout(() => {
+      // Then set the actual values after the DOM is ready
+      if (document.getElementById("c-col2"))
+        document.getElementById("c-col2").value = col2Val;
+      if (document.getElementById("c-col3"))
+        document.getElementById("c-col3").value = col3Val;
+      
       const tipCodice = _getTipologiaCodice();
       if (REGIMI_ANNUALI.includes(col3Val))
         _aggiornCol4BasedOnCol3(tipCodice, col3Val);
       else if (document.getElementById("c-col4"))
         document.getElementById("c-col4").value = col4Val;
+      
       aggiornaRiepilogoClassificazione();
     }, 50);
   }, 60);
@@ -1301,9 +1336,11 @@ function aggiornaColonneCliente() {
   const tipCodice = _getTipologiaCodice();
   const col2Wrap = document.getElementById("wrap-col2");
   const col2Sel = document.getElementById("c-col2");
-  const col2Opts = COL2_OPTIONS[tipCodice];
+  
+  // Generate col2 options dynamically from JSON instead of hardcoded
+  const col2Opts = _getCol2OptionsFromJson(tipCodice);
   _aggiornaTipologiaSelectStyle();
-  if (!col2Opts) {
+  if (!col2Opts || col2Opts.length === 0) {
     col2Wrap.style.display = "none";
     col2Sel.value = "";
     _aggiornaCol3(tipCodice, "");
@@ -1321,7 +1358,62 @@ function aggiornaColonneCliente() {
     if (!col2Current) col2Sel.value = "";
     _aggiornaCol3(tipCodice, col2Sel.value);
   }
+  
+  // Always check if we should show periodicity based on tipologia and paths
+  _checkAndShowPeriodicita(tipCodice);
   aggiornaRiepilogoClassificazione();
+}
+
+// Helper function to check and show periodicity field
+function _checkAndShowPeriodicita(tipCodice) {
+  const cfg = _cfg();
+  const percorsi = cfg.percorsi?.[tipCodice] || [];
+  
+  // Check if any path for this tipologia has periodicity
+  const hasPeriodicita = percorsi.some(p => p.hasPer || p.isForfettario);
+  
+  const col4Wrap = document.getElementById("wrap-col4");
+  if (hasPeriodicita) {
+    // Show periodicity field
+    col4Wrap.style.display = "";
+    // Initialize with empty options if not already populated
+    const col4Sel = document.getElementById("c-col4");
+    if (col4Sel && !col4Sel.innerHTML.includes("option")) {
+      const ivaPer = cfg.periodicitaIva || [];
+      const annPer = (cfg.periodicitaAnnuale || []).map((p) => p.value);
+      
+      col4Sel.innerHTML = `<option value="">— Seleziona —</option>` +
+        ivaPer.map(p => `<option value="${p.value}">${p.label}</option>`).join("") +
+        annPer.map(p => `<option value="${p.value}">${p.label}</option>`).join("");
+    }
+  } else {
+    // Hide periodicity field
+    _nascondiCol4();
+  }
+}
+
+// Helper function to generate col2 options from JSON
+function _getCol2OptionsFromJson(tipCodice) {
+  const cfg = _cfg();
+  const percorsi = cfg.percorsi?.[tipCodice] || [];
+  const options = [];
+  
+  percorsi.forEach(p => {
+    if (p.col2Label) {
+      const value = p.col2Label === "Ditta Individuale" ? "ditta" : p.col2Label.toLowerCase();
+      
+      // Check if this option already exists
+      const existing = options.find(opt => opt.value === value);
+      if (!existing) {
+        options.push({
+          value,
+          label: p.col2Label
+        });
+      }
+    }
+  });
+  
+  return options;
 }
 
 function _aggiornaCol3(tipCodice, col2Val) {
@@ -1348,7 +1440,18 @@ function _aggiornaCol3(tipCodice, col2Val) {
 }
 
 function _aggiornCol4BasedOnCol3(tipCodice, col3Val) {
+  // Ensure JSON data is available before proceeding
   const cfg = _cfg();
+  if (!cfg || !cfg.periodicitaIva || !cfg.periodicitaAnnuale) {
+    // If JSON is not ready, wait and try again
+    setTimeout(() => {
+      if (_cfg() && _cfg().periodicitaIva && _cfg().periodicitaAnnuale) {
+        _aggiornCol4BasedOnCol3(tipCodice, col3Val);
+      }
+    }, 100);
+    return;
+  }
+
   const annPer = (cfg.periodicitaAnnuale || []).map((p) => p.value);
   const ivaPer = cfg.periodicitaIva || [];
 
@@ -1523,7 +1626,18 @@ function onTipologiaChange() {
   _nascondiCol4();
   const badge = document.getElementById("col4-forfettario-badge");
   if (badge) badge.style.display = "none";
-  aggiornaColonneCliente();
+  
+  // Ensure JSON data is loaded before updating columns
+  if (_cfg() && _cfg().percorsi) {
+    aggiornaColonneCliente();
+  } else {
+    // If JSON is not ready, wait and try again
+    setTimeout(() => {
+      if (_cfg() && _cfg().percorsi) {
+        aggiornaColonneCliente();
+      }
+    }, 100);
+  }
 }
 
 function onCol2Change() {
@@ -1615,6 +1729,7 @@ window.eseguiCopiaConfig = eseguiCopiaConfig;
 window.openNuovoCliente = openNuovoCliente;
 window.saveCliente = saveCliente;
 window.applyClientiFiltri = applyClientiFiltri;
+window.applyClientiFiltriImmediate = applyClientiFiltriImmediate;
 window.resetClientiFiltri = resetClientiFiltri;
 window.onTipologiaChange = onTipologiaChange;
 window.onCol2Change = onCol2Change;
