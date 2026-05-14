@@ -130,11 +130,14 @@ function _aggiornaGlobPanelVisibility() {
   var container = document.getElementById("glob-tip-filtro-container");
   if (!container) return;
   container.style.display = _globTipFiltroPanelOpen ? "block" : "none";
-  var btn = document.getElementById("glob-tip-filtro-toggle-btn");
-  if (btn) {
-    btn.innerHTML = _globTipFiltroPanelOpen
-      ? '<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
-      : '<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>';
+  var headerRow = document.getElementById("glob-tip-filtro-header-row");
+  if (headerRow) {
+    var btn = headerRow.querySelector(".btn");
+    if (btn) {
+      btn.parentElement.innerHTML = _globTipFiltroPanelOpen
+        ? '<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
+        : '<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>';
+    }
   }
 }
 
@@ -162,14 +165,14 @@ function _aggiornaGlobTipFiltroCounter() {
 
 function _refreshGlobTipFiltroPanel() {
   var container = document.getElementById("glob-tip-filtro-container");
-  if (!container || !_globTipFiltroPanelOpen) return;
+  if (!container) return;
   if (typeof renderTipologieFiltroPanel === "function") {
     var tmp = document.createElement("div");
     tmp.innerHTML = renderTipologieFiltroPanel();
     container.innerHTML = "";
     container.appendChild(tmp.firstChild);
   }
-  container.style.display = "block";
+  container.style.display = _globTipFiltroPanelOpen ? "block" : "none";
   _aggiornaGlobTipFiltroCounter();
 }
 
@@ -798,9 +801,9 @@ function renderGlobaleTabella(rawData) {
   var tipFiltroHtml = "";
   if (typeof renderTipologieFiltroPanel === "function") {
     tipFiltroHtml =
-      '<div class="glob-tip-filtro-wrap" style="margin-bottom:14px">' +
-      '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b0);border-radius:var(--r-sm);cursor:pointer;" onclick="toggleGlobTipFiltroPanel(event)">' +
-      '<span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie Clienti</span>' +
+      '<div style="margin-bottom:14px">' +
+      '<div id="glob-tip-filtro-header-row" style="display:flex;align-items:center;gap:10px;margin-bottom:6px;padding:10px 14px;background:var(--s2);border:1px solid var(--b0);border-radius:var(--r-sm);">' +
+      '<span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie</span>' +
       '<span id="glob-tip-filtro-count" style="display:' +
       (showTipBadge ? "inline-flex" : "none") +
       ";align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:" +
@@ -813,13 +816,13 @@ function renderGlobaleTabella(rawData) {
         : "") +
       '<div id="glob-tip-filtro-toggle-btn" style="margin-left:auto" onclick="event.stopPropagation()">' +
       (_globTipFiltroPanelOpen
-        ? '<button class="btn btn-xs btn-secondary" onclick="event.stopPropagation(); closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
-        : '<button class="btn btn-xs btn-secondary" onclick="event.stopPropagation(); toggleGlobTipFiltroPanel(event)">▼ Espandi</button>') +
+        ? '<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
+        : '<button class="btn btn-xs btn-secondary" onclick="toggleGlobTipFiltroPanel(event)">▼ Espandi</button>') +
       "</div>" +
       "</div>" +
       '<div id="glob-tip-filtro-container" style="display:' +
       (_globTipFiltroPanelOpen ? "block" : "none") +
-      ';margin-top:8px">' +
+      '">' +
       renderTipologieFiltroPanel() +
       "</div>" +
       "</div>";

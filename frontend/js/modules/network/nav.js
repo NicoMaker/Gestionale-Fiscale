@@ -194,11 +194,7 @@ function initSearchableSelect(selectId) {
 
   // Chiudi cliccando fuori
   document.addEventListener("click", (e) => {
-    // Non chiudere se il click è su un pannello filtri
-    const filtroPanel = e.target.closest('.tip-filtro-panel, #tip-filtro-panel, #dash-tip-filtro-panel, #glob-tip-filtro-panel, [id*="tip-filtro-container"]');
-    if (!wrap.contains(e.target) && !filtroPanel) {
-      closePanel();
-    }
+    if (!wrap.contains(e.target)) closePanel();
   });
 
   /* ── refresh pubblico ── */
@@ -238,13 +234,7 @@ function initNav() {
   /* ── chiudi modal cliccando fuori ── */
   document.querySelectorAll(".modal-overlay").forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
-      // Check if click is on filter panel elements inside the modal
-      const filtroPanel = e.target.closest('.tip-filtro-panel, #tip-filtro-panel, #dash-tip-filtro-panel, #glob-tip-filtro-panel, [id*="tip-filtro-container"], .tip-percorso-chip, .tip-gruppo-header, .tip-btn-all, .tip-btn-none');
-      
-      // Only close if clicking directly on the overlay (outside modal content) and not on filter elements
-      if (e.target === overlay && !filtroPanel) {
-        overlay.classList.remove("open");
-      }
+      if (e.target === overlay) overlay.classList.remove("open");
     });
   });
 
