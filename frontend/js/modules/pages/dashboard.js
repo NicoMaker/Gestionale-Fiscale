@@ -311,16 +311,34 @@ function renderApplicaAdempimentiModal() {
       '<div style="text-align:center;padding:20px">📋 Nessun adempimento</div>';
     return;
   }
+  // Mantieni selezioni precedenti durante il re-render (es. dopo ricerca)
+  var prevSelezionati = new Set(
+    Array.from(document.querySelectorAll(".applica-adp-checkbox:checked")).map(function(cb) { return cb.value; })
+  );
+  var q = (document.getElementById("applica-adp-search") ? document.getElementById("applica-adp-search").value : "").toLowerCase().trim();
   var adpOrdinati = state.adempimenti.slice().sort(function (a, b) {
     return a.nome.localeCompare(b.nome);
   });
+  var adpFiltrati = q
+    ? adpOrdinati.filter(function(adp) {
+        return (adp.codice && adp.codice.toLowerCase().indexOf(q) !== -1) ||
+               (adp.nome && adp.nome.toLowerCase().indexOf(q) !== -1);
+      })
+    : adpOrdinati;
+
+  if (adpFiltrati.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3)">Nessun adempimento trovato</div>';
+    _aggiornaAdpSelezionaTuttiBtn();
+    return;
+  }
   var html = '<div style="display:flex;flex-wrap:wrap">';
-  adpOrdinati.forEach(function (adp) {
+  adpFiltrati.forEach(function (adp) {
+    var isChecked = prevSelezionati.has(String(adp.id));
     html +=
       '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px)">' +
       '<input type="checkbox" class="applica-adp-checkbox" value="' +
       adp.id +
-      '">' +
+      '"'+(isChecked ? ' checked' : '')+' onchange="_aggiornaAdpSelezionaTuttiBtn()">' +
       "<span><strong>" +
       adp.codice +
       "</strong> — " +
@@ -329,6 +347,11 @@ function renderApplicaAdempimentiModal() {
   });
   html += "</div>";
   container.innerHTML = html;
+  _aggiornaAdpSelezionaTuttiBtn();
+}
+
+function filtraAdpApplica() {
+  renderApplicaAdempimentiModal();
 }
 
 // ─── STATO FILTRO TIPOLOGIA APPLICA ──────────────────────────
@@ -408,21 +431,65 @@ function _applicaToggleTipFiltro(tc) {
 
 function _applicaSelezionaTipologia(tc) {
   var clientiFiltrati = _getApplicaClientiFiltrati();
-  var daSelezionare = tc
+  var daGestire = tc
     ? clientiFiltrati.filter(function(c) { return c.tipologia_codice === tc; })
     : clientiFiltrati;
-  document.querySelectorAll(".applica-cliente-checkbox").forEach(function(cb) {
-    var id = parseInt(cb.value);
-    if (daSelezionare.some(function(c) { return c.id === id; })) cb.checked = true;
+  // Controlla se tutti sono già selezionati → deseleziona, altrimenti seleziona
+  var ids = daGestire.map(function(c) { return c.id; });
+  var checkboxes = Array.from(document.querySelectorAll(".applica-cliente-checkbox")).filter(function(cb) {
+    return ids.indexOf(parseInt(cb.value)) !== -1;
   });
+  var tuttiChecked = checkboxes.length > 0 && checkboxes.every(function(cb) { return cb.checked; });
+  checkboxes.forEach(function(cb) { cb.checked = !tuttiChecked; });
   _aggiornaApplicaSelezionaTuttiCounter();
+  // Aggiorna il testo del bottone del gruppo
+  _aggiornaBottoniGruppo();
+}
+
+function _aggiornaBottoniGruppo() {
+  // Aggiorna ogni bottone di gruppo in base allo stato attuale delle checkbox
+  document.querySelectorAll("[data-gruppo-tc]").forEach(function(btn) {
+    var tc = btn.dataset.gruppoTc;
+    var checkboxes = Array.from(document.querySelectorAll(
+      ".applica-cliente-checkbox[data-tc='" + tc + "']"
+    ));
+    if (checkboxes.length === 0) return;
+    var tuttiChecked = checkboxes.every(function(cb) { return cb.checked; });
+    btn.textContent = tuttiChecked ? "− Deseleziona tutti" : "+ Seleziona tutti";
+    btn.style.background = tuttiChecked ? btn.dataset.color + "44" : btn.dataset.color + "22";
+  });
 }
 
 function _aggiornaApplicaSelezionaTuttiCounter() {
   var tot = document.querySelectorAll(".applica-cliente-checkbox").length;
   var checked = document.querySelectorAll(".applica-cliente-checkbox:checked").length;
-  var sel = document.getElementById("applica-clienti-seleziona-tutti");
-  if (sel) sel.checked = tot > 0 && checked === tot;
+  var tuttiSelezionati = tot > 0 && checked === tot;
+  var btn = document.getElementById("applica-clienti-btn-seleziona-tutti");
+  if (btn) {
+    if (tuttiSelezionati) {
+      btn.textContent = "☑️ Deseleziona tutti i clienti";
+      btn.style.background = "var(--surface3)";
+    } else {
+      btn.textContent = "✅ Seleziona tutti i clienti";
+      btn.style.background = "";
+    }
+  }
+}
+
+function _aggiornaAdpSelezionaTuttiBtn() {
+  var tot = document.querySelectorAll(".applica-adp-checkbox").length;
+  var checked = document.querySelectorAll(".applica-adp-checkbox:checked").length;
+  var tuttiSelezionati = tot > 0 && checked === tot;
+  var btn = document.getElementById("applica-adp-btn-seleziona-tutti");
+  if (btn) {
+    if (tuttiSelezionati) {
+      btn.textContent = "☑️ Deseleziona tutti gli adempimenti";
+      btn.style.background = "var(--surface3)";
+    } else {
+      btn.textContent = "✅ Seleziona tutti gli adempimenti";
+      btn.style.background = "";
+    }
+  }
 }
 
 function renderApplicaClientiList() {
@@ -469,13 +536,14 @@ function renderApplicaClientiList() {
       '<span style="font-size:12px;font-weight:800;color:' + g.color + '">' + g.icon + ' ' + g.codice + '</span>' +
       '<span style="font-size:11px;color:var(--text3)">' + g.desc + ' — ' + g.clienti.length + ' client' + (g.clienti.length === 1 ? 'e' : 'i') + '</span>' +
       '<button onclick="event.stopPropagation();_applicaSelezionaTipologia(\'' + g.codice + '\')" ' +
+      'data-gruppo-tc="' + g.codice + '" data-color="' + g.color + '" ' +
       'style="margin-left:auto;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;' +
       'border:1px solid ' + g.color + ';background:' + g.color + '22;color:' + g.color + '">+ Seleziona tutti</button>' +
       '</div>' +
       '<div style="display:flex;flex-wrap:wrap">';
     g.clienti.forEach(function(cli) {
       html += '<label class="flag-chip" style="margin:3px;padding:5px 10px;font-size:12px;width:calc(33% - 6px);border-left:2px solid ' + g.color + '55">' +
-        '<input type="checkbox" class="applica-cliente-checkbox" value="' + cli.id + '" onchange="_aggiornaApplicaSelezionaTuttiCounter()">' +
+        '<input type="checkbox" class="applica-cliente-checkbox" value="' + cli.id + '" data-tc="' + g.codice + '" onchange="_aggiornaApplicaSelezionaTuttiCounter();_aggiornaBottoniGruppo()">' +
         '<span>' + g.icon + ' ' + (cli.nome || "") + '</span></label>';
     });
     html += '</div></div>';
@@ -483,33 +551,41 @@ function renderApplicaClientiList() {
 
   container.innerHTML = html;
   _aggiornaApplicaSelezionaTuttiCounter();
+  _aggiornaBottoniGruppo();
 }
 
 function filtraClientiApplica() {
   renderApplicaClientiList();
 }
-function toggleSelezionaTuttiAdpApplica() {
-  var checked =
-    document.getElementById("applica-adp-seleziona-tutti")?.checked || false;
+
+function toggleSelezionaTuttiAdpApplicaBtn() {
+  var tot = document.querySelectorAll(".applica-adp-checkbox").length;
+  var checked = document.querySelectorAll(".applica-adp-checkbox:checked").length;
+  var selezionaTutti = !(tot > 0 && checked === tot);
   document.querySelectorAll(".applica-adp-checkbox").forEach(function (cb) {
-    cb.checked = checked;
+    cb.checked = selezionaTutti;
   });
+  _aggiornaAdpSelezionaTuttiBtn();
 }
-function toggleSelezionaTuttiClientiApplica() {
-  var checked =
-    document.getElementById("applica-clienti-seleziona-tutti")?.checked ||
-    false;
+
+function toggleSelezionaTuttiClientiApplicaBtn() {
+  var tot = document.querySelectorAll(".applica-cliente-checkbox").length;
+  var checked = document.querySelectorAll(".applica-cliente-checkbox:checked").length;
+  var selezionaTutti = !(tot > 0 && checked === tot);
   document.querySelectorAll(".applica-cliente-checkbox").forEach(function (cb) {
-    cb.checked = checked;
+    cb.checked = selezionaTutti;
   });
   _aggiornaApplicaSelezionaTuttiCounter();
 }
+
+// Mantieni le vecchie funzioni per compatibilità
+function toggleSelezionaTuttiAdpApplica() { toggleSelezionaTuttiAdpApplicaBtn(); }
+function toggleSelezionaTuttiClientiApplica() { toggleSelezionaTuttiClientiApplicaBtn(); }
 function resetSelezioneAdpApplica() {
   document.querySelectorAll(".applica-adp-checkbox").forEach(function (cb) {
     cb.checked = false;
   });
-  var sel = document.getElementById("applica-adp-seleziona-tutti");
-  if (sel) sel.checked = false;
+  _aggiornaAdpSelezionaTuttiBtn();
 }
 function getSelectedAdempimentiApplica() {
   return Array.from(
