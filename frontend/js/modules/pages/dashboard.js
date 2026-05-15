@@ -272,6 +272,7 @@ function apriModalConPreselezione(clientiVuotiIds) {
 }
 
 function openApplicaAdempimenti() {
+  _applicaTipFiltro = new Set(); // reset filtro tipologia all'apertura
   if (!state.adempimenti || state.adempimenti.length === 0) {
     socket.emit("get:adempimenti");
     socket.once("res:adempimenti", function (data) {
@@ -330,17 +331,13 @@ function renderApplicaAdempimentiModal() {
   container.innerHTML = html;
 }
 
-function renderApplicaClientiList() {
-  var container = document.getElementById("applica-clienti-list");
-  if (!container) return;
-  if (!state.clienti || state.clienti.length === 0) {
-    container.innerHTML =
-      '<div style="text-align:center;padding:20px">👥 Nessun cliente</div>';
-    return;
-  }
+// ─── STATO FILTRO TIPOLOGIA APPLICA ──────────────────────────
+var _applicaTipFiltro = new Set(); // vuoto = tutti
+
+function _getApplicaClientiFiltrati() {
   var attiviCheck = document.getElementById("applica-clienti-solo-attivi");
   var soloAttivi = !attiviCheck || attiviCheck.checked !== false;
-  var clientiFiltrati = state.clienti.filter(function (c) {
+  var clientiFiltrati = (state.clienti || []).filter(function (c) {
     return !soloAttivi || c.attivo === 1;
   });
   var searchInput = document.getElementById("applica-clienti-search");
@@ -353,23 +350,139 @@ function renderApplicaClientiList() {
       );
     });
   }
-  clientiFiltrati.sort(function (a, b) {
-    return a.nome.localeCompare(b.nome);
+  clientiFiltrati.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
+  return clientiFiltrati;
+}
+
+function _renderApplicaTipFiltroPanel() {
+  var panel = document.getElementById("applica-tip-filtro-panel");
+  if (!panel) return;
+
+  var clientiFiltrati = _getApplicaClientiFiltrati();
+  var tipMap = {};
+  clientiFiltrati.forEach(function(c) {
+    var tc = c.tipologia_codice || "?";
+    if (!tipMap[tc]) {
+      var info = (typeof TIPOLOGIE_INFO !== "undefined" && TIPOLOGIE_INFO[tc]) || {};
+      tipMap[tc] = { color: c.tipologia_colore || info.color || "#5b8df6", icon: info.icon || "📋", desc: info.desc || tc, count: 0 };
+    }
+    tipMap[tc].count++;
   });
-  var html = '<div style="display:flex;flex-wrap:wrap">';
-  clientiFiltrati.forEach(function (cli) {
-    html +=
-      '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px)">' +
-      '<input type="checkbox" class="applica-cliente-checkbox" value="' +
-      cli.id +
-      '">' +
-      "<span>👤 " +
-      cli.nome +
-      (cli.tipologia_codice ? " (" + cli.tipologia_codice + ")" : "") +
-      "</span></label>";
+
+  var tuttiActive = _applicaTipFiltro.size === 0;
+  var html = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px">' +
+    '<span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">🏷️ Tipologia:</span>';
+
+  html += '<button onclick="event.stopPropagation();_applicaSetTipFiltro(null)" style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ' +
+    (tuttiActive ? 'var(--accent)' : 'var(--border)') + ';background:' +
+    (tuttiActive ? 'var(--accent)' : 'var(--surface3)') + ';color:' +
+    (tuttiActive ? '#fff' : 'var(--text1)') + '">✦ Tutti (' + clientiFiltrati.length + ')</button>';
+
+  Object.entries(tipMap).forEach(function(entry) {
+    var tc = entry[0], info = entry[1];
+    var isActive = _applicaTipFiltro.has(tc);
+    html += '<button onclick="event.stopPropagation();_applicaToggleTipFiltro(\'' + tc + '\')" style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ' +
+      (isActive ? info.color : 'var(--border)') + ';background:' +
+      (isActive ? info.color + '22' : 'var(--surface3)') + ';color:' +
+      (isActive ? info.color : 'var(--text2)') + '">' +
+      info.icon + ' ' + tc + ' <span style="font-weight:400;opacity:.7">(' + info.count + ')</span></button>';
   });
-  html += "</div>";
+  html += '</div>';
+  panel.innerHTML = html;
+}
+
+function _applicaSetTipFiltro(tc) {
+  _applicaTipFiltro = tc ? new Set([tc]) : new Set();
+  renderApplicaClientiList();
+}
+
+function _applicaToggleTipFiltro(tc) {
+  if (_applicaTipFiltro.has(tc)) {
+    _applicaTipFiltro.delete(tc);
+  } else {
+    _applicaTipFiltro.add(tc);
+  }
+  if (_applicaTipFiltro.size === 0) _applicaTipFiltro = new Set();
+  renderApplicaClientiList();
+}
+
+function _applicaSelezionaTipologia(tc) {
+  var clientiFiltrati = _getApplicaClientiFiltrati();
+  var daSelezionare = tc
+    ? clientiFiltrati.filter(function(c) { return c.tipologia_codice === tc; })
+    : clientiFiltrati;
+  document.querySelectorAll(".applica-cliente-checkbox").forEach(function(cb) {
+    var id = parseInt(cb.value);
+    if (daSelezionare.some(function(c) { return c.id === id; })) cb.checked = true;
+  });
+  _aggiornaApplicaSelezionaTuttiCounter();
+}
+
+function _aggiornaApplicaSelezionaTuttiCounter() {
+  var tot = document.querySelectorAll(".applica-cliente-checkbox").length;
+  var checked = document.querySelectorAll(".applica-cliente-checkbox:checked").length;
+  var sel = document.getElementById("applica-clienti-seleziona-tutti");
+  if (sel) sel.checked = tot > 0 && checked === tot;
+}
+
+function renderApplicaClientiList() {
+  _renderApplicaTipFiltroPanel();
+
+  var container = document.getElementById("applica-clienti-list");
+  if (!container) return;
+  if (!state.clienti || state.clienti.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px">👥 Nessun cliente</div>';
+    return;
+  }
+
+  var clientiFiltrati = _getApplicaClientiFiltrati();
+
+  // Applica filtro tipologia se attivo
+  var clientiVisibili = _applicaTipFiltro.size > 0
+    ? clientiFiltrati.filter(function(c) { return _applicaTipFiltro.has(c.tipologia_codice); })
+    : clientiFiltrati;
+
+  if (clientiVisibili.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3)">Nessun cliente per questa tipologia</div>';
+    return;
+  }
+
+  // Raggruppa per tipologia con header colorato e bottone "Seleziona gruppo"
+  var gruppi = {};
+  var gruppiOrder = [];
+  clientiVisibili.forEach(function(c) {
+    var tc = c.tipologia_codice || "?";
+    if (!gruppi[tc]) {
+      var info = (typeof TIPOLOGIE_INFO !== "undefined" && TIPOLOGIE_INFO[tc]) || {};
+      gruppi[tc] = { color: c.tipologia_colore || info.color || "#5b8df6", icon: info.icon || "📋", desc: info.desc || tc, codice: tc, clienti: [] };
+      gruppiOrder.push(tc);
+    }
+    gruppi[tc].clienti.push(c);
+  });
+
+  var html = "";
+  gruppiOrder.forEach(function(tc) {
+    var g = gruppi[tc];
+    html += '<div style="margin-bottom:10px">' +
+      '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;' +
+      'background:' + g.color + '15;border-left:3px solid ' + g.color + ';border-radius:0 6px 6px 0;margin-bottom:5px">' +
+      '<span style="font-size:12px;font-weight:800;color:' + g.color + '">' + g.icon + ' ' + g.codice + '</span>' +
+      '<span style="font-size:11px;color:var(--text3)">' + g.desc + ' — ' + g.clienti.length + ' client' + (g.clienti.length === 1 ? 'e' : 'i') + '</span>' +
+      '<button onclick="event.stopPropagation();_applicaSelezionaTipologia(\'' + g.codice + '\')" ' +
+      'style="margin-left:auto;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;' +
+      'border:1px solid ' + g.color + ';background:' + g.color + '22;color:' + g.color + '">+ Seleziona tutti</button>' +
+      '</div>' +
+      '<div style="display:flex;flex-wrap:wrap">';
+    g.clienti.forEach(function(cli) {
+      html += '<label class="flag-chip" style="margin:3px;padding:5px 10px;font-size:12px;width:calc(33% - 6px);border-left:2px solid ' + g.color + '55">' +
+        '<input type="checkbox" class="applica-cliente-checkbox" value="' + cli.id + '" onchange="_aggiornaApplicaSelezionaTuttiCounter()">' +
+        '<span>' + g.icon + ' ' + (cli.nome || "") + '</span></label>';
+    });
+    html += '</div></div>';
+  });
+
   container.innerHTML = html;
+  _aggiornaApplicaSelezionaTuttiCounter();
 }
 
 function filtraClientiApplica() {
@@ -389,6 +502,7 @@ function toggleSelezionaTuttiClientiApplica() {
   document.querySelectorAll(".applica-cliente-checkbox").forEach(function (cb) {
     cb.checked = checked;
   });
+  _aggiornaApplicaSelezionaTuttiCounter();
 }
 function resetSelezioneAdpApplica() {
   document.querySelectorAll(".applica-adp-checkbox").forEach(function (cb) {
@@ -819,6 +933,10 @@ if (typeof socket !== "undefined") {
 // ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
 
 window.openApplicaAdempimenti = openApplicaAdempimenti;
+window._applicaSetTipFiltro = _applicaSetTipFiltro;
+window._applicaToggleTipFiltro = _applicaToggleTipFiltro;
+window._applicaSelezionaTipologia = _applicaSelezionaTipologia;
+window._aggiornaApplicaSelezionaTuttiCounter = _aggiornaApplicaSelezionaTuttiCounter;
 window.filtraClientiApplica = filtraClientiApplica;
 window.toggleSelezionaTuttiAdpApplica = toggleSelezionaTuttiAdpApplica;
 window.toggleSelezionaTuttiClientiApplica = toggleSelezionaTuttiClientiApplica;
