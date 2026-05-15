@@ -187,6 +187,10 @@ function loadScadenzario() {
   const sv = document.getElementById("scad-search")?.value || "";
   const st = document.getElementById("scad-filtro-stato")?.value || "";
   if (typeof socket !== "undefined") {
+    // Assicurati che gli adempimenti globali siano caricati (servono per calcolare i mancanti)
+    if (!state.adempimenti || state.adempimenti.length === 0) {
+      socket.emit("get:adempimenti");
+    }
     socket.emit("get:scadenzario", {
       id_cliente: state.selectedCliente.id,
       anno: state.anno,
@@ -295,7 +299,10 @@ function renderScadenzarioTabella(data) {
 
   const hasDati = data && data.length > 0;
   const mancanti = getAdempimentiMancanti();
-  const hasDatiDaGenerare = mancanti.length > 0;
+  // Il pulsante è disabilitato SOLO se abbiamo dati E sappiamo con certezza che non manca nulla
+  // (state.adempimenti.length > 0 garantisce che il confronto sia affidabile)
+  const tuttiGenerati = hasDati && state.adempimenti.length > 0 && mancanti.length === 0;
+  const hasDatiDaGenerare = !tuttiGenerati;
 
   let generaBtnClass = "btn btn-sm btn-orange";
   let generaBtnTitle = "Genera adempimenti mancanti per l'anno selezionato";
@@ -304,7 +311,7 @@ function renderScadenzarioTabella(data) {
   if (!hasDati) {
     generaBtnTitle =
       "Nessun adempimento presente. Genera lo scadenzario per l'anno selezionato";
-  } else if (hasDati && !hasDatiDaGenerare) {
+  } else if (tuttiGenerati) {
     generaBtnClass = "btn btn-sm btn-success";
     generaBtnTitle =
       "✅ Tutti gli adempimenti sono già stati generati per quest'anno";
@@ -418,7 +425,7 @@ function renderScadenzarioTabella(data) {
       </div>
     </div>
     <div class="cpc-actions no-print">
-      <button class="${generaBtnClass}" onclick="generaScadenzario()" title="${generaBtnTitle}" ${!hasDatiDaGenerare && hasDati ? "disabled" : ""}>${generaBtnIcon} Genera</button>
+      <button class="${generaBtnClass}" onclick="generaScadenzario()" title="${generaBtnTitle}" ${tuttiGenerati ? "disabled" : ""}>${generaBtnIcon} Genera</button>
       <button class="btn btn-sm btn-cyan" onclick="openCopia()">📋 Copia</button>
       ${renderBtnAddAdp(c.id)}
       <button class="btn btn-print btn-sm" style="margin-left:auto" onclick="window.print()">🖨️ Stampa</button>
@@ -508,7 +515,41 @@ function renderScadenzarioTabella(data) {
 // ─── AZIONI ───────────────────────────────────────────────────
 function generaScadenzario() {
   if (!state.selectedCliente) return;
-  openAddAdp(state.selectedCliente.id);
+
+  const mancanti = getAdempimentiMancanti();
+
+  // Se non ci sono adempimenti caricati, proviamo a caricarli prima
+  if (!state.adempimenti || state.adempimenti.length === 0) {
+    if (typeof socket !== "undefined") {
+      socket.emit("get:adempimenti");
+      socket.once("res:adempimenti", ({ success, data }) => {
+        if (success) {
+          state.adempimenti = data;
+          generaScadenzario(); // riprova dopo il caricamento
+        }
+      });
+    }
+    return;
+  }
+
+  if (mancanti.length === 0 && state.scadenzario && state.scadenzario.length > 0) {
+    showNotif("✅ Tutti gli adempimenti sono già stati generati per quest'anno", "success");
+    return;
+  }
+
+  // Genera tutti gli adempimenti mancanti per il cliente corrente
+  const idAdpDaGenerare = mancanti.length > 0
+    ? mancanti.map((a) => a.id)
+    : state.adempimenti.map((a) => a.id);
+
+  if (typeof socket !== "undefined") {
+    socket.emit("genera:tutti", {
+      anno: state.anno,
+      adempimenti: idAdpDaGenerare,
+      id_cliente: state.selectedCliente.id,
+    });
+    showNotif(`⚡ Generazione di ${idAdpDaGenerare.length} adempiment${idAdpDaGenerare.length === 1 ? "o" : "i"} in corso...`, "info");
+  }
 }
 
 function openCopia() {
