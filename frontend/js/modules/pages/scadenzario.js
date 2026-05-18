@@ -722,6 +722,10 @@ function openAddAdp(id_cliente) {
   document.getElementById("add-adp-cliente-id").value = id_cliente;
   document.getElementById("add-adp-anno").value = state.anno;
 
+  // Reset campo ricerca
+  const searchEl = document.getElementById("add-adp-search");
+  if (searchEl) searchEl.value = "";
+
   if (!state.adempimenti || state.adempimenti.length === 0) {
     if (typeof socket !== "undefined") {
       socket.emit("get:adempimenti");
@@ -743,7 +747,12 @@ function openAddAdp(id_cliente) {
   openModal("modal-add-adp");
 }
 
-function renderAddAdpSelection() {
+function filtraAddAdpList() {
+  const q = document.getElementById("add-adp-search")?.value.toLowerCase().trim() || "";
+  renderAddAdpSelection(q);
+}
+
+function renderAddAdpSelection(filtro = "") {
   const container = document.getElementById("add-adp-list");
   if (!container) return;
 
@@ -756,13 +765,23 @@ function renderAddAdpSelection() {
     </div>`;
     setTimeout(() => {
       if (!state.adempimenti || state.adempimenti.length === 0) {
-        renderAddAdpSelection();
+        renderAddAdpSelection(filtro);
       }
     }, 2000);
     return;
   }
 
-  const checkboxes = state.adempimenti
+  const adempimentiFiltrati = filtro
+    ? state.adempimenti.filter(a =>
+        a.nome.toLowerCase().includes(filtro) || a.codice.toLowerCase().includes(filtro))
+    : state.adempimenti;
+
+  if (adempimentiFiltrati.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">Nessun adempimento trovato</div>`;
+    return;
+  }
+
+  const checkboxes = adempimentiFiltrati
     .map((a) => {
       const checked = localStorage.getItem(`add_adp_${a.id}`) !== "false";
       localStorage.setItem(`add_adp_${a.id}`, checked);

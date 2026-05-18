@@ -1080,6 +1080,12 @@
         <div id="tab-panel-aggiungi">
           <div class="form-group">
             <label>SELEZIONA ADEMPIMENTI DA AGGIUNGERE</label>
+            <div style="margin-bottom:6px">
+              <input class="input" id="add-adp-search"
+                placeholder="🔍 Cerca adempimento…"
+                oninput="filtraAddAdpList()"
+                style="font-size:12px;padding:6px 10px;width:100%;box-sizing:border-box" />
+            </div>
             <div
               id="add-adp-list"
               style="
