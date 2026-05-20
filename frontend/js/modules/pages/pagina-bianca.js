@@ -835,7 +835,7 @@ function openPaginaBiancaPerCliente(clienteId, clienteNome) {
 
   state.page = "pagina_bianca";
   document.getElementById("page-title").textContent =
-    `📝 Pagina Bianca - ${clienteNome}`;
+    `📝 Pagina Bianca `;
 
   setupPaginaBiancaSocketListeners();
   renderPaginaBiancaPage();
