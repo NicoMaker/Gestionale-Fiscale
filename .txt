@@ -1,3 +1,5 @@
 appunti -> chiamare scadenze studio (avvio all'inizio)
 
-pagine bianche -> note (titolo non obbligatorio) 
+pagine bianche -> chiamare  note (titolo non obbligatorio) 
+
+e togliere quando hai creato note nella apgine bianche la data 

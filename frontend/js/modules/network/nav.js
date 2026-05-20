@@ -227,7 +227,7 @@ function renderPage(page) {
     scadenzario_globale: "Vista Globale",
     adempimenti: "Adempimenti Fiscali",
     tipologie: "Tipologie Clienti",
-    appunti: "Appunti",
+    appunti: "Scadenze Studio",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
 

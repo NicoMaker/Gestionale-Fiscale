@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// PAGINA-BIANCA.JS — Gestione Pagina Bianca (appunti liberi)
+// PAGINA-BIANCA.JS — Gestione Note (ex Pagina Bianca)
 // ═══════════════════════════════════════════════════════════════
 
 let paginaBiancaFilter = {
@@ -50,7 +50,7 @@ function stampaPaginaBianca() {
 
   const appuntiHTML = container.innerHTML;
   const titoloPagina =
-    document.getElementById("page-title")?.textContent || "Pagina Bianca";
+    document.getElementById("page-title")?.textContent || "Note";
   const tipoFiltro =
     paginaBiancaFilter.tipo === "studio"
       ? "🏢 Appunti Studio"
@@ -226,27 +226,27 @@ function setupPaginaBiancaSocketListeners() {
   socket.on("res:create:pagina_bianca", ({ success }) => {
     if (success && state.page === "pagina_bianca") {
       filterPaginaBianca();
-      showNotif("Appunto creato con successo", "success");
+      showNotif("Nota creata con successo", "success");
     } else if (success) {
-      showNotif("Appunto creato con successo", "success");
+      showNotif("Nota creata con successo", "success");
     }
   });
 
   socket.on("res:update:pagina_bianca", ({ success }) => {
     if (success && state.page === "pagina_bianca") {
       filterPaginaBianca();
-      showNotif("Appunto aggiornato", "success");
+      showNotif("Nota aggiornata", "success");
     } else if (success) {
-      showNotif("Appunto aggiornato", "success");
+      showNotif("Nota aggiornata", "success");
     }
   });
 
   socket.on("res:delete:pagina_bianca", ({ success }) => {
     if (success && state.page === "pagina_bianca") {
       filterPaginaBianca();
-      showNotif("Appunto eliminato", "success");
+      showNotif("Nota eliminata", "success");
     } else if (success) {
-      showNotif("Appunto eliminato", "success");
+      showNotif("Nota eliminata", "success");
     }
   });
 
@@ -439,15 +439,15 @@ function renderPaginaBiancaPage() {
     <div class="pagina-bianca-container" style="max-width: 1200px; margin: 0 auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
-          <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">📝 Pagina Bianca</h1>
-          <p style="color: var(--text2); font-size: 14px; margin-top: 4px;">Appunti liberi, promemoria e note personali</p>
+          <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">📝 Note</h1>
+          <p style="color: var(--text2); font-size: 14px; margin-top: 4px;">Note libere, promemoria e appunti personali</p>
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="btn btn-print btn-sm" onclick="stampaPaginaBianca()" title="Stampa pagina" style="display: flex; align-items: center; gap: 6px;">
             🖨️ Stampa
           </button>
           <button class="btn btn-primary" onclick="openPaginaBiancaEditor()" style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px;">✏️</span> Nuovo Appunto
+            <span style="font-size: 18px;">✏️</span> Nuova Nota
           </button>
         </div>
       </div>
@@ -537,8 +537,8 @@ function renderPaginaBiancaList(appunti) {
     container.innerHTML = `
       <div class="empty">
         <div class="empty-icon">📝</div>
-        <p>Nessun appunto trovato</p>
-        <button class="btn btn-primary" onclick="openPaginaBiancaEditor()" style="margin-top: 12px;">+ Crea il tuo primo appunto</button>
+        <p>Nessuna nota trovata</p>
+        <button class="btn btn-primary" onclick="openPaginaBiancaEditor()" style="margin-top: 12px;">+ Crea la tua prima nota</button>
       </div>
     `;
     return;
@@ -557,10 +557,10 @@ function renderPaginaBiancaList(appunti) {
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
               <span style="font-size: 24px;">${a.tipo === "studio" ? "🏢" : "👤"}</span>
               <div>
-                <div style="font-weight: 700; font-size: 16px;">${escAttr(a.titolo)}</div>
+                <div style="font-weight: 700; font-size: 16px;">${a.titolo ? escAttr(a.titolo) : '<span style="color:var(--text3);font-style:italic;font-weight:500">(senza titolo)</span>'}</div>
                 <div style="font-size: 12px; color: var(--text3); margin-top: 2px;">
                   ${a.tipo === "studio" ? "Appunto Studio" : `Cliente: ${escAttr(a.cliente_nome || "—")}`}
-                  ${a.data_creazione ? ` · ${formattaDataOraItaliana(a.data_creazione)}` : ""}
+                  
                 </div>
               </div>
             </div>
@@ -621,7 +621,7 @@ function showPaginaBiancaModal() {
     modal.innerHTML = `
       <div class="modal modal-lg" style="max-width: 800px;">
         <div class="modal-title">
-          <span id="pb-modal-title">✏️ Nuovo Appunto</span>
+          <span id="pb-modal-title">✏️ Nuova Nota</span>
         </div>
         <input type="hidden" id="pb-id">
         
@@ -656,8 +656,8 @@ function showPaginaBiancaModal() {
         </div>
 
         <div class="form-group">
-          <label>Titolo <span class="required-star">*</span></label>
-          <input type="text" id="pb-titolo" class="input" placeholder="Titolo dell'appunto..." maxlength="200">
+          <label>Titolo</label>
+          <input type="text" id="pb-titolo" class="input" placeholder="Titolo della nota (opzionale)..." maxlength="200">
         </div>
 
         <div class="form-group">
@@ -694,13 +694,18 @@ function showPaginaBiancaModal() {
   const clienteSelect = document.getElementById("pb-id-cliente");
   if (clienteSelect) clienteSelect.value = "";
 
-  // Ereditarietà automatica del contesto
+  // Reset esplicito radio e gruppo cliente prima di applicare il contesto
   const radioStudio = document.querySelector(
     'input[name="pb-tipo"][value="studio"]',
   );
   const radioCliente = document.querySelector(
     'input[name="pb-tipo"][value="cliente"]',
   );
+  // Reset di default a "studio" e nascondi gruppo cliente
+  if (radioStudio) radioStudio.checked = true;
+  if (radioCliente) radioCliente.checked = false;
+  const clienteGroupReset = document.getElementById("pb-cliente-group");
+  if (clienteGroupReset) clienteGroupReset.style.display = "none";
 
   if (paginaBiancaFilter.tipo === "cliente" && paginaBiancaFilter.id_cliente) {
     if (radioCliente) radioCliente.checked = true;
@@ -710,7 +715,7 @@ function showPaginaBiancaModal() {
       filterModalClientiSelect();
     }, 50);
     document.getElementById("pb-modal-title").textContent =
-      "✏️ Nuovo Appunto Cliente";
+      "✏️ Nuova Nota Cliente";
   } else if (
     paginaBiancaFilter.tipo === "cliente" &&
     !paginaBiancaFilter.id_cliente
@@ -718,12 +723,12 @@ function showPaginaBiancaModal() {
     if (radioCliente) radioCliente.checked = true;
     document.getElementById("pb-cliente-group").style.display = "block";
     document.getElementById("pb-modal-title").textContent =
-      "✏️ Nuovo Appunto Cliente";
+      "✏️ Nuova Nota Cliente";
   } else {
     if (radioStudio) radioStudio.checked = true;
     document.getElementById("pb-cliente-group").style.display = "none";
     document.getElementById("pb-modal-title").textContent =
-      "✏️ Nuovo Appunto Studio";
+      "✏️ Nuova Nota Studio";
   }
 
   // Se è in modifica
@@ -736,7 +741,7 @@ function showPaginaBiancaModal() {
         document.getElementById("pb-contenuto").value = data.contenuto || "";
         document.getElementById("pb-allegati").value = data.allegati || "";
         document.getElementById("pb-modal-title").textContent =
-          "✏️ Modifica Appunto";
+          "✏️ Modifica Nota";
 
         if (data.tipo === "cliente") {
           if (radioCliente) radioCliente.checked = true;
@@ -768,23 +773,18 @@ function onPaginaBiancaTipoChange() {
   if (titleSpan) {
     titleSpan.textContent =
       tipo === "cliente"
-        ? "✏️ Nuovo Appunto Cliente"
-        : "✏️ Nuovo Appunto Studio";
+        ? "✏️ Nuova Nota Cliente"
+        : "✏️ Nuova Nota Studio";
   }
 }
 
 function savePaginaBiancaAppunto() {
   const id = document.getElementById("pb-id").value;
   const tipo = document.querySelector('input[name="pb-tipo"]:checked')?.value;
-  const titolo = document.getElementById("pb-titolo").value.trim();
+  const titolo = document.getElementById("pb-titolo").value.trim() || null;
   const contenuto = document.getElementById("pb-contenuto").value;
   const allegati = document.getElementById("pb-allegati").value;
   let id_cliente = null;
-
-  if (!titolo) {
-    showNotif("Il titolo è obbligatorio", "error");
-    return;
-  }
 
   if (tipo === "cliente") {
     id_cliente = document.getElementById("pb-id-cliente").value;
@@ -814,7 +814,7 @@ function savePaginaBiancaAppunto() {
 }
 
 function deletePaginaBiancaAppunto(id) {
-  if (confirm("Eliminare questo appunto definitivamente?")) {
+  if (confirm("Eliminare questa nota definitivamente?")) {
     socket.emit("delete:pagina_bianca", { id });
   }
 }
@@ -835,7 +835,7 @@ function openPaginaBiancaPerCliente(clienteId, clienteNome) {
 
   state.page = "pagina_bianca";
   document.getElementById("page-title").textContent =
-    `📝 Pagina Bianca `;
+    `📝 Note`;
 
   setupPaginaBiancaSocketListeners();
   renderPaginaBiancaPage();

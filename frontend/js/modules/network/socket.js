@@ -9,7 +9,7 @@ socket.on("connect", () => {
   document.getElementById("conn-status").textContent = "● Online";
   document.getElementById("conn-status").style.color = "var(--green)";
   socket.emit("get:tipologie");
-  renderPage("dashboard");
+  renderPage("appunti");
 });
 
 socket.on("disconnect", () => {

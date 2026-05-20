@@ -19,7 +19,7 @@
         <div class="logo-sub">Gestionale Fiscale</div>
       </div>
       <nav class="nav">
-        <div class="nav-item active" data-page="dashboard">
+        <div class="nav-item" data-page="dashboard">
           <span class="nav-icon">📊</span> Dashboard
         </div>
         <div class="nav-item" data-page="clienti">
@@ -39,12 +39,12 @@
           <span class="nav-icon">🏷️</span> Tipologie Clienti
         </div>
         <div class="nav-sep"></div>
-        <div class="nav-item" data-page="appunti">
-          <span class="nav-icon">📝</span> Appunti
+        <div class="nav-item active" data-page="appunti">
+          <span class="nav-icon">📅</span> Scadenze Studio
         </div>
         <div class="nav-sep"></div>
         <div class="nav-item" data-page="pagina_bianca">
-          <span class="nav-icon">📄</span> Pagina Bianca
+          <span class="nav-icon">📝</span> Note
         </div>
         <div class="nav-sep"></div>
         <div class="nav-item" id="btn-scarica-db" style="cursor: pointer">
@@ -1403,7 +1403,7 @@
     <div class="modal-overlay" id="modal-appunto">
       <div class="modal">
         <div class="modal-title">
-          📝 <span id="modal-appunto-title">Nuovo Appunto</span>
+          📝 <span id="modal-appunto-title">Nuova Scadenza Studio</span>
         </div>
         <input type="hidden" id="appunto-id" />
         <div class="form-group">

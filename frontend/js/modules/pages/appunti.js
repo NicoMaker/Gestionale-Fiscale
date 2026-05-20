@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// APPUNTI.JS — Gestione Block Notes
+// APPUNTI.JS — Gestione Scadenze Studio
 // ═══════════════════════════════════════════════════════════════
 
 let appuntiFilter = {
@@ -17,7 +17,7 @@ function renderAppuntiPage() {
     return;
   }
 
-  content.innerHTML = `<div class="empty"><div class="empty-icon">📝</div><p>Caricamento appunti...</p></div>`;
+  content.innerHTML = `<div class="empty"><div class="empty-icon">📝</div><p>Caricamento scadenze studio...</p></div>`;
 
   if (state.clienti && state.clienti.length > 0) {
     console.log("✅ Clienti già caricati:", state.clienti.length);
@@ -47,7 +47,7 @@ function renderAppuntiTopbar() {
   topbarActions.innerHTML = `
     <div class="search-wrap" style="width:200px">
       <span class="search-icon">🔍</span>
-      <input class="input" id="appunti-search" placeholder="Cerca titolo o contenuto..." oninput="filterAppunti()" style="font-size:13px">
+      <input class="input" id="appunti-search" placeholder="Cerca scadenza o contenuto..." oninput="filterAppunti()" style="font-size:13px">
     </div>
     <select class="select" id="appunti-filtro-completato" onchange="filterAppunti()" style="width:130px">
       <option value="">📋 Tutti</option>
@@ -64,7 +64,7 @@ function renderAppuntiTopbar() {
       <option value="">👥 Tutti i clienti</option>
       ${state.clienti.map((c) => `<option value="${c.id}">${escAttr(c.nome)}</option>`).join("")}
     </select>
-    <button class="btn btn-primary" onclick="openNuovoAppunto()">+ Appunto</button>
+    <button class="btn btn-primary" onclick="openNuovoAppunto()">+ Scadenza</button>
     <button class="btn btn-print btn-sm" onclick="window.print()">🖨️</button>
   `;
 }
@@ -85,8 +85,8 @@ function renderAppuntiTabella(appunti) {
     content.innerHTML = `
       <div class="empty">
         <div class="empty-icon">📝</div>
-        <p>Nessun appunto trovato</p>
-        <button class="btn btn-primary" onclick="openNuovoAppunto()" style="margin-top:12px">+ Crea primo appunto</button>
+        <p>Nessuna scadenza studio trovata</p>
+        <button class="btn btn-primary" onclick="openNuovoAppunto()" style="margin-top:12px">+ Crea prima scadenza</button>
       </div>`;
     return;
   }
@@ -120,13 +120,13 @@ function renderAppuntiTabella(appunti) {
   content.innerHTML = `
     <div class="table-wrap">
       <div class="table-header">
-        <h3>Appunti <span style="font-size:13px;color:var(--text3);margin-left:8px">(${appunti.length})</span></h3>
+        <h3>Scadenze Studio <span style="font-size:13px;color:var(--text3);margin-left:8px">(${appunti.length})</span></h3>
       </div>
       <div class="table-scroll-wrap">
         <table style="width:100%;border-collapse:collapse">
           <thead>
             <tr style="background:var(--s2);border-bottom:1px solid var(--b0)">
-              <th style="text-align:left;padding:12px 16px">Appunto</th>
+              <th style="text-align:left;padding:12px 16px">Scadenza Studio</th>
               <th style="text-align:left;padding:12px 16px">Cliente</th>
               <th style="text-align:left;padding:12px 16px">Priorità</th>
               <th style="text-align:left;padding:12px 16px">Scadenza</th>
@@ -152,7 +152,7 @@ function filterAppunti() {
 }
 
 function openNuovoAppunto() {
-  document.getElementById("modal-appunto-title").textContent = "Nuovo Appunto";
+  document.getElementById("modal-appunto-title").textContent = "Nuova Scadenza Studio";
   document.getElementById("appunto-id").value = "";
   document.getElementById("appunto-titolo").value = "";
   document.getElementById("appunto-contenuto").value = "";
@@ -185,7 +185,7 @@ function openAppunto(id) {
   socket.once("res:appunto", ({ success, data }) => {
     if (!success || !data) return;
     document.getElementById("modal-appunto-title").textContent =
-      "Modifica Appunto";
+      "Modifica Scadenza Studio";
     document.getElementById("appunto-id").value = data.id;
     document.getElementById("appunto-titolo").value = data.titolo || "";
     document.getElementById("appunto-contenuto").value = data.contenuto || "";
@@ -244,7 +244,7 @@ function saveAppunto() {
 }
 
 function deleteAppunto(id) {
-  if (confirm("Eliminare questo appunto?"))
+  if (confirm("Eliminare questa scadenza studio?"))
     socket.emit("delete:appunto", { id });
 }
 
@@ -263,9 +263,9 @@ function openCopiaAppunti() {
     modal.className = "modal-overlay";
     modal.innerHTML = `
       <div class="modal modal-sm">
-        <div class="modal-title">📋 Copia Appunti tra Anni</div>
+        <div class="modal-title">📋 Copia Scadenze Studio tra Anni</div>
         <div class="infobox" style="margin-bottom:16px">
-          Copia tutti gli appunti dall'anno di partenza all'anno di destinazione.<br>
+          Copia tutte le scadenze studio dall'anno di partenza all'anno di destinazione.<br>
           La data di scadenza viene incrementata di un anno.
         </div>
         <div class="form-row">
@@ -337,19 +337,19 @@ if (typeof socket !== "undefined") {
   socket.on("res:create:appunto", ({ success }) => {
     if (success) {
       filterAppunti();
-      showNotif("Appunto creato con successo", "success");
+      showNotif("Scadenza studio creata con successo", "success");
     }
   });
   socket.on("res:update:appunto", ({ success }) => {
     if (success) {
       filterAppunti();
-      showNotif("Appunto aggiornato", "success");
+      showNotif("Scadenza studio aggiornata", "success");
     }
   });
   socket.on("res:delete:appunto", ({ success }) => {
     if (success) {
       filterAppunti();
-      showNotif("Appunto eliminato", "success");
+      showNotif("Scadenza studio eliminata", "success");
     }
   });
   socket.on("res:toggle:appunto_completato", ({ success }) => {
@@ -358,7 +358,7 @@ if (typeof socket !== "undefined") {
   socket.on("res:copia:appunti_anno", ({ success, copiati }) => {
     if (success) {
       filterAppunti();
-      showNotif(`✅ Copiati ${copiati} appunti`, "success");
+      showNotif(`✅ Copiate ${copiati} scadenze studio`, "success");
     }
   });
   socket.on("broadcast:appunti_updated", () => {
