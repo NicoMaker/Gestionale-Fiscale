@@ -152,7 +152,8 @@ function filterAppunti() {
 }
 
 function openNuovoAppunto() {
-  document.getElementById("modal-appunto-title").textContent = "Nuova Scadenza Studio";
+  document.getElementById("modal-appunto-title").textContent =
+    "Nuova Scadenza Studio";
   document.getElementById("appunto-id").value = "";
   document.getElementById("appunto-titolo").value = "";
   document.getElementById("appunto-contenuto").value = "";
