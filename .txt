@@ -1,0 +1,4 @@
+creazione adempimetno di tipo testo -> per tutti i clienti testo 
+
+sezione block notes -> sezione sotto a adepimenti -> appunti 
+
