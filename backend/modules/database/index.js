@@ -77,7 +77,7 @@ function migrateDB() {
     `ALTER TABLE clienti ADD COLUMN col2_value TEXT`,
     `ALTER TABLE clienti ADD COLUMN col3_value TEXT`,
     
-    // Tabella appunti
+    // Tabella appunti (SENZA colonna colore)
     `CREATE TABLE IF NOT EXISTS appunti (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       titolo TEXT NOT NULL,
@@ -86,7 +86,6 @@ function migrateDB() {
       data_inserimento TEXT DEFAULT (datetime('now')),
       data_scadenza TEXT,
       priorita TEXT CHECK(priorita IN ('bassa','media','alta')) DEFAULT 'media',
-      colore TEXT,
       completato INTEGER DEFAULT 0,
       FOREIGN KEY (id_cliente) REFERENCES clienti(id)
     )`,

@@ -41,15 +41,14 @@ function getAppunto(id) {
 
 function createAppunto(data) {
   return runQueryAndGetId(`
-    INSERT INTO appunti (titolo, contenuto, id_cliente, data_scadenza, priorita, colore, completato)
-    VALUES (?,?,?,?,?,?,?)
+    INSERT INTO appunti (titolo, contenuto, id_cliente, data_scadenza, priorita, completato)
+    VALUES (?,?,?,?,?,?)
   `, [
     data.titolo,
     data.contenuto || null,
     data.id_cliente || null,
     data.data_scadenza || null,
     data.priorita || "media",
-    data.colore || null,
     data.completato ? 1 : 0
   ]);
 }
@@ -58,7 +57,7 @@ function updateAppunto(data) {
   runQuery(`
     UPDATE appunti SET
       titolo = ?, contenuto = ?, id_cliente = ?, data_scadenza = ?,
-      priorita = ?, colore = ?, completato = ?
+      priorita = ?, completato = ?
     WHERE id = ?
   `, [
     data.titolo,
@@ -66,7 +65,6 @@ function updateAppunto(data) {
     data.id_cliente || null,
     data.data_scadenza || null,
     data.priorita || "media",
-    data.colore || null,
     data.completato ? 1 : 0,
     data.id
   ]);
@@ -104,15 +102,14 @@ function copiaAppuntiDaAnno(anno_da, anno_a, id_cliente = null) {
     }
     
     runQuery(`
-      INSERT INTO appunti (titolo, contenuto, id_cliente, data_scadenza, priorita, colore, completato)
-      VALUES (?,?,?,?,?,?,?)
+      INSERT INTO appunti (titolo, contenuto, id_cliente, data_scadenza, priorita, completato)
+      VALUES (?,?,?,?,?,?)
     `, [
       ap.titolo,
       ap.contenuto,
       ap.id_cliente,
       nuovaScadenza,
       ap.priorita,
-      ap.colore,
       0
     ]);
     copiati++;

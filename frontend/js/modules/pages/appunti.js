@@ -12,10 +12,8 @@ function renderAppuntiPage() {
     return;
   }
 
-  // Mostra loading
   content.innerHTML = `<div class="empty"><div class="empty-icon">📝</div><p>Caricamento appunti...</p></div>`;
 
-  // Popola clienti per filtro
   if (state.clienti && state.clienti.length > 0) {
     console.log("✅ Clienti già caricati:", state.clienti.length);
     renderAppuntiTopbar();
@@ -146,7 +144,6 @@ function openNuovoAppunto() {
   document.getElementById("appunto-cliente").value = "";
   document.getElementById("appunto-scadenza").value = "";
   document.getElementById("appunto-priorita").value = "media";
-  document.getElementById("appunto-colore").value = "#e8eaed";
 
   const clienteSel = document.getElementById("appunto-cliente");
   if (clienteSel && state.clienti) {
@@ -175,7 +172,6 @@ function openAppunto(id) {
     document.getElementById("appunto-cliente").value = data.id_cliente || "";
     document.getElementById("appunto-scadenza").value = formattaDataItaliana(data.data_scadenza) || "";
     document.getElementById("appunto-priorita").value = data.priorita || "media";
-    document.getElementById("appunto-colore").value = data.colore || "#e8eaed";
 
     const clienteSel = document.getElementById("appunto-cliente");
     if (clienteSel && state.clienti) {
@@ -202,7 +198,6 @@ function saveAppunto() {
     id_cliente: document.getElementById("appunto-cliente").value || null,
     data_scadenza: daItalianaAISO(document.getElementById("appunto-scadenza").value) || null,
     priorita: document.getElementById("appunto-priorita").value,
-    colore: document.getElementById("appunto-colore").value,
     completato: 0,
   };
   if (!data.titolo) { showNotif("Il titolo è obbligatorio", "error"); return; }
