@@ -271,12 +271,13 @@ function renderPage(page) {
     document.getElementById("topbar-actions").innerHTML = "";
     renderTipologiePage();
   } else if (page === "appunti") {
+    // ═══ PAGINA APPUNTI ═══
     document.getElementById("topbar-actions").innerHTML = "";
-    if (typeof renderAppuntiPage === "function") renderAppuntiPage();
-    else {
-      document.getElementById("content").innerHTML =
-        `<div class="empty"><div class="empty-icon">📝</div><p>Caricamento appunti...</p></div>`;
-      socket.emit("get:appunti");
+    if (typeof renderAppuntiPage === "function") {
+      renderAppuntiPage();
+    } else {
+      console.error("❌ renderAppuntiPage non definita!");
+      document.getElementById("content").innerHTML = `<div class="empty"><div class="empty-icon">❌</div><p>Errore: modulo appunti non caricato</p><button class="btn btn-primary" onclick="location.reload()">⟳ Ricarica</button></div>`;
     }
   }
 }
@@ -314,3 +315,11 @@ function setupDecimalInputs() {
   });
   observer.observe(document.body, { childList: true, subtree: true });
 }
+
+// Esposizioni globali
+window.initNav = initNav;
+window.renderPage = renderPage;
+window.refreshPage = refreshPage;
+window.changeAnno = changeAnno;
+window.setupDecimalInputs = setupDecimalInputs;
+window.initSearchableSelect = initSearchableSelect;

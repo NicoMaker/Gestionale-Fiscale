@@ -77,7 +77,7 @@ function migrateDB() {
     `ALTER TABLE clienti ADD COLUMN col2_value TEXT`,
     `ALTER TABLE clienti ADD COLUMN col3_value TEXT`,
     
-    // ⭐ Tabella appunti
+    // Tabella appunti
     `CREATE TABLE IF NOT EXISTS appunti (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       titolo TEXT NOT NULL,
@@ -92,6 +92,7 @@ function migrateDB() {
     )`,
     `CREATE INDEX IF NOT EXISTS idx_appunti_cliente ON appunti(id_cliente)`,
     `CREATE INDEX IF NOT EXISTS idx_appunti_scadenza ON appunti(data_scadenza)`,
+    `CREATE INDEX IF NOT EXISTS idx_appunti_completato ON appunti(completato)`,
     
     // Ricreazione tabella adempimenti
     `CREATE TABLE IF NOT EXISTS adempimenti_new (

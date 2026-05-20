@@ -13,13 +13,13 @@ function getAppunti(filtri = {}) {
     sql += ` AND (a.titolo LIKE ? OR a.contenuto LIKE ?)`;
     params.push(`%${filtri.search}%`, `%${filtri.search}%`);
   }
-  if (filtri.id_cliente) {
+  if (filtri.id_cliente && filtri.id_cliente !== "") {
     sql += ` AND a.id_cliente = ?`;
-    params.push(filtri.id_cliente);
+    params.push(parseInt(filtri.id_cliente));
   }
   if (filtri.completato !== undefined && filtri.completato !== "") {
     sql += ` AND a.completato = ?`;
-    params.push(filtri.completato ? 1 : 0);
+    params.push(filtri.completato === "1" ? 1 : 0);
   }
   if (filtri.priorita && filtri.priorita !== "tutte") {
     sql += ` AND a.priorita = ?`;
@@ -80,6 +80,47 @@ function toggleAppuntoCompletato(id, completato) {
   runQuery(`UPDATE appunti SET completato = ? WHERE id = ?`, [completato ? 1 : 0, id]);
 }
 
+function copiaAppuntiDaAnno(anno_da, anno_a, id_cliente = null) {
+  let sql = `
+    SELECT * FROM appunti
+    WHERE strftime('%Y', data_scadenza) = ?
+  `;
+  const params = [String(anno_da)];
+  
+  if (id_cliente) {
+    sql += ` AND id_cliente = ?`;
+    params.push(id_cliente);
+  }
+  
+  const appunti = queryAll(sql, params);
+  let copiati = 0;
+  
+  appunti.forEach(ap => {
+    let nuovaScadenza = null;
+    if (ap.data_scadenza) {
+      const date = new Date(ap.data_scadenza);
+      date.setFullYear(anno_a);
+      nuovaScadenza = date.toISOString().split('T')[0];
+    }
+    
+    runQuery(`
+      INSERT INTO appunti (titolo, contenuto, id_cliente, data_scadenza, priorita, colore, completato)
+      VALUES (?,?,?,?,?,?,?)
+    `, [
+      ap.titolo,
+      ap.contenuto,
+      ap.id_cliente,
+      nuovaScadenza,
+      ap.priorita,
+      ap.colore,
+      0
+    ]);
+    copiati++;
+  });
+  
+  return copiati;
+}
+
 module.exports = {
   getAppunti,
   getAppunto,
@@ -87,4 +128,5 @@ module.exports = {
   updateAppunto,
   deleteAppunto,
   toggleAppuntoCompletato,
+  copiaAppuntiDaAnno,
 };

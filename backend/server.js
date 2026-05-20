@@ -7,7 +7,7 @@ const { initDB } = require("./modules/database");
 const { getLocalIP, getPublicIP } = require("./modules/utils/network");
 const setupSocketHandlers = require("./modules/sockets");
 const downloadDbRouter = require("./modules/routes/downloadDb");
-const avvioHtmlRouter = require("./modules/routes/avviohtml"); // ← NUOVO IMPORT
+const avvioHtmlRouter = require("./modules/routes/avviohtml");
 
 const app = express();
 const server = http.createServer(app);
@@ -39,8 +39,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ⭐ IMPORANTE: Il router HTML va DOPO le route API e i file statici
-app.use(avvioHtmlRouter); // ← SERVE INDEX.HTML PER LE ALTRE ROUTE
+// Il router HTML va DOPO le route API e i file statici
+app.use(avvioHtmlRouter);
 
 setupSocketHandlers(io);
 

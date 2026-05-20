@@ -316,3 +316,18 @@ function renderClienteDatiRiferimento(cliente) {
   if (!items.length) return "";
   return `<div class="cpc-dati-riferimento"><div class="dati-ref-title">📋 Dati di Riferimento</div><div class="dati-ref-grid">${items.join("")}</div></div>`;
 }
+
+function renderTextOnlyPill(r) {
+  const ps = getPeriodoShort(r);
+  const pillColor = "var(--purple)";
+  return `<div class="periodo-pill text-only-pill"
+    onclick="openAdpById(${r.id})"
+    title="${escAttr(getPeriodoLabel(r))} — Click: modifica"
+    style="border-color:${pillColor};min-width:145px;flex:1 1 145px">
+    <div class="pp-top">
+      <span class="pp-tag" style="border-color:${pillColor};color:${pillColor}">📝 ${ps}</span>
+    </div>
+    <div class="pp-nome" style="color:${pillColor};font-weight:600">${r.adempimento_nome || ""}</div>
+    ${r.note ? `<div class="pp-note" style="margin-top:4px">📝 ${r.note}</div>` : ""}
+  </div>`;
+}
