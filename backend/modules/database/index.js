@@ -65,6 +65,8 @@ function migrateDB() {
     `ALTER TABLE adempimenti ADD COLUMN has_rate INTEGER DEFAULT 0`,
     `ALTER TABLE adempimenti ADD COLUMN rate_labels TEXT`,
     `ALTER TABLE adempimenti ADD COLUMN is_checkbox INTEGER DEFAULT 0`,
+    `ALTER TABLE adempimenti ADD COLUMN is_text_only INTEGER DEFAULT 0`,
+    `ALTER TABLE adempimenti ADD COLUMN anno_validita INTEGER DEFAULT NULL`,
     `ALTER TABLE adempimenti_cliente ADD COLUMN importo_saldo REAL`,
     `ALTER TABLE adempimenti_cliente ADD COLUMN importo_acconto1 REAL`,
     `ALTER TABLE adempimenti_cliente ADD COLUMN importo_acconto2 REAL`,
@@ -74,9 +76,24 @@ function migrateDB() {
     `ALTER TABLE clienti ADD COLUMN periodicita TEXT`,
     `ALTER TABLE clienti ADD COLUMN col2_value TEXT`,
     `ALTER TABLE clienti ADD COLUMN col3_value TEXT`,
-    // ⭐ NUOVO: anno_validita — se impostato, l'adempimento esiste solo per quell'anno
-    `ALTER TABLE adempimenti ADD COLUMN anno_validita INTEGER DEFAULT NULL`,
-    // Ricreazione tabella adempimenti senza vincolo UNIQUE sul codice
+    
+    // ⭐ Tabella appunti
+    `CREATE TABLE IF NOT EXISTS appunti (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      titolo TEXT NOT NULL,
+      contenuto TEXT,
+      id_cliente INTEGER,
+      data_inserimento TEXT DEFAULT (datetime('now')),
+      data_scadenza TEXT,
+      priorita TEXT CHECK(priorita IN ('bassa','media','alta')) DEFAULT 'media',
+      colore TEXT,
+      completato INTEGER DEFAULT 0,
+      FOREIGN KEY (id_cliente) REFERENCES clienti(id)
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_appunti_cliente ON appunti(id_cliente)`,
+    `CREATE INDEX IF NOT EXISTS idx_appunti_scadenza ON appunti(data_scadenza)`,
+    
+    // Ricreazione tabella adempimenti
     `CREATE TABLE IF NOT EXISTS adempimenti_new (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       codice TEXT NOT NULL,
@@ -86,19 +103,22 @@ function migrateDB() {
       is_contabilita INTEGER DEFAULT 0,
       has_rate INTEGER DEFAULT 0,
       is_checkbox INTEGER DEFAULT 0,
+      is_text_only INTEGER DEFAULT 0,
       rate_labels TEXT,
       anno_validita INTEGER DEFAULT NULL,
       attivo INTEGER DEFAULT 1
     )`,
     `INSERT OR IGNORE INTO adempimenti_new
        SELECT id, codice, nome, descrizione, scadenza_tipo,
-              is_contabilita, has_rate, is_checkbox, rate_labels,
-              anno_validita, attivo
+              is_contabilita, has_rate, is_checkbox, 
+              COALESCE(is_text_only, 0) as is_text_only,
+              rate_labels, anno_validita, attivo
        FROM adempimenti`,
     `DROP TABLE adempimenti`,
     `ALTER TABLE adempimenti_new RENAME TO adempimenti`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_adempimenti_codice_attivo ON adempimenti(codice) WHERE attivo = 1`,
   ];
+  
   migrations.forEach((sql) => {
     try {
       db.run(sql);
@@ -110,9 +130,7 @@ function migrateDB() {
 }
 
 module.exports = {
-  get db() {
-    return db;
-  },
+  get db() { return db; },
   initDB,
   saveDB,
   runQuery,

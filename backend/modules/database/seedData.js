@@ -1,10 +1,7 @@
 function createSchema(db) {
-  // Migration: aggiungi campo contabilita se non esiste
   try {
     db.run(`ALTER TABLE clienti ADD COLUMN contabilita INTEGER DEFAULT 0`);
-  } catch (e) {
-    // La colonna esiste già
-  }
+  } catch (e) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS tipologie_cliente (
@@ -52,7 +49,6 @@ function createSchema(db) {
     )
   `);
 
-  // ⭐ NUOVA TABELLA: configurazioni annuali del cliente
   db.run(`
     CREATE TABLE IF NOT EXISTS clienti_config_annuale (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,7 +76,9 @@ function createSchema(db) {
       is_contabilita INTEGER DEFAULT 0,
       has_rate INTEGER DEFAULT 0,
       is_checkbox INTEGER DEFAULT 0,
+      is_text_only INTEGER DEFAULT 0,
       rate_labels TEXT,
+      anno_validita INTEGER DEFAULT NULL,
       attivo INTEGER DEFAULT 1
     )
   `);
@@ -110,11 +108,27 @@ function createSchema(db) {
       FOREIGN KEY (id_adempimento) REFERENCES adempimenti(id)
     )
   `);
+
+  // ⭐ Tabella appunti
+  db.run(`
+    CREATE TABLE IF NOT EXISTS appunti (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      titolo TEXT NOT NULL,
+      contenuto TEXT,
+      id_cliente INTEGER,
+      data_inserimento TEXT DEFAULT (datetime('now')),
+      data_scadenza TEXT,
+      priorita TEXT CHECK(priorita IN ('bassa','media','alta')) DEFAULT 'media',
+      colore TEXT,
+      completato INTEGER DEFAULT 0,
+      FOREIGN KEY (id_cliente) REFERENCES clienti(id)
+    )
+  `);
+
   console.log("📐 Schema creato");
 }
 
 function seedData(db) {
-  // Tipologie
   const tipologie = [
     {
       codice: "PF",
@@ -148,7 +162,6 @@ function seedData(db) {
     ),
   );
 
-  // Sottotipologie
   const sottotipologie = [
     { it: 1, c: "PF_PRIV", n: "Privato", sep: 0, ord: 1 },
     { it: 1, c: "PF_DITTA_SEP", n: "— Ditta Individuale —", sep: 1, ord: 2 },

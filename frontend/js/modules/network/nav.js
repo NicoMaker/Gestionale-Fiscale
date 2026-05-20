@@ -4,21 +4,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ─── SEARCHABLE SELECT ────────────────────────────────────────
-/**
- * Converte una <select> nativa in un dropdown con campo ricerca.
- * Gestisce correttamente:
- *   • apertura / chiusura (click trigger, click fuori, Escape)
- *   • aggiornamento del valore sulla <select> nativa (event change)
- *   • refresh esterno via sel._ssRefresh()
- *   • z-index elevato per non finire sotto i modal
- */
 function initSearchableSelect(selectId) {
   const sel = document.getElementById(selectId);
   if (!sel || sel.dataset.ssinit) return;
   sel.dataset.ssinit = "1";
   sel.style.display = "none";
 
-  /* ── wrapper ── */
   const wrap = document.createElement("div");
   wrap.className = "ss-wrap";
   wrap.style.cssText = [
@@ -31,58 +22,47 @@ function initSearchableSelect(selectId) {
   sel.parentNode.insertBefore(wrap, sel);
   wrap.appendChild(sel);
 
-  /* ── trigger visibile ── */
   const trigger = document.createElement("div");
   trigger.className = "ss-trigger input topbar-select";
   trigger.setAttribute("tabindex", "0");
   trigger.setAttribute("role", "combobox");
   trigger.setAttribute("aria-expanded", "false");
   trigger.setAttribute("aria-haspopup", "listbox");
-  trigger.innerHTML = `
-    <span class="ss-trigger-label">${sel.options[sel.selectedIndex]?.text || "-- Seleziona --"}</span>
-    <span class="ss-arrow" style="font-size:10px;opacity:0.5;flex-shrink:0;transition:transform 0.15s">▼</span>`;
+  trigger.innerHTML = `<span class="ss-trigger-label">${sel.options[sel.selectedIndex]?.text || "-- Seleziona --"}</span><span class="ss-arrow" style="font-size:10px;opacity:0.5;flex-shrink:0;transition:transform 0.15s">▼</span>`;
   wrap.insertBefore(trigger, sel);
 
-  /* ── pannello dropdown ── */
   const panel = document.createElement("div");
   panel.className = "ss-panel";
   panel.setAttribute("role", "listbox");
   wrap.appendChild(panel);
 
-  /* ── campo ricerca ── */
   const searchInput = document.createElement("input");
   searchInput.placeholder = "🔍 Cerca...";
   searchInput.setAttribute("type", "text");
   searchInput.setAttribute("aria-label", "Cerca opzione");
   panel.appendChild(searchInput);
 
-  /* ── lista risultati ── */
   const list = document.createElement("div");
   list.style.maxHeight = "280px";
   list.style.overflowY = "auto";
   panel.appendChild(list);
 
-  /* ── helpers ── */
   function getAllOptions() {
     return Array.from(sel.options).map((o) => ({
       value: o.value,
       text: o.text,
     }));
   }
-
   function renderList(q) {
     const opts = getAllOptions();
     const filtered = q
       ? opts.filter((o) => o.text.toLowerCase().includes(q.toLowerCase()))
       : opts;
-
     list.innerHTML = "";
-
     if (!filtered.length) {
       list.innerHTML = `<div style="padding:14px;text-align:center;color:var(--t3);font-size:13px">Nessun risultato</div>`;
       return;
     }
-
     const frag = document.createDocumentFragment();
     filtered.forEach((o) => {
       const item = document.createElement("div");
@@ -93,7 +73,6 @@ function initSearchableSelect(selectId) {
       item.setAttribute("role", "option");
       item.setAttribute("aria-selected", String(o.value) === String(sel.value));
       item.textContent = o.text;
-
       item.addEventListener("click", () => {
         sel.value = o.value;
         sel.dispatchEvent(new Event("change", { bubbles: true }));
@@ -106,21 +85,16 @@ function initSearchableSelect(selectId) {
   }
 
   function openPanel() {
-    // Chiudi tutti gli altri panel aperti
     document.querySelectorAll(".ss-panel[data-open]").forEach((p) => {
       if (p !== panel) _closeOtherPanel(p);
     });
-
     panel.style.display = "block";
     panel.dataset.open = "1";
     trigger.setAttribute("aria-expanded", "true");
     trigger.querySelector(".ss-arrow").style.transform = "rotate(180deg)";
     trigger.style.borderColor = "var(--accent)";
-
     searchInput.value = "";
     renderList("");
-
-    // Posizionamento intelligente: se lo spazio sotto è insufficiente, apri verso l'alto
     requestAnimationFrame(() => {
       const wrapRect = wrap.getBoundingClientRect();
       const panelH = panel.offsetHeight;
@@ -159,26 +133,22 @@ function initSearchableSelect(selectId) {
     }
   }
 
-  /* ── eventi ── */
   trigger.addEventListener("click", (e) => {
     e.stopPropagation();
     panel.style.display === "none" ? openPanel() : closePanel();
   });
-
   trigger.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       panel.style.display === "none" ? openPanel() : closePanel();
     }
   });
-
   searchInput.addEventListener("input", () => renderList(searchInput.value));
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closePanel();
       trigger.focus();
     }
-    // Navigazione con frecce
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       const items = list.querySelectorAll(".ss-item");
@@ -191,17 +161,12 @@ function initSearchableSelect(selectId) {
       if (items[idx]) items[idx].focus();
     }
   });
-
-  // Chiudi cliccando fuori
   document.addEventListener("click", (e) => {
-    // Non chiudere se il click è su un pannello filtri
-    const filtroPanel = e.target.closest('.tip-filtro-panel, #tip-filtro-panel, #dash-tip-filtro-panel, #glob-tip-filtro-panel, [id*="tip-filtro-container"]');
-    if (!wrap.contains(e.target) && !filtroPanel) {
-      closePanel();
-    }
+    const filtroPanel = e.target.closest(
+      '.tip-filtro-panel, #tip-filtro-panel, #dash-tip-filtro-panel, #glob-tip-filtro-panel, [id*="tip-filtro-container"]',
+    );
+    if (!wrap.contains(e.target) && !filtroPanel) closePanel();
   });
-
-  /* ── refresh pubblico ── */
   sel._ssRefresh = function () {
     const opt = sel.options[sel.selectedIndex];
     if (opt) trigger.querySelector(".ss-trigger-label").textContent = opt.text;
@@ -211,7 +176,6 @@ function initSearchableSelect(selectId) {
 
 // ─── INIT NAV ─────────────────────────────────────────────────
 function initNav() {
-  /* ── voci di navigazione ── */
   document.querySelectorAll(".nav-item").forEach((el) => {
     if (!el.dataset.page) return;
     el.addEventListener("click", () => {
@@ -220,44 +184,33 @@ function initNav() {
         .forEach((x) => x.classList.remove("active"));
       el.classList.add("active");
       renderPage(el.dataset.page);
-
-      // Su mobile chiudi la sidebar dopo la navigazione (gestito anche da mobile.js,
-      // ma lo ripetiamo qui come fallback nel caso mobile.js non sia caricato)
-      if (window.mobileSidebar && window.mobileSidebar.isOpen()) {
+      if (window.mobileSidebar && window.mobileSidebar.isOpen())
         window.mobileSidebar.close();
-      }
     });
   });
 
-  /* ── scarica DB ── */
   document.getElementById("btn-scarica-db")?.addEventListener("click", (e) => {
     e.stopPropagation();
     scaricaDatabase();
   });
 
-  /* ── chiudi modal cliccando fuori ── */
   document.querySelectorAll(".modal-overlay").forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
-      // Check if click is on filter panel elements inside the modal
-      const filtroPanel = e.target.closest('.tip-filtro-panel, #tip-filtro-panel, #dash-tip-filtro-panel, #glob-tip-filtro-panel, [id*="tip-filtro-container"], .tip-percorso-chip, .tip-gruppo-header, .tip-btn-all, .tip-btn-none');
-      
-      // Only close if clicking directly on the overlay (outside modal content) and not on filter elements
-      if (e.target === overlay && !filtroPanel) {
+      const filtroPanel = e.target.closest(
+        '.tip-filtro-panel, #tip-filtro-panel, #dash-tip-filtro-panel, #glob-tip-filtro-panel, [id*="tip-filtro-container"], .tip-percorso-chip, .tip-gruppo-header, .tip-btn-all, .tip-btn-none',
+      );
+      if (e.target === overlay && !filtroPanel)
         overlay.classList.remove("open");
-      }
     });
   });
 
-  /* ── Escape per chiudere modal ── */
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
+    if (e.key === "Escape")
       document
         .querySelectorAll(".modal-overlay.open")
         .forEach((m) => m.classList.remove("open"));
-    }
   });
 
-  /* ── Setup decimal inputs ── */
   setupDecimalInputs();
 }
 
@@ -274,10 +227,10 @@ function renderPage(page) {
     scadenzario_globale: "Vista Globale",
     adempimenti: "Adempimenti Fiscali",
     tipologie: "Tipologie Clienti",
+    appunti: "Appunti",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
 
-  /* ── aggiorna aria-current nelle nav-item ── */
   document.querySelectorAll(".nav-item").forEach((el) => {
     el.setAttribute(
       "aria-current",
@@ -286,34 +239,20 @@ function renderPage(page) {
   });
 
   if (page === "dashboard") {
-    document.getElementById("topbar-actions").innerHTML = `
-      <div class="year-sel">
-        <button onclick="changeAnno(-1)" title="Anno precedente">&#9664;</button>
-        <span class="year-num">${state.anno}</span>
-        <button onclick="changeAnno(1)" title="Anno successivo">&#9654;</button>
-      </div>
-      <button class="btn btn-sm" style="background:var(--accent-d);color:var(--accent);border:1px solid rgba(91,141,246,0.3);font-size:13px" onclick="setDashCat('tutti')" title="Mostra tutti">📋 Tutti</button>
-      <button class="btn btn-cyan btn-sm no-print"   onclick="openCopiaTutti()" style="font-size:13px">📋 Copia</button>
-      <button class="btn btn-print btn-sm"           onclick="window.print()" style="font-size:13px">🖨️</button>`;
+    document.getElementById("topbar-actions").innerHTML =
+      `<div class="year-sel"><button onclick="changeAnno(-1)" title="Anno precedente">&#9664;</button><span class="year-num">${state.anno}</span><button onclick="changeAnno(1)" title="Anno successivo">&#9654;</button></div><button class="btn btn-sm" style="background:var(--accent-d);color:var(--accent);border:1px solid rgba(91,141,246,0.3);font-size:13px" onclick="setDashCat('tutti')" title="Mostra tutti">📋 Tutti</button><button class="btn btn-cyan btn-sm no-print" onclick="openCopiaTutti()" style="font-size:13px">📋 Copia</button><button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️</button>`;
     socket.emit("get:stats", { anno: state.anno });
   } else if (page === "clienti") {
     state._pending = "clienti";
-    document.getElementById("topbar-actions").innerHTML = `
-      <div class="search-wrap" style="width:240px">
-        <span class="search-icon">🔍</span>
-        <input class="input" id="global-search-clienti" placeholder="Cerca nome, CF, P.IVA…" oninput="applyClientiFiltri()" style="font-size:13px">
-      </div>
-      <button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="font-size:13px">⟳</button>
-      <button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️</button>
-      <button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Cliente</button>`;
-    
-    // Apply current filters to ensure all data is loaded correctly
+    document.getElementById("topbar-actions").innerHTML =
+      `<div class="search-wrap" style="width:240px"><span class="search-icon">🔍</span><input class="input" id="global-search-clienti" placeholder="Cerca nome, CF, P.IVA…" oninput="applyClientiFiltri()" style="font-size:13px"></div><button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="font-size:13px">⟳</button><button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️</button><button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Cliente</button>`;
     setTimeout(() => {
-      if (typeof applyClientiFiltriImmediate === 'function') {
+      if (typeof applyClientiFiltriImmediate === "function")
         applyClientiFiltriImmediate();
-      } else {
-        // Fallback to basic call with current year
-        const anno = parseInt(document.getElementById("filter-anno")?.value) || new Date().getFullYear();
+      else {
+        const anno =
+          parseInt(document.getElementById("filter-anno")?.value) ||
+          new Date().getFullYear();
         socket.emit("get:clienti", { anno });
       }
     }, 50);
@@ -325,17 +264,20 @@ function renderPage(page) {
     renderGlobalePage();
   } else if (page === "adempimenti") {
     state._pending = "adempimenti";
-    document.getElementById("topbar-actions").innerHTML = `
-      <div class="search-wrap" style="width:260px">
-        <span class="search-icon">🔍</span>
-        <input class="input" id="global-search-adempimenti" placeholder="Cerca codice o nome…" oninput="applyAdempimentiFiltriSearch()" style="font-size:13px">
-      </div>
-      <button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:13px">⟳</button>
-      <button class="btn btn-primary no-print" onclick="openNuovoAdpDef()" style="font-size:13px">+ Nuovo</button>`;
+    document.getElementById("topbar-actions").innerHTML =
+      `<div class="search-wrap" style="width:260px"><span class="search-icon">🔍</span><input class="input" id="global-search-adempimenti" placeholder="Cerca codice o nome…" oninput="applyAdempimentiFiltriSearch()" style="font-size:13px"></div><button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:13px">⟳</button><button class="btn btn-primary no-print" onclick="openNuovoAdpDef()" style="font-size:13px">+ Nuovo</button>`;
     socket.emit("get:adempimenti");
   } else if (page === "tipologie") {
     document.getElementById("topbar-actions").innerHTML = "";
     renderTipologiePage();
+  } else if (page === "appunti") {
+    document.getElementById("topbar-actions").innerHTML = "";
+    if (typeof renderAppuntiPage === "function") renderAppuntiPage();
+    else {
+      document.getElementById("content").innerHTML =
+        `<div class="empty"><div class="empty-icon">📝</div><p>Caricamento appunti...</p></div>`;
+      socket.emit("get:appunti");
+    }
   }
 }
 
@@ -354,34 +296,21 @@ function changeAnno(d) {
   }
 }
 
-// ─── SETUP DECIMAL INPUTS ────────────────────────────────────────
 function setupDecimalInputs() {
-  // Setup all existing number inputs
   document.querySelectorAll('input[type="number"]').forEach(setupDecimalInput);
-
-  // Setup new inputs when they are added to the DOM
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType === Node.ELEMENT_NODE) {
-          // Check if the added node is a number input
-          if (node.tagName === "INPUT" && node.type === "number") {
+          if (node.tagName === "INPUT" && node.type === "number")
             setupDecimalInput(node);
-          }
-          // Check if the added node contains number inputs
-          if (node.querySelectorAll) {
+          if (node.querySelectorAll)
             node
               .querySelectorAll('input[type="number"]')
               .forEach(setupDecimalInput);
-          }
         }
       });
     });
   });
-
-  // Start observing the document body for added nodes
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }

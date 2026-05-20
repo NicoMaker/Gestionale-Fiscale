@@ -642,6 +642,67 @@ module.exports = function setupSocketHandlers(io) {
       },
     );
 
+    // ========== APPUNTI ==========
+const appuntiModel = require("../models/appunti");
+
+socket.on("get:appunti", (filtri = {}) => {
+  try {
+    const data = appuntiModel.getAppunti(filtri);
+    socket.emit("res:appunti", { success: true, data });
+  } catch (e) {
+    socket.emit("res:appunti", { success: false, error: e.message });
+  }
+});
+
+socket.on("get:appunto", ({ id }) => {
+  try {
+    const data = appuntiModel.getAppunto(id);
+    socket.emit("res:appunto", { success: true, data });
+  } catch (e) {
+    socket.emit("res:appunto", { success: false, error: e.message });
+  }
+});
+
+socket.on("create:appunto", (data) => {
+  try {
+    const newId = appuntiModel.createAppunto(data);
+    io.emit("broadcast:appunti_updated");
+    socket.emit("res:create:appunto", { success: true, id: newId });
+  } catch (e) {
+    socket.emit("res:create:appunto", { success: false, error: e.message });
+  }
+});
+
+socket.on("update:appunto", (data) => {
+  try {
+    appuntiModel.updateAppunto(data);
+    io.emit("broadcast:appunti_updated");
+    socket.emit("res:update:appunto", { success: true });
+  } catch (e) {
+    socket.emit("res:update:appunto", { success: false, error: e.message });
+  }
+});
+
+socket.on("delete:appunto", ({ id }) => {
+  try {
+    appuntiModel.deleteAppunto(id);
+    io.emit("broadcast:appunti_updated");
+    socket.emit("res:delete:appunto", { success: true });
+  } catch (e) {
+    socket.emit("res:delete:appunto", { success: false, error: e.message });
+  }
+});
+
+socket.on("toggle:appunto_completato", ({ id, completato }) => {
+  try {
+    appuntiModel.toggleAppuntoCompletato(id, completato);
+    io.emit("broadcast:appunti_updated");
+    socket.emit("res:toggle:appunto_completato", { success: true });
+  } catch (e) {
+    socket.emit("res:toggle:appunto_completato", { success: false, error: e.message });
+  }
+});
+
     socket.on("disconnect", () => {
       console.log(`❌ Client disconnesso: ${socket.id}`);
     });

@@ -47,6 +47,9 @@ function hasRate(r) {
 function isCheckbox(r) {
   return parseInt(r.is_checkbox) === 1 || r.is_checkbox === true;
 }
+function isTextOnly(r) {
+  return parseInt(r.is_text_only) === 1 || r.is_text_only === true;
+}
 
 // ─── LISTA ADEMPIMENTI ────────────────────────────────────────
 const applyAdempimentiFiltriSearch = debounce(() => {
@@ -126,7 +129,11 @@ function renderAdempimentiTabella(adempimenti) {
         flagsBadges.push(
           `<span class="adp-flag-badge" style="color:#a78bfa;background:#a78bfa15;border-color:#a78bfa33;font-size:11px" title="Checkbox semplice ✓/✗">☑️ Check</span>`,
         );
-      if (!a.is_contabilita && !a.has_rate && !a.is_checkbox)
+      if (a.is_text_only)
+        flagsBadges.push(
+          `<span class="adp-flag-badge" style="color:#c084fc;background:#c084fc15;border-color:#c084fc33;font-size:11px" title="Solo testo (nessuno stato)">📝 Testo</span>`,
+        );
+      if (!a.is_contabilita && !a.has_rate && !a.is_checkbox && !a.is_text_only)
         flagsBadges.push(
           `<span class="adp-flag-badge" style="color:#5b8df6;background:#5b8df615;border-color:#5b8df633;font-size:11px" title="Solo data scadenza">📅 Solo Scad.</span>`,
         );
@@ -177,11 +184,13 @@ function openNuovoAdpDef() {
   const contRadio = document.getElementById("adp-def-contabilita");
   const rateRadio = document.getElementById("adp-def-rate");
   const checkRadio = document.getElementById("adp-def-checkbox");
+  const textRadio = document.getElementById("adp-def-textonly");
 
   if (sempliceRadio) sempliceRadio.checked = true;
   if (contRadio) contRadio.checked = false;
   if (rateRadio) rateRadio.checked = false;
   if (checkRadio) checkRadio.checked = false;
+  if (textRadio) textRadio.checked = false;
 
   setDisplay("sect-rate-labels", "none");
   setVal("adp-rate-l1", "Saldo");
@@ -206,32 +215,40 @@ function editAdpDef(id) {
   const isCont = a.is_contabilita === 1;
   const isRate = a.has_rate === 1;
   const isCheck = a.is_checkbox === 1;
+  const isText = a.is_text_only === 1;
 
   const sempliceRadio = document.getElementById("adp-def-semplice");
   const contRadio = document.getElementById("adp-def-contabilita");
   const rateRadio = document.getElementById("adp-def-rate");
   const checkRadio = document.getElementById("adp-def-checkbox");
+  const textRadio = document.getElementById("adp-def-textonly");
 
   if (isCont && contRadio) {
     contRadio.checked = true;
-    if (sempliceRadio) sempliceRadio.checked = false;
-    if (rateRadio) rateRadio.checked = false;
-    if (checkRadio) checkRadio.checked = false;
+    sempliceRadio.checked = false;
+    rateRadio.checked = false;
+    checkRadio.checked = false;
+    textRadio.checked = false;
   } else if (isRate && rateRadio) {
     rateRadio.checked = true;
-    if (sempliceRadio) sempliceRadio.checked = false;
-    if (contRadio) contRadio.checked = false;
-    if (checkRadio) checkRadio.checked = false;
+    sempliceRadio.checked = false;
+    contRadio.checked = false;
+    checkRadio.checked = false;
+    textRadio.checked = false;
   } else if (isCheck && checkRadio) {
     checkRadio.checked = true;
-    if (sempliceRadio) sempliceRadio.checked = false;
-    if (contRadio) contRadio.checked = false;
-    if (rateRadio) rateRadio.checked = false;
+    sempliceRadio.checked = false;
+    contRadio.checked = false;
+    rateRadio.checked = false;
+    textRadio.checked = false;
+  } else if (isText && textRadio) {
+    textRadio.checked = true;
+    sempliceRadio.checked = false;
+    contRadio.checked = false;
+    rateRadio.checked = false;
+    checkRadio.checked = false;
   } else {
     if (sempliceRadio) sempliceRadio.checked = true;
-    if (contRadio) contRadio.checked = false;
-    if (rateRadio) rateRadio.checked = false;
-    if (checkRadio) checkRadio.checked = false;
   }
 
   let lb = ["Saldo", "1° Acconto", "2° Acconto"];
@@ -266,33 +283,35 @@ function saveAdpDef() {
     document.getElementById("adp-def-contabilita")?.checked || false;
   const isRate = document.getElementById("adp-def-rate")?.checked || false;
   const isCheck = document.getElementById("adp-def-checkbox")?.checked || false;
+  const isText = document.getElementById("adp-def-textonly")?.checked || false;
 
   const data = {
     codice,
     nome,
     descrizione: String(getVal("adp-def-desc")).trim() || null,
     scadenza_tipo: getVal("adp-def-scadenza"),
-    anno_validita: (function(){ const v = String(getVal("adp-def-anno-validita")).trim(); const n = parseInt(v, 10); return (v.length === 4 && n >= 2000 && n <= 2099) ? n : null; })(),
+    anno_validita: (function () {
+      const v = String(getVal("adp-def-anno-validita")).trim();
+      const n = parseInt(v, 10);
+      return v.length === 4 && n >= 2000 && n <= 2099 ? n : null;
+    })(),
     is_contabilita: 0,
     has_rate: 0,
     is_checkbox: 0,
+    is_text_only: 0,
   };
 
-  if (isCont) {
-    data.is_contabilita = 1;
-  } else if (isRate) {
-    data.has_rate = 1;
-  } else if (isCheck) {
-    data.is_checkbox = 1;
-  }
+  if (isCont) data.is_contabilita = 1;
+  else if (isRate) data.has_rate = 1;
+  else if (isCheck) data.is_checkbox = 1;
+  else if (isText) data.is_text_only = 1;
 
-  if (data.has_rate) {
+  if (data.has_rate)
     data.rate_labels = [
       getVal("adp-rate-l1"),
       getVal("adp-rate-l2"),
       getVal("adp-rate-l3"),
     ];
-  }
 
   if (id) {
     data.id = parseInt(id);
@@ -316,6 +335,7 @@ function openAdpModal(r) {
   setVal("adp-is-contabilita", r.is_contabilita || 0);
   setVal("adp-has-rate", r.has_rate || 0);
   setVal("adp-is-checkbox", r.is_checkbox || 0);
+  setVal("adp-is-text-only", r.is_text_only || 0);
   setVal("adp-rate-labels-json", r.rate_labels || "");
 
   setTimeout(() => {
@@ -348,28 +368,29 @@ function openAdpModal(r) {
   const isCont = isContabilita(r);
   const isRate = hasRate(r);
   const isCbx = isCheckbox(r);
-  const isSemplice = !isCont && !isRate && !isCbx;
+  const isText = isTextOnly(r);
+  const isSemplice = !isCont && !isRate && !isCbx && !isText;
 
-  // Nascondi DATA COMPLETAMENTO per tipo Semplice
   const dataCompletamentoGroup = document.getElementById(
     "data-completamento-group",
   );
-  if (dataCompletamentoGroup) {
-    dataCompletamentoGroup.style.display = isSemplice ? "none" : "";
-  }
+  const statoGroup = document.getElementById("stato-group");
+  if (dataCompletamentoGroup)
+    dataCompletamentoGroup.style.display = isSemplice || isText ? "none" : "";
+  if (statoGroup) statoGroup.style.display = isText ? "none" : "";
 
-  // CHIUDI TUTTE LE SEZIONI prima di mostrarne una
   const sectNormale = document.getElementById("sect-importo-normale");
   const sectCont = document.getElementById("sect-importo-cont");
   const sectRate = document.getElementById("sect-importo-rate");
   const sectCheckbox = document.getElementById("sect-importo-checkbox");
+  const sectTextOnly = document.getElementById("sect-text-only");
 
   if (sectNormale) sectNormale.style.display = "none";
   if (sectCont) sectCont.style.display = "none";
   if (sectRate) sectRate.style.display = "none";
   if (sectCheckbox) sectCheckbox.style.display = "none";
+  if (sectTextOnly) sectTextOnly.style.display = "none";
 
-  // Mostra la sezione corretta in base al tipo
   if (isCbx) {
     if (sectCheckbox) sectCheckbox.style.display = "block";
     _aggiornaPulsantiCheckbox(r.stato || "da_fare");
@@ -385,7 +406,6 @@ function openAdpModal(r) {
     setVal("adp-imp-saldo", formattaNumeroItaliano(r.importo_saldo));
     setVal("adp-imp-acc1", formattaNumeroItaliano(r.importo_acconto1));
     setVal("adp-imp-acc2", formattaNumeroItaliano(r.importo_acconto2));
-
     let lb = ["Saldo", "1° Acconto", "2° Acconto"];
     try {
       if (r.rate_labels) lb = JSON.parse(r.rate_labels);
@@ -393,7 +413,6 @@ function openAdpModal(r) {
     setTxt("rate-l0", `💰 ${lb[0]} (€)`);
     setTxt("rate-l1", `📥 ${lb[1]} (€)`);
     setTxt("rate-l2", `📥 ${lb[2]} (€)`);
-
     const rateContWrapper = document.getElementById(
       "rate-contabilita-checkbox-wrapper",
     );
@@ -402,12 +421,11 @@ function openAdpModal(r) {
     if (rateContCheck)
       rateContCheck.checked = parseInt(r.cont_completata) === 1;
     _aggiornaColoriRateContabilita(r);
+  } else if (isText) {
+    if (sectTextOnly) sectTextOnly.style.display = "block";
   } else if (isSemplice) {
-    // Solo Scadenza: nessun importo, solo data scadenza
     if (sectNormale) sectNormale.style.display = "none";
-    // Non mostrare importo
   }
-
   openModal("modal-adempimento");
 }
 
@@ -417,7 +435,6 @@ function _aggiornaPulsantiCheckbox(stato) {
   const btnNA = document.getElementById("cbx-modal-na");
   const btnCompl = document.getElementById("cbx-modal-completato");
   if (!btnDaFare || !btnNA || !btnCompl) return;
-
   [btnDaFare, btnNA, btnCompl].forEach((b) => {
     b.classList.remove(
       "cbx-modal-active-red",
@@ -427,7 +444,6 @@ function _aggiornaPulsantiCheckbox(stato) {
     b.style.opacity = "0.5";
     b.style.transform = "scale(1)";
   });
-
   if (stato === "da_fare") {
     btnDaFare.classList.add("cbx-modal-active-red");
     btnDaFare.style.opacity = "1";
@@ -456,12 +472,10 @@ function _aggiornaColoriContabilita(r) {
   const contDone = contCheck
     ? contCheck.checked
     : parseInt(r?.cont_completata) === 1;
-
   let colorIva = "",
     colorCont = "";
   if (hasIva && contDone) colorIva = colorCont = "var(--green)";
   else if (hasIva || contDone) colorIva = colorCont = "var(--accent)";
-
   const ivaLabel = document.getElementById("label-imp-iva");
   const contLabel = document.getElementById("label-cont-completata");
   const contSpan = document.getElementById("label-imp-cont");
@@ -489,21 +503,6 @@ function coloraInputImporto(input) {
     input.style.color = "var(--green)";
     input.style.borderColor = "";
   }
-}
-
-function formattaNumeroItaliano(valore) {
-  if (valore === null || valore === undefined || valore === "") return "";
-  const s = String(valore);
-  const normalizzato = s.includes(",")
-    ? s.replace(/\./g, "").replace(",", ".")
-    : s;
-  const numero = parseFloat(normalizzato);
-  if (isNaN(numero)) return "";
-  const negativo = numero < 0;
-  const [intero, dec] = Math.abs(numero).toFixed(2).split(".");
-  const interoFormattato = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  const risultato = interoFormattato + "," + dec;
-  return negativo ? "-" + risultato : risultato;
 }
 
 function parseItalianoFloat(str) {
@@ -553,11 +552,11 @@ function bloccaPuntoInput(e) {
   }
   if (e.key === "-") {
     const input = e.target;
-    if (input.selectionStart !== 0 || input.value.includes("-")) {
+    if (input.selectionStart !== 0 || input.value.includes("-"))
       e.preventDefault();
-    }
   }
 }
+
 function validaInputNumerico(input) {
   formattaInputConSeparatori(input);
   coloraInputImporto(input);
@@ -619,7 +618,8 @@ function saveAdpStato() {
   const isCont = getVal("adp-is-contabilita") === "1";
   const isRate = getVal("adp-has-rate") === "1";
   const isCbx = getVal("adp-is-checkbox") === "1";
-  const isSemplice = !isCont && !isRate && !isCbx;
+  const isText = getVal("adp-is-text-only") === "1";
+  const isSemplice = !isCont && !isRate && !isCbx && !isText;
 
   const data = {
     id,
@@ -630,8 +630,16 @@ function saveAdpStato() {
     cont_completata: 0,
   };
 
-  if (isCbx) {
-    // Checkbox: nessun importo, solo stato
+  if (isText) {
+    data.stato = "text_only";
+    data.importo = null;
+    data.importo_saldo = null;
+    data.importo_acconto1 = null;
+    data.importo_acconto2 = null;
+    data.importo_iva = null;
+    data.importo_contabilita = null;
+  } else if (isCbx) {
+    // nessun importo
   } else if (isCont) {
     data.importo_iva = parseItalianoFloat(getVal("adp-imp-iva"));
     data.importo_contabilita = parseItalianoFloat(getVal("adp-imp-cont"));
@@ -654,7 +662,6 @@ function saveAdpStato() {
       data.data_completamento =
         daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
   } else if (isSemplice) {
-    // Solo Scadenza: nessun importo, nessuna data completamento
     data.importo = null;
     data.data_completamento = null;
   }
@@ -677,43 +684,3 @@ window.saveAdpDef = saveAdpDef;
 window.onAdpTipoChange = onAdpTipoChange;
 window.applyAdempimentiFiltriSearch = applyAdempimentiFiltriSearch;
 window.resetAdempimentiFiltri = resetAdempimentiFiltri;
-
-function eliminaAdempimentiDaClienti(adempimenti_ids, clienti_ids, anno) {
-  let eliminati = 0;
-  let nonTrovati = 0;
-
-  for (const adpId of adempimenti_ids) {
-    const adp = queryOne(
-      `SELECT * FROM adempimenti WHERE id = ? AND attivo = 1`,
-      [adpId],
-    );
-    if (!adp) {
-      console.warn(`Adempimento ${adpId} non trovato o non attivo`);
-      continue;
-    }
-
-    for (const clienteId of clienti_ids) {
-      const esistenti = queryAll(
-        `SELECT id FROM adempimenti_cliente WHERE id_cliente = ? AND id_adempimento = ? AND anno = ?`,
-        [clienteId, adpId, anno],
-      );
-      if (esistenti.length === 0) {
-        nonTrovati++;
-        continue;
-      }
-      // Elimina tutte le occorrenze (mesi/trimestri/semestri) per quella coppia
-      runQuery(
-        `DELETE FROM adempimenti_cliente WHERE id_cliente = ? AND id_adempimento = ? AND anno = ?`,
-        [clienteId, adpId, anno],
-      );
-      eliminati += esistenti.length;
-    }
-  }
-
-  return {
-    eliminati,
-    nonTrovati,
-    clienti: clienti_ids.length,
-    adempimenti: adempimenti_ids.length,
-  };
-}

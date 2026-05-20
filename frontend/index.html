@@ -39,6 +39,10 @@
           <span class="nav-icon">🏷️</span> Tipologie Clienti
         </div>
         <div class="nav-sep"></div>
+        <div class="nav-item" data-page="appunti">
+          <span class="nav-icon">📝</span> Appunti
+        </div>
+        <div class="nav-sep"></div>
         <div class="nav-item" id="btn-scarica-db" style="cursor: pointer">
           <span class="nav-icon">💾</span> Scarica DB
         </div>
@@ -312,11 +316,12 @@
         <input type="hidden" id="adp-is-contabilita" />
         <input type="hidden" id="adp-has-rate" />
         <input type="hidden" id="adp-is-checkbox" />
+        <input type="hidden" id="adp-is-text-only" />
         <input type="hidden" id="adp-rate-labels-json" />
 
         <div class="adp-cliente-info-box" id="adp-cliente-info"></div>
 
-        <div class="form-group">
+        <div class="form-group" id="stato-group">
           <label>Stato</label>
           <select class="select" id="adp-stato">
             <option value="da_fare">⭕ Da fare</option>
@@ -511,6 +516,21 @@
           </div>
         </div>
 
+        <!-- ── SOLO TESTO ── -->
+        <div id="sect-text-only" style="display: none">
+          <div
+            class="infobox"
+            style="
+              font-size: 12px;
+              margin-bottom: 4px;
+              background: var(--purple-d);
+              border-color: var(--purple);
+            "
+          >
+            📝 Adempimento di solo testo — usa la nota per annotazioni libere.
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Note</label>
           <input class="input" id="adp-note" placeholder="Note..." />
@@ -583,11 +603,7 @@
           />
         </div>
         <div class="form-group">
-          <label>📆 Anno di Validità
-            <span style="font-weight:400;color:var(--text3);font-size:11px;margin-left:6px">
-              (opzionale — se impostato, l'adempimento esiste solo per quell'anno)
-            </span>
-          </label>
+          <label>📆 Anno di Validità</label>
           <input
             class="input"
             id="adp-def-anno-validita"
@@ -596,7 +612,7 @@
             pattern="[0-9]{4}"
             maxlength="4"
             placeholder="Es. 2025 — lascia vuoto per tutti gli anni"
-            style="max-width:280px"
+            style="max-width: 280px"
           />
         </div>
         <div class="infobox" style="margin-bottom: 12px; font-size: 12px">
@@ -643,6 +659,16 @@
               onchange="onAdpTipoChange()"
             />
             <span>☑️ Checkbox (✓ / ✗)</span>
+          </label>
+          <label class="flag-chip">
+            <input
+              type="radio"
+              name="adp-tipo"
+              id="adp-def-textonly"
+              value="textonly"
+              onchange="onAdpTipoChange()"
+            />
+            <span>📝 Solo Testo (nessuno stato)</span>
           </label>
         </div>
         <div id="sect-rate-labels" style="display: none">
@@ -732,22 +758,26 @@
               margin-top: 8px;
             "
           >
-            <label class="flag-chip">
-              <input
+            <label class="flag-chip"
+              ><input
                 type="radio"
                 name="genera-modalita"
                 value="normale"
                 checked
-              />
-              <span>📋 Normale - Aggiungi solo adempimenti mancanti</span>
-            </label>
-            <label class="flag-chip">
-              <input type="radio" name="genera-modalita" value="rigenera" />
-              <span
+              /><span
+                >📋 Normale - Aggiungi solo adempimenti mancanti</span
+              ></label
+            >
+            <label class="flag-chip"
+              ><input
+                type="radio"
+                name="genera-modalita"
+                value="rigenera"
+              /><span
                 >🔄 Rigenera - Elimina e ricrea tutti gli adempimenti
                 selezionati</span
-              >
-            </label>
+              ></label
+            >
           </div>
         </div>
         <div class="form-group">
@@ -835,7 +865,6 @@
           Crea un nuovo adempimento con un nome personalizzato che non esiste
           nel sistema standard.
         </div>
-
         <div class="form-group">
           <label>Nome Adempimento *</label>
           <input
@@ -846,7 +875,6 @@
             required
           />
         </div>
-
         <div class="form-group">
           <label>Descrizione</label>
           <textarea
@@ -856,7 +884,6 @@
             placeholder="Descrizione dettagliata dell'adempimento..."
           ></textarea>
         </div>
-
         <div class="form-group">
           <label>Tipo Scadenza</label>
           <select class="input" id="custom-adp-scadenza-tipo">
@@ -866,15 +893,45 @@
             <option value="mensile">Mensile</option>
           </select>
         </div>
-
         <div class="form-group">
-          <label>Adempimento di contabilità</label>
-          <label class="flag-chip">
-            <input type="checkbox" id="custom-adp-is-contabilita" />
-            <span>Sì, è un adempimento di contabilità</span>
-          </label>
+          <label>Tipo Adempimento</label>
+          <div class="flags-row">
+            <label class="flag-chip"
+              ><input
+                type="radio"
+                name="custom-adp-tipo"
+                value="semplice"
+                checked
+              /><span>📅 Solo Scadenza</span></label
+            >
+            <label class="flag-chip"
+              ><input
+                type="radio"
+                name="custom-adp-tipo"
+                value="contabilita"
+              /><span>📊 Contabilità</span></label
+            >
+            <label class="flag-chip"
+              ><input type="radio" name="custom-adp-tipo" value="rate" /><span
+                >💰 Rate</span
+              ></label
+            >
+            <label class="flag-chip"
+              ><input
+                type="radio"
+                name="custom-adp-tipo"
+                value="checkbox"
+              /><span>☑️ Checkbox</span></label
+            >
+            <label class="flag-chip"
+              ><input
+                type="radio"
+                name="custom-adp-tipo"
+                value="textonly"
+              /><span>📝 Solo Testo</span></label
+            >
+          </div>
         </div>
-
         <div class="form-group">
           <label>Genera immediatamente per</label>
           <select
@@ -887,7 +944,6 @@
             <option value="selezionati">Cliente specifico</option>
           </select>
         </div>
-
         <div
           class="form-group"
           id="custom-adp-cliente-div"
@@ -898,7 +954,6 @@
             <option value="">-- Seleziona un cliente --</option>
           </select>
         </div>
-
         <div class="form-group">
           <label>Anno</label>
           <input
@@ -908,7 +963,6 @@
             value="2026"
           />
         </div>
-
         <div class="modal-actions">
           <button
             class="btn btn-secondary"
@@ -931,25 +985,64 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-applica-adempimenti">
       <div class="modal modal-lg">
-        <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div
+          class="modal-title"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+          "
+        >
           <span>📋 Gestione Adempimenti su Clienti</span>
-          <div style="display:flex;gap:6px;align-items:center">
-            <span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Modalità:</span>
+          <div style="display: flex; gap: 6px; align-items: center">
+            <span
+              style="
+                font-size: 11px;
+                color: var(--text3);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+              "
+              >Modalità:</span
+            >
             <button
               id="applica-mode-inserisci"
               onclick="setApplicaModalita('inserisci')"
-              style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--green);background:var(--green);color:#fff;transition:all .15s">
+              style="
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                border: 1px solid var(--green);
+                background: var(--green);
+                color: #fff;
+                transition: all 0.15s;
+              "
+            >
               ➕ Inserisci
             </button>
             <button
               id="applica-mode-elimina"
               onclick="setApplicaModalita('elimina')"
-              style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface3);color:var(--text2);transition:all .15s">
+              style="
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                border: 1px solid var(--border);
+                background: var(--surface3);
+                color: var(--text2);
+                transition: all 0.15s;
+              "
+            >
               🗑️ Elimina
             </button>
           </div>
         </div>
-
         <div class="infobox" style="margin-bottom: 18px">
           ✅ Seleziona <strong>uno o più adempimenti</strong> e
           <strong>uno o più clienti</strong>.<br />
@@ -958,22 +1051,20 @@
           🔄 Vengono generati automaticamente tutti i periodi previsti (es: 4
           trimestri, 12 mesi, ecc.)
         </div>
-
-        <!-- Sezione ADEMPIMENTI -->
         <div class="form-group">
           <label
             >📋 Adempimenti da applicare
             <span class="required-star">*</span></label
           >
-          <div style="margin-bottom:8px">
-            <div class="search-wrap" style="width:100%">
+          <div style="margin-bottom: 8px">
+            <div class="search-wrap" style="width: 100%">
               <span class="search-icon"></span>
               <input
                 class="input"
                 id="applica-adp-search"
                 placeholder="Cerca adempimento..."
                 oninput="filtraAdpApplica()"
-                style="font-size:12px;padding:5px 10px;width:100%"
+                style="font-size: 12px; padding: 5px 10px; width: 100%"
               />
             </div>
           </div>
@@ -990,26 +1081,29 @@
             "
           ></div>
           <div
-            style="margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items:center"
+            style="
+              margin-top: 8px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              align-items: center;
+            "
           >
             <button
               class="btn btn-xs"
               id="applica-adp-btn-seleziona-tutti"
               onclick="toggleSelezionaTuttiAdpApplicaBtn()"
-              style="font-size:12px"
+              style="font-size: 12px"
             >
               ✅ Seleziona tutti gli adempimenti
             </button>
           </div>
         </div>
-
-        <!-- Sezione CLIENTI -->
         <div class="form-group">
           <label
             >👥 Clienti destinatari <span class="required-star">*</span></label
           >
-          <!-- Pannello filtro rapido per tipologia -->
-          <div id="applica-tip-filtro-panel" style="margin-bottom:6px"></div>
+          <div id="applica-tip-filtro-panel" style="margin-bottom: 6px"></div>
           <div
             id="applica-clienti-list"
             style="
@@ -1023,13 +1117,19 @@
             "
           ></div>
           <div
-            style="margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items:center"
+            style="
+              margin-top: 8px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              align-items: center;
+            "
           >
             <button
               class="btn btn-xs"
               id="applica-clienti-btn-seleziona-tutti"
               onclick="toggleSelezionaTuttiClientiApplicaBtn()"
-              style="font-size:12px"
+              style="font-size: 12px"
             >
               ✅ Seleziona tutti i clienti
             </button>
@@ -1045,7 +1145,6 @@
             </div>
           </div>
         </div>
-
         <div class="form-group">
           <label>Anno</label>
           <input
@@ -1055,7 +1154,6 @@
             value="2026"
           />
         </div>
-
         <div class="modal-actions">
           <button
             class="btn btn-secondary"
@@ -1063,7 +1161,11 @@
           >
             Annulla
           </button>
-          <button class="btn btn-primary" id="btn-esegui-applica" onclick="eseguiApplicaAdempimenti()">
+          <button
+            class="btn btn-primary"
+            id="btn-esegui-applica"
+            onclick="eseguiApplicaAdempimenti()"
+          >
             📋 Applica a Clienti Selezionati
           </button>
         </div>
@@ -1075,33 +1177,69 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-add-adp">
       <div class="modal modal-sm">
-
-        <!-- Tab switcher -->
-        <div style="display:flex;gap:0;margin-bottom:16px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
-          <button id="tab-add-adp-btn"
+        <div
+          style="
+            display: flex;
+            gap: 0;
+            margin-bottom: 16px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+          "
+        >
+          <button
+            id="tab-add-adp-btn"
             onclick="switchAddAdpTab('aggiungi')"
-            style="flex:1;padding:9px 0;font-size:13px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;transition:all .15s">
+            style="
+              flex: 1;
+              padding: 9px 0;
+              font-size: 13px;
+              font-weight: 700;
+              border: none;
+              cursor: pointer;
+              background: var(--accent);
+              color: #fff;
+              transition: all 0.15s;
+            "
+          >
             ➕ Aggiungi
           </button>
-          <button id="tab-del-adp-btn"
+          <button
+            id="tab-del-adp-btn"
             onclick="switchAddAdpTab('elimina')"
-            style="flex:1;padding:9px 0;font-size:13px;font-weight:700;border:none;cursor:pointer;background:var(--surface2);color:var(--text2);transition:all .15s">
+            style="
+              flex: 1;
+              padding: 9px 0;
+              font-size: 13px;
+              font-weight: 700;
+              border: none;
+              cursor: pointer;
+              background: var(--surface2);
+              color: var(--text2);
+              transition: all 0.15s;
+            "
+          >
             🗑️ Elimina
           </button>
         </div>
-
         <input type="hidden" id="add-adp-cliente-id" />
         <div class="add-adp-cliente-info" id="add-adp-cliente-info"></div>
-
-        <!-- ── TAB AGGIUNGI ── -->
         <div id="tab-panel-aggiungi">
           <div class="form-group">
             <label>SELEZIONA ADEMPIMENTI DA AGGIUNGERE</label>
-            <div style="margin-bottom:6px">
-              <input class="input" id="add-adp-search"
+            <div style="margin-bottom: 6px">
+              <input
+                class="input"
+                id="add-adp-search"
                 placeholder="🔍 Cerca adempimento…"
                 oninput="filtraAddAdpList()"
-                style="font-size:12px;padding:6px 10px;width:100%;box-sizing:border-box" />
+                style="
+                  font-size: 12px;
+                  padding: 6px 10px;
+                  width: 100%;
+                  box-sizing: border-box;
+                "
+              />
             </div>
             <div
               id="add-adp-list"
@@ -1116,14 +1254,13 @@
               "
             ></div>
             <div style="margin-top: 8px">
-              <label class="flag-chip">
-                <input
+              <label class="flag-chip"
+                ><input
                   type="checkbox"
                   id="add-adp-seleziona-tutti"
                   onchange="toggleSelezionaTuttiAddAdp()"
-                />
-                <span>Seleziona/Deseleziona Tutti</span>
-              </label>
+                /><span>Seleziona/Deseleziona Tutti</span></label
+              >
             </div>
           </div>
           <div class="form-group">
@@ -1131,7 +1268,10 @@
             <input class="input" id="add-adp-anno" type="number" />
           </div>
           <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal('modal-add-adp')">
+            <button
+              class="btn btn-secondary"
+              onclick="closeModal('modal-add-adp')"
+            >
               Annulla
             </button>
             <button class="btn btn-primary" onclick="eseguiAddAdp()">
@@ -1139,16 +1279,22 @@
             </button>
           </div>
         </div>
-
-        <!-- ── TAB ELIMINA ── -->
-        <div id="tab-panel-elimina" style="display:none">
+        <div id="tab-panel-elimina" style="display: none">
           <div class="form-group">
             <label>SELEZIONA ADEMPIMENTI DA ELIMINARE</label>
-            <div style="margin-bottom:6px">
-              <input class="input" id="del-adp-search"
+            <div style="margin-bottom: 6px">
+              <input
+                class="input"
+                id="del-adp-search"
                 placeholder="🔍 Cerca adempimento…"
                 oninput="filtraDelAdpList()"
-                style="font-size:12px;padding:6px 10px;width:100%;box-sizing:border-box" />
+                style="
+                  font-size: 12px;
+                  padding: 6px 10px;
+                  width: 100%;
+                  box-sizing: border-box;
+                "
+              />
             </div>
             <div
               id="del-adp-list"
@@ -1163,45 +1309,64 @@
               "
             ></div>
             <div style="margin-top: 8px">
-              <label class="flag-chip">
-                <input
+              <label class="flag-chip"
+                ><input
                   type="checkbox"
                   id="del-adp-seleziona-tutti"
                   onchange="toggleSelezionaTuttiDelAdp()"
-                />
-                <span>Seleziona/Deseleziona Tutti</span>
-              </label>
+                /><span>Seleziona/Deseleziona Tutti</span></label
+              >
             </div>
           </div>
           <div class="form-group">
             <label>Anno</label>
-            <input class="input" id="del-adp-anno" type="number" readonly
-              style="opacity:0.6;cursor:not-allowed" />
+            <input
+              class="input"
+              id="del-adp-anno"
+              type="number"
+              readonly
+              style="opacity: 0.6; cursor: not-allowed"
+            />
           </div>
-          <div id="del-adp-avviso" style="
-            display:none;
-            padding:8px 12px;
-            background:var(--red)18;
-            border:1px solid var(--red)44;
-            border-radius:var(--r-sm);
-            font-size:12px;
-            color:var(--red);
-            margin-bottom:10px
-          ">
-            ⚠️ Verranno eliminati tutti i periodi (mesi/trimestri) dell'adempimento selezionato per questo cliente e anno.
+          <div
+            id="del-adp-avviso"
+            style="
+              display: none;
+              padding: 8px 12px;
+              background: var(--red) 18;
+              border: 1px solid var(--red) 44;
+              border-radius: var(--r-sm);
+              font-size: 12px;
+              color: var(--red);
+              margin-bottom: 10px;
+            "
+          >
+            ⚠️ Verranno eliminati tutti i periodi (mesi/trimestri)
+            dell'adempimento selezionato per questo cliente e anno.
           </div>
           <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal('modal-add-adp')">
+            <button
+              class="btn btn-secondary"
+              onclick="closeModal('modal-add-adp')"
+            >
               Annulla
             </button>
-            <button id="btn-esegui-elimina-adp" class="btn" disabled
+            <button
+              id="btn-esegui-elimina-adp"
+              class="btn"
+              disabled
               onclick="eseguiEliminaAdpCliente()"
-              style="background:var(--red);color:#fff;border-color:var(--red);opacity:0.5">
+              style="
+                background: var(--red);
+                color: #fff;
+                border-color: var(--red);
+                opacity: 0.5;
+              "
+            >
               🗑️ Elimina selezionati
             </button>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -1229,6 +1394,83 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- MODAL APPUNTO                                             -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modal-appunto">
+      <div class="modal">
+        <div class="modal-title">
+          📝 <span id="modal-appunto-title">Nuovo Appunto</span>
+        </div>
+        <input type="hidden" id="appunto-id" />
+        <div class="form-group">
+          <label>Titolo *</label>
+          <input
+            class="input"
+            id="appunto-titolo"
+            placeholder="Titolo dell'appunto"
+          />
+        </div>
+        <div class="form-group">
+          <label>Contenuto</label>
+          <textarea
+            class="input"
+            id="appunto-contenuto"
+            rows="4"
+            placeholder="Testo dell'appunto..."
+          ></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cliente associato</label>
+            <select class="select" id="appunto-cliente">
+              <option value="">-- Nessuno (appunto generale) --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Data scadenza</label>
+            <input
+              class="input"
+              id="appunto-scadenza"
+              type="text"
+              placeholder="gg/mm/aaaa"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Priorità</label>
+            <select class="select" id="appunto-priorita">
+              <option value="bassa">🟢 Bassa</option>
+              <option value="media" selected>🟡 Media</option>
+              <option value="alta">🔴 Alta</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Colore (opzionale)</label>
+            <input
+              class="input"
+              id="appunto-colore"
+              type="color"
+              value="#e8eaed"
+              style="height: 42px"
+            />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('modal-appunto')"
+          >
+            Annulla
+          </button>
+          <button class="btn btn-primary" onclick="saveAppunto()">
+            💾 Salva
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- SCRIPT (ordine di dipendenza)                           -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <script src="js/modules/core/constants.js"></script>
@@ -1238,11 +1480,12 @@
     <script src="js/modules/components/renderers.js"></script>
     <script src="js/modules/pages/dashboard.js"></script>
     <script src="js/modules/pages/clienti.js"></script>
-    <script src="js/modules/pages/scadenzario.js"></script>7
+    <script src="js/modules/pages/scadenzario.js"></script>
     <script src="js/modules/pages/scadenziario-bulk.js"></script>
     <script src="js/modules/pages/globale.js"></script>
     <script src="js/modules/pages/adempimenti.js"></script>
     <script src="js/modules/pages/tipologie.js"></script>
+    <script src="js/modules/pages/appunti.js"></script>
     <script src="js/modules/network/socket.js"></script>
     <script src="js/modules/network/mobile.js"></script>
     <script src="js/modules/network/nav.js"></script>
