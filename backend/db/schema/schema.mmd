@@ -58,6 +58,7 @@ erDiagram
         integer is_contabilita
         integer has_rate
         integer is_checkbox
+        integer is_text_only
         string rate_labels
         integer anno_validita
         integer attivo
@@ -84,9 +85,25 @@ erDiagram
         integer cont_completata
     }
 
+    appunti {
+        integer id PK
+        string titolo
+        string contenuto
+        integer id_cliente FK
+        string data_inserimento
+        string data_scadenza
+        string priorita
+        integer completato
+    }
+
+    %% Relazioni
     clienti ||--o{ adempimenti_cliente : "esegue"
     clienti ||--o{ clienti_config_annuale : "configurato in"
+    clienti ||--o{ appunti : "ha"
+    
     tipologie_cliente ||--o{ sottotipologie : "contiene"
     tipologie_cliente ||--o{ clienti_config_annuale : "definita in"
+    
     sottotipologie ||--o{ clienti_config_annuale : "definita in"
+    
     adempimenti ||--o{ adempimenti_cliente : "istanziato in"
