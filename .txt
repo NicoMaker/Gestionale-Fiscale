@@ -1,4 +1,4 @@
-creazione adempimetno di tipo testo -> per tutti i clienti testo 
+in creazione adempimento anche opzione solo testo e ha solo testo e solo quello nemmeno il da fare compeltato ecc solo testo 
 
-sezione block notes -> sezione sotto a adepimenti -> appunti 
+sezione block notes -> sezione sotto a adepimenti -> appunti altra tabella db con anche ricerca nella sezione
 
