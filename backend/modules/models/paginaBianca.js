@@ -54,7 +54,7 @@ function createPaginaBianca(data) {
   `,
     [
       data.tipo,
-      data.titolo,
+      data.titolo || "",
       data.contenuto || null,
       data.allegati || null,
       data.id_cliente || null,
@@ -71,7 +71,7 @@ function updatePaginaBianca(data) {
   `,
     [
       data.tipo,
-      data.titolo,
+      data.titolo || "",
       data.contenuto || null,
       data.allegati || null,
       data.id_cliente || null,
