@@ -85,6 +85,7 @@ erDiagram
     }
 
     clienti ||--o{ adempimenti_cliente : "esegue"
+    clienti ||--o{ clienti_config_annuale : "configurato in"
     tipologie_cliente ||--o{ sottotipologie : "contiene"
     tipologie_cliente ||--o{ clienti_config_annuale : "definita in"
     sottotipologie ||--o{ clienti_config_annuale : "definita in"
