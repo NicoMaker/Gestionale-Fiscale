@@ -41,6 +41,166 @@ function cleanupPaginaBianca() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// FUNZIONE STAMPA PER LA PAGINA BIANCA
+// ═══════════════════════════════════════════════════════════════
+function stampaPaginaBianca() {
+  // Ottieni gli appunti attualmente visualizzati
+  const container = document.getElementById("pagina-bianca-list");
+  if (!container) return;
+  
+  const appuntiHTML = container.innerHTML;
+  const titoloPagina = document.getElementById("page-title")?.textContent || "Pagina Bianca";
+  const tipoFiltro = paginaBiancaFilter.tipo === "studio" ? "🏢 Appunti Studio" : "👤 Appunti Clienti";
+  const clienteNome = (paginaBiancaFilter.id_cliente && state.clienti) 
+    ? state.clienti.find(c => c.id == paginaBiancaFilter.id_cliente)?.nome 
+    : "";
+  const filtroInfo = paginaBiancaFilter.tipo === "cliente" && clienteNome 
+    ? ` - Cliente: ${clienteNome}` 
+    : (paginaBiancaFilter.tipo === "cliente" ? " - Tutti i clienti" : "");
+  const searchTerm = paginaBiancaFilter.search ? ` - Cerca: "${paginaBiancaFilter.search}"` : "";
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Stampa - ${titoloPagina}</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        body {
+          font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+          background: white;
+          color: #1a1f2e;
+          padding: 20px;
+          line-height: 1.5;
+        }
+        .print-header {
+          text-align: center;
+          margin-bottom: 30px;
+          padding-bottom: 20px;
+          border-bottom: 2px solid #e2e8f0;
+        }
+        .print-header h1 {
+          font-size: 24px;
+          color: #1967d2;
+          margin-bottom: 8px;
+        }
+        .print-header p {
+          color: #64748b;
+          font-size: 14px;
+        }
+        .print-filters {
+          background: #f8fafc;
+          padding: 12px 16px;
+          border-radius: 8px;
+          margin-bottom: 24px;
+          font-size: 13px;
+          color: #475569;
+          border: 1px solid #e2e8f0;
+        }
+        .print-filters span {
+          font-weight: 600;
+          color: #1e293b;
+        }
+        .print-date {
+          text-align: right;
+          font-size: 12px;
+          color: #94a3b8;
+          margin-bottom: 20px;
+        }
+        .appunto-card {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          margin-bottom: 20px;
+          page-break-inside: avoid;
+          break-inside: avoid;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .appunto-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 20px;
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .appunto-tipo {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        .appunto-tipo.studio { color: #1967d2; }
+        .appunto-tipo.cliente { color: #059669; }
+        .appunto-titolo {
+          font-size: 16px;
+          font-weight: 700;
+          color: #1e293b;
+        }
+        .appunto-meta {
+          font-size: 12px;
+          color: #64748b;
+          margin-top: 4px;
+        }
+        .appunto-contenuto {
+          padding: 20px;
+          font-size: 14px;
+          color: #334155;
+          line-height: 1.6;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+        .appunto-allegati {
+          padding: 12px 20px;
+          background: #fef3c7;
+          border-top: 1px solid #fde68a;
+          font-size: 12px;
+          color: #92400e;
+        }
+        .no-data {
+          text-align: center;
+          padding: 60px;
+          color: #94a3b8;
+        }
+        @media print {
+          body {
+            padding: 0;
+            margin: 0;
+          }
+          .appunto-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          .no-print {
+            display: none;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="print-header">
+        <h1>📝 ${titoloPagina}</h1>
+        <p>${tipoFiltro}${filtroInfo}${searchTerm}</p>
+      </div>
+      <div class="print-date">
+        Data stampa: ${new Date().toLocaleString('it-IT')}
+      </div>
+      ${appuntiHTML || '<div class="no-data">Nessun appunto da stampare</div>'}
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.print();
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SETUP SOCKET LISTENERS
 // ═══════════════════════════════════════════════════════════════
 function setupPaginaBiancaSocketListeners() {
@@ -96,7 +256,6 @@ function filterClientiSelect(searchTerm) {
   
   options.forEach(opt => {
     if (opt.value === "") {
-      // L'opzione "Tutti i clienti" rimane sempre visibile
       opt.style.display = "";
       opt.style.backgroundColor = "";
       return;
@@ -112,7 +271,6 @@ function filterClientiSelect(searchTerm) {
     }
   });
   
-  // Se c'è un solo risultato e il campo di ricerca non è vuoto, selezionalo automaticamente
   if (visibleCount === 1 && searchLower !== "" && select.value === "") {
     for (let i = 0; i < options.length; i++) {
       const opt = options[i];
@@ -199,7 +357,6 @@ function filterModalClientiSelect() {
     }
   });
   
-  // Se c'è un solo risultato e il campo di ricerca non è vuoto, selezionalo automaticamente
   if (visibleCount === 1 && searchTerm !== "" && select.value === "") {
     for (let i = 0; i < options.length; i++) {
       const opt = options[i];
@@ -267,9 +424,14 @@ function renderPaginaBiancaPage() {
           <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">📝 Pagina Bianca</h1>
           <p style="color: var(--text2); font-size: 14px; margin-top: 4px;">Appunti liberi, promemoria e note personali</p>
         </div>
-        <button class="btn btn-primary" onclick="openPaginaBiancaEditor()" style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 18px;">✏️</span> Nuovo Appunto
-        </button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-print btn-sm" onclick="stampaPaginaBianca()" title="Stampa pagina" style="display: flex; align-items: center; gap: 6px;">
+            🖨️ Stampa
+          </button>
+          <button class="btn btn-primary" onclick="openPaginaBiancaEditor()" style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">✏️</span> Nuovo Appunto
+          </button>
+        </div>
       </div>
 
       <div class="filtri-avanzati" style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
@@ -312,7 +474,6 @@ function setPaginaBiancaTipo(tipo) {
     paginaBiancaFilter.id_cliente = "";
     paginaBiancaClientiSearchTerm = "";
   } else {
-    // Quando si passa a "Cliente", resetta la ricerca per mostrare tutti i clienti
     paginaBiancaClientiSearchTerm = "";
   }
   renderPaginaBiancaPage();
@@ -660,3 +821,4 @@ window.onPaginaBiancaClientiSearch = onPaginaBiancaClientiSearch;
 window.onPaginaBiancaClienteSelectChange = onPaginaBiancaClienteSelectChange;
 window.filterModalClientiSelect = filterModalClientiSelect;
 window.onModalClientiSearchInput = onModalClientiSearchInput;
+window.stampaPaginaBianca = stampaPaginaBianca;
