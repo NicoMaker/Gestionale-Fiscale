@@ -195,13 +195,6 @@ function initNav() {
   });
 
   document.querySelectorAll(".modal-overlay").forEach((overlay) => {
-    overlay.addEventListener("click", (e) => {
-      const filtroPanel = e.target.closest(
-        '.tip-filtro-panel, #tip-filtro-panel, #dash-tip-filtro-panel, #glob-tip-filtro-panel, [id*="tip-filtro-container"], .tip-percorso-chip, .tip-gruppo-header, .tip-btn-all, .tip-btn-none',
-      );
-      if (e.target === overlay && !filtroPanel)
-        overlay.classList.remove("open");
-    });
   });
 
   document.addEventListener("keydown", (e) => {
