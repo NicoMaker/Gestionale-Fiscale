@@ -194,9 +194,6 @@ function initNav() {
     scaricaDatabase();
   });
 
-  document.querySelectorAll(".modal-overlay").forEach((overlay) => {
-  });
-
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape")
       document
