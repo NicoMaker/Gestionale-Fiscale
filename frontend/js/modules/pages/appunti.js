@@ -143,11 +143,16 @@ function renderAppuntiTabella(appunti) {
 }
 
 function filterAppuntiClientiSelect() {
-  const q = (document.getElementById("appunti-search-cliente")?.value || "").toLowerCase().trim();
+  const q = (document.getElementById("appunti-search-cliente")?.value || "")
+    .toLowerCase()
+    .trim();
   const sel = document.getElementById("appunti-filtro-cliente");
   if (!sel) return;
   Array.from(sel.options).forEach((opt) => {
-    if (opt.value === "") { opt.style.display = ""; return; }
+    if (opt.value === "") {
+      opt.style.display = "";
+      return;
+    }
     opt.style.display = opt.text.toLowerCase().includes(q) ? "" : "none";
   });
   // Se la selezione attiva è nascosta, torna a "Tutti" e ricarica
@@ -158,7 +163,9 @@ function filterAppuntiClientiSelect() {
   }
   // Auto-seleziona se rimane solo un risultato
   if (q !== "") {
-    const visibili = Array.from(sel.options).filter(o => o.value !== "" && o.style.display !== "none");
+    const visibili = Array.from(sel.options).filter(
+      (o) => o.value !== "" && o.style.display !== "none",
+    );
     if (visibili.length === 1 && sel.value === "") {
       sel.value = visibili[0].value;
       filterAppunti();
@@ -167,16 +174,23 @@ function filterAppuntiClientiSelect() {
 }
 
 function filterAppuntiModalClientiSelect() {
-  const q = (document.getElementById("appunto-cliente-search")?.value || "").toLowerCase().trim();
+  const q = (document.getElementById("appunto-cliente-search")?.value || "")
+    .toLowerCase()
+    .trim();
   const sel = document.getElementById("appunto-cliente");
   if (!sel) return;
   Array.from(sel.options).forEach((opt) => {
-    if (opt.value === "") { opt.style.display = ""; return; }
+    if (opt.value === "") {
+      opt.style.display = "";
+      return;
+    }
     opt.style.display = opt.text.toLowerCase().includes(q) ? "" : "none";
   });
   // Auto-seleziona se rimane solo un risultato
   if (q !== "") {
-    const visibili = Array.from(sel.options).filter(o => o.value !== "" && o.style.display !== "none");
+    const visibili = Array.from(sel.options).filter(
+      (o) => o.value !== "" && o.style.display !== "none",
+    );
     if (visibili.length === 1 && sel.value === "") {
       sel.value = visibili[0].value;
     }
@@ -214,7 +228,8 @@ function openNuovoAppunto() {
     searchEl.id = "appunto-cliente-search";
     searchEl.className = "input";
     searchEl.placeholder = "🔍 Cerca cliente...";
-    searchEl.style.cssText = "margin-bottom:4px;font-size:13px;padding:6px 10px";
+    searchEl.style.cssText =
+      "margin-bottom:4px;font-size:13px;padding:6px 10px";
     searchEl.setAttribute("oninput", "filterAppuntiModalClientiSelect()");
     clienteSel.parentNode.insertBefore(searchEl, clienteSel);
   }
@@ -225,7 +240,7 @@ function openNuovoAppunto() {
         .map((c) => `<option value="${c.id}">${escAttr(c.nome)}</option>`)
         .join("");
     // Ripristina visibilità opzioni
-    Array.from(clienteSel.options).forEach(o => o.style.display = "");
+    Array.from(clienteSel.options).forEach((o) => (o.style.display = ""));
   }
 
   const scadenzaInput = document.getElementById("appunto-scadenza");
@@ -263,7 +278,8 @@ function openAppunto(id) {
       searchEl.id = "appunto-cliente-search";
       searchEl.className = "input";
       searchEl.placeholder = "🔍 Cerca cliente...";
-      searchEl.style.cssText = "margin-bottom:4px;font-size:13px;padding:6px 10px";
+      searchEl.style.cssText =
+        "margin-bottom:4px;font-size:13px;padding:6px 10px";
       searchEl.setAttribute("oninput", "filterAppuntiModalClientiSelect()");
       clienteSel.parentNode.insertBefore(searchEl, clienteSel);
     }
@@ -276,7 +292,7 @@ function openAppunto(id) {
               `<option value="${c.id}" ${c.id == data.id_cliente ? "selected" : ""}>${escAttr(c.nome)}</option>`,
           )
           .join("");
-      Array.from(clienteSel.options).forEach(o => o.style.display = "");
+      Array.from(clienteSel.options).forEach((o) => (o.style.display = ""));
     }
 
     const scadenzaInput = document.getElementById("appunto-scadenza");

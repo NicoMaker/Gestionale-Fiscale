@@ -136,7 +136,9 @@ function _aggiornaGlobPanelVisibility() {
   if (!container) return;
   container.style.display = _globTipFiltroPanelOpen ? "block" : "none";
   // Impedisce che i click dentro il pannello salgano all'header e lo chiudano
-  container.onclick = function(e) { e.stopPropagation(); };
+  container.onclick = function (e) {
+    e.stopPropagation();
+  };
   var btn = document.getElementById("glob-tip-filtro-toggle-btn");
   if (btn) {
     btn.innerHTML = _globTipFiltroPanelOpen
