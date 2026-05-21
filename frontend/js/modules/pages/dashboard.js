@@ -108,7 +108,8 @@ function buildDashboardShell(stats) {
     window.addEventListener("filtriTipologieAggiornati", function (e) {
       // Verifica che siamo effettivamente nella dashboard prima di aggiornare
       if (document.getElementById("dash-adp-grid")) {
-        _dashTipFiltroPanelOpen = e.detail.pannelloAperto;
+        // NON sovrascrivere _dashTipFiltroPanelOpen con pannelloAperto di clienti.js:
+        // i due pannelli sono indipendenti e hanno stati separati.
         _refreshDashTipFiltroPanel();
         _aggiornaDashTipFiltroCounter();
         if (state.dashStats) updateDashboardContent(state.dashStats);

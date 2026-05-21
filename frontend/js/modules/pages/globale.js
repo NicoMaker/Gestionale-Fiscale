@@ -135,6 +135,8 @@ function _aggiornaGlobPanelVisibility() {
   var container = document.getElementById("glob-tip-filtro-container");
   if (!container) return;
   container.style.display = _globTipFiltroPanelOpen ? "block" : "none";
+  // Impedisce che i click dentro il pannello salgano all'header e lo chiudano
+  container.onclick = function(e) { e.stopPropagation(); };
   var btn = document.getElementById("glob-tip-filtro-toggle-btn");
   if (btn) {
     btn.innerHTML = _globTipFiltroPanelOpen
@@ -393,7 +395,8 @@ function renderGlobalePage() {
   window.addEventListener("filtriTipologieAggiornati", function (e) {
     // Verifica che siamo effettivamente nella vista globale prima di aggiornare
     if (document.getElementById("glob-tip-filtro-container")) {
-      _globTipFiltroPanelOpen = e.detail.pannelloAperto;
+      // NON sovrascrivere _globTipFiltroPanelOpen con pannelloAperto di clienti.js:
+      // i due pannelli sono indipendenti e hanno stati separati.
       // Aggiorna solo il contatore, non fare refresh completo del pannello
       _aggiornaGlobTipFiltroCounter();
       if (state.scadGlobale) renderGlobaleTabella(state.scadGlobale);
@@ -827,7 +830,7 @@ function renderGlobaleTabella(rawData) {
       "</div>" +
       '<div id="glob-tip-filtro-container" style="display:' +
       (_globTipFiltroPanelOpen ? "block" : "none") +
-      ';margin-top:8px">' +
+      ';margin-top:8px" onclick="event.stopPropagation()">' +
       renderTipologieFiltroPanel() +
       "</div>" +
       "</div>";
