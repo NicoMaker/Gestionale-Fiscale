@@ -324,13 +324,27 @@ function renderClientiSelectWithSearch() {
 
   wrapper.innerHTML = `
     <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cliente</label>
-    <input type="text" id="pb-cliente-search-input" class="input" placeholder="🔍 Cerca cliente..."
-      style="margin-top: 4px; font-size: 12px; padding: 5px 10px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;"
-      oninput="onPaginaBiancaClientiSearch()">
-    <select id="pb-filtro-cliente-select" class="select" style="margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0;" onchange="onPaginaBiancaClienteSelectChange()">
-      <option value="">-- Tutti i clienti --</option>
-      ${state.clienti.map((c) => `<option value="${c.id}" ${currentValue == c.id ? "selected" : ""}>${escAttr(c.nome)} (${c.tipologia_codice || "-"})</option>`).join("")}
-    </select>
+    <div style="position: relative;">
+      <input type="text" 
+        id="pb-cliente-search-input" 
+        class="input" 
+        placeholder="🔍 Cerca cliente..." 
+        style="margin-bottom: 4px; padding: 8px 12px; font-size: 13px;"
+        oninput="onPaginaBiancaClientiSearch()"
+        value="${escAttr(paginaBiancaClientiSearchTerm)}">
+      <select id="pb-filtro-cliente-select" class="select" style="margin-top: 0px;" onchange="onPaginaBiancaClienteSelectChange()">
+        <option value="">-- Tutti i clienti --</option>
+        ${state.clienti
+          .map(
+            (c) => `
+          <option value="${c.id}" ${currentValue == c.id ? "selected" : ""}>
+            ${escAttr(c.nome)} (${c.tipologia_codice || "-"})
+          </option>
+        `,
+          )
+          .join("")}
+      </select>
+    </div>
   `;
 
   if (paginaBiancaClientiSearchTerm) {
@@ -403,17 +417,31 @@ function renderPaginaBiancaPage() {
     return;
   }
 
-  // Costruisci l'HTML del filtro clienti
+  // Costruisci l'HTML del filtro clienti con ricerca
   const clientiFilterHtml = `
     <div id="pb-cliente-select-wrapper" style="min-width: 260px; ${paginaBiancaFilter.tipo !== "cliente" ? "display: none;" : ""}">
       <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cliente</label>
-      <input type="text" id="pb-cliente-search-input" class="input" placeholder="🔍 Cerca cliente..."
-        style="margin-top: 4px; font-size: 12px; padding: 5px 10px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;"
-        oninput="onPaginaBiancaClientiSearch()">
-      <select id="pb-filtro-cliente-select" class="select" style="margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0;" onchange="onPaginaBiancaClienteSelectChange()">
-        <option value="">-- Tutti i clienti --</option>
-        ${state.clienti.map((c) => `<option value="${c.id}" ${paginaBiancaFilter.id_cliente == c.id ? "selected" : ""}>${escAttr(c.nome)} (${c.tipologia_codice || "-"})</option>`).join("")}
-      </select>
+      <div style="position: relative;">
+        <input type="text" 
+          id="pb-cliente-search-input" 
+          class="input" 
+          placeholder="🔍 Cerca cliente..." 
+          style="margin-bottom: 4px; padding: 8px 12px; font-size: 13px;"
+          oninput="onPaginaBiancaClientiSearch()"
+          value="${escAttr(paginaBiancaClientiSearchTerm)}">
+        <select id="pb-filtro-cliente-select" class="select" style="margin-top: 0px;" onchange="onPaginaBiancaClienteSelectChange()">
+          <option value="">-- Tutti i clienti --</option>
+          ${state.clienti
+            .map(
+              (c) => `
+            <option value="${c.id}" ${paginaBiancaFilter.id_cliente == c.id ? "selected" : ""}>
+              ${escAttr(c.nome)} (${c.tipologia_codice || "-"})
+            </option>
+          `,
+            )
+            .join("")}
+        </select>
+      </div>
     </div>
   `;
 

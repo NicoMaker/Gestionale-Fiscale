@@ -52,13 +52,18 @@ function showPaginaBiancaModal() {
 
         <div id="pb-cliente-group" class="form-group" style="display: none;">
           <label>Cliente Associato <span class="required-star">*</span></label>
-          <input type="text" id="pb-modal-cliente-search" class="input" placeholder="🔍 Cerca cliente..."
-            style="margin-top: 4px; font-size: 12px; padding: 5px 10px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;"
-            oninput="filterModalClientiSelect()">
-          <select id="pb-id-cliente" class="select" style="margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0;">
-            <option value="">-- Seleziona un cliente --</option>
-            ${state.clienti ? state.clienti.map((c) => `<option value="${c.id}">${escAttr(c.nome)} (${c.tipologia_codice || "-"})</option>`).join("") : ""}
-          </select>
+          <div style="position: relative;">
+            <input type="text" 
+              id="pb-modal-cliente-search" 
+              class="input" 
+              placeholder="🔍 Cerca cliente..." 
+              style="margin-bottom: 4px;"
+              oninput="filterModalClientiSelect()">
+            <select id="pb-id-cliente" class="select" style="margin-top: 0px; height: 160px; overflow-y: scroll;" size="6">
+              <option value="">-- Seleziona un cliente --</option>
+              ${state.clienti ? state.clienti.map((c) => `<option value="${c.id}">${escAttr(c.nome)} (${c.tipologia_codice || "-"})</option>`).join("") : ""}
+            </select>
+          </div>
         </div>
 
         <div class="form-group">
