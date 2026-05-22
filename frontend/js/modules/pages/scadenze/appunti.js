@@ -60,14 +60,13 @@ function renderAppuntiTopbar() {
       <option value="media">🟡 Media</option>
       <option value="bassa">🟢 Bassa</option>
     </select>
-    <div style="display:flex;flex-direction:column;gap:3px;min-width:200px">
-      <input class="input" id="appunti-search-cliente" placeholder="🔍 Cerca cliente..." oninput="filterAppuntiClientiSelect()" style="font-size:13px;padding:6px 10px">
-      <select class="select" id="appunti-filtro-cliente" onchange="filterAppunti()" style="margin-top:0">
+    <div style="display:flex;flex-direction:column;gap:2px;min-width:200px">
+      <input class="input" id="appunti-search-cliente" placeholder="🔍 Cerca cliente..." oninput="filterAppuntiClientiSelect()" style="font-size:12px;padding:5px 10px;border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:none">
+      <select class="select" id="appunti-filtro-cliente" onchange="filterAppunti()" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
         <option value="">👥 Tutti i clienti</option>
         ${state.clienti.map((c) => `<option value="${c.id}">${escAttr(c.nome)}</option>`).join("")}
       </select>
     </div>
-    <button class="btn btn-primary" onclick="openNuovoAppunto()">+ Scadenza</button>
     <button class="btn btn-print btn-sm" onclick="window.print()">🖨️</button>
   `;
 }
@@ -142,59 +141,29 @@ function renderAppuntiTabella(appunti) {
     </div>`;
 }
 
+
 function filterAppuntiClientiSelect() {
-  const q = (document.getElementById("appunti-search-cliente")?.value || "")
-    .toLowerCase()
-    .trim();
+  const q = (document.getElementById("appunti-search-cliente")?.value || "").toLowerCase().trim();
   const sel = document.getElementById("appunti-filtro-cliente");
   if (!sel) return;
   Array.from(sel.options).forEach((opt) => {
-    if (opt.value === "") {
-      opt.style.display = "";
-      return;
-    }
-    opt.style.display = opt.text.toLowerCase().includes(q) ? "" : "none";
+    opt.style.display = (opt.value === "" || opt.text.toLowerCase().includes(q)) ? "" : "none";
   });
-  // Se la selezione attiva è nascosta, torna a "Tutti" e ricarica
-  const cur = sel.options[sel.selectedIndex];
-  if (cur && cur.style.display === "none") {
+  if (sel.options[sel.selectedIndex]?.style.display === "none") {
     sel.value = "";
     filterAppunti();
   }
-  // Auto-seleziona se rimane solo un risultato
-  if (q !== "") {
-    const visibili = Array.from(sel.options).filter(
-      (o) => o.value !== "" && o.style.display !== "none",
-    );
-    if (visibili.length === 1 && sel.value === "") {
-      sel.value = visibili[0].value;
-      filterAppunti();
-    }
-  }
+  sel.scrollTop = 0;
 }
 
 function filterAppuntiModalClientiSelect() {
-  const q = (document.getElementById("appunto-cliente-search")?.value || "")
-    .toLowerCase()
-    .trim();
+  const q = (document.getElementById("appunto-cliente-search")?.value || "").toLowerCase().trim();
   const sel = document.getElementById("appunto-cliente");
   if (!sel) return;
   Array.from(sel.options).forEach((opt) => {
-    if (opt.value === "") {
-      opt.style.display = "";
-      return;
-    }
-    opt.style.display = opt.text.toLowerCase().includes(q) ? "" : "none";
+    opt.style.display = (opt.value === "" || opt.text.toLowerCase().includes(q)) ? "" : "none";
   });
-  // Auto-seleziona se rimane solo un risultato
-  if (q !== "") {
-    const visibili = Array.from(sel.options).filter(
-      (o) => o.value !== "" && o.style.display !== "none",
-    );
-    if (visibili.length === 1 && sel.value === "") {
-      sel.value = visibili[0].value;
-    }
-  }
+  sel.scrollTop = 0;
 }
 
 function filterAppunti() {
@@ -221,25 +190,13 @@ function openNuovoAppunto() {
 
   const clienteSel = document.getElementById("appunto-cliente");
   const clienteSearch = document.getElementById("appunto-cliente-search");
-  if (clienteSearch) clienteSearch.value = "";
-  // Inserisce il campo cerca sopra la select se non esiste ancora
-  if (!clienteSearch && clienteSel) {
-    const searchEl = document.createElement("input");
-    searchEl.id = "appunto-cliente-search";
-    searchEl.className = "input";
-    searchEl.placeholder = "🔍 Cerca cliente...";
-    searchEl.style.cssText =
-      "margin-bottom:4px;font-size:13px;padding:6px 10px";
-    searchEl.setAttribute("oninput", "filterAppuntiModalClientiSelect()");
-    clienteSel.parentNode.insertBefore(searchEl, clienteSel);
-  }
+  if (clienteSearch) { clienteSearch.value = ""; }
   if (clienteSel && state.clienti) {
     clienteSel.innerHTML =
       `<option value="">-- Nessuno (appunto generale) --</option>` +
       state.clienti
         .map((c) => `<option value="${c.id}">${escAttr(c.nome)}</option>`)
         .join("");
-    // Ripristina visibilità opzioni
     Array.from(clienteSel.options).forEach((o) => (o.style.display = ""));
   }
 
@@ -271,26 +228,12 @@ function openAppunto(id) {
 
     const clienteSel = document.getElementById("appunto-cliente");
     const clienteSearch = document.getElementById("appunto-cliente-search");
-    if (clienteSearch) clienteSearch.value = "";
-    // Inserisce il campo cerca sopra la select se non esiste ancora
-    if (!document.getElementById("appunto-cliente-search") && clienteSel) {
-      const searchEl = document.createElement("input");
-      searchEl.id = "appunto-cliente-search";
-      searchEl.className = "input";
-      searchEl.placeholder = "🔍 Cerca cliente...";
-      searchEl.style.cssText =
-        "margin-bottom:4px;font-size:13px;padding:6px 10px";
-      searchEl.setAttribute("oninput", "filterAppuntiModalClientiSelect()");
-      clienteSel.parentNode.insertBefore(searchEl, clienteSel);
-    }
+    if (clienteSearch) { clienteSearch.value = ""; }
     if (clienteSel && state.clienti) {
       clienteSel.innerHTML =
         `<option value="">-- Nessuno (appunto generale) --</option>` +
         state.clienti
-          .map(
-            (c) =>
-              `<option value="${c.id}" ${c.id == data.id_cliente ? "selected" : ""}>${escAttr(c.nome)}</option>`,
-          )
+          .map((c) => `<option value="${c.id}" ${c.id == data.id_cliente ? "selected" : ""}>${escAttr(c.nome)}</option>`)
           .join("");
       Array.from(clienteSel.options).forEach((o) => (o.style.display = ""));
     }
@@ -455,10 +398,10 @@ if (typeof socket !== "undefined") {
 }
 
 // Esposizioni globali
-window.filterAppuntiClientiSelect = filterAppuntiClientiSelect;
-window.filterAppuntiModalClientiSelect = filterAppuntiModalClientiSelect;
 window.renderAppuntiPage = renderAppuntiPage;
 window.filterAppunti = filterAppunti;
+window.filterAppuntiClientiSelect = filterAppuntiClientiSelect;
+window.filterAppuntiModalClientiSelect = filterAppuntiModalClientiSelect;
 window.openNuovoAppunto = openNuovoAppunto;
 window.openAppunto = openAppunto;
 window.saveAppunto = saveAppunto;
