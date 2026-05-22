@@ -295,6 +295,9 @@ function filterClientiSelect(searchTerm) {
       }
     }
   }
+
+  // Riporta sempre lo scroll della lista in cima dopo il filtraggio
+  select.scrollTop = 0;
 }
 
 function onPaginaBiancaClientiSearch() {
@@ -384,6 +387,9 @@ function filterModalClientiSelect() {
       }
     }
   }
+
+  // Riporta sempre lo scroll della lista in cima dopo il filtraggio
+  select.scrollTop = 0;
 }
 
 function onModalClientiSearchInput() {
@@ -595,4 +601,3 @@ function renderPaginaBiancaList(appunti) {
 
   container.innerHTML = html;
 }
-

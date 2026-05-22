@@ -59,7 +59,7 @@ function showPaginaBiancaModal() {
               placeholder="🔍 Cerca cliente..." 
               style="margin-bottom: 4px;"
               oninput="filterModalClientiSelect()">
-            <select id="pb-id-cliente" class="select" style="margin-top: 0px;" size="6">
+            <select id="pb-id-cliente" class="select" style="margin-top: 0px; height: 160px; overflow-y: scroll;" size="6">
               <option value="">-- Seleziona un cliente --</option>
               ${state.clienti ? state.clienti.map((c) => `<option value="${c.id}">${escAttr(c.nome)} (${c.tipologia_codice || "-"})</option>`).join("") : ""}
             </select>
