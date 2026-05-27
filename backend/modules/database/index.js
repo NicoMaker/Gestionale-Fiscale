@@ -140,6 +140,18 @@ function migrateDB() {
     `DROP TABLE adempimenti`,
     `ALTER TABLE adempimenti_new RENAME TO adempimenti`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_adempimenti_codice_attivo ON adempimenti(codice) WHERE attivo = 1`,
+
+    // ── CESTINO ──
+    `CREATE TABLE IF NOT EXISTS cestino (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tabella TEXT NOT NULL,
+      record_id INTEGER,
+      dati_json TEXT NOT NULL,
+      eliminato_da TEXT DEFAULT 'utente',
+      data_eliminazione TEXT DEFAULT (datetime('now'))
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_cestino_tabella ON cestino(tabella)`,
+    `CREATE INDEX IF NOT EXISTS idx_cestino_data ON cestino(data_eliminazione DESC)`,
   ];
 
   migrations.forEach((sql) => {

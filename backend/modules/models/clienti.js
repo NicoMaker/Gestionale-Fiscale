@@ -4,6 +4,7 @@ const {
   queryAll,
   queryOne,
 } = require("../database");
+const { spostaInCestino } = require("./cestino");
 
 function getConfigClientePerAnno(id_cliente, anno) {
   const sql = `
@@ -537,6 +538,11 @@ function deleteCliente(id) {
     throw new Error(
       `Impossibile eliminare il cliente: ha ${count.cnt} adempimenti associati.`,
     );
+  }
+  // Salva nel cestino prima di disattivare
+  const cliente = queryOne(`SELECT * FROM clienti WHERE id = ?`, [id]);
+  if (cliente) {
+    spostaInCestino({ tabella: "clienti", record_id: id, dati_json: cliente });
   }
   runQuery(`UPDATE clienti SET attivo = 0 WHERE id = ?`, [id]);
 }

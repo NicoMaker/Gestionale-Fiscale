@@ -1,4 +1,5 @@
 const { runQuery, queryAll, queryOne } = require("../database");
+const { spostaInCestino } = require("./cestino");
 
 function getAdempimenti() {
   return queryAll(`SELECT * FROM adempimenti WHERE attivo = 1 ORDER BY nome`);
@@ -87,6 +88,10 @@ function deleteAdempimento(id) {
     throw new Error(
       `Impossibile eliminare l'adempimento: è assegnato a ${count.cnt} clienti.`,
     );
+  }
+  const adp = queryOne(`SELECT * FROM adempimenti WHERE id = ?`, [id]);
+  if (adp) {
+    spostaInCestino({ tabella: "adempimenti", record_id: id, dati_json: adp });
   }
   runQuery(`UPDATE adempimenti SET attivo = 0 WHERE id = ?`, [id]);
 }

@@ -4,6 +4,7 @@ const {
   queryAll,
   queryOne,
 } = require("../database");
+const { spostaInCestino } = require("./cestino");
 
 function getPaginaBianca(filtri = {}) {
   let sql = `
@@ -81,6 +82,10 @@ function updatePaginaBianca(data) {
 }
 
 function deletePaginaBianca(id) {
+  const nota = queryOne(`SELECT * FROM pagina_bianca WHERE id = ?`, [id]);
+  if (nota) {
+    spostaInCestino({ tabella: "pagina_bianca", record_id: id, dati_json: nota });
+  }
   runQuery(`DELETE FROM pagina_bianca WHERE id = ?`, [id]);
 }
 

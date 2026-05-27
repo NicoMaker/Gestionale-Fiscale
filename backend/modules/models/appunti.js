@@ -4,6 +4,7 @@ const {
   queryAll,
   queryOne,
 } = require("../database");
+const { spostaInCestino } = require("./cestino");
 
 function getAppunti(filtri = {}) {
   let sql = `
@@ -85,6 +86,10 @@ function updateAppunto(data) {
 }
 
 function deleteAppunto(id) {
+  const appunto = queryOne(`SELECT * FROM appunti WHERE id = ?`, [id]);
+  if (appunto) {
+    spostaInCestino({ tabella: "appunti", record_id: id, dati_json: appunto });
+  }
   runQuery(`DELETE FROM appunti WHERE id = ?`, [id]);
 }
 

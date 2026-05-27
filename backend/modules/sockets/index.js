@@ -4,7 +4,8 @@ const scadenzarioModel = require("../models/scadenzario");
 const statsModel = require("../models/stats");
 const appuntiModel = require("../models/appunti");
 const paginaBiancaModel = require("../models/paginaBianca");
-const { queryAll, queryOne } = require("../database");
+const cestinoModel = require("../models/cestino");
+const { queryAll, queryOne, runQuery } = require("../database");
 
 module.exports = function setupSocketHandlers(io) {
   io.on("connection", (socket) => {
@@ -671,6 +672,94 @@ module.exports = function setupSocketHandlers(io) {
           success: false,
           error: e.message,
         });
+      }
+    });
+
+    // ========== CESTINO ==========
+    socket.on("get:cestino", (filtri = {}) => {
+      try {
+        // Pulizia automatica elementi scaduti (>30gg)
+        cestinoModel.eliminaScadutiCestino();
+        const data = cestinoModel.getCestino(filtri);
+        socket.emit("res:cestino", { success: true, data });
+      } catch (e) {
+        socket.emit("res:cestino", { success: false, error: e.message });
+      }
+    });
+
+    socket.on("ripristina:cestino", ({ id }) => {
+      try {
+        const item = cestinoModel.getCestinoItem(id);
+        if (!item) throw new Error("Elemento non trovato nel cestino");
+
+        const dati = item.dati;
+        let ripristinato = false;
+
+        if (item.tabella === "clienti") {
+          // Riattiva il cliente
+          runQuery(`UPDATE clienti SET attivo = 1, updated_at = datetime('now') WHERE id = ?`, [item.record_id]);
+          ripristinato = true;
+          io.emit("broadcast:clienti_updated");
+        } else if (item.tabella === "adempimenti") {
+          // Riattiva l'adempimento
+          runQuery(`UPDATE adempimenti SET attivo = 1 WHERE id = ?`, [item.record_id]);
+          ripristinato = true;
+          io.emit("broadcast:adempimenti_updated");
+        } else if (item.tabella === "appunti") {
+          // Reinserisce l'appunto
+          runQuery(
+            `INSERT OR REPLACE INTO appunti (id, titolo, contenuto, id_cliente, data_inserimento, data_scadenza, priorita, completato)
+             VALUES (?,?,?,?,?,?,?,?)`,
+            [dati.id, dati.titolo, dati.contenuto || null, dati.id_cliente || null,
+             dati.data_inserimento, dati.data_scadenza || null, dati.priorita || "media", dati.completato || 0]
+          );
+          ripristinato = true;
+          io.emit("broadcast:appunti_updated");
+        } else if (item.tabella === "pagina_bianca") {
+          // Reinserisce la nota
+          runQuery(
+            `INSERT OR REPLACE INTO pagina_bianca (id, tipo, titolo, contenuto, allegati, id_cliente, data_creazione, data_modifica)
+             VALUES (?,?,?,?,?,?,?,?)`,
+            [dati.id, dati.tipo, dati.titolo || "", dati.contenuto || null,
+             dati.allegati || null, dati.id_cliente || null, dati.data_creazione, dati.data_modifica]
+          );
+          ripristinato = true;
+          io.emit("broadcast:pagina_bianca_updated");
+        }
+
+        if (ripristinato) {
+          cestinoModel.eliminaDalCestino(id);
+          io.emit("broadcast:cestino_updated");
+          socket.emit("res:ripristina:cestino", { success: true });
+          socket.emit("notify", { type: "success", msg: "Elemento ripristinato con successo" });
+        } else {
+          throw new Error("Tabella non supportata per il ripristino: " + item.tabella);
+        }
+      } catch (e) {
+        socket.emit("res:ripristina:cestino", { success: false, error: e.message });
+        socket.emit("notify", { type: "error", msg: e.message });
+      }
+    });
+
+    socket.on("delete:cestino_item", ({ id }) => {
+      try {
+        cestinoModel.eliminaDalCestino(id);
+        io.emit("broadcast:cestino_updated");
+        socket.emit("res:delete:cestino_item", { success: true });
+        socket.emit("notify", { type: "success", msg: "Elemento eliminato definitivamente" });
+      } catch (e) {
+        socket.emit("res:delete:cestino_item", { success: false, error: e.message });
+      }
+    });
+
+    socket.on("svuota:cestino", () => {
+      try {
+        const cnt = cestinoModel.svuotaCestino();
+        io.emit("broadcast:cestino_updated");
+        socket.emit("res:svuota:cestino", { success: true, eliminati: cnt });
+        socket.emit("notify", { type: "success", msg: `Cestino svuotato (${cnt} elementi eliminati)` });
+      } catch (e) {
+        socket.emit("res:svuota:cestino", { success: false, error: e.message });
       }
     });
 

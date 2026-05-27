@@ -56,6 +56,7 @@ function renderPage(page) {
     tipologie: "Tipologie Clienti",
     appunti: "Scadenze Studio",
     pagina_bianca: "Note",
+    cestino: "🗑️ Cestino",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
 
@@ -115,6 +116,15 @@ function renderPage(page) {
       console.error("❌ renderPaginaBiancaPage non definita!");
       document.getElementById("content").innerHTML =
         `<div class="empty"><div class="empty-icon">❌</div><p>Errore: modulo pagina bianca non caricato</p><button class="btn btn-primary" onclick="location.reload()">⟳ Ricarica</button></div>`;
+    }
+  } else if (page === "cestino") {
+    document.getElementById("topbar-actions").innerHTML = "";
+    if (typeof renderCestinoPage === "function") {
+      renderCestinoPage();
+    } else {
+      console.error("❌ renderCestinoPage non definita!");
+      document.getElementById("content").innerHTML =
+        `<div class="empty"><div class="empty-icon">❌</div><p>Errore: modulo cestino non caricato</p><button class="btn btn-primary" onclick="location.reload()">⟳ Ricarica</button></div>`;
     }
   }
 }
