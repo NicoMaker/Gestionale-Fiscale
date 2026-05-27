@@ -1,7 +1,0 @@
-impostami che se elimino i dati dalla pagina mi fanno in una ytabella cestino nella tabelle cesrtino c'è anche il reiposta dove timette i dati da dove elimianti se i dati sono rpesenti da 30 giorni nel cestino elimianti 
-
-se i dati elimnati da prpgramma princopale allora vanno in cestino e da cestino puoi ripristinare al programa principale criteri di elimaznione non possiible che ci sono già alsciali 
-
-e anche impostazione che posso eliminare i dati dal cestino prima dei 30 giorni
-
-sistema tutti i file 
