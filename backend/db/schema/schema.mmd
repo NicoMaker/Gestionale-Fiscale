@@ -110,15 +110,24 @@ erDiagram
         string data_modifica
     }
 
+    cestino {
+        integer id PK
+        string tabella
+        integer record_id
+        string dati_json
+        string eliminato_da
+        string data_eliminazione
+    }
+
     %% Relazioni
     clienti ||--o{ adempimenti_cliente : "esegue"
     clienti ||--o{ clienti_config_annuale : "configurato in"
     clienti ||--o{ appunti : "ha"
     clienti ||--o{ pagina_bianca : "ha"
-    
+
     tipologie_cliente ||--o{ sottotipologie : "contiene"
     tipologie_cliente ||--o{ clienti_config_annuale : "definita in"
-    
+
     sottotipologie ||--o{ clienti_config_annuale : "definita in"
-    
+
     adempimenti ||--o{ adempimenti_cliente : "istanziato in"

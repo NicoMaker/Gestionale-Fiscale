@@ -8,7 +8,8 @@ let cestinoFiltro = { tabella: "", search: "" };
 const TABELLA_LABELS = {
   clienti: { label: "Cliente", icon: "👥" },
   adempimenti: { label: "Adempimento", icon: "📋" },
-  appunti: { label: "Scadenza Studio", icon: "📅" },
+  adempimenti_cliente: { label: "Riga Scadenzario", icon: "📅" },
+  appunti: { label: "Scadenza Studio", icon: "🗒️" },
   pagina_bianca: { label: "Nota", icon: "📝" },
 };
 
@@ -18,7 +19,8 @@ function renderCestinoPage() {
       <option value="">Tutti i tipi</option>
       <option value="clienti">👥 Clienti</option>
       <option value="adempimenti">📋 Adempimenti</option>
-      <option value="appunti">📅 Scadenze Studio</option>
+      <option value="adempimenti_cliente">📅 Righe Scadenzario</option>
+      <option value="appunti">🗒️ Scadenze Studio</option>
       <option value="pagina_bianca">📝 Note</option>
     </select>
     <div class="search-wrap" style="width:220px">
@@ -88,7 +90,9 @@ function renderCestinoTabella(container) {
   const rows = cestinoData.map((item) => {
     const info = TABELLA_LABELS[item.tabella] || { label: item.tabella, icon: "📄" };
     const dati = item.dati || {};
-    const nome = dati.nome || dati.titolo || dati.codice || `#${item.record_id}`;
+    const nome = item.tabella === "adempimenti_cliente"
+      ? (dati.adempimento_nome || dati.adempimento_codice || `Adempimento #${dati.id_adempimento}`)
+      : (dati.nome || dati.titolo || dati.codice || `#${item.record_id}`);
     const dataEl = new Date(item.data_eliminazione);
     const giorni = Math.floor((now - dataEl) / (1000 * 60 * 60 * 24));
     const rimanenti = 30 - giorni;
@@ -102,6 +106,21 @@ function renderCestinoTabella(container) {
       extra = [dati.codice_fiscale, dati.partita_iva, dati.email].filter(Boolean).join(" · ");
     } else if (item.tabella === "adempimenti") {
       extra = [dati.codice, dati.scadenza_tipo].filter(Boolean).join(" · ");
+    } else if (item.tabella === "adempimenti_cliente") {
+      // Periodo
+      let periodo = "";
+      if (dati.mese) {
+        const mesi = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+        periodo = mesi[(dati.mese || 1) - 1];
+      } else if (dati.trimestre) {
+        periodo = `T${dati.trimestre}`;
+      } else if (dati.semestre) {
+        periodo = `S${dati.semestre}`;
+      } else {
+        periodo = "Annuale";
+      }
+      const statoLabel = { da_fare: "Da fare", fatto: "Completato", non_applicabile: "N/A", in_corso: "In corso", text_only: "Testo" };
+      extra = `${dati.cliente_nome || `Cliente #${dati.id_cliente}`} · ${periodo} ${dati.anno} · ${statoLabel[dati.stato] || dati.stato}`;
     } else if (item.tabella === "appunti") {
       extra = dati.contenuto ? dati.contenuto.substring(0, 80) + (dati.contenuto.length > 80 ? "…" : "") : "";
     } else if (item.tabella === "pagina_bianca") {

@@ -450,14 +450,21 @@ function eliminaAdempimentiDaClienti(adempimenti_ids, clienti_ids, anno) {
   for (const adpId of adempimenti_ids) {
     for (const clienteId of clienti_ids) {
       const esistenti = queryAll(
-        `
-        SELECT id FROM adempimenti_cliente WHERE id_adempimento = ? AND id_cliente = ? AND anno = ?`,
+        `SELECT ac.*, a.nome as adempimento_nome, a.codice as adempimento_codice,
+                c.nome as cliente_nome
+         FROM adempimenti_cliente ac
+         JOIN adempimenti a ON ac.id_adempimento = a.id
+         JOIN clienti c ON ac.id_cliente = c.id
+         WHERE ac.id_adempimento = ? AND ac.id_cliente = ? AND ac.anno = ?`,
         [adpId, clienteId, anno],
       );
       if (esistenti.length === 0) {
         nonTrovati++;
         continue;
       }
+      esistenti.forEach((r) =>
+        spostaInCestino({ tabella: "adempimenti_cliente", record_id: r.id, dati_json: r })
+      );
       runQuery(
         `DELETE FROM adempimenti_cliente WHERE id_adempimento = ? AND id_cliente = ? AND anno = ?`,
         [adpId, clienteId, anno],
@@ -471,7 +478,17 @@ function eliminaAdempimentiDaClienti(adempimenti_ids, clienti_ids, anno) {
 function eliminaAdempimentiClienteBulk(ids_righe) {
   let eliminati = 0;
   for (const id of ids_righe) {
-    if (queryOne(`SELECT id FROM adempimenti_cliente WHERE id = ?`, [id])) {
+    const row = queryOne(
+      `SELECT ac.*, a.nome as adempimento_nome, a.codice as adempimento_codice,
+              c.nome as cliente_nome
+       FROM adempimenti_cliente ac
+       JOIN adempimenti a ON ac.id_adempimento = a.id
+       JOIN clienti c ON ac.id_cliente = c.id
+       WHERE ac.id = ?`,
+      [id],
+    );
+    if (row) {
+      spostaInCestino({ tabella: "adempimenti_cliente", record_id: id, dati_json: row });
       runQuery(`DELETE FROM adempimenti_cliente WHERE id = ?`, [id]);
       eliminati++;
     }

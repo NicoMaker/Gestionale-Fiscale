@@ -725,6 +725,35 @@ module.exports = function setupSocketHandlers(io) {
           );
           ripristinato = true;
           io.emit("broadcast:pagina_bianca_updated");
+        } else if (item.tabella === "adempimenti_cliente") {
+          // Verifica che cliente e adempimento esistano ancora
+          const clienteOk = queryOne(`SELECT id FROM clienti WHERE id = ? AND attivo = 1`, [dati.id_cliente]);
+          if (!clienteOk) throw new Error(`Impossibile ripristinare: il cliente associato non esiste più o è stato eliminato.`);
+          const adpOk = queryOne(`SELECT id FROM adempimenti WHERE id = ? AND attivo = 1`, [dati.id_adempimento]);
+          if (!adpOk) throw new Error(`Impossibile ripristinare: l'adempimento associato non esiste più o è stato eliminato.`);
+          // Reinserisce la riga adempimenti_cliente
+          runQuery(
+            `INSERT OR REPLACE INTO adempimenti_cliente
+               (id, id_cliente, id_adempimento, anno, mese, trimestre, semestre,
+                stato, data_scadenza, data_completamento, note, importo,
+                importo_saldo, importo_acconto1, importo_acconto2, importo_iva,
+                importo_contabilita, cont_completata)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            [
+              dati.id, dati.id_cliente, dati.id_adempimento, dati.anno,
+              dati.mese || null, dati.trimestre || null, dati.semestre || null,
+              dati.stato || "da_fare",
+              dati.data_scadenza || null, dati.data_completamento || null,
+              dati.note || null, dati.importo || null,
+              dati.importo_saldo || null, dati.importo_acconto1 || null,
+              dati.importo_acconto2 || null, dati.importo_iva || null,
+              dati.importo_contabilita || null, dati.cont_completata || 0,
+            ]
+          );
+          ripristinato = true;
+          io.emit("broadcast:scadenzario_updated", { id_cliente: dati.id_cliente, anno: dati.anno });
+          io.emit("broadcast:globale_updated", { anno: dati.anno });
+          io.emit("broadcast:stats_updated", { anno: dati.anno });
         }
 
         if (ripristinato) {

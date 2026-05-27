@@ -3,6 +3,7 @@ const {
   inserisciAdempimentoSeAssente,
   inserisciAdempimentoSeAssenteConDettagli,
 } = require("./adempimenti");
+const { spostaInCestino } = require("./cestino");
 
 function _annoFromRow(anno) {
   return anno || new Date().getFullYear();
@@ -319,11 +320,19 @@ function updateAdempimentoStato(data) {
 
 function deleteAdempimentoCliente(id) {
   const row = queryOne(
-    `SELECT id_cliente, anno FROM adempimenti_cliente WHERE id = ?`,
+    `SELECT ac.*, a.nome as adempimento_nome, a.codice as adempimento_codice,
+            c.nome as cliente_nome
+     FROM adempimenti_cliente ac
+     JOIN adempimenti a ON ac.id_adempimento = a.id
+     JOIN clienti c ON ac.id_cliente = c.id
+     WHERE ac.id = ?`,
     [id],
   );
+  if (row) {
+    spostaInCestino({ tabella: "adempimenti_cliente", record_id: id, dati_json: row });
+  }
   runQuery(`DELETE FROM adempimenti_cliente WHERE id = ?`, [id]);
-  return row;
+  return row ? { id_cliente: row.id_cliente, anno: row.anno } : null;
 }
 
 function addAdempimentoCliente(data) {
