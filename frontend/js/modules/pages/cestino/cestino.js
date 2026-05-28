@@ -30,6 +30,7 @@ function renderCestinoPage() {
       <input class="input" id="cestino-search" placeholder="Cerca nel cestino…" oninput="applyCestinoFiltri()" style="font-size:13px">
     </div>
     <button class="btn btn-sm btn-primary no-print" id="btn-ripristina-selezionati" onclick="ripristinaSelezione()" style="font-size:13px;display:none">↩️ Ripristina selezionati (<span id="count-sel">0</span>)</button>
+    <button class="btn btn-sm btn-danger no-print" id="btn-elimina-selezionati" onclick="eliminaSelezione()" style="font-size:13px;background:#dc2626;color:#fff;border:none;display:none">🗑️ Elimina selezionati (<span id="count-sel-elim">0</span>)</button>
     <button class="btn btn-sm no-print" onclick="ripristinaTutto()" style="font-size:13px;background:#16a34a;color:#fff;border:none">↩️ Ripristina tutto</button>
     <button class="btn btn-sm btn-danger no-print" onclick="svuotaCestino()" style="font-size:13px;background:#dc2626;color:#fff;border:none">🗑️ Svuota cestino</button>
   `;
@@ -239,15 +240,18 @@ function toggleTuttiCestino(checked) {
 }
 
 function aggiornaBarraSelezione() {
-  const btn = document.getElementById("btn-ripristina-selezionati");
+  const btnRip = document.getElementById("btn-ripristina-selezionati");
+  const btnElim = document.getElementById("btn-elimina-selezionati");
   const countEl = document.getElementById("count-sel");
-  if (!btn) return;
+  const countElimEl = document.getElementById("count-sel-elim");
   const n = cestinoSelezione.size;
-  if (n > 0) {
-    btn.style.display = "";
+  if (btnRip) {
+    btnRip.style.display = n > 0 ? "" : "none";
     if (countEl) countEl.textContent = n;
-  } else {
-    btn.style.display = "none";
+  }
+  if (btnElim) {
+    btnElim.style.display = n > 0 ? "" : "none";
+    if (countElimEl) countElimEl.textContent = n;
   }
 }
 
@@ -371,6 +375,26 @@ socket.on("res:svuota:cestino", ({ success, eliminati, error }) => {
   }
 });
 
+// ─── ELIMINA SELEZIONE ────────────────────────────────────────
+
+function eliminaSelezione() {
+  const ids = [...cestinoSelezione];
+  if (!ids.length) return;
+  if (!confirm(`Eliminare definitivamente ${ids.length} element${ids.length === 1 ? "o" : "i"} selezionat${ids.length === 1 ? "o" : "i"}? L'operazione non è reversibile.`)) return;
+  socket.emit("delete:cestino_bulk", { ids });
+}
+
+socket.on("res:delete:cestino_bulk", ({ success, eliminati, error }) => {
+  if (!success) {
+    showNotif("❌ Errore eliminazione: " + (error || "Operazione fallita"), "error");
+    return;
+  }
+  cestinoSelezione.clear();
+  cestinoNonRipristinabili.clear();
+  showNotif(`🗑️ Eliminat${eliminati === 1 ? "o" : "i"} definitivamente ${eliminati} element${eliminati === 1 ? "o" : "i"}`, "success");
+  aggiornaBarraSelezione();
+});
+
 // ─── HELPERS ──────────────────────────────────────────────────
 
 function escapeHtml(str) {
@@ -389,5 +413,6 @@ window.eliminaDefinitivoCestino = eliminaDefinitivoCestino;
 window.svuotaCestino = svuotaCestino;
 window.ripristinaTutto = ripristinaTutto;
 window.ripristinaSelezione = ripristinaSelezione;
+window.eliminaSelezione = eliminaSelezione;
 window.toggleCestinoSelezione = toggleCestinoSelezione;
 window.toggleTuttiCestino = toggleTuttiCestino;
