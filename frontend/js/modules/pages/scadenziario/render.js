@@ -506,4 +506,3 @@ function renderScadenzarioTabella(data) {
   document.getElementById("content").innerHTML =
     configAnnoInfo + clienteCard + `<div id="scad-content">${content}</div>`;
 }
-

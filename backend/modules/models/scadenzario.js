@@ -329,7 +329,11 @@ function deleteAdempimentoCliente(id) {
     [id],
   );
   if (row) {
-    spostaInCestino({ tabella: "adempimenti_cliente", record_id: id, dati_json: row });
+    spostaInCestino({
+      tabella: "adempimenti_cliente",
+      record_id: id,
+      dati_json: row,
+    });
   }
   runQuery(`DELETE FROM adempimenti_cliente WHERE id = ?`, [id]);
   return row ? { id_cliente: row.id_cliente, anno: row.anno } : null;

@@ -78,7 +78,9 @@ function createSchema(db) {
     attivo INTEGER DEFAULT 1
   )`);
 
-  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_adempimenti_codice_attivo ON adempimenti(codice) WHERE attivo = 1`);
+  db.run(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_adempimenti_codice_attivo ON adempimenti(codice) WHERE attivo = 1`,
+  );
 
   // ── ADEMPIMENTI CLIENTE ──
   db.run(`CREATE TABLE IF NOT EXISTS adempimenti_cliente (
@@ -104,8 +106,12 @@ function createSchema(db) {
     FOREIGN KEY (id_adempimento) REFERENCES adempimenti(id)
   )`);
 
-  db.run(`CREATE INDEX IF NOT EXISTS idx_adempimenti_cliente_cliente ON adempimenti_cliente(id_cliente)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_adempimenti_cliente_anno ON adempimenti_cliente(anno)`);
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_adempimenti_cliente_cliente ON adempimenti_cliente(id_cliente)`,
+  );
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_adempimenti_cliente_anno ON adempimenti_cliente(anno)`,
+  );
 
   // ── APPUNTI ──
   db.run(`CREATE TABLE IF NOT EXISTS appunti (
@@ -150,22 +156,24 @@ function createSchema(db) {
   )`);
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_cestino_tabella ON cestino(tabella)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_cestino_data ON cestino(data_eliminazione DESC)`);
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_cestino_data ON cestino(data_eliminazione DESC)`,
+  );
 }
 
 function seedData(db) {
   // ── TIPOLOGIE ──
   const tipologie = [
-    { codice: "PF",  nome: "Persona Fisica",       colore: "#5b8df6" },
-    { codice: "SP",  nome: "Società di Persone",    colore: "#a78bfa" },
-    { codice: "SC",  nome: "Società di Capitali",   colore: "#34d399" },
-    { codice: "ASS", nome: "Associazione",          colore: "#fbbf24" },
+    { codice: "PF", nome: "Persona Fisica", colore: "#5b8df6" },
+    { codice: "SP", nome: "Società di Persone", colore: "#a78bfa" },
+    { codice: "SC", nome: "Società di Capitali", colore: "#34d399" },
+    { codice: "ASS", nome: "Associazione", colore: "#fbbf24" },
   ];
 
   tipologie.forEach((t) => {
     db.run(
       `INSERT OR IGNORE INTO tipologie_cliente (codice, nome, colore) VALUES (?,?,?)`,
-      [t.codice, t.nome, t.colore]
+      [t.codice, t.nome, t.colore],
     );
   });
 
@@ -180,27 +188,57 @@ function seedData(db) {
 
   // ── SOTTOTIPOLOGIE PF ──
   const sottoPF = [
-    { codice: "PF_PRIV",     nome: "Privato",                    is_sep: 0, ordine: 1 },
-    { codice: "PF_SOCIO",    nome: "Socio",                      is_sep: 0, ordine: 2 },
-    { codice: "PF_DITTA_ORD",nome: "Ditta Individuale Ordinario",is_sep: 0, ordine: 3 },
-    { codice: "PF_DITTA_SEM",nome: "Ditta Individuale Semplificato", is_sep: 0, ordine: 4 },
-    { codice: "PF_DITTA_FOR",nome: "Ditta Individuale Forfettario",  is_sep: 0, ordine: 5 },
-    { codice: "PF_PROF_ORD", nome: "Professionista Ordinario",   is_sep: 0, ordine: 6 },
-    { codice: "PF_PROF_SEM", nome: "Professionista Semplificato",is_sep: 0, ordine: 7 },
-    { codice: "PF_PROF_FOR", nome: "Professionista Forfettario", is_sep: 0, ordine: 8 },
+    { codice: "PF_PRIV", nome: "Privato", is_sep: 0, ordine: 1 },
+    { codice: "PF_SOCIO", nome: "Socio", is_sep: 0, ordine: 2 },
+    {
+      codice: "PF_DITTA_ORD",
+      nome: "Ditta Individuale Ordinario",
+      is_sep: 0,
+      ordine: 3,
+    },
+    {
+      codice: "PF_DITTA_SEM",
+      nome: "Ditta Individuale Semplificato",
+      is_sep: 0,
+      ordine: 4,
+    },
+    {
+      codice: "PF_DITTA_FOR",
+      nome: "Ditta Individuale Forfettario",
+      is_sep: 0,
+      ordine: 5,
+    },
+    {
+      codice: "PF_PROF_ORD",
+      nome: "Professionista Ordinario",
+      is_sep: 0,
+      ordine: 6,
+    },
+    {
+      codice: "PF_PROF_SEM",
+      nome: "Professionista Semplificato",
+      is_sep: 0,
+      ordine: 7,
+    },
+    {
+      codice: "PF_PROF_FOR",
+      nome: "Professionista Forfettario",
+      is_sep: 0,
+      ordine: 8,
+    },
   ];
 
   const sottoSP = [
-    { codice: "SP_ORD",  nome: "Ordinaria",    is_sep: 0, ordine: 1 },
+    { codice: "SP_ORD", nome: "Ordinaria", is_sep: 0, ordine: 1 },
     { codice: "SP_SEMP", nome: "Semplificata", is_sep: 0, ordine: 2 },
   ];
 
   const sottoSC = [
-    { codice: "SC_ORD",  nome: "Ordinaria",    is_sep: 0, ordine: 1 },
+    { codice: "SC_ORD", nome: "Ordinaria", is_sep: 0, ordine: 1 },
   ];
 
   const sottoASS = [
-    { codice: "ASS_ORD",  nome: "Ordinaria",    is_sep: 0, ordine: 1 },
+    { codice: "ASS_ORD", nome: "Ordinaria", is_sep: 0, ordine: 1 },
     { codice: "ASS_SEMP", nome: "Semplificata", is_sep: 0, ordine: 2 },
   ];
 
@@ -216,7 +254,7 @@ function seedData(db) {
     if (!tipId) return;
     db.run(
       `INSERT OR IGNORE INTO sottotipologie (id_tipologia, codice, nome, is_separator, ordine) VALUES (?,?,?,?,?)`,
-      [tipId, s.codice, s.nome, s.is_sep, s.ordine]
+      [tipId, s.codice, s.nome, s.is_sep, s.ordine],
     );
   });
 }

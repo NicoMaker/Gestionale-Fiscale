@@ -697,12 +697,17 @@ module.exports = function setupSocketHandlers(io) {
 
         if (item.tabella === "clienti") {
           // Riattiva il cliente
-          runQuery(`UPDATE clienti SET attivo = 1, updated_at = datetime('now') WHERE id = ?`, [item.record_id]);
+          runQuery(
+            `UPDATE clienti SET attivo = 1, updated_at = datetime('now') WHERE id = ?`,
+            [item.record_id],
+          );
           ripristinato = true;
           io.emit("broadcast:clienti_updated");
         } else if (item.tabella === "adempimenti") {
           // Riattiva l'adempimento
-          runQuery(`UPDATE adempimenti SET attivo = 1 WHERE id = ?`, [item.record_id]);
+          runQuery(`UPDATE adempimenti SET attivo = 1 WHERE id = ?`, [
+            item.record_id,
+          ]);
           ripristinato = true;
           io.emit("broadcast:adempimenti_updated");
         } else if (item.tabella === "appunti") {
@@ -710,8 +715,16 @@ module.exports = function setupSocketHandlers(io) {
           runQuery(
             `INSERT OR REPLACE INTO appunti (id, titolo, contenuto, id_cliente, data_inserimento, data_scadenza, priorita, completato)
              VALUES (?,?,?,?,?,?,?,?)`,
-            [dati.id, dati.titolo, dati.contenuto || null, dati.id_cliente || null,
-             dati.data_inserimento, dati.data_scadenza || null, dati.priorita || "media", dati.completato || 0]
+            [
+              dati.id,
+              dati.titolo,
+              dati.contenuto || null,
+              dati.id_cliente || null,
+              dati.data_inserimento,
+              dati.data_scadenza || null,
+              dati.priorita || "media",
+              dati.completato || 0,
+            ],
           );
           ripristinato = true;
           io.emit("broadcast:appunti_updated");
@@ -720,17 +733,37 @@ module.exports = function setupSocketHandlers(io) {
           runQuery(
             `INSERT OR REPLACE INTO pagina_bianca (id, tipo, titolo, contenuto, allegati, id_cliente, data_creazione, data_modifica)
              VALUES (?,?,?,?,?,?,?,?)`,
-            [dati.id, dati.tipo, dati.titolo || "", dati.contenuto || null,
-             dati.allegati || null, dati.id_cliente || null, dati.data_creazione, dati.data_modifica]
+            [
+              dati.id,
+              dati.tipo,
+              dati.titolo || "",
+              dati.contenuto || null,
+              dati.allegati || null,
+              dati.id_cliente || null,
+              dati.data_creazione,
+              dati.data_modifica,
+            ],
           );
           ripristinato = true;
           io.emit("broadcast:pagina_bianca_updated");
         } else if (item.tabella === "adempimenti_cliente") {
           // Verifica che cliente e adempimento esistano ancora
-          const clienteOk = queryOne(`SELECT id FROM clienti WHERE id = ? AND attivo = 1`, [dati.id_cliente]);
-          if (!clienteOk) throw new Error(`Impossibile ripristinare: il cliente associato non esiste più o è stato eliminato.`);
-          const adpOk = queryOne(`SELECT id FROM adempimenti WHERE id = ? AND attivo = 1`, [dati.id_adempimento]);
-          if (!adpOk) throw new Error(`Impossibile ripristinare: l'adempimento associato non esiste più o è stato eliminato.`);
+          const clienteOk = queryOne(
+            `SELECT id FROM clienti WHERE id = ? AND attivo = 1`,
+            [dati.id_cliente],
+          );
+          if (!clienteOk)
+            throw new Error(
+              `Impossibile ripristinare: il cliente associato non esiste più o è stato eliminato.`,
+            );
+          const adpOk = queryOne(
+            `SELECT id FROM adempimenti WHERE id = ? AND attivo = 1`,
+            [dati.id_adempimento],
+          );
+          if (!adpOk)
+            throw new Error(
+              `Impossibile ripristinare: l'adempimento associato non esiste più o è stato eliminato.`,
+            );
           // Reinserisce la riga adempimenti_cliente
           runQuery(
             `INSERT OR REPLACE INTO adempimenti_cliente
@@ -740,18 +773,31 @@ module.exports = function setupSocketHandlers(io) {
                 importo_contabilita, cont_completata)
              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [
-              dati.id, dati.id_cliente, dati.id_adempimento, dati.anno,
-              dati.mese || null, dati.trimestre || null, dati.semestre || null,
+              dati.id,
+              dati.id_cliente,
+              dati.id_adempimento,
+              dati.anno,
+              dati.mese || null,
+              dati.trimestre || null,
+              dati.semestre || null,
               dati.stato || "da_fare",
-              dati.data_scadenza || null, dati.data_completamento || null,
-              dati.note || null, dati.importo || null,
-              dati.importo_saldo || null, dati.importo_acconto1 || null,
-              dati.importo_acconto2 || null, dati.importo_iva || null,
-              dati.importo_contabilita || null, dati.cont_completata || 0,
-            ]
+              dati.data_scadenza || null,
+              dati.data_completamento || null,
+              dati.note || null,
+              dati.importo || null,
+              dati.importo_saldo || null,
+              dati.importo_acconto1 || null,
+              dati.importo_acconto2 || null,
+              dati.importo_iva || null,
+              dati.importo_contabilita || null,
+              dati.cont_completata || 0,
+            ],
           );
           ripristinato = true;
-          io.emit("broadcast:scadenzario_updated", { id_cliente: dati.id_cliente, anno: dati.anno });
+          io.emit("broadcast:scadenzario_updated", {
+            id_cliente: dati.id_cliente,
+            anno: dati.anno,
+          });
           io.emit("broadcast:globale_updated", { anno: dati.anno });
           io.emit("broadcast:stats_updated", { anno: dati.anno });
         }
@@ -760,12 +806,20 @@ module.exports = function setupSocketHandlers(io) {
           cestinoModel.eliminaDalCestino(id);
           io.emit("broadcast:cestino_updated");
           socket.emit("res:ripristina:cestino", { success: true });
-          socket.emit("notify", { type: "success", msg: "Elemento ripristinato con successo" });
+          socket.emit("notify", {
+            type: "success",
+            msg: "Elemento ripristinato con successo",
+          });
         } else {
-          throw new Error("Tabella non supportata per il ripristino: " + item.tabella);
+          throw new Error(
+            "Tabella non supportata per il ripristino: " + item.tabella,
+          );
         }
       } catch (e) {
-        socket.emit("res:ripristina:cestino", { success: false, error: e.message });
+        socket.emit("res:ripristina:cestino", {
+          success: false,
+          error: e.message,
+        });
         socket.emit("notify", { type: "error", msg: e.message });
       }
     });
@@ -775,9 +829,15 @@ module.exports = function setupSocketHandlers(io) {
         cestinoModel.eliminaDalCestino(id);
         io.emit("broadcast:cestino_updated");
         socket.emit("res:delete:cestino_item", { success: true });
-        socket.emit("notify", { type: "success", msg: "Elemento eliminato definitivamente" });
+        socket.emit("notify", {
+          type: "success",
+          msg: "Elemento eliminato definitivamente",
+        });
       } catch (e) {
-        socket.emit("res:delete:cestino_item", { success: false, error: e.message });
+        socket.emit("res:delete:cestino_item", {
+          success: false,
+          error: e.message,
+        });
       }
     });
 
@@ -786,7 +846,10 @@ module.exports = function setupSocketHandlers(io) {
         const cnt = cestinoModel.svuotaCestino();
         io.emit("broadcast:cestino_updated");
         socket.emit("res:svuota:cestino", { success: true, eliminati: cnt });
-        socket.emit("notify", { type: "success", msg: `Cestino svuotato (${cnt} elementi eliminati)` });
+        socket.emit("notify", {
+          type: "success",
+          msg: `Cestino svuotato (${cnt} elementi eliminati)`,
+        });
       } catch (e) {
         socket.emit("res:svuota:cestino", { success: false, error: e.message });
       }
@@ -795,7 +858,10 @@ module.exports = function setupSocketHandlers(io) {
     // ── BULK: ripristina più elementi selezionati ──────────────────────
     socket.on("ripristina:cestino:bulk", ({ ids }) => {
       if (!Array.isArray(ids) || !ids.length) {
-        socket.emit("res:ripristina:cestino:bulk", { success: false, error: "Nessun id fornito" });
+        socket.emit("res:ripristina:cestino:bulk", {
+          success: false,
+          error: "Nessun id fornito",
+        });
         return;
       }
       const results = { ok: [], failed: [] };
@@ -807,38 +873,89 @@ module.exports = function setupSocketHandlers(io) {
           let ripristinato = false;
 
           if (item.tabella === "clienti") {
-            runQuery(`UPDATE clienti SET attivo = 1, updated_at = datetime('now') WHERE id = ?`, [item.record_id]);
+            runQuery(
+              `UPDATE clienti SET attivo = 1, updated_at = datetime('now') WHERE id = ?`,
+              [item.record_id],
+            );
             ripristinato = true;
             io.emit("broadcast:clienti_updated");
           } else if (item.tabella === "adempimenti") {
-            runQuery(`UPDATE adempimenti SET attivo = 1 WHERE id = ?`, [item.record_id]);
+            runQuery(`UPDATE adempimenti SET attivo = 1 WHERE id = ?`, [
+              item.record_id,
+            ]);
             ripristinato = true;
             io.emit("broadcast:adempimenti_updated");
           } else if (item.tabella === "appunti") {
             runQuery(
               `INSERT OR REPLACE INTO appunti (id, titolo, contenuto, id_cliente, data_inserimento, data_scadenza, priorita, completato) VALUES (?,?,?,?,?,?,?,?)`,
-              [dati.id, dati.titolo, dati.contenuto || null, dati.id_cliente || null, dati.data_inserimento, dati.data_scadenza || null, dati.priorita || "media", dati.completato || 0]
+              [
+                dati.id,
+                dati.titolo,
+                dati.contenuto || null,
+                dati.id_cliente || null,
+                dati.data_inserimento,
+                dati.data_scadenza || null,
+                dati.priorita || "media",
+                dati.completato || 0,
+              ],
             );
             ripristinato = true;
             io.emit("broadcast:appunti_updated");
           } else if (item.tabella === "pagina_bianca") {
             runQuery(
               `INSERT OR REPLACE INTO pagina_bianca (id, tipo, titolo, contenuto, allegati, id_cliente, data_creazione, data_modifica) VALUES (?,?,?,?,?,?,?,?)`,
-              [dati.id, dati.tipo, dati.titolo || "", dati.contenuto || null, dati.allegati || null, dati.id_cliente || null, dati.data_creazione, dati.data_modifica]
+              [
+                dati.id,
+                dati.tipo,
+                dati.titolo || "",
+                dati.contenuto || null,
+                dati.allegati || null,
+                dati.id_cliente || null,
+                dati.data_creazione,
+                dati.data_modifica,
+              ],
             );
             ripristinato = true;
             io.emit("broadcast:pagina_bianca_updated");
           } else if (item.tabella === "adempimenti_cliente") {
-            const clienteOk = queryOne(`SELECT id FROM clienti WHERE id = ? AND attivo = 1`, [dati.id_cliente]);
+            const clienteOk = queryOne(
+              `SELECT id FROM clienti WHERE id = ? AND attivo = 1`,
+              [dati.id_cliente],
+            );
             if (!clienteOk) throw new Error(`Cliente non trovato o eliminato`);
-            const adpOk = queryOne(`SELECT id FROM adempimenti WHERE id = ? AND attivo = 1`, [dati.id_adempimento]);
+            const adpOk = queryOne(
+              `SELECT id FROM adempimenti WHERE id = ? AND attivo = 1`,
+              [dati.id_adempimento],
+            );
             if (!adpOk) throw new Error(`Adempimento non trovato o eliminato`);
             runQuery(
               `INSERT OR REPLACE INTO adempimenti_cliente (id, id_cliente, id_adempimento, anno, mese, trimestre, semestre, stato, data_scadenza, data_completamento, note, importo, importo_saldo, importo_acconto1, importo_acconto2, importo_iva, importo_contabilita, cont_completata) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-              [dati.id, dati.id_cliente, dati.id_adempimento, dati.anno, dati.mese || null, dati.trimestre || null, dati.semestre || null, dati.stato || "da_fare", dati.data_scadenza || null, dati.data_completamento || null, dati.note || null, dati.importo || null, dati.importo_saldo || null, dati.importo_acconto1 || null, dati.importo_acconto2 || null, dati.importo_iva || null, dati.importo_contabilita || null, dati.cont_completata || 0]
+              [
+                dati.id,
+                dati.id_cliente,
+                dati.id_adempimento,
+                dati.anno,
+                dati.mese || null,
+                dati.trimestre || null,
+                dati.semestre || null,
+                dati.stato || "da_fare",
+                dati.data_scadenza || null,
+                dati.data_completamento || null,
+                dati.note || null,
+                dati.importo || null,
+                dati.importo_saldo || null,
+                dati.importo_acconto1 || null,
+                dati.importo_acconto2 || null,
+                dati.importo_iva || null,
+                dati.importo_contabilita || null,
+                dati.cont_completata || 0,
+              ],
             );
             ripristinato = true;
-            io.emit("broadcast:scadenzario_updated", { id_cliente: dati.id_cliente, anno: dati.anno });
+            io.emit("broadcast:scadenzario_updated", {
+              id_cliente: dati.id_cliente,
+              anno: dati.anno,
+            });
             io.emit("broadcast:globale_updated", { anno: dati.anno });
             io.emit("broadcast:stats_updated", { anno: dati.anno });
           }
@@ -854,17 +971,27 @@ module.exports = function setupSocketHandlers(io) {
         }
       }
       io.emit("broadcast:cestino_updated");
-      socket.emit("res:ripristina:cestino:bulk", { success: true, ok: results.ok.length, failed: results.failed });
+      socket.emit("res:ripristina:cestino:bulk", {
+        success: true,
+        ok: results.ok.length,
+        failed: results.failed,
+      });
       const msg = results.failed.length
         ? `Ripristinati ${results.ok.length}, falliti ${results.failed.length}`
         : `${results.ok.length} element${results.ok.length === 1 ? "o ripristinato" : "i ripristinati"} con successo`;
-      socket.emit("notify", { type: results.failed.length ? "warning" : "success", msg });
+      socket.emit("notify", {
+        type: results.failed.length ? "warning" : "success",
+        msg,
+      });
     });
 
     // ── BULK: elimina definitivamente più elementi selezionati ─────────
     socket.on("delete:cestino:bulk", ({ ids }) => {
       if (!Array.isArray(ids) || !ids.length) {
-        socket.emit("res:delete:cestino:bulk", { success: false, error: "Nessun id fornito" });
+        socket.emit("res:delete:cestino:bulk", {
+          success: false,
+          error: "Nessun id fornito",
+        });
         return;
       }
       let eliminati = 0;
@@ -876,7 +1003,10 @@ module.exports = function setupSocketHandlers(io) {
       }
       io.emit("broadcast:cestino_updated");
       socket.emit("res:delete:cestino:bulk", { success: true, eliminati });
-      socket.emit("notify", { type: "success", msg: `${eliminati} element${eliminati === 1 ? "o eliminato" : "i eliminati"} definitivamente` });
+      socket.emit("notify", {
+        type: "success",
+        msg: `${eliminati} element${eliminati === 1 ? "o eliminato" : "i eliminati"} definitivamente`,
+      });
     });
 
     socket.on("disconnect", () => {

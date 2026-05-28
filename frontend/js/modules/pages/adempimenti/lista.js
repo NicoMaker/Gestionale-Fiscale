@@ -327,4 +327,3 @@ function deleteAdpDef(id) {
   if (confirm("Eliminare questo adempimento?"))
     socket.emit("delete:adempimento", { id });
 }
-

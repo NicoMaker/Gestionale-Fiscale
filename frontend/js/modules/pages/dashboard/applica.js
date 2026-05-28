@@ -874,4 +874,3 @@ function eseguiApplicaAdempimenti() {
   }
   closeModal("modal-applica-adempimenti");
 }
-

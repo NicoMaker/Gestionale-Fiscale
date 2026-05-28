@@ -678,4 +678,3 @@ function _buildPeriodiOrdinatiHtml(periodi) {
   }
   return html;
 }
-

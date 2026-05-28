@@ -463,7 +463,11 @@ function eliminaAdempimentiDaClienti(adempimenti_ids, clienti_ids, anno) {
         continue;
       }
       esistenti.forEach((r) =>
-        spostaInCestino({ tabella: "adempimenti_cliente", record_id: r.id, dati_json: r })
+        spostaInCestino({
+          tabella: "adempimenti_cliente",
+          record_id: r.id,
+          dati_json: r,
+        }),
       );
       runQuery(
         `DELETE FROM adempimenti_cliente WHERE id_adempimento = ? AND id_cliente = ? AND anno = ?`,
@@ -488,7 +492,11 @@ function eliminaAdempimentiClienteBulk(ids_righe) {
       [id],
     );
     if (row) {
-      spostaInCestino({ tabella: "adempimenti_cliente", record_id: id, dati_json: row });
+      spostaInCestino({
+        tabella: "adempimenti_cliente",
+        record_id: id,
+        dati_json: row,
+      });
       runQuery(`DELETE FROM adempimenti_cliente WHERE id = ?`, [id]);
       eliminati++;
     }

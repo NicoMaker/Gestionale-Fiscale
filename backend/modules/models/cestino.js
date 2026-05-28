@@ -11,7 +11,7 @@ function spostaInCestino({ tabella, record_id, dati_json, eliminato_da }) {
   return runQueryAndGetId(
     `INSERT INTO cestino (tabella, record_id, dati_json, eliminato_da, data_eliminazione)
      VALUES (?,?,?,?,datetime('now'))`,
-    [tabella, record_id, JSON.stringify(dati_json), eliminato_da || "utente"]
+    [tabella, record_id, JSON.stringify(dati_json), eliminato_da || "utente"],
   );
 }
 
@@ -52,10 +52,10 @@ function svuotaCestino() {
 
 function eliminaScadutiCestino() {
   const result = queryOne(
-    `SELECT COUNT(*) as cnt FROM cestino WHERE data_eliminazione <= datetime('now', '-${GIORNI_RETENTION} days')`
+    `SELECT COUNT(*) as cnt FROM cestino WHERE data_eliminazione <= datetime('now', '-${GIORNI_RETENTION} days')`,
   );
   runQuery(
-    `DELETE FROM cestino WHERE data_eliminazione <= datetime('now', '-${GIORNI_RETENTION} days')`
+    `DELETE FROM cestino WHERE data_eliminazione <= datetime('now', '-${GIORNI_RETENTION} days')`,
   );
   return result.cnt;
 }

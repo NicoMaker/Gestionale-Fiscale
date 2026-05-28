@@ -484,4 +484,3 @@ function goScadenzario(id) {
     if (typeof socket !== "undefined") socket.emit("get:clienti");
   }
 }
-

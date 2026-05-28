@@ -18,7 +18,13 @@ const TABELLA_LABELS = {
 function isRipristinabile(item) {
   // adempimenti_cliente richiede che cliente e adempimento esistano: non possiamo saperlo lato client
   // Tutti gli altri tipi supportati possono essere ripristinati
-  return ["clienti", "adempimenti", "appunti", "pagina_bianca", "adempimenti_cliente"].includes(item.tabella);
+  return [
+    "clienti",
+    "adempimenti",
+    "appunti",
+    "pagina_bianca",
+    "adempimenti_cliente",
+  ].includes(item.tabella);
 }
 
 function renderCestinoPage() {
@@ -52,7 +58,8 @@ function renderCestinoPage() {
 }
 
 function applyCestinoFiltri() {
-  cestinoFiltro.tabella = document.getElementById("cestino-filter-tabella")?.value || "";
+  cestinoFiltro.tabella =
+    document.getElementById("cestino-filter-tabella")?.value || "";
   cestinoFiltro.search = document.getElementById("cestino-search")?.value || "";
   socket.emit("get:cestino", {
     tabella: cestinoFiltro.tabella || undefined,
@@ -72,7 +79,7 @@ socket.on("res:cestino", ({ success, data, error }) => {
 
   cestinoData = data || [];
   // Rimuovi dalla selezione elementi che non sono più presenti
-  const idSet = new Set(cestinoData.map(i => i.id));
+  const idSet = new Set(cestinoData.map((i) => i.id));
   for (const id of cestinoSelezione) {
     if (!idSet.has(id)) cestinoSelezione.delete(id);
   }
@@ -100,60 +107,108 @@ function renderCestinoTabella(container) {
   }
 
   const now = new Date();
-  const tuttiSelezionati = cestinoData.length > 0 && cestinoData.every(i => cestinoSelezione.has(i.id));
+  const tuttiSelezionati =
+    cestinoData.length > 0 &&
+    cestinoData.every((i) => cestinoSelezione.has(i.id));
   const qualcunoSelezionato = cestinoSelezione.size > 0;
 
   // Calcola quanti selezionati sono ripristinabili
-  const selezionati = cestinoData.filter(i => cestinoSelezione.has(i.id));
+  const selezionati = cestinoData.filter((i) => cestinoSelezione.has(i.id));
   const selezionatiRipristinabili = selezionati.filter(isRipristinabile);
   const tuttiRipristinabili = cestinoData.filter(isRipristinabile);
 
-  const rows = cestinoData.map((item) => {
-    const info = TABELLA_LABELS[item.tabella] || { label: item.tabella, icon: "📄" };
-    const dati = item.dati || {};
-    const nome = item.tabella === "adempimenti_cliente"
-      ? (dati.adempimento_nome || dati.adempimento_codice || `Adempimento #${dati.id_adempimento}`)
-      : (dati.nome || dati.titolo || dati.codice || `#${item.record_id}`);
-    const dataEl = new Date(item.data_eliminazione);
-    const giorni = Math.floor((now - dataEl) / (1000 * 60 * 60 * 24));
-    const rimanenti = 30 - giorni;
-    const dataFmt = dataEl.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const rows = cestinoData
+    .map((item) => {
+      const info = TABELLA_LABELS[item.tabella] || {
+        label: item.tabella,
+        icon: "📄",
+      };
+      const dati = item.dati || {};
+      const nome =
+        item.tabella === "adempimenti_cliente"
+          ? dati.adempimento_nome ||
+            dati.adempimento_codice ||
+            `Adempimento #${dati.id_adempimento}`
+          : dati.nome || dati.titolo || dati.codice || `#${item.record_id}`;
+      const dataEl = new Date(item.data_eliminazione);
+      const giorni = Math.floor((now - dataEl) / (1000 * 60 * 60 * 24));
+      const rimanenti = 30 - giorni;
+      const dataFmt = dataEl.toLocaleDateString("it-IT", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
-    const urgente = rimanenti <= 5;
-    const badgeColor = urgente ? "#dc2626" : rimanenti <= 10 ? "#d97706" : "#6b7280";
-    const ripristinabile = isRipristinabile(item);
-    const selezionato = cestinoSelezione.has(item.id);
+      const urgente = rimanenti <= 5;
+      const badgeColor = urgente
+        ? "#dc2626"
+        : rimanenti <= 10
+          ? "#d97706"
+          : "#6b7280";
+      const ripristinabile = isRipristinabile(item);
+      const selezionato = cestinoSelezione.has(item.id);
 
-    let extra = "";
-    if (item.tabella === "clienti") {
-      extra = [dati.codice_fiscale, dati.partita_iva, dati.email].filter(Boolean).join(" · ");
-    } else if (item.tabella === "adempimenti") {
-      extra = [dati.codice, dati.scadenza_tipo].filter(Boolean).join(" · ");
-    } else if (item.tabella === "adempimenti_cliente") {
-      let periodo = "";
-      if (dati.mese) {
-        const mesi = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
-        periodo = mesi[(dati.mese || 1) - 1];
-      } else if (dati.trimestre) {
-        periodo = `T${dati.trimestre}`;
-      } else if (dati.semestre) {
-        periodo = `S${dati.semestre}`;
-      } else {
-        periodo = "Annuale";
+      let extra = "";
+      if (item.tabella === "clienti") {
+        extra = [dati.codice_fiscale, dati.partita_iva, dati.email]
+          .filter(Boolean)
+          .join(" · ");
+      } else if (item.tabella === "adempimenti") {
+        extra = [dati.codice, dati.scadenza_tipo].filter(Boolean).join(" · ");
+      } else if (item.tabella === "adempimenti_cliente") {
+        let periodo = "";
+        if (dati.mese) {
+          const mesi = [
+            "Gen",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Mag",
+            "Giu",
+            "Lug",
+            "Ago",
+            "Set",
+            "Ott",
+            "Nov",
+            "Dic",
+          ];
+          periodo = mesi[(dati.mese || 1) - 1];
+        } else if (dati.trimestre) {
+          periodo = `T${dati.trimestre}`;
+        } else if (dati.semestre) {
+          periodo = `S${dati.semestre}`;
+        } else {
+          periodo = "Annuale";
+        }
+        const statoLabel = {
+          da_fare: "Da fare",
+          fatto: "Completato",
+          non_applicabile: "N/A",
+          in_corso: "In corso",
+          text_only: "Testo",
+        };
+        extra = `${dati.cliente_nome || `Cliente #${dati.id_cliente}`} · ${periodo} ${dati.anno} · ${statoLabel[dati.stato] || dati.stato}`;
+      } else if (item.tabella === "appunti") {
+        extra = dati.contenuto
+          ? dati.contenuto.substring(0, 80) +
+            (dati.contenuto.length > 80 ? "…" : "")
+          : "";
+      } else if (item.tabella === "pagina_bianca") {
+        extra = [
+          dati.tipo === "cliente" ? "Note cliente" : "Note studio",
+          dati.cliente_nome,
+        ]
+          .filter(Boolean)
+          .join(" · ");
       }
-      const statoLabel = { da_fare: "Da fare", fatto: "Completato", non_applicabile: "N/A", in_corso: "In corso", text_only: "Testo" };
-      extra = `${dati.cliente_nome || `Cliente #${dati.id_cliente}`} · ${periodo} ${dati.anno} · ${statoLabel[dati.stato] || dati.stato}`;
-    } else if (item.tabella === "appunti") {
-      extra = dati.contenuto ? dati.contenuto.substring(0, 80) + (dati.contenuto.length > 80 ? "…" : "") : "";
-    } else if (item.tabella === "pagina_bianca") {
-      extra = [dati.tipo === "cliente" ? "Note cliente" : "Note studio", dati.cliente_nome].filter(Boolean).join(" · ");
-    }
 
-    const ripristinaBtn = ripristinabile
-      ? `<button class="btn btn-sm btn-primary" onclick="ripristinaDaCestino(${item.id})" style="font-size:12px;margin-right:6px" title="Ripristina">↩️ Ripristina</button>`
-      : `<button class="btn btn-sm" disabled style="font-size:12px;margin-right:6px;opacity:0.45;cursor:not-allowed" title="Non ripristinabile: dipendenze mancanti">↩️ N/R</button>`;
+      const ripristinaBtn = ripristinabile
+        ? `<button class="btn btn-sm btn-primary" onclick="ripristinaDaCestino(${item.id})" style="font-size:12px;margin-right:6px" title="Ripristina">↩️ Ripristina</button>`
+        : `<button class="btn btn-sm" disabled style="font-size:12px;margin-right:6px;opacity:0.45;cursor:not-allowed" title="Non ripristinabile: dipendenze mancanti">↩️ N/R</button>`;
 
-    return `
+      return `
       <tr class="${selezionato ? "cestino-row-selected" : ""}" style="transition:background 0.15s">
         <td style="width:32px;padding:8px 4px 8px 12px">
           <input type="checkbox" class="cestino-checkbox"
@@ -181,10 +236,12 @@ function renderCestinoTabella(container) {
           <button class="btn btn-sm btn-danger" onclick="eliminaDefinitivoCestino(${item.id})" style="font-size:12px;background:#dc2626;color:#fff;border:none">🗑️ Elimina</button>
         </td>
       </tr>`;
-  }).join("");
+    })
+    .join("");
 
   // Barra azioni bulk
-  const bulkBar = qualcunoSelezionato ? `
+  const bulkBar = qualcunoSelezionato
+    ? `
     <div id="cestino-bulk-bar" style="
       display:flex;align-items:center;gap:10px;
       background:var(--bg-card,#fff);border:1.5px solid var(--primary,#2563eb);
@@ -198,25 +255,34 @@ function renderCestinoTabella(container) {
         (${selezionatiRipristinabili.length} ripristinabil${selezionatiRipristinabili.length === 1 ? "e" : "i"})
       </span>
       <div style="flex:1"></div>
-      ${selezionatiRipristinabili.length > 0 ? `
+      ${
+        selezionatiRipristinabili.length > 0
+          ? `
         <button class="btn btn-sm btn-primary" onclick="ripristinaBulk()" style="font-size:12px">
           ↩️ Ripristina selezionati (${selezionatiRipristinabili.length})
-        </button>` : ""}
+        </button>`
+          : ""
+      }
       <button class="btn btn-sm btn-danger" onclick="eliminaBulk()" style="font-size:12px;background:#dc2626;color:#fff;border:none">
         🗑️ Elimina selezionati (${cestinoSelezione.size})
       </button>
       <button class="btn btn-sm" onclick="deselezionaTutti()" style="font-size:12px">✕ Deseleziona</button>
-    </div>` : "";
+    </div>`
+    : "";
 
   container.innerHTML = `
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <span style="font-size:13px;color:var(--text-muted)">${cestinoData.length} element${cestinoData.length === 1 ? "o" : "i"} nel cestino</span>
       <span style="font-size:12px;color:var(--text-muted)">· Gli elementi vengono eliminati automaticamente dopo 30 giorni</span>
       <div style="flex:1"></div>
-      ${tuttiRipristinabili.length > 0 ? `
+      ${
+        tuttiRipristinabili.length > 0
+          ? `
         <button class="btn btn-sm btn-primary" onclick="ripristinaTutto()" style="font-size:12px" title="Ripristina tutti gli elementi che è possibile ripristinare">
           ↩️ Ripristina tutto (${tuttiRipristinabili.length})
-        </button>` : ""}
+        </button>`
+          : ""
+      }
     </div>
     ${bulkBar}
     <div class="table-wrap">
@@ -253,7 +319,7 @@ function toggleSelezione(id) {
 }
 
 function toggleSelezioneAll(checked) {
-  if (checked) cestinoData.forEach(i => cestinoSelezione.add(i.id));
+  if (checked) cestinoData.forEach((i) => cestinoSelezione.add(i.id));
   else cestinoSelezione.clear();
   const container = document.getElementById("cestino-content");
   if (container) renderCestinoTabella(container);
@@ -277,7 +343,12 @@ socket.on("res:ripristina:cestino", ({ success, error }) => {
 
 // ── Elimina singolo ───────────────────────────────────────────
 function eliminaDefinitivoCestino(id) {
-  if (!confirm("Eliminare definitivamente questo elemento? L'operazione non è reversibile.")) return;
+  if (
+    !confirm(
+      "Eliminare definitivamente questo elemento? L'operazione non è reversibile.",
+    )
+  )
+    return;
   socket.emit("delete:cestino_item", { id });
 }
 
@@ -294,7 +365,9 @@ function ripristinaTutto() {
     msg += `\n\n⚠️ ${nonRipristinabili} element${nonRipristinabili === 1 ? "o" : "i"} non verr${nonRipristinabili === 1 ? "à" : "anno"} ripristinato (dipendenze mancanti, es. cliente o adempimento già eliminato).`;
   }
   if (!confirm(msg)) return;
-  socket.emit("ripristina:cestino:bulk", { ids: ripristinabili.map(i => i.id) });
+  socket.emit("ripristina:cestino:bulk", {
+    ids: ripristinabili.map((i) => i.id),
+  });
 }
 
 socket.on("res:ripristina:cestino:bulk", ({ success, ok, failed, error }) => {
@@ -303,14 +376,16 @@ socket.on("res:ripristina:cestino:bulk", ({ success, ok, failed, error }) => {
     return;
   }
   if (failed && failed.length) {
-    const dettagli = failed.map(f => `• ID ${f.id}: ${f.error}`).join("\n");
-    alert(`✅ Ripristinati: ${ok}\n❌ Falliti: ${failed.length}\n\nDettagli fallimenti:\n${dettagli}`);
+    const dettagli = failed.map((f) => `• ID ${f.id}: ${f.error}`).join("\n");
+    alert(
+      `✅ Ripristinati: ${ok}\n❌ Falliti: ${failed.length}\n\nDettagli fallimenti:\n${dettagli}`,
+    );
   }
 });
 
 // ── Ripristina bulk (selezione) ───────────────────────────────
 function ripristinaBulk() {
-  const selezionati = cestinoData.filter(i => cestinoSelezione.has(i.id));
+  const selezionati = cestinoData.filter((i) => cestinoSelezione.has(i.id));
   const ripristinabili = selezionati.filter(isRipristinabile);
   const nonRipristinabili = selezionati.length - ripristinabili.length;
   if (!ripristinabili.length) {
@@ -322,14 +397,21 @@ function ripristinaBulk() {
     msg += `\n\n⚠️ ${nonRipristinabili} element${nonRipristinabili === 1 ? "o" : "i"} verr${nonRipristinabili === 1 ? "à" : "anno"} saltato (dipendenze mancanti).`;
   }
   if (!confirm(msg)) return;
-  socket.emit("ripristina:cestino:bulk", { ids: ripristinabili.map(i => i.id) });
+  socket.emit("ripristina:cestino:bulk", {
+    ids: ripristinabili.map((i) => i.id),
+  });
 }
 
 // ── Elimina bulk (selezione) ──────────────────────────────────
 function eliminaBulk() {
   const ids = Array.from(cestinoSelezione);
   if (!ids.length) return;
-  if (!confirm(`Eliminare definitivamente ${ids.length} element${ids.length === 1 ? "o" : "i"} selezionat${ids.length === 1 ? "o" : "i"}? L'operazione non è reversibile.`)) return;
+  if (
+    !confirm(
+      `Eliminare definitivamente ${ids.length} element${ids.length === 1 ? "o" : "i"} selezionat${ids.length === 1 ? "o" : "i"}? L'operazione non è reversibile.`,
+    )
+  )
+    return;
   socket.emit("delete:cestino:bulk", { ids });
   cestinoSelezione.clear();
 }
@@ -344,7 +426,12 @@ function svuotaCestino() {
     alert("Il cestino è già vuoto.");
     return;
   }
-  if (!confirm(`Eliminare definitivamente tutti i ${cestinoData.length} elementi nel cestino? L'operazione non è reversibile.`)) return;
+  if (
+    !confirm(
+      `Eliminare definitivamente tutti i ${cestinoData.length} elementi nel cestino? L'operazione non è reversibile.`,
+    )
+  )
+    return;
   socket.emit("svuota:cestino");
 }
 
