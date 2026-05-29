@@ -263,7 +263,10 @@ function setupPaginaBiancaSocketListeners() {
   });
 
   socket.on("broadcast:pagina_bianca_updated", () => {
-    if (state.page === "pagina_bianca" && typeof filterPaginaBianca === "function")
+    if (
+      state.page === "pagina_bianca" &&
+      typeof filterPaginaBianca === "function"
+    )
       filterPaginaBianca();
   });
 
@@ -641,7 +644,8 @@ function aggiornaPbBulkToolbar() {
   const n = cbs.length;
   if (n > 0) {
     toolbar.style.display = "flex";
-    countEl.textContent = n + (n === 1 ? " nota selezionata" : " note selezionate");
+    countEl.textContent =
+      n + (n === 1 ? " nota selezionata" : " note selezionate");
   } else {
     toolbar.style.display = "none";
   }
@@ -652,14 +656,21 @@ function aggiornaPbBulkToolbar() {
 }
 
 function toggleSelezionaTutteNote(cb) {
-  document.querySelectorAll(".pb-bulk-cb").forEach((el) => { el.checked = cb.checked; });
+  document.querySelectorAll(".pb-bulk-cb").forEach((el) => {
+    el.checked = cb.checked;
+  });
   aggiornaPbBulkToolbar();
 }
 
 function deselezionaTutteNote() {
-  document.querySelectorAll(".pb-bulk-cb").forEach((el) => { el.checked = false; });
+  document.querySelectorAll(".pb-bulk-cb").forEach((el) => {
+    el.checked = false;
+  });
   const selAll = document.getElementById("pb-select-all");
-  if (selAll) { selAll.checked = false; selAll.indeterminate = false; }
+  if (selAll) {
+    selAll.checked = false;
+    selAll.indeterminate = false;
+  }
   aggiornaPbBulkToolbar();
 }
 
@@ -667,10 +678,17 @@ function eliminaNoteSelezionate() {
   const cbs = document.querySelectorAll(".pb-bulk-cb:checked");
   if (cbs.length === 0) return;
   const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
-  if (!confirm(`Eliminare ${ids.length} not${ids.length === 1 ? "a" : "e"} selezionat${ids.length === 1 ? "a" : "e"}?`)) return;
+  if (
+    !confirm(
+      `Eliminare ${ids.length} not${ids.length === 1 ? "a" : "e"} selezionat${ids.length === 1 ? "a" : "e"}?`,
+    )
+  )
+    return;
   if (typeof socket === "undefined") return;
   socket.emit("delete:pagina_bianca:bulk", { ids });
-  socket.once("res:delete:pagina_bianca:bulk", () => { deselezionaTutteNote(); });
+  socket.once("res:delete:pagina_bianca:bulk", () => {
+    deselezionaTutteNote();
+  });
 }
 
 window.aggiornaPbBulkToolbar = aggiornaPbBulkToolbar;

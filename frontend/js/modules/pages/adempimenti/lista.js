@@ -358,12 +358,16 @@ function toggleSelezionaTuttiAdp() {
   const allCbs = document.querySelectorAll(".adp-bulk-cb");
   const checked = document.querySelectorAll(".adp-bulk-cb:checked");
   const selectAll = checked.length < allCbs.length;
-  allCbs.forEach((cb) => { cb.checked = selectAll; });
+  allCbs.forEach((cb) => {
+    cb.checked = selectAll;
+  });
   aggiornaAdpBulkToolbar();
 }
 
 function deselezionaTuttiAdp() {
-  document.querySelectorAll(".adp-bulk-cb").forEach((cb) => { cb.checked = false; });
+  document.querySelectorAll(".adp-bulk-cb").forEach((cb) => {
+    cb.checked = false;
+  });
   aggiornaAdpBulkToolbar();
 }
 
@@ -375,7 +379,10 @@ function eliminaAdpSelezionati() {
   if (typeof socket === "undefined") return;
   socket.emit("check:adempimenti:bulk", { ids });
   socket.once("res:check:adempimenti:bulk", ({ success, results }) => {
-    if (!success) { showNotif("Errore durante il controllo", "error"); return; }
+    if (!success) {
+      showNotif("Errore durante il controllo", "error");
+      return;
+    }
 
     const eliminabili = results.filter((r) => r.canDelete);
     const nonEliminabili = results.filter((r) => !r.canDelete);
@@ -383,15 +390,22 @@ function eliminaAdpSelezionati() {
     let msg = `Stai per eliminare ${eliminabili.length} adempiment${eliminabili.length === 1 ? "o" : "i"}`;
     if (nonEliminabili.length > 0) {
       msg += `\n\n⚠️ ${nonEliminabili.length} non eliminabil${nonEliminabili.length === 1 ? "e" : "i"} (assegnati a clienti):\n`;
-      msg += nonEliminabili.map((r) => `• ${r.nome} (${r.clientiCount} clienti)`).join("\n");
+      msg += nonEliminabili
+        .map((r) => `• ${r.nome} (${r.clientiCount} clienti)`)
+        .join("\n");
     }
     if (eliminabili.length === 0) {
-      showNotif("Nessun adempimento selezionato può essere eliminato (sono tutti assegnati a dei clienti)", "warning");
+      showNotif(
+        "Nessun adempimento selezionato può essere eliminato (sono tutti assegnati a dei clienti)",
+        "warning",
+      );
       return;
     }
     msg += "\n\nConfermi?";
     if (!confirm(msg)) return;
-    socket.emit("delete:adempimenti:bulk", { ids: eliminabili.map((r) => r.id) });
+    socket.emit("delete:adempimenti:bulk", {
+      ids: eliminabili.map((r) => r.id),
+    });
     socket.once("res:delete:adempimenti:bulk", () => {
       deselezionaTuttiAdp();
     });

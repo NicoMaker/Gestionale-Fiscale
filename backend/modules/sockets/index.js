@@ -116,7 +116,10 @@ module.exports = function setupSocketHandlers(io) {
         });
         socket.emit("res:check:clienti:bulk", { success: true, results });
       } catch (e) {
-        socket.emit("res:check:clienti:bulk", { success: false, error: e.message });
+        socket.emit("res:check:clienti:bulk", {
+          success: false,
+          error: e.message,
+        });
       }
     });
 
@@ -137,8 +140,13 @@ module.exports = function setupSocketHandlers(io) {
       const totOk = ok.length;
       const msg = failed.length
         ? "Eliminati " + totOk + ", falliti " + failed.length
-        : totOk + (totOk === 1 ? " cliente eliminato" : " clienti eliminati") + " con successo";
-      socket.emit("notify", { type: failed.length ? "warning" : "success", msg });
+        : totOk +
+          (totOk === 1 ? " cliente eliminato" : " clienti eliminati") +
+          " con successo";
+      socket.emit("notify", {
+        type: failed.length ? "warning" : "success",
+        msg,
+      });
     });
 
     // Copia configurazione cliente
@@ -270,7 +278,10 @@ module.exports = function setupSocketHandlers(io) {
         });
         socket.emit("res:check:adempimenti:bulk", { success: true, results });
       } catch (e) {
-        socket.emit("res:check:adempimenti:bulk", { success: false, error: e.message });
+        socket.emit("res:check:adempimenti:bulk", {
+          success: false,
+          error: e.message,
+        });
       }
     });
 
@@ -291,8 +302,13 @@ module.exports = function setupSocketHandlers(io) {
       const totOk = ok.length;
       const msg = failed.length
         ? "Eliminati " + totOk + ", falliti " + failed.length
-        : totOk + (totOk === 1 ? " adempimento eliminato" : " adempimenti eliminati") + " con successo";
-      socket.emit("notify", { type: failed.length ? "warning" : "success", msg });
+        : totOk +
+          (totOk === 1 ? " adempimento eliminato" : " adempimenti eliminati") +
+          " con successo";
+      socket.emit("notify", {
+        type: failed.length ? "warning" : "success",
+        msg,
+      });
     });
 
     socket.on("create:adempimento_personalizzato", (data) => {
@@ -671,8 +687,13 @@ module.exports = function setupSocketHandlers(io) {
       const totOk = ok.length;
       const msg = failed.length
         ? "Eliminati " + totOk + ", falliti " + failed.length
-        : totOk + (totOk === 1 ? " scadenza eliminata" : " scadenze eliminate") + " con successo";
-      socket.emit("notify", { type: failed.length ? "warning" : "success", msg });
+        : totOk +
+          (totOk === 1 ? " scadenza eliminata" : " scadenze eliminate") +
+          " con successo";
+      socket.emit("notify", {
+        type: failed.length ? "warning" : "success",
+        msg,
+      });
     });
 
     socket.on("toggle:appunto_completato", ({ id, completato }) => {
@@ -789,12 +810,21 @@ module.exports = function setupSocketHandlers(io) {
         }
       }
       if (ok.length > 0) io.emit("broadcast:pagina_bianca_updated");
-      socket.emit("res:delete:pagina_bianca:bulk", { success: true, ok, failed });
+      socket.emit("res:delete:pagina_bianca:bulk", {
+        success: true,
+        ok,
+        failed,
+      });
       const totOk = ok.length;
       const msg = failed.length
         ? "Eliminate " + totOk + ", fallite " + failed.length
-        : totOk + (totOk === 1 ? " nota eliminata" : " note eliminate") + " con successo";
-      socket.emit("notify", { type: failed.length ? "warning" : "success", msg });
+        : totOk +
+          (totOk === 1 ? " nota eliminata" : " note eliminate") +
+          " con successo";
+      socket.emit("notify", {
+        type: failed.length ? "warning" : "success",
+        msg,
+      });
     });
 
     // ========== CESTINO ==========

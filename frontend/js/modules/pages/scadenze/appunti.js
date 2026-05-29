@@ -184,9 +184,14 @@ function toggleSelezionaTuttiAppunti(cb) {
 }
 
 function deselezionaTuttiAppunti() {
-  document.querySelectorAll(".appunti-bulk-cb").forEach((el) => { el.checked = false; });
+  document.querySelectorAll(".appunti-bulk-cb").forEach((el) => {
+    el.checked = false;
+  });
   const selAll = document.getElementById("appunti-select-all");
-  if (selAll) { selAll.checked = false; selAll.indeterminate = false; }
+  if (selAll) {
+    selAll.checked = false;
+    selAll.indeterminate = false;
+  }
   aggiornaAppuntiBulkToolbar();
 }
 
@@ -194,17 +199,23 @@ function eliminaAppuntiSelezionati() {
   const cbs = document.querySelectorAll(".appunti-bulk-cb:checked");
   if (cbs.length === 0) return;
   const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
-  if (!confirm(`Eliminare ${ids.length} scadenz${ids.length === 1 ? "a" : "e"} selezionat${ids.length === 1 ? "a" : "e"}?`)) return;
+  if (
+    !confirm(
+      `Eliminare ${ids.length} scadenz${ids.length === 1 ? "a" : "e"} selezionat${ids.length === 1 ? "a" : "e"}?`,
+    )
+  )
+    return;
   if (typeof socket === "undefined") return;
   socket.emit("delete:appunti:bulk", { ids });
-  socket.once("res:delete:appunti:bulk", () => { deselezionaTuttiAppunti(); });
+  socket.once("res:delete:appunti:bulk", () => {
+    deselezionaTuttiAppunti();
+  });
 }
 
 window.aggiornaAppuntiBulkToolbar = aggiornaAppuntiBulkToolbar;
 window.toggleSelezionaTuttiAppunti = toggleSelezionaTuttiAppunti;
 window.deselezionaTuttiAppunti = deselezionaTuttiAppunti;
 window.eliminaAppuntiSelezionati = eliminaAppuntiSelezionati;
-
 
 function filterAppuntiClientiSelect() {
   const q = (document.getElementById("appunti-search-cliente")?.value || "")

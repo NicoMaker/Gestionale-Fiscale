@@ -873,7 +873,10 @@ function deselezionaTuttiClienti() {
     el.checked = false;
   });
   const selAll = document.getElementById("clienti-select-all");
-  if (selAll) { selAll.checked = false; selAll.indeterminate = false; }
+  if (selAll) {
+    selAll.checked = false;
+    selAll.indeterminate = false;
+  }
   aggiornaClientiBulkToolbar();
 }
 
@@ -886,7 +889,10 @@ function eliminaClientiSelezionati() {
   if (typeof socket === "undefined") return;
   socket.emit("check:clienti:bulk", { ids });
   socket.once("res:check:clienti:bulk", ({ success, results }) => {
-    if (!success) { showNotif("Errore durante il controllo", "error"); return; }
+    if (!success) {
+      showNotif("Errore durante il controllo", "error");
+      return;
+    }
 
     const eliminabili = results.filter((r) => r.canDelete);
     const nonEliminabili = results.filter((r) => !r.canDelete);
@@ -894,10 +900,15 @@ function eliminaClientiSelezionati() {
     let msg = `Stai per eliminare ${eliminabili.length} client${eliminabili.length === 1 ? "e" : "i"}`;
     if (nonEliminabili.length > 0) {
       msg += `\n\n⚠️ ${nonEliminabili.length} non eliminabil${nonEliminabili.length === 1 ? "e" : "i"} (hanno adempimenti):\n`;
-      msg += nonEliminabili.map((r) => `• ${r.nome} (${r.adempimentiCount} adempimenti)`).join("\n");
+      msg += nonEliminabili
+        .map((r) => `• ${r.nome} (${r.adempimentiCount} adempimenti)`)
+        .join("\n");
     }
     if (eliminabili.length === 0) {
-      showNotif("Nessun cliente selezionato può essere eliminato (hanno tutti adempimenti associati)", "warning");
+      showNotif(
+        "Nessun cliente selezionato può essere eliminato (hanno tutti adempimenti associati)",
+        "warning",
+      );
       return;
     }
     msg += "\n\nConfermi?";
