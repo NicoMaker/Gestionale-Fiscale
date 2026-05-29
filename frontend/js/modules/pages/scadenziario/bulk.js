@@ -476,11 +476,14 @@ function selezionaTuttiDelAdp() {
     cb.checked = true;
   });
   _aggiornaDelAdpCounter();
-  
+
   var chkAll = document.getElementById("del-adp-seleziona-tutti");
   if (chkAll) chkAll.checked = true;
-  
-  showNotif("✅ Selezionati tutti gli " + checkboxes.length + " adempimenti", "info");
+
+  showNotif(
+    "✅ Selezionati tutti gli " + checkboxes.length + " adempimenti",
+    "info",
+  );
 }
 
 /**
@@ -492,7 +495,7 @@ function deselezionaTuttiDelAdp() {
     cb.checked = false;
   });
   _aggiornaDelAdpCounter();
-  
+
   var chkAll = document.getElementById("del-adp-seleziona-tutti");
   if (chkAll) chkAll.checked = false;
 }
@@ -503,14 +506,14 @@ function deselezionaTuttiDelAdp() {
 function toggleSelezionaTuttiDelAdp() {
   var chkAll = document.getElementById("del-adp-seleziona-tutti");
   if (!chkAll) return;
-  
+
   var stato = chkAll.checked;
   var checkboxes = document.querySelectorAll(".del-adp-checkbox");
-  
+
   checkboxes.forEach(function (cb) {
     cb.checked = stato;
   });
-  
+
   _aggiornaDelAdpCounter();
 }
 
