@@ -290,8 +290,7 @@ function renderAddAdpSelection(filtro = "") {
       )
     : state.adempimenti.filter(
         (a) =>
-          a.anno_validita == null ||
-          Number(a.anno_validita) === annoCorrente,
+          a.anno_validita == null || Number(a.anno_validita) === annoCorrente,
       );
 
   if (adempimentiFiltrati.length === 0) {
