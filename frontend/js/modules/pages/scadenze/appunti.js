@@ -114,9 +114,10 @@ function renderAppuntiTabella(appunti) {
       <td style="padding:12px 16px"><span class="badge-info" style="background:${prioritaIcon[a.priorita]}20;border-color:${prioritaIcon[a.priorita]}40">${prioritaIcon[a.priorita]} ${prioritaLabel[a.priorita]}</span></td>
       <td style="padding:12px 16px;font-family:var(--mono);font-size:12px">${a.data_scadenza ? formattaDataItaliana(a.data_scadenza) : "—"}</td>
       <td class="no-print" style="padding:12px 16px;white-space:nowrap" onclick="event.stopPropagation()">
-        <div style="display:flex;gap:5px">
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
           <button class="btn btn-xs btn-success" onclick="toggleAppuntoCompletato(${a.id}, ${!a.completato})" title="${a.completato ? "Segna da fare" : "Segna completato"}">${a.completato ? "⭕" : "✅"}</button>
           <button class="btn btn-xs btn-secondary" onclick="openAppunto(${a.id})" title="Modifica">✏️</button>
+          ${a.id_cliente ? `<button class="btn btn-xs" onclick="event.stopPropagation();editCliente(${a.id_cliente})" title="Modifica cliente" style="border:1px solid var(--accent);color:var(--accent);background:transparent">👤 Cliente</button>` : ""}
           <button class="btn btn-xs btn-danger" onclick="deleteAppunto(${a.id})" title="Elimina">🗑️</button>
         </div>
       </td>

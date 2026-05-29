@@ -606,6 +606,7 @@ function renderPaginaBiancaList(appunti) {
               </div>
             </div>
             <div style="display: flex; gap: 8px;">
+              ${a.id_cliente ? `<button class="btn btn-xs" onclick="event.stopPropagation(); editCliente(${a.id_cliente})" title="Modifica cliente" style="border:1px solid var(--accent);color:var(--accent);background:transparent">👤 Modifica cliente</button>` : ""}
               <button class="btn btn-xs btn-secondary" onclick="event.stopPropagation(); openPaginaBiancaEditor(${a.id})" title="Modifica">✏️</button>
               <button class="btn btn-xs btn-danger" onclick="event.stopPropagation(); deletePaginaBiancaAppunto(${a.id})" title="Elimina">🗑️</button>
             </div>
