@@ -3167,8 +3167,14 @@ select {
 
 /* flash verde quando si naviga verso un valore */
 @keyframes fh-flash-kf {
-  0%   { background-color: #e8f5e9; border-color: #4caf50; }
-  100% { background-color: #ffffff; border-color: #c8d0e0; }
+  0% {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+  }
+  100% {
+    background-color: #ffffff;
+    border-color: #c8d0e0;
+  }
 }
 .fh-flash {
   animation: fh-flash-kf 0.35s ease-out;
@@ -3176,8 +3182,14 @@ select {
 
 /* flash rosso quando la storia è vuota */
 @keyframes fh-flash-empty-kf {
-  0%   { background-color: #fdecea; border-color: #e57373; }
-  100% { background-color: #ffffff; border-color: #c8d0e0; }
+  0% {
+    background-color: #fdecea;
+    border-color: #e57373;
+  }
+  100% {
+    background-color: #ffffff;
+    border-color: #c8d0e0;
+  }
 }
 .fh-flash-empty {
   animation: fh-flash-empty-kf 0.4s ease-out;

@@ -24,14 +24,19 @@
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) _db = JSON.parse(raw);
-  } catch (_) { _db = {}; }
-
-  function _save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_db)); }
-    catch (_) {}
+  } catch (_) {
+    _db = {};
   }
 
-  function _key(modalId, fieldId) { return modalId + "__" + fieldId; }
+  function _save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(_db));
+    } catch (_) {}
+  }
+
+  function _key(modalId, fieldId) {
+    return modalId + "__" + fieldId;
+  }
 
   function _getHistory(modalId, fieldId) {
     return _db[_key(modalId, fieldId)] || [];
@@ -42,7 +47,9 @@
     const k = _key(modalId, fieldId);
     const arr = _db[k] || [];
     if (arr[arr.length - 1] === value) return;
-    const filtered = arr.filter(function(v) { return v !== value; });
+    const filtered = arr.filter(function (v) {
+      return v !== value;
+    });
     filtered.push(value);
     if (filtered.length > MAX_HISTORY) filtered.shift();
     _db[k] = filtered;
@@ -58,7 +65,12 @@
     // non reinizializzare se già presente (evita reset dell'idx durante navigazione)
     if (_nav.has(el)) return;
     const h = _getHistory(modalId, fieldId);
-    _nav.set(el, { modalId: modalId, fieldId: fieldId, idx: h.length, liveValue: undefined });
+    _nav.set(el, {
+      modalId: modalId,
+      fieldId: fieldId,
+      idx: h.length,
+      liveValue: undefined,
+    });
   }
 
   function _resetNavToLive(el) {
@@ -78,7 +90,10 @@
     const state = _nav.get(el);
     if (!state) return;
     const history = _getHistory(state.modalId, state.fieldId);
-    if (history.length === 0) { _flashEmpty(el); return; }
+    if (history.length === 0) {
+      _flashEmpty(el);
+      return;
+    }
 
     // prima di andare indietro, salva il valore live corrente
     if (state.idx === history.length && direction === -1) {
@@ -98,7 +113,7 @@
       el.value = history[newIdx];
     }
 
-    el.dispatchEvent(new Event("input",  { bubbles: true }));
+    el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
     _updateButtons(el);
     _flashField(el);
@@ -106,11 +121,15 @@
 
   function _flashField(el) {
     el.classList.add("fh-flash");
-    setTimeout(function() { el.classList.remove("fh-flash"); }, 350);
+    setTimeout(function () {
+      el.classList.remove("fh-flash");
+    }, 350);
   }
   function _flashEmpty(el) {
     el.classList.add("fh-flash-empty");
-    setTimeout(function() { el.classList.remove("fh-flash-empty"); }, 400);
+    setTimeout(function () {
+      el.classList.remove("fh-flash-empty");
+    }, 400);
   }
 
   // ── UI BUTTONS ──────────────────────────────────────────────
@@ -145,10 +164,30 @@
     wrap.appendChild(counter);
     wrap.appendChild(btnFwd);
 
-    btnBack.addEventListener("mousedown", function(e) { e.preventDefault(); _navigate(el, -1); });
-    btnFwd.addEventListener("mousedown",  function(e) { e.preventDefault(); _navigate(el, +1); });
-    btnBack.addEventListener("touchstart", function(e) { e.preventDefault(); _navigate(el, -1); }, { passive: false });
-    btnFwd.addEventListener("touchstart",  function(e) { e.preventDefault(); _navigate(el, +1); }, { passive: false });
+    btnBack.addEventListener("mousedown", function (e) {
+      e.preventDefault();
+      _navigate(el, -1);
+    });
+    btnFwd.addEventListener("mousedown", function (e) {
+      e.preventDefault();
+      _navigate(el, +1);
+    });
+    btnBack.addEventListener(
+      "touchstart",
+      function (e) {
+        e.preventDefault();
+        _navigate(el, -1);
+      },
+      { passive: false },
+    );
+    btnFwd.addEventListener(
+      "touchstart",
+      function (e) {
+        e.preventDefault();
+        _navigate(el, +1);
+      },
+      { passive: false },
+    );
 
     _updateButtons(el);
   }
@@ -161,19 +200,19 @@
     const state = _nav.get(el);
     if (!state) return;
     const history = _getHistory(state.modalId, state.fieldId);
-    const total = history.length;  // solo valori salvati
+    const total = history.length; // solo valori salvati
 
     const btnBack = wrap.querySelector(".fh-btn-back");
-    const btnFwd  = wrap.querySelector(".fh-btn-fwd");
+    const btnFwd = wrap.querySelector(".fh-btn-fwd");
     const counter = wrap.querySelector(".fh-counter");
 
-    const onLive  = state.idx === total;
+    const onLive = state.idx === total;
     const canBack = state.idx > 0;
     // puoi andare avanti solo se sei su un valore storico (non già sul live)
-    const canFwd  = !onLive && state.idx < total;
+    const canFwd = !onLive && state.idx < total;
 
     btnBack.disabled = !canBack;
-    btnFwd.disabled  = !canFwd;
+    btnFwd.disabled = !canFwd;
     btnBack.classList.toggle("fh-btn-active", canBack);
     btnFwd.classList.toggle("fh-btn-active", canFwd);
 
@@ -236,7 +275,9 @@
 
     if (e.key === "Enter") {
       _enterPressed.add(el);
-      setTimeout(function() { _enterPressed.delete(el); }, 200);
+      setTimeout(function () {
+        _enterPressed.delete(el);
+      }, 200);
       return;
     }
 
@@ -257,19 +298,27 @@
     if (!(btn.textContent || "").includes("Salva")) return;
     const modal = btn.closest(".modal-overlay");
     if (!modal) return;
-    modal.querySelectorAll("input.input, textarea.input").forEach(function(el) {
-      if (!_isTrackedField(el)) return;
-      const fieldId = el.id || el.name || el.dataset.fhId;
-      if (!fieldId) return;
-      const val = el.value.trim();
-      if (val) _pushValue(modal.id, fieldId, val);
-    });
+    modal
+      .querySelectorAll("input.input, textarea.input")
+      .forEach(function (el) {
+        if (!_isTrackedField(el)) return;
+        const fieldId = el.id || el.name || el.dataset.fhId;
+        if (!fieldId) return;
+        const val = el.value.trim();
+        if (val) _pushValue(modal.id, fieldId, val);
+      });
   }
 
   // ── HELPER ──────────────────────────────────────────────────
   function _isTrackedField(el) {
     if (!el) return false;
-    if (el.type === "hidden" || el.type === "checkbox" || el.type === "radio" || el.type === "date") return false;
+    if (
+      el.type === "hidden" ||
+      el.type === "checkbox" ||
+      el.type === "radio" ||
+      el.type === "date"
+    )
+      return false;
     if (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA") return false;
     if (!el.classList.contains("input")) return false;
     return true;
@@ -277,10 +326,10 @@
 
   // ── INIT ─────────────────────────────────────────────────────
   function init() {
-    document.addEventListener("focusin",  _onFocus,      true);
-    document.addEventListener("focusout", _onBlur,       true);
-    document.addEventListener("keydown",  _onKeydown,    true);
-    document.addEventListener("click",    _onSalvaClick, true);
+    document.addEventListener("focusin", _onFocus, true);
+    document.addEventListener("focusout", _onBlur, true);
+    document.addEventListener("keydown", _onKeydown, true);
+    document.addEventListener("click", _onSalvaClick, true);
   }
 
   if (document.readyState === "loading") {
@@ -291,9 +340,14 @@
 
   window._fieldHistory = {
     push: _pushValue,
-    get:  _getHistory,
-    clearAll: function() { _db = {}; _save(); },
-    clearField: function(modalId, fieldId) { delete _db[_key(modalId, fieldId)]; _save(); },
+    get: _getHistory,
+    clearAll: function () {
+      _db = {};
+      _save();
+    },
+    clearField: function (modalId, fieldId) {
+      delete _db[_key(modalId, fieldId)];
+      _save();
+    },
   };
-
 })();
