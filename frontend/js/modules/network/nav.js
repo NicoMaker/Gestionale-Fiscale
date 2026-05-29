@@ -211,7 +211,11 @@ function renderPage(page) {
   scrollToTop();
 
   // Reset pill bulk selection on page change
-  if (typeof disattivaModalitaSelezione === 'function' && typeof _pillBulkAttivo !== 'undefined' && _pillBulkAttivo) {
+  if (
+    typeof disattivaModalitaSelezione === "function" &&
+    typeof _pillBulkAttivo !== "undefined" &&
+    _pillBulkAttivo
+  ) {
     disattivaModalitaSelezione();
   }
 

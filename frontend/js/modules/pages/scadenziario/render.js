@@ -509,7 +509,7 @@ function renderScadenzarioTabella(data) {
     configAnnoInfo + clienteCard + `<div id="scad-content">${content}</div>`;
 
   // Aggiorna UI bulk selezione se modalità attiva
-  if (typeof _pillBulkAttivo !== 'undefined' && _pillBulkAttivo) {
+  if (typeof _pillBulkAttivo !== "undefined" && _pillBulkAttivo) {
     _renderBarraBulkPill();
     _aggiornaPillBulkUI();
   }
