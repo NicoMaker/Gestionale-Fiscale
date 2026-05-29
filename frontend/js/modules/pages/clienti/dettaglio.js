@@ -278,10 +278,22 @@ function openEditClienteModal(cliente, anno) {
         document.getElementById("c-col3").value = col3Val;
 
       const tipCodice = _getTipologiaCodice();
-      if (REGIMI_ANNUALI.includes(col3Val))
+
+      // Per privato e socio: nascondi col3 e col4 (non servono)
+      if (col2Val === "privato" || col2Val === "socio") {
+        const col3Wrap = document.getElementById("wrap-col3");
+        const col4Wrap = document.getElementById("wrap-col4");
+        if (col3Wrap) col3Wrap.style.display = "none";
+        if (col4Wrap) col4Wrap.style.display = "none";
+        const col3Sel = document.getElementById("c-col3");
+        const col4Sel = document.getElementById("c-col4");
+        if (col3Sel) col3Sel.value = "";
+        if (col4Sel) col4Sel.value = "";
+      } else if (REGIMI_ANNUALI.includes(col3Val)) {
         _aggiornCol4BasedOnCol3(tipCodice, col3Val);
-      else if (document.getElementById("c-col4"))
+      } else if (document.getElementById("c-col4")) {
         document.getElementById("c-col4").value = col4Val;
+      }
 
       aggiornaRiepilogoClassificazione();
     }, 50);
