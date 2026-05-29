@@ -3093,3 +3093,101 @@ select {
 .modal .select-search-input:focus {
   border-color: var(--accent);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   FIELD-HISTORY — Frecce cronologia valori per ogni campo form
+   ════════════════════════════════════════════════════════════════ */
+
+/* wrapper che avvolge input + frecce */
+.fh-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+/* il campo occupa tutto lo spazio disponibile */
+.fh-wrap > input.input,
+.fh-wrap > textarea.input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* bottoni freccia */
+.fh-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-xs, 5px);
+  border: 1.5px solid #c8d0e0;
+  background: #f4f6fb;
+  color: #9aa3b8;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  line-height: 1;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fh-btn:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.fh-btn.fh-btn-active {
+  border-color: var(--accent, #5b8df6);
+  color: var(--accent, #5b8df6);
+  background: #eef3ff;
+}
+
+.fh-btn.fh-btn-active:hover {
+  background: var(--accent, #5b8df6);
+  color: #fff;
+  border-color: var(--accent, #5b8df6);
+  transform: scale(1.1);
+}
+
+/* contatore posizione  1/3 */
+.fh-counter {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  color: #9aa3b8;
+  min-width: 26px;
+  text-align: center;
+  white-space: nowrap;
+  font-family: var(--mono, monospace);
+  letter-spacing: 0.02em;
+}
+
+/* flash verde quando si naviga verso un valore */
+@keyframes fh-flash-kf {
+  0%   { background-color: #e8f5e9; border-color: #4caf50; }
+  100% { background-color: #ffffff; border-color: #c8d0e0; }
+}
+.fh-flash {
+  animation: fh-flash-kf 0.35s ease-out;
+}
+
+/* flash rosso quando la storia è vuota */
+@keyframes fh-flash-empty-kf {
+  0%   { background-color: #fdecea; border-color: #e57373; }
+  100% { background-color: #ffffff; border-color: #c8d0e0; }
+}
+.fh-flash-empty {
+  animation: fh-flash-empty-kf 0.4s ease-out;
+}
+
+/* textarea: allinea le frecce in alto */
+.fh-wrap:has(textarea) {
+  align-items: flex-start;
+}
+.fh-wrap:has(textarea) .fh-btn,
+.fh-wrap:has(textarea) .fh-counter {
+  margin-top: 4px;
+}
