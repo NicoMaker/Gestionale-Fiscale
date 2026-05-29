@@ -7,7 +7,12 @@
 
 function getAdempimentiMancanti() {
   if (!state.selectedCliente) return [];
-  return state.adempimenti.filter((a) => !state.adpInseriti.includes(a.id));
+  const annoCorrente = state.anno;
+  return state.adempimenti.filter(
+    (a) =>
+      !state.adpInseriti.includes(a.id) &&
+      (a.anno_validita == null || Number(a.anno_validita) === annoCorrente),
+  );
 }
 
 function hasDatiDaGenerare() {

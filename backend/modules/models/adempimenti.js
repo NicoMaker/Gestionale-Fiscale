@@ -325,7 +325,10 @@ function createAdempimentoPersonalizzato(data) {
 }
 
 function checkAdempimentiClienteEsistenti(id_cliente, anno) {
-  const adp = queryAll(`SELECT * FROM adempimenti WHERE attivo = 1`);
+  const adp = queryAll(
+    `SELECT * FROM adempimenti WHERE attivo = 1 AND (anno_validita IS NULL OR anno_validita = ?)`,
+    [anno],
+  );
   const esistenti = queryAll(
     `
     SELECT id_adempimento, mese, trimestre, semestre FROM adempimenti_cliente 

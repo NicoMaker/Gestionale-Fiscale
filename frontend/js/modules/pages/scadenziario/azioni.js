@@ -277,13 +277,22 @@ function renderAddAdpSelection(filtro = "") {
     return;
   }
 
+  const annoCorrente =
+    parseInt(document.getElementById("add-adp-anno")?.value) || state.anno;
+
   const adempimentiFiltrati = filtro
     ? state.adempimenti.filter(
         (a) =>
-          a.nome.toLowerCase().includes(filtro) ||
-          a.codice.toLowerCase().includes(filtro),
+          (a.anno_validita == null ||
+            Number(a.anno_validita) === annoCorrente) &&
+          (a.nome.toLowerCase().includes(filtro) ||
+            a.codice.toLowerCase().includes(filtro)),
       )
-    : state.adempimenti;
+    : state.adempimenti.filter(
+        (a) =>
+          a.anno_validita == null ||
+          Number(a.anno_validita) === annoCorrente,
+      );
 
   if (adempimentiFiltrati.length === 0) {
     container.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">Nessun adempimento trovato</div>`;
