@@ -218,6 +218,9 @@ socket.on("res:update:cliente", ({ success, error }) => {
 socket.on("res:delete:cliente", ({ success }) => {
   if (success) refreshPage();
 });
+socket.on("res:delete:clienti:bulk", ({ success }) => {
+  if (success) refreshPage();
+});
 
 // ─── RISPOSTA CRUD ADEMPIMENTI DEF ────────────────────────────
 socket.on("res:create:adempimento", ({ success, error }) => {
@@ -235,6 +238,12 @@ socket.on("res:update:adempimento", ({ success, error }) => {
   } else showNotif(error, "error");
 });
 socket.on("res:delete:adempimento", ({ success }) => {
+  if (success) {
+    state._pending = "adempimenti";
+    socket.emit("get:adempimenti");
+  }
+});
+socket.on("res:delete:adempimenti:bulk", ({ success }) => {
   if (success) {
     state._pending = "adempimenti";
     socket.emit("get:adempimenti");
