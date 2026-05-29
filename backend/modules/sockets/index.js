@@ -654,6 +654,27 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    // ── BULK: elimina più scadenze studio ─────────────────────────────
+    socket.on("delete:appunti:bulk", ({ ids }) => {
+      const ok = [];
+      const failed = [];
+      for (const id of ids) {
+        try {
+          appuntiModel.deleteAppunto(id);
+          ok.push(id);
+        } catch (e) {
+          failed.push({ id, error: e.message });
+        }
+      }
+      if (ok.length > 0) io.emit("broadcast:appunti_updated");
+      socket.emit("res:delete:appunti:bulk", { success: true, ok, failed });
+      const totOk = ok.length;
+      const msg = failed.length
+        ? "Eliminati " + totOk + ", falliti " + failed.length
+        : totOk + (totOk === 1 ? " scadenza eliminata" : " scadenze eliminate") + " con successo";
+      socket.emit("notify", { type: failed.length ? "warning" : "success", msg });
+    });
+
     socket.on("toggle:appunto_completato", ({ id, completato }) => {
       try {
         appuntiModel.toggleAppuntoCompletato(id, completato);
@@ -753,6 +774,27 @@ module.exports = function setupSocketHandlers(io) {
           error: e.message,
         });
       }
+    });
+
+    // ── BULK: elimina più note ────────────────────────────────────────
+    socket.on("delete:pagina_bianca:bulk", ({ ids }) => {
+      const ok = [];
+      const failed = [];
+      for (const id of ids) {
+        try {
+          paginaBiancaModel.deletePaginaBianca(id);
+          ok.push(id);
+        } catch (e) {
+          failed.push({ id, error: e.message });
+        }
+      }
+      if (ok.length > 0) io.emit("broadcast:pagina_bianca_updated");
+      socket.emit("res:delete:pagina_bianca:bulk", { success: true, ok, failed });
+      const totOk = ok.length;
+      const msg = failed.length
+        ? "Eliminate " + totOk + ", fallite " + failed.length
+        : totOk + (totOk === 1 ? " nota eliminata" : " note eliminate") + " con successo";
+      socket.emit("notify", { type: failed.length ? "warning" : "success", msg });
     });
 
     // ========== CESTINO ==========

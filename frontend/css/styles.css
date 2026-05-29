@@ -3212,3 +3212,10 @@ select {
 .clienti-bulk-row:has(.clienti-bulk-cb:checked) td {
   background: var(--red)08;
 }
+.appunti-bulk-row:has(.appunti-bulk-cb:checked) td {
+  background: var(--red)08;
+}
+.pb-bulk-card:has(.pb-bulk-cb:checked) {
+  border-color: var(--red) !important;
+  background: var(--red)08;
+}

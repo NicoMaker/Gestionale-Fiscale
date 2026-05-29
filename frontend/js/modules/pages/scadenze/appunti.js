@@ -97,7 +97,10 @@ function renderAppuntiTabella(appunti) {
   const rows = appunti
     .map(
       (a) => `
-    <tr class="clickable" onclick="openAppunto(${a.id})" style="cursor:pointer">
+    <tr class="clickable appunti-bulk-row" data-id="${a.id}" onclick="openAppunto(${a.id})" style="cursor:pointer">
+      <td class="no-print" style="padding:12px 10px 12px 16px;width:36px" onclick="event.stopPropagation()">
+        <input type="checkbox" class="appunti-bulk-cb" data-id="${a.id}" onchange="aggiornaAppuntiBulkToolbar()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)">
+      </td>
       <td style="padding:12px 16px">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:18px">${a.completato ? "✅" : "📝"}</span>
@@ -111,9 +114,11 @@ function renderAppuntiTabella(appunti) {
       <td style="padding:12px 16px"><span class="badge-info" style="background:${prioritaIcon[a.priorita]}20;border-color:${prioritaIcon[a.priorita]}40">${prioritaIcon[a.priorita]} ${prioritaLabel[a.priorita]}</span></td>
       <td style="padding:12px 16px;font-family:var(--mono);font-size:12px">${a.data_scadenza ? formattaDataItaliana(a.data_scadenza) : "—"}</td>
       <td class="no-print" style="padding:12px 16px;white-space:nowrap" onclick="event.stopPropagation()">
-        <button class="btn btn-xs btn-success" onclick="toggleAppuntoCompletato(${a.id}, ${!a.completato})" title="${a.completato ? "Segna da fare" : "Segna completato"}">${a.completato ? "⭕" : "✅"}</button>
-        <button class="btn btn-xs btn-secondary" onclick="openAppunto(${a.id})" title="Modifica">✏️</button>
-        <button class="btn btn-xs btn-danger" onclick="deleteAppunto(${a.id})" title="Elimina">🗑️</button>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-xs btn-success" onclick="toggleAppuntoCompletato(${a.id}, ${!a.completato})" title="${a.completato ? "Segna da fare" : "Segna completato"}">${a.completato ? "⭕" : "✅"}</button>
+          <button class="btn btn-xs btn-secondary" onclick="openAppunto(${a.id})" title="Modifica">✏️</button>
+          <button class="btn btn-xs btn-danger" onclick="deleteAppunto(${a.id})" title="Elimina">🗑️</button>
+        </div>
       </td>
     </tr>
   `,
@@ -122,13 +127,21 @@ function renderAppuntiTabella(appunti) {
 
   content.innerHTML = `
     <div class="table-wrap">
-      <div class="table-header">
+      <div class="table-header no-print" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <h3>Scadenze Studio <span style="font-size:13px;color:var(--text3);margin-left:8px">(${appunti.length})</span></h3>
+        <div id="appunti-bulk-toolbar" style="display:none;margin-left:auto;align-items:center;gap:8px;flex-wrap:wrap">
+          <span id="appunti-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
+          <button class="btn btn-sm btn-danger" onclick="eliminaAppuntiSelezionati()">🗑️ Elimina selezionati</button>
+          <button class="btn btn-sm btn-secondary" onclick="deselezionaTuttiAppunti()">✕ Deseleziona</button>
+        </div>
       </div>
       <div class="table-scroll-wrap">
         <table style="width:100%;border-collapse:collapse">
           <thead>
             <tr style="background:var(--s2);border-bottom:1px solid var(--b0)">
+              <th class="no-print" style="padding:12px 10px 12px 16px;width:36px">
+                <input type="checkbox" id="appunti-select-all" onchange="toggleSelezionaTuttiAppunti(this)" style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)" title="Seleziona tutti">
+              </th>
               <th style="text-align:left;padding:12px 16px">Scadenza Studio</th>
               <th style="text-align:left;padding:12px 16px">Cliente</th>
               <th style="text-align:left;padding:12px 16px">Priorità</th>
@@ -141,6 +154,57 @@ function renderAppuntiTabella(appunti) {
       </div>
     </div>`;
 }
+
+// ── BULK SCADENZE STUDIO ─────────────────────────────────────
+function aggiornaAppuntiBulkToolbar() {
+  const cbs = document.querySelectorAll(".appunti-bulk-cb:checked");
+  const toolbar = document.getElementById("appunti-bulk-toolbar");
+  const countEl = document.getElementById("appunti-bulk-count");
+  const selAll = document.getElementById("appunti-select-all");
+  const allCbs = document.querySelectorAll(".appunti-bulk-cb");
+  if (!toolbar) return;
+  const n = cbs.length;
+  if (n > 0) {
+    toolbar.style.display = "flex";
+    countEl.textContent = n + (n === 1 ? " selezionata" : " selezionate");
+  } else {
+    toolbar.style.display = "none";
+  }
+  if (selAll) {
+    selAll.checked = n > 0 && n === allCbs.length;
+    selAll.indeterminate = n > 0 && n < allCbs.length;
+  }
+}
+
+function toggleSelezionaTuttiAppunti(cb) {
+  document.querySelectorAll(".appunti-bulk-cb").forEach((el) => {
+    el.checked = cb.checked;
+  });
+  aggiornaAppuntiBulkToolbar();
+}
+
+function deselezionaTuttiAppunti() {
+  document.querySelectorAll(".appunti-bulk-cb").forEach((el) => { el.checked = false; });
+  const selAll = document.getElementById("appunti-select-all");
+  if (selAll) { selAll.checked = false; selAll.indeterminate = false; }
+  aggiornaAppuntiBulkToolbar();
+}
+
+function eliminaAppuntiSelezionati() {
+  const cbs = document.querySelectorAll(".appunti-bulk-cb:checked");
+  if (cbs.length === 0) return;
+  const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
+  if (!confirm(`Eliminare ${ids.length} scadenz${ids.length === 1 ? "a" : "e"} selezionat${ids.length === 1 ? "a" : "e"}?`)) return;
+  if (typeof socket === "undefined") return;
+  socket.emit("delete:appunti:bulk", { ids });
+  socket.once("res:delete:appunti:bulk", () => { deselezionaTuttiAppunti(); });
+}
+
+window.aggiornaAppuntiBulkToolbar = aggiornaAppuntiBulkToolbar;
+window.toggleSelezionaTuttiAppunti = toggleSelezionaTuttiAppunti;
+window.deselezionaTuttiAppunti = deselezionaTuttiAppunti;
+window.eliminaAppuntiSelezionati = eliminaAppuntiSelezionati;
+
 
 function filterAppuntiClientiSelect() {
   const q = (document.getElementById("appunti-search-cliente")?.value || "")

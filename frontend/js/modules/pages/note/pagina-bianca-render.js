@@ -26,6 +26,8 @@ function cleanupPaginaBianca() {
     socket.off("res:create:pagina_bianca");
     socket.off("res:update:pagina_bianca");
     socket.off("res:delete:pagina_bianca");
+    socket.off("res:delete:pagina_bianca:bulk");
+    socket.off("broadcast:pagina_bianca_updated");
     paginaBiancaListenersRegistered = false;
   }
 
@@ -252,6 +254,17 @@ function setupPaginaBiancaSocketListeners() {
     } else if (success) {
       showNotif("Nota eliminata", "success");
     }
+  });
+
+  socket.on("res:delete:pagina_bianca:bulk", ({ success }) => {
+    if (success && state.page === "pagina_bianca") {
+      filterPaginaBianca();
+    }
+  });
+
+  socket.on("broadcast:pagina_bianca_updated", () => {
+    if (state.page === "pagina_bianca" && typeof filterPaginaBianca === "function")
+      filterPaginaBianca();
   });
 
   paginaBiancaListenersRegistered = true;
@@ -554,23 +567,38 @@ function renderPaginaBiancaList(appunti) {
     return;
   }
 
+  // Toolbar bulk sopra le card
+  const bulkBar = `
+    <div id="pb-bulk-toolbar" style="display:none;margin-bottom:14px;padding:10px 14px;background:var(--red)12;border:1px solid var(--red)33;border-radius:var(--r-sm);align-items:center;gap:10px;flex-wrap:wrap">
+      <span id="pb-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
+      <button class="btn btn-sm btn-danger" onclick="eliminaNoteSelezionate()">🗑️ Elimina selezionate</button>
+      <button class="btn btn-sm btn-secondary" onclick="deselezionaTutteNote()">✕ Deseleziona</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--t2);cursor:pointer;user-select:none">
+        <input type="checkbox" id="pb-select-all" onchange="toggleSelezionaTutteNote(this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red)">
+        Seleziona tutte
+      </label>
+    </div>`;
+
   const html = `
+    ${bulkBar}
     <div style="display: flex; flex-direction: column; gap: 16px;">
       ${appunti
         .map(
           (a) => `
-        <div class="pagina-bianca-card" style="background: var(--surface1); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);" 
-             onmouseenter="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'; this.style.transform='translateY(-2px)'" 
+        <div class="pagina-bianca-card pb-bulk-card" data-id="${a.id}" style="background: var(--surface1); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+             onmouseenter="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'; this.style.transform='translateY(-2px)'"
              onmouseleave="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'; this.style.transform='translateY(0)'">
-          
+
           <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface2); border-bottom: 1px solid var(--border);">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <input type="checkbox" class="pb-bulk-cb" data-id="${a.id}" onchange="aggiornaPbBulkToolbar()" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red);flex-shrink:0" title="Seleziona">
               <span style="font-size: 24px;">${a.tipo === "studio" ? "🏢" : "👤"}</span>
               <div>
                 <div style="font-weight: 700; font-size: 16px;">${a.titolo ? escAttr(a.titolo) : ""}</div>
                 <div style="font-size: 12px; color: var(--text3); margin-top: 2px;">
                   ${a.tipo === "studio" ? "Appunto Studio" : `Cliente: ${escAttr(a.cliente_nome || "—")}`}
-                  
                 </div>
               </div>
             </div>
@@ -579,7 +607,7 @@ function renderPaginaBiancaList(appunti) {
               <button class="btn btn-xs btn-danger" onclick="event.stopPropagation(); deletePaginaBiancaAppunto(${a.id})" title="Elimina">🗑️</button>
             </div>
           </div>
-          
+
           <div style="padding: 20px;">
             <div style="color: var(--text1); line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto;">
               ${escAttr(a.contenuto || "— Nessun contenuto —")}
@@ -601,3 +629,51 @@ function renderPaginaBiancaList(appunti) {
 
   container.innerHTML = html;
 }
+
+// ── BULK NOTE ────────────────────────────────────────────────
+function aggiornaPbBulkToolbar() {
+  const cbs = document.querySelectorAll(".pb-bulk-cb:checked");
+  const toolbar = document.getElementById("pb-bulk-toolbar");
+  const countEl = document.getElementById("pb-bulk-count");
+  const selAll = document.getElementById("pb-select-all");
+  const allCbs = document.querySelectorAll(".pb-bulk-cb");
+  if (!toolbar) return;
+  const n = cbs.length;
+  if (n > 0) {
+    toolbar.style.display = "flex";
+    countEl.textContent = n + (n === 1 ? " nota selezionata" : " note selezionate");
+  } else {
+    toolbar.style.display = "none";
+  }
+  if (selAll) {
+    selAll.checked = n > 0 && n === allCbs.length;
+    selAll.indeterminate = n > 0 && n < allCbs.length;
+  }
+}
+
+function toggleSelezionaTutteNote(cb) {
+  document.querySelectorAll(".pb-bulk-cb").forEach((el) => { el.checked = cb.checked; });
+  aggiornaPbBulkToolbar();
+}
+
+function deselezionaTutteNote() {
+  document.querySelectorAll(".pb-bulk-cb").forEach((el) => { el.checked = false; });
+  const selAll = document.getElementById("pb-select-all");
+  if (selAll) { selAll.checked = false; selAll.indeterminate = false; }
+  aggiornaPbBulkToolbar();
+}
+
+function eliminaNoteSelezionate() {
+  const cbs = document.querySelectorAll(".pb-bulk-cb:checked");
+  if (cbs.length === 0) return;
+  const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
+  if (!confirm(`Eliminare ${ids.length} not${ids.length === 1 ? "a" : "e"} selezionat${ids.length === 1 ? "a" : "e"}?`)) return;
+  if (typeof socket === "undefined") return;
+  socket.emit("delete:pagina_bianca:bulk", { ids });
+  socket.once("res:delete:pagina_bianca:bulk", () => { deselezionaTutteNote(); });
+}
+
+window.aggiornaPbBulkToolbar = aggiornaPbBulkToolbar;
+window.toggleSelezionaTutteNote = toggleSelezionaTutteNote;
+window.deselezionaTutteNote = deselezionaTutteNote;
+window.eliminaNoteSelezionate = eliminaNoteSelezionate;

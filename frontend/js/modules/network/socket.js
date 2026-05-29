@@ -154,6 +154,9 @@ socket.on("res:delete:appunto", ({ success }) => {
     showNotif("Appunto eliminato", "success");
   }
 });
+socket.on("res:delete:appunti:bulk", ({ success }) => {
+  if (success && typeof filterAppunti === "function") filterAppunti();
+});
 socket.on("res:toggle:appunto_completato", ({ success }) => {
   if (success && typeof filterAppunti === "function") filterAppunti();
 });
@@ -410,6 +413,9 @@ socket.on("res:delete:appunto", ({ success }) => {
     filterAppunti();
     showNotif("Appunto eliminato", "success");
   }
+});
+socket.on("res:delete:appunti:bulk", ({ success }) => {
+  if (success && typeof filterAppunti === "function") filterAppunti();
 });
 socket.on("res:toggle:appunto_completato", ({ success }) => {
   if (success && typeof filterAppunti === "function") filterAppunti();
