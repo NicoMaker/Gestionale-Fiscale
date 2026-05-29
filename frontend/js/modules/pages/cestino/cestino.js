@@ -132,7 +132,7 @@ function renderCestinoTabella(container) {
           : dati.nome || dati.titolo || dati.codice || `#${item.record_id}`;
       const dataEl = new Date(item.data_eliminazione);
       const giorni = Math.floor((now - dataEl) / (1000 * 60 * 60 * 24));
-      const rimanenti = 30 - giorni;
+      const rimanenti = 15 - giorni;
       const dataFmt = dataEl.toLocaleDateString("it-IT", {
         day: "2-digit",
         month: "2-digit",

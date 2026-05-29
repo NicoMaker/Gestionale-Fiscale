@@ -5,7 +5,7 @@ const {
   queryOne,
 } = require("../database");
 
-const GIORNI_RETENTION = 30;
+const GIORNI_RETENTION = 15;
 
 function spostaInCestino({ tabella, record_id, dati_json, eliminato_da }) {
   return runQueryAndGetId(
