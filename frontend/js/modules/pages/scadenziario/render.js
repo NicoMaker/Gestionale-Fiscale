@@ -23,9 +23,27 @@ function hasDatiDaGenerare() {
 
 function renderBtnAddAdp(id_cliente) {
   const mancanti = getAdempimentiMancanti();
-  if (!mancanti.length)
-    return `<button class="btn btn-sm btn-purple" disabled style="opacity:0.4;cursor:not-allowed" title="Tutti gli adempimenti sono già inseriti">✓ Tutti inseriti</button>`;
-  return `<button class="btn btn-sm btn-purple" onclick="openAddAdp(${id_cliente})" title="Aggiungi un adempimento mancante (${mancanti.length} disponibili)">+ Adempimento <span class="badge-count">${mancanti.length}</span></button>`;
+  const totaleInseriti = state.adempimentiCliente ? state.adempimentiCliente.length : 0;
+  const totaleAdp = state.adempimenti ? state.adempimenti.length : 0;
+  
+  // Se ci sono adempimenti mancanti
+  if (mancanti.length > 0) {
+    return `<button class="btn btn-sm btn-purple" onclick="openAddAdp(${id_cliente})" title="Aggiungi un adempimento mancante (${mancanti.length} disponibili)">
+      + Adempimento <span class="badge-count">${mancanti.length}</span>
+    </button>`;
+  }
+  
+  // Se tutti gli adempimenti sono già inseriti, mostra comunque un pulsante per gestire/eliminare
+  if (totaleInseriti > 0) {
+    return `<button class="btn btn-sm" onclick="openAddAdp(${id_cliente})" title="Gestisci ed elimina adempimenti esistenti" style="background: var(--surface3); border-color: var(--border); color: var(--text1);">
+      🗑️ Gestisci adempimenti
+    </button>`;
+  }
+  
+  // Fallback (nessun adempimento)
+  return `<button class="btn btn-sm btn-purple" onclick="openAddAdp(${id_cliente})" title="Aggiungi adempimenti">
+    + Adempimento
+  </button>`;
 }
 
 function filtraScadPerAdp(idAdp) {

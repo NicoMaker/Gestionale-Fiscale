@@ -13,10 +13,10 @@
 //     • switchAddAdpTab(tab)         'aggiungi' | 'elimina'
 //     • popolaDelAdpList()           riempie la lista "Elimina"
 //                                    con gli adempimenti già presenti
-//     • toggleSelezionaTuttiDelAdp() seleziona/deseleziona tutto Elimina
+//     • selezionaTuttiDelAdp()       seleziona TUTTI gli adempimenti
+//     • deselezionaTuttiDelAdp()     deseleziona TUTTI gli adempimenti
+//     • toggleSelezionaTuttiDelAdp() seleziona/deseleziona tutto (toggle)
 //     • eseguiEliminaAdpCliente()    invia elimina:adempimenti_cliente_bulk
-//                                    usando gli id_adempimento selezionati
-//                                    (raccoglie tutti i record del cliente/anno)
 // ═══════════════════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════════════════
@@ -319,11 +319,6 @@ function switchAddAdpTab(tab) {
 /**
  * Popola #del-adp-list con gli adempimenti già presenti per
  * il cliente + anno correntemente selezionati.
- *
- * Usa state.scadenzario (già caricato) per ricavare i dati:
- * raggruppa per id_adempimento e mostra una riga per adempimento
- * (non per singola riga mese/trimestre: quando elimini un adempimento
- * vengono eliminati tutti i suoi periodi per quel cliente/anno).
  */
 function filtraDelAdpList() {
   var q = (document.getElementById("del-adp-search")?.value || "")
@@ -382,10 +377,6 @@ function popolaDelAdpList(filtro) {
   }
 
   if (avviso) avviso.style.display = adpList.length > 0 ? "" : "none";
-  if (chkTutti) {
-    chkTutti.checked = false;
-    chkTutti.indeterminate = false;
-  }
 
   if (adpList.length === 0) {
     container.innerHTML =
@@ -397,6 +388,11 @@ function popolaDelAdpList(filtro) {
     if (btnElim) {
       btnElim.disabled = true;
       btnElim.style.opacity = "0.5";
+    }
+    // Reset della checkbox "Seleziona tutti"
+    if (chkTutti) {
+      chkTutti.checked = false;
+      chkTutti.indeterminate = false;
     }
     return;
   }
@@ -419,10 +415,10 @@ function popolaDelAdpList(filtro) {
       ' onchange="_aggiornaDelAdpCounter()"' +
       ' style="width:15px;height:15px;cursor:pointer">' +
       '<span style="font-size:13px;font-weight:600">' +
-      adp.nome +
+      escapeHtml(adp.nome) +
       "</span>" +
       '<span style="font-size:11px;color:var(--text3);margin-left:auto;font-family:var(--mono)">' +
-      adp.codice +
+      escapeHtml(adp.codice) +
       "</span>" +
       '<span style="font-size:10px;color:var(--text3);white-space:nowrap">' +
       "(" +
@@ -434,7 +430,24 @@ function popolaDelAdpList(filtro) {
     container.appendChild(label);
   });
 
+  // Reset della checkbox "Seleziona tutti"
+  if (chkTutti) {
+    chkTutti.checked = false;
+    chkTutti.indeterminate = false;
+  }
+
   _aggiornaDelAdpCounter();
+}
+
+// Funzione helper per escape HTML
+function escapeHtml(str) {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function _aggiornaDelAdpCounter() {
@@ -454,20 +467,55 @@ function _aggiornaDelAdpCounter() {
   }
 }
 
+/**
+ * Seleziona TUTTI gli adempimenti nella tab Elimina
+ */
+function selezionaTuttiDelAdp() {
+  var checkboxes = document.querySelectorAll(".del-adp-checkbox");
+  checkboxes.forEach(function (cb) {
+    cb.checked = true;
+  });
+  _aggiornaDelAdpCounter();
+  
+  var chkAll = document.getElementById("del-adp-seleziona-tutti");
+  if (chkAll) chkAll.checked = true;
+  
+  showNotif("✅ Selezionati tutti gli " + checkboxes.length + " adempimenti", "info");
+}
+
+/**
+ * Deseleziona TUTTI gli adempimenti nella tab Elimina
+ */
+function deselezionaTuttiDelAdp() {
+  var checkboxes = document.querySelectorAll(".del-adp-checkbox");
+  checkboxes.forEach(function (cb) {
+    cb.checked = false;
+  });
+  _aggiornaDelAdpCounter();
+  
+  var chkAll = document.getElementById("del-adp-seleziona-tutti");
+  if (chkAll) chkAll.checked = false;
+}
+
+/**
+ * Toggle selezione tutti (usata dalla checkbox)
+ */
 function toggleSelezionaTuttiDelAdp() {
   var chkAll = document.getElementById("del-adp-seleziona-tutti");
-  var stato = chkAll ? chkAll.checked : false;
-  document.querySelectorAll(".del-adp-checkbox").forEach(function (cb) {
+  if (!chkAll) return;
+  
+  var stato = chkAll.checked;
+  var checkboxes = document.querySelectorAll(".del-adp-checkbox");
+  
+  checkboxes.forEach(function (cb) {
     cb.checked = stato;
   });
+  
   _aggiornaDelAdpCounter();
 }
 
 /**
  * Esegue l'eliminazione degli adempimenti selezionati nella tab "Elimina".
- * Raccoglie tutti gli ids_righe (adempimenti_cliente.id) corrispondenti
- * agli adempimenti spuntati, poi invia elimina:adempimenti_cliente_bulk.
- * Il backend ignora silenziosamente gli id non presenti nel DB.
  */
 function eseguiEliminaAdpCliente() {
   var checked = document.querySelectorAll(".del-adp-checkbox:checked");
@@ -519,7 +567,6 @@ function eseguiEliminaAdpCliente() {
   });
 
   closeModal("modal-add-adp");
-  // ⭐ NON resetta la tab: mantiene l'ultima scelta (aggiungi/elimina)
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -538,4 +585,6 @@ window.popolaDelAdpList = popolaDelAdpList;
 window.filtraDelAdpList = filtraDelAdpList;
 window._aggiornaDelAdpCounter = _aggiornaDelAdpCounter;
 window.toggleSelezionaTuttiDelAdp = toggleSelezionaTuttiDelAdp;
+window.selezionaTuttiDelAdp = selezionaTuttiDelAdp;
+window.deselezionaTuttiDelAdp = deselezionaTuttiDelAdp;
 window.eseguiEliminaAdpCliente = eseguiEliminaAdpCliente;
