@@ -101,6 +101,46 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    // ── BULK: controlla se i clienti selezionati sono eliminabili ─────
+    socket.on("check:clienti:bulk", ({ ids }) => {
+      try {
+        const results = ids.map((id) => {
+          const check = clientiModel.canDeleteCliente(id);
+          const c = queryOne("SELECT nome FROM clienti WHERE id = ?", [id]);
+          return {
+            id,
+            nome: c ? c.nome : "#" + id,
+            canDelete: check.canDelete,
+            adempimentiCount: check.adempimentiCount,
+          };
+        });
+        socket.emit("res:check:clienti:bulk", { success: true, results });
+      } catch (e) {
+        socket.emit("res:check:clienti:bulk", { success: false, error: e.message });
+      }
+    });
+
+    // ── BULK: elimina più clienti ─────────────────────────────────────
+    socket.on("delete:clienti:bulk", ({ ids }) => {
+      const ok = [];
+      const failed = [];
+      for (const id of ids) {
+        try {
+          clientiModel.deleteCliente(id);
+          ok.push(id);
+        } catch (e) {
+          failed.push({ id, error: e.message });
+        }
+      }
+      if (ok.length > 0) io.emit("broadcast:clienti_updated");
+      socket.emit("res:delete:clienti:bulk", { success: true, ok, failed });
+      const totOk = ok.length;
+      const msg = failed.length
+        ? "Eliminati " + totOk + ", falliti " + failed.length
+        : totOk + (totOk === 1 ? " cliente eliminato" : " clienti eliminati") + " con successo";
+      socket.emit("notify", { type: failed.length ? "warning" : "success", msg });
+    });
+
     // Copia configurazione cliente
     socket.on("copia:config_cliente", ({ id_cliente, anno_da, anno_a }) => {
       try {
@@ -213,6 +253,46 @@ module.exports = function setupSocketHandlers(io) {
         });
         socket.emit("notify", { type: "error", msg: e.message });
       }
+    });
+
+    // ── BULK: controlla se gli adempimenti selezionati sono eliminabili ─
+    socket.on("check:adempimenti:bulk", ({ ids }) => {
+      try {
+        const results = ids.map((id) => {
+          const check = adempimentiModel.canDeleteAdempimento(id);
+          const a = queryOne("SELECT nome FROM adempimenti WHERE id = ?", [id]);
+          return {
+            id,
+            nome: a ? a.nome : "#" + id,
+            canDelete: check.canDelete,
+            clientiCount: check.clientiCount,
+          };
+        });
+        socket.emit("res:check:adempimenti:bulk", { success: true, results });
+      } catch (e) {
+        socket.emit("res:check:adempimenti:bulk", { success: false, error: e.message });
+      }
+    });
+
+    // ── BULK: elimina più adempimenti ─────────────────────────────────
+    socket.on("delete:adempimenti:bulk", ({ ids }) => {
+      const ok = [];
+      const failed = [];
+      for (const id of ids) {
+        try {
+          adempimentiModel.deleteAdempimento(id);
+          ok.push(id);
+        } catch (e) {
+          failed.push({ id, error: e.message });
+        }
+      }
+      if (ok.length > 0) io.emit("broadcast:adempimenti_updated");
+      socket.emit("res:delete:adempimenti:bulk", { success: true, ok, failed });
+      const totOk = ok.length;
+      const msg = failed.length
+        ? "Eliminati " + totOk + ", falliti " + failed.length
+        : totOk + (totOk === 1 ? " adempimento eliminato" : " adempimenti eliminati") + " con successo";
+      socket.emit("notify", { type: failed.length ? "warning" : "success", msg });
     });
 
     socket.on("create:adempimento_personalizzato", (data) => {

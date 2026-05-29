@@ -1,0 +1,3 @@
+selezione eliminazione vista globale -> per adempiemnto se 12 mesi -> 12
+
+modifica cliente in ogni punto dove c'è cliente -> modifica dati scheda

@@ -221,7 +221,7 @@ function goToClienteScadenzario() {
 function editCliente(id) {
   const anno =
     parseInt(document.getElementById("filter-anno")?.value) ||
-    (typeof state !== "undefined" && state.anno ? state.anno : null) ||
+    (typeof state !== 'undefined' && state.anno ? state.anno : null) ||
     new Date().getFullYear();
   editClienteConfig(id, anno);
 }

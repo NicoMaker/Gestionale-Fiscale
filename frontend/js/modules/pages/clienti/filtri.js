@@ -750,9 +750,9 @@ function renderClientiTabella(clienti) {
   let tableRows = "";
   if (!clienti || clienti.length === 0) {
     if (isNone) {
-      tableRows = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">🏷️</div><p>Nessun filtro selezionato — clicca <strong>✦ Tutti</strong> per vedere tutti i clienti</p></div></td></tr>`;
+      tableRows = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">🏷️</div><p>Nessun filtro selezionato — clicca <strong>✦ Tutti</strong> per vedere tutti i clienti</p></div></td></tr>`;
     } else {
-      tableRows = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">👥</div><p>Nessun cliente trovato per l'anno ${currentAnno}</p></div></td></tr>`;
+      tableRows = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">👥</div><p>Nessun cliente trovato per l'anno ${currentAnno}</p></div></td></tr>`;
     }
   } else {
     tableRows = clienti
@@ -779,7 +779,10 @@ function renderClientiTabella(clienti) {
             ? `<div style="font-size:9px;color:var(--yellow);margin-top:3px" title="Configurazione ereditata dal ${c.config_anno}">📌 eredita ${c.config_anno}</div>`
             : "";
 
-        return `<tr class="clickable" onclick="showClienteDettaglio(${c.id})" style="cursor:pointer">
+        return `<tr class="clickable clienti-bulk-row" data-id="${c.id}" onclick="showClienteDettaglio(${c.id})" style="cursor:pointer">
+        <td class="no-print" style="padding:12px 10px 12px 16px;width:36px" onclick="event.stopPropagation()">
+          <input type="checkbox" class="clienti-bulk-cb" data-id="${c.id}" onchange="aggiornaClientiBulkToolbar()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)">
+        </td>
         <td style="padding:12px 16px">
           <div style="display:flex;align-items:center;gap:12px">
             <div class="cliente-avatar-sm" style="background:${tipColor}22;border-color:${tipColor};color:${tipColor};width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-weight:800;font-size:${avatarFontSize(avatar, 13)}">${avatar}</div>
@@ -810,12 +813,20 @@ function renderClientiTabella(clienti) {
 
   const html = `${filterBar}
     <div class="table-wrap">
-      <div class="table-header no-print">
+      <div class="table-header no-print" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <h3>Clienti <span style="font-size:13px;color:var(--t3);margin-left:8px">(${clienti ? clienti.length : 0})</span></h3>
+        <div id="clienti-bulk-toolbar" style="display:none;margin-left:auto;display:none;align-items:center;gap:8px">
+          <span id="clienti-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
+          <button class="btn btn-sm btn-danger" onclick="eliminaClientiSelezionati()">🗑️ Elimina selezionati</button>
+          <button class="btn btn-sm btn-secondary" onclick="deselezionaTuttiClienti()">✕ Deseleziona</button>
+        </div>
       </div>
       <table style="width:100%;border-collapse:collapse">
         <thead>
           <tr style="background:var(--s2);border-bottom:1px solid var(--b0)">
+            <th class="no-print" style="padding:12px 10px 12px 16px;width:36px">
+              <input type="checkbox" id="clienti-select-all" onchange="toggleSelezionaTuttiClienti(this)" style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)" title="Seleziona tutti">
+            </th>
             <th style="text-align:left;padding:12px 16px;font-size:12px;color:var(--t2)">Cliente</th>
             <th style="text-align:left;padding:12px 16px;font-size:12px;color:var(--t2)">Classificazione ${currentAnno}</th>
             <th style="text-align:left;padding:12px 16px;font-size:12px;color:var(--t2)">Email</th>
@@ -828,5 +839,79 @@ function renderClientiTabella(clienti) {
 
   document.getElementById("content").innerHTML = html;
 }
+
+// ── BULK CLIENTI ────────────────────────────────────────────────
+function aggiornaClientiBulkToolbar() {
+  const cbs = document.querySelectorAll(".clienti-bulk-cb:checked");
+  const toolbar = document.getElementById("clienti-bulk-toolbar");
+  const countEl = document.getElementById("clienti-bulk-count");
+  const selAll = document.getElementById("clienti-select-all");
+  const allCbs = document.querySelectorAll(".clienti-bulk-cb");
+  if (!toolbar) return;
+  const n = cbs.length;
+  if (n > 0) {
+    toolbar.style.display = "flex";
+    countEl.textContent = n + (n === 1 ? " selezionato" : " selezionati");
+  } else {
+    toolbar.style.display = "none";
+  }
+  if (selAll) {
+    selAll.checked = n > 0 && n === allCbs.length;
+    selAll.indeterminate = n > 0 && n < allCbs.length;
+  }
+}
+
+function toggleSelezionaTuttiClienti(cb) {
+  document.querySelectorAll(".clienti-bulk-cb").forEach((el) => {
+    el.checked = cb.checked;
+  });
+  aggiornaClientiBulkToolbar();
+}
+
+function deselezionaTuttiClienti() {
+  document.querySelectorAll(".clienti-bulk-cb").forEach((el) => {
+    el.checked = false;
+  });
+  const selAll = document.getElementById("clienti-select-all");
+  if (selAll) { selAll.checked = false; selAll.indeterminate = false; }
+  aggiornaClientiBulkToolbar();
+}
+
+function eliminaClientiSelezionati() {
+  const cbs = document.querySelectorAll(".clienti-bulk-cb:checked");
+  if (cbs.length === 0) return;
+  const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
+
+  // Prima controlla quali si possono eliminare
+  if (typeof socket === "undefined") return;
+  socket.emit("check:clienti:bulk", { ids });
+  socket.once("res:check:clienti:bulk", ({ success, results }) => {
+    if (!success) { showNotif("Errore durante il controllo", "error"); return; }
+
+    const eliminabili = results.filter((r) => r.canDelete);
+    const nonEliminabili = results.filter((r) => !r.canDelete);
+
+    let msg = `Stai per eliminare ${eliminabili.length} client${eliminabili.length === 1 ? "e" : "i"}`;
+    if (nonEliminabili.length > 0) {
+      msg += `\n\n⚠️ ${nonEliminabili.length} non eliminabil${nonEliminabili.length === 1 ? "e" : "i"} (hanno adempimenti):\n`;
+      msg += nonEliminabili.map((r) => `• ${r.nome} (${r.adempimentiCount} adempimenti)`).join("\n");
+    }
+    if (eliminabili.length === 0) {
+      showNotif("Nessun cliente selezionato può essere eliminato (hanno tutti adempimenti associati)", "warning");
+      return;
+    }
+    msg += "\n\nConfermi?";
+    if (!confirm(msg)) return;
+    socket.emit("delete:clienti:bulk", { ids: eliminabili.map((r) => r.id) });
+    socket.once("res:delete:clienti:bulk", ({ ok, failed }) => {
+      deselezionaTuttiClienti();
+    });
+  });
+}
+
+window.aggiornaClientiBulkToolbar = aggiornaClientiBulkToolbar;
+window.toggleSelezionaTuttiClienti = toggleSelezionaTuttiClienti;
+window.deselezionaTuttiClienti = deselezionaTuttiClienti;
+window.eliminaClientiSelezionati = eliminaClientiSelezionati;
 
 // Fine clienti-filtri.js

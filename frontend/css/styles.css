@@ -3203,3 +3203,12 @@ select {
 .fh-wrap:has(textarea) .fh-counter {
   margin-top: 4px;
 }
+
+/* ── BULK SELECTION ──────────────────────────────────────────── */
+.adp-bulk-card:has(.adp-bulk-cb:checked) {
+  border-color: var(--red) !important;
+  background: var(--red)08;
+}
+.clienti-bulk-row:has(.clienti-bulk-cb:checked) td {
+  background: var(--red)08;
+}

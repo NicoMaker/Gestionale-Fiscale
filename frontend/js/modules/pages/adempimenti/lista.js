@@ -107,11 +107,19 @@ function renderAdempimentiTabella(adempimenti) {
   const totAll = state.adempimenti.length;
   const isFiltrato = totAdp < totAll;
 
-  let html = `<div style="margin-bottom:16px;display:flex;align-items:center;gap:10px">
+  let html = `<div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <span style="font-size:14px;color:var(--text2)">
       ${isFiltrato ? `<span style="color:var(--yellow)">⚠️ Filtro attivo:</span> ${totAdp} di ${totAll} adempimenti` : `<span style="color:var(--text3)">${totAll} adempimenti totali</span>`}
     </span>
     ${isFiltrato ? `<button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:12px">⟳ Tutti</button>` : ""}
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+      <button class="btn btn-sm btn-secondary" onclick="toggleSelezionaTuttiAdp()" title="Seleziona/Deseleziona tutti" style="font-size:12px">☑️ Seleziona tutti</button>
+    </div>
+  </div>
+  <div id="adp-bulk-toolbar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--red)12;border:1px solid var(--red)33;border-radius:var(--r-sm);align-items:center;gap:10px;flex-wrap:wrap">
+    <span id="adp-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
+    <button class="btn btn-sm btn-danger" onclick="eliminaAdpSelezionati()">🗑️ Elimina selezionati</button>
+    <button class="btn btn-sm btn-secondary" onclick="deselezionaTuttiAdp()">✕ Deseleziona</button>
   </div>`;
 
   const adempimentiOrdinati = [...adempimenti].sort((a, b) =>
@@ -142,9 +150,12 @@ function renderAdempimentiTabella(adempimenti) {
           `<span class="adp-flag-badge" style="color:#5b8df6;background:#5b8df615;border-color:#5b8df633;font-size:11px" title="Solo data scadenza">📅 Solo Scad.</span>`,
         );
 
-      return `<div class="adp-def-card" title="${escAttr(a.nome)} — ${scadDesc[a.scadenza_tipo] || a.scadenza_tipo}">
+      return `<div class="adp-def-card adp-bulk-card" data-id="${a.id}" title="${escAttr(a.nome)} — ${scadDesc[a.scadenza_tipo] || a.scadenza_tipo}" style="position:relative">
       <div class="adp-def-card-top">
-        <div class="adp-def-codice" style="font-size:13px">${a.codice}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" class="adp-bulk-cb" data-id="${a.id}" onchange="aggiornaAdpBulkToolbar()" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red);flex-shrink:0" title="Seleziona">
+          <div class="adp-def-codice" style="font-size:13px">${a.codice}</div>
+        </div>
         <div style="display:flex;gap:5px">
           <button class="btn btn-xs btn-secondary" onclick="editAdpDef(${a.id})" title="Modifica">✏️</button>
           <button class="btn btn-xs btn-danger" onclick="deleteAdpDef(${a.id})" title="Elimina">🗑️</button>
@@ -327,3 +338,67 @@ function deleteAdpDef(id) {
   if (confirm("Eliminare questo adempimento?"))
     socket.emit("delete:adempimento", { id });
 }
+
+// ── BULK ADEMPIMENTI ─────────────────────────────────────────
+function aggiornaAdpBulkToolbar() {
+  const cbs = document.querySelectorAll(".adp-bulk-cb:checked");
+  const toolbar = document.getElementById("adp-bulk-toolbar");
+  const countEl = document.getElementById("adp-bulk-count");
+  if (!toolbar) return;
+  const n = cbs.length;
+  if (n > 0) {
+    toolbar.style.display = "flex";
+    countEl.textContent = n + (n === 1 ? " selezionato" : " selezionati");
+  } else {
+    toolbar.style.display = "none";
+  }
+}
+
+function toggleSelezionaTuttiAdp() {
+  const allCbs = document.querySelectorAll(".adp-bulk-cb");
+  const checked = document.querySelectorAll(".adp-bulk-cb:checked");
+  const selectAll = checked.length < allCbs.length;
+  allCbs.forEach((cb) => { cb.checked = selectAll; });
+  aggiornaAdpBulkToolbar();
+}
+
+function deselezionaTuttiAdp() {
+  document.querySelectorAll(".adp-bulk-cb").forEach((cb) => { cb.checked = false; });
+  aggiornaAdpBulkToolbar();
+}
+
+function eliminaAdpSelezionati() {
+  const cbs = document.querySelectorAll(".adp-bulk-cb:checked");
+  if (cbs.length === 0) return;
+  const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
+
+  if (typeof socket === "undefined") return;
+  socket.emit("check:adempimenti:bulk", { ids });
+  socket.once("res:check:adempimenti:bulk", ({ success, results }) => {
+    if (!success) { showNotif("Errore durante il controllo", "error"); return; }
+
+    const eliminabili = results.filter((r) => r.canDelete);
+    const nonEliminabili = results.filter((r) => !r.canDelete);
+
+    let msg = `Stai per eliminare ${eliminabili.length} adempiment${eliminabili.length === 1 ? "o" : "i"}`;
+    if (nonEliminabili.length > 0) {
+      msg += `\n\n⚠️ ${nonEliminabili.length} non eliminabil${nonEliminabili.length === 1 ? "e" : "i"} (assegnati a clienti):\n`;
+      msg += nonEliminabili.map((r) => `• ${r.nome} (${r.clientiCount} clienti)`).join("\n");
+    }
+    if (eliminabili.length === 0) {
+      showNotif("Nessun adempimento selezionato può essere eliminato (sono tutti assegnati a dei clienti)", "warning");
+      return;
+    }
+    msg += "\n\nConfermi?";
+    if (!confirm(msg)) return;
+    socket.emit("delete:adempimenti:bulk", { ids: eliminabili.map((r) => r.id) });
+    socket.once("res:delete:adempimenti:bulk", () => {
+      deselezionaTuttiAdp();
+    });
+  });
+}
+
+window.aggiornaAdpBulkToolbar = aggiornaAdpBulkToolbar;
+window.toggleSelezionaTuttiAdp = toggleSelezionaTuttiAdp;
+window.deselezionaTuttiAdp = deselezionaTuttiAdp;
+window.eliminaAdpSelezionati = eliminaAdpSelezionati;
