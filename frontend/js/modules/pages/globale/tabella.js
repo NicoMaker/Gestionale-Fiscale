@@ -422,6 +422,10 @@ function renderGlobaleTabella(rawData) {
         totC +
         "</span>" +
         "</div>" +
+        '<div style="display:flex;flex-direction:column;gap:5px;margin-left:8px">' +
+        '<button class="btn btn-xs" onclick="event.stopPropagation();editCliente(' + client.id + ')" title="Modifica dati cliente" style="font-size:11px;padding:3px 7px;border:1px solid var(--accent,#2563eb);color:var(--accent,#2563eb);background:transparent;border-radius:5px;cursor:pointer;white-space:nowrap">✏️ Modifica</button>' +
+        '<button class="btn btn-xs" onclick="event.stopPropagation();attivaModalitaSelezioneGlobale(' + client.id + ')" title="Seleziona periodi di questo cliente per eliminarli" style="font-size:11px;padding:3px 7px;border:1px solid var(--red,#dc2626);color:var(--red,#dc2626);background:transparent;border-radius:5px;cursor:pointer;white-space:nowrap">☑ Seleziona</button>' +
+        "</div>" +
         "</div>" +
         '<div class="glob-cliente-periodi' +
         (isMensile ? " periodi-mensili" : "") +
@@ -495,6 +499,12 @@ function renderGlobaleTabella(rawData) {
   if (state.globalePreFiltroAdp) {
     state.globalePreFiltroAdp = "";
   }
+
+  // Aggiorna UI bulk selezione se modalità attiva
+  if (typeof _pillBulkAttivo !== 'undefined' && _pillBulkAttivo) {
+    _renderBarraBulkPill();
+    _aggiornaPillBulkUI();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -504,6 +514,14 @@ function renderGlobaleTabella(rawData) {
 window.toggleGlobTipFiltroPanel = toggleGlobTipFiltroPanel;
 window.closeGlobTipFiltroPanel = closeGlobTipFiltroPanel;
 window.resetGlobaleFiltri = resetGlobaleFiltri;
+
+// Helper per attivare selezione bulk da vista globale (per singolo cliente)
+function attivaModalitaSelezioneGlobale(clienteId) {
+  if (typeof attivaModalitaSelezione === 'function') {
+    attivaModalitaSelezione('globale');
+  }
+}
+window.attivaModalitaSelezioneGlobale = attivaModalitaSelezioneGlobale;
 window.resetGlobaleClienteSel = resetGlobaleClienteSel;
 window.applyGlobaleFiltri = applyGlobaleFiltri;
 window.applyGlobaleFiltriLocali = applyGlobaleFiltriLocali;

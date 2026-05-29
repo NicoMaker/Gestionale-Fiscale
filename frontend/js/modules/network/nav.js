@@ -210,6 +210,11 @@ function renderPage(page) {
   state._dashRendered = false;
   scrollToTop();
 
+  // Reset pill bulk selection on page change
+  if (typeof disattivaModalitaSelezione === 'function' && typeof _pillBulkAttivo !== 'undefined' && _pillBulkAttivo) {
+    disattivaModalitaSelezione();
+  }
+
   const titles = {
     dashboard: "Dashboard",
     clienti: "Clienti",

@@ -174,10 +174,10 @@ function getPillColor(r, stato) {
 function renderTextOnlyPill(r) {
   const ps = getPeriodoShort(r);
   const pillColor = "var(--purple)";
-  return `<div class="periodo-pill text-only-pill"
+  return `<div class="periodo-pill text-only-pill" data-id="${r.id}"
     onclick="openAdpById(${r.id})"
     title="${escAttr(getPeriodoLabel(r))} — Click: modifica"
-    style="border-color:${pillColor};min-width:145px;flex:1 1 145px">
+    style="border-color:${pillColor};min-width:145px;flex:1 1 145px;position:relative">
     <div class="pp-top">
       <span class="pp-tag" style="border-color:${pillColor};color:${pillColor}">📝 ${ps}</span>
     </div>
@@ -204,7 +204,7 @@ function renderCheckboxPill(r) {
   const nomeHtml = r.adempimento_nome
     ? `<div class="pp-nome" style="color:${color};font-size:11px;line-height:1.3;margin-bottom:2px">${r.adempimento_nome}</div>`
     : "";
-  return `<div class="periodo-pill checkbox-pill s-${stato}" onclick="openAdpById(${r.id})" oncontextmenu="toggleAdpCompletato(event,${r.id})" title="${escAttr(getPeriodoLabel(r))} — Click: modifica | Tasto DX: toggle completato" style="border-color:${color};min-width:120px;flex:0 1 120px">
+  return `<div class="periodo-pill checkbox-pill s-${stato}" data-id="${r.id}" onclick="openAdpById(${r.id})" oncontextmenu="toggleAdpCompletato(event,${r.id})" title="${escAttr(getPeriodoLabel(r))} — Click: modifica | Tasto DX: toggle completato" style="border-color:${color};min-width:120px;flex:0 1 120px;position:relative">
     <div class="pp-top" style="justify-content:space-between;gap:4px">
       <span class="pp-tag" style="border-color:${color};color:${color}">${ps}</span>
       <span style="font-size:18px;line-height:1">${icon}</span>
@@ -287,7 +287,7 @@ function renderPeriodoPill(r) {
   const tagColor =
     isContabilita(r) && r.importo_iva ? "var(--green)" : pillColor;
 
-  return `<div class="periodo-pill s-${stato}" onclick="openAdpById(${r.id})" oncontextmenu="toggleAdpCompletato(event,${r.id})" title="${escAttr(tooltipText)}" style="border-color:${pillColor};color:${pillColor}">
+  return `<div class="periodo-pill s-${stato}" data-id="${r.id}" onclick="openAdpById(${r.id})" oncontextmenu="toggleAdpCompletato(event,${r.id})" title="${escAttr(tooltipText)}" style="border-color:${pillColor};color:${pillColor};position:relative">
     <div class="pp-top">
       <span class="pp-tag" style="border-color:${tagColor};color:${tagColor}">${ps}</span>
       <span class="pp-stato-icon" title="${escAttr(statoLabel)}">${statoIcon}</span>
@@ -501,10 +501,10 @@ function renderClienteDatiRiferimento(cliente) {
 function renderTextOnlyPill(r) {
   const ps = getPeriodoShort(r);
   const pillColor = "var(--purple)";
-  return `<div class="periodo-pill text-only-pill"
+  return `<div class="periodo-pill text-only-pill" data-id="${r.id}"
     onclick="openAdpById(${r.id})"
     title="${escAttr(getPeriodoLabel(r))} — Click: modifica"
-    style="border-color:${pillColor};min-width:145px;flex:1 1 145px">
+    style="border-color:${pillColor};min-width:145px;flex:1 1 145px;position:relative">
     <div class="pp-top">
       <span class="pp-tag" style="border-color:${pillColor};color:${pillColor}">📝 ${ps}</span>
     </div>

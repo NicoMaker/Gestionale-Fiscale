@@ -1,6 +1,3 @@
 selezione eliminazione vista globale -> per adempiemnto se 12 mesi -> 12
 
 modifica cliente in ogni punto dove c'è cliente -> modifica dati scheda
-
-
-anche qui la selezione degli adempiemnti che puoi elimianre più in una volta selezioanndoli come concetto come nei clientri sia in clienti che vista globael e elimini selezioanti mandando al ceestin o  pero se 12 1 2caselle di scelte 3 3 e cosi via con  chebox come nei cestino selezione eliminazione vista globale -> per adempiemnto se 12 mesi -> 12 e poi altra cosa in vista globale e cliente dove vedi i dati del cliente che li puoi modifare sia in cliente che viasta globale come conceetto aprendo il modale che c'è nei contatti clientei di quel cliente dammi zip compelto con tutto

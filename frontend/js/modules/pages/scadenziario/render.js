@@ -429,6 +429,8 @@ function renderScadenzarioTabella(data) {
       <button class="btn btn-sm btn-cyan" onclick="openCopia()">📋 Copia</button>
       ${renderBtnAddAdp(c.id)}
       <button class="btn btn-sm btn-purple" onclick="openPaginaBiancaPerCliente(${c.id}, '${escAttr(c.nome)}')" title="Appunti per questo cliente">📄 Appunti</button>
+      <button class="btn btn-sm" onclick="editCliente(${c.id})" title="Modifica dati cliente" style="border:1px solid var(--accent);color:var(--accent);background:transparent">✏️ Modifica cliente</button>
+      <button class="btn btn-sm" onclick="attivaModalitaSelezione('scad')" title="Seleziona periodi per eliminarli" style="border:1px solid var(--red,#dc2626);color:var(--red,#dc2626);background:transparent">☑ Seleziona periodi</button>
       <button class="btn btn-print btn-sm" style="margin-left:auto" onclick="window.print()">🖨️ Stampa</button>
     </div>
     ${renderClienteDatiRiferimento(c)}
@@ -505,4 +507,10 @@ function renderScadenzarioTabella(data) {
 
   document.getElementById("content").innerHTML =
     configAnnoInfo + clienteCard + `<div id="scad-content">${content}</div>`;
+
+  // Aggiorna UI bulk selezione se modalità attiva
+  if (typeof _pillBulkAttivo !== 'undefined' && _pillBulkAttivo) {
+    _renderBarraBulkPill();
+    _aggiornaPillBulkUI();
+  }
 }
