@@ -101,7 +101,7 @@ function renderCestinoTabella(container) {
       <div class="empty">
         <div class="empty-icon">🗑️</div>
         <p style="font-size:15px;margin-bottom:6px">Il cestino è vuoto</p>
-        <p style="color:var(--text-muted);font-size:13px">Gli elementi eliminati appariranno qui per 30 giorni prima di essere rimossi definitivamente.</p>
+        <p style="color:var(--text-muted);font-size:13px">Gli elementi eliminati appariranno qui per 15 giorni prima di essere rimossi definitivamente.</p>
       </div>`;
     return;
   }
