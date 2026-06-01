@@ -37,16 +37,20 @@ const CESTINO_TIPI = [
 
 function renderFiltroTipi() {
   const nessuno = cestinoFiltro.tabelle.size === 0;
-  const chips = CESTINO_TIPI.map(t => {
+  const STILE_ATTIVO =
+    "background:var(--primary,#2563eb);color:#fff;border-color:var(--primary,#2563eb);font-weight:600;";
+  const STILE_INATTIVO =
+    "background:transparent;color:var(--text-secondary,#374151);border-color:var(--border,#d1d5db);font-weight:400;";
+  const chips = CESTINO_TIPI.map((t) => {
     const attivo = cestinoFiltro.tabelle.has(t.value);
     return `<button
       onclick="toggleFiltroTipo('${t.value}')"
-      style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;border-radius:20px;cursor:pointer;border:1.5px solid;transition:all 0.15s;white-space:nowrap;${attivo ? "background:var(--primary,#2563eb);color:#fff;border-color:var(--primary,#2563eb);" : "background:transparent;color:var(--text-muted,#6b7280);border-color:var(--border,#e5e7eb);"}"
+      style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;border-radius:20px;cursor:pointer;border:1.5px solid;transition:all 0.15s;white-space:nowrap;${attivo ? STILE_ATTIVO : STILE_INATTIVO}"
     >${t.icon} ${t.label}</button>`;
   }).join("");
   const tuttiBtn = `<button
     onclick="resetFiltroTipi()"
-    style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;border-radius:20px;cursor:pointer;border:1.5px solid;transition:all 0.15s;white-space:nowrap;${nessuno ? "background:var(--primary,#2563eb);color:#fff;border-color:var(--primary,#2563eb);" : "background:transparent;color:var(--text-muted,#6b7280);border-color:var(--border,#e5e7eb);"}"
+    style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;border-radius:20px;cursor:pointer;border:1.5px solid;transition:all 0.15s;white-space:nowrap;${nessuno ? STILE_ATTIVO : STILE_INATTIVO}"
   >Tutti i tipi</button>`;
   const el = document.getElementById("cestino-filter-chips");
   if (el) el.innerHTML = tuttiBtn + chips;
@@ -55,6 +59,9 @@ function renderFiltroTipi() {
 function toggleFiltroTipo(valore) {
   if (cestinoFiltro.tabelle.has(valore)) cestinoFiltro.tabelle.delete(valore);
   else cestinoFiltro.tabelle.add(valore);
+  // Se tutti i tipi sono selezionati, equivale a "Tutti i tipi" → reset
+  if (cestinoFiltro.tabelle.size === CESTINO_TIPI.length)
+    cestinoFiltro.tabelle.clear();
   renderFiltroTipi();
   applyCestinoFiltri();
 }
@@ -102,7 +109,7 @@ function applyCestinoFiltri() {
 // Restituisce solo gli elementi che passano il filtro tipi (lato client)
 function getCestinoDataFiltrato() {
   if (cestinoFiltro.tabelle.size === 0) return cestinoData;
-  return cestinoData.filter(i => cestinoFiltro.tabelle.has(i.tabella));
+  return cestinoData.filter((i) => cestinoFiltro.tabelle.has(i.tabella));
 }
 
 socket.on("res:cestino", ({ success, data, error }) => {
@@ -470,18 +477,32 @@ function svuotaCestino() {
   const hasFiltro = cestinoFiltro.tabelle.size > 0 || cestinoFiltro.search;
 
   if (!visibili.length) {
-    alert(hasFiltro ? "Nessun elemento visibile da eliminare." : "Il cestino è già vuoto.");
+    alert(
+      hasFiltro
+        ? "Nessun elemento visibile da eliminare."
+        : "Il cestino è già vuoto.",
+    );
     return;
   }
 
   if (hasFiltro) {
     // Elimina solo gli elementi visibili (filtrati) tramite delete:cestino:bulk
-    if (!confirm(`Eliminare definitivamente i ${visibili.length} elementi visibili? L'operazione non è reversibile.`)) return;
-    socket.emit("delete:cestino:bulk", { ids: visibili.map(i => i.id) });
+    if (
+      !confirm(
+        `Eliminare definitivamente i ${visibili.length} elementi visibili? L'operazione non è reversibile.`,
+      )
+    )
+      return;
+    socket.emit("delete:cestino:bulk", { ids: visibili.map((i) => i.id) });
     cestinoSelezione.clear();
   } else {
     // Nessun filtro: svuota tutto
-    if (!confirm(`Eliminare definitivamente tutti i ${cestinoData.length} elementi nel cestino? L'operazione non è reversibile.`)) return;
+    if (
+      !confirm(
+        `Eliminare definitivamente tutti i ${cestinoData.length} elementi nel cestino? L'operazione non è reversibile.`,
+      )
+    )
+      return;
     socket.emit("svuota:cestino");
   }
 }
