@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 let cestinoData = [];
-let cestinoFiltro = { tabella: "", search: "" };
+let cestinoFiltro = { tabelle: new Set(), search: "" }; // tabelle = Set di tipi selezionati
 let cestinoSelezione = new Set(); // ids selezionati
 
 const TABELLA_LABELS = {
@@ -27,23 +27,57 @@ function isRipristinabile(item) {
   ].includes(item.tabella);
 }
 
+const CESTINO_TIPI = [
+  { value: "clienti", label: "Clienti", icon: "👥" },
+  { value: "adempimenti", label: "Adempimenti", icon: "📋" },
+  { value: "adempimenti_cliente", label: "Righe Scadenzario", icon: "📅" },
+  { value: "appunti", label: "Scadenze Studio", icon: "🗒️" },
+  { value: "pagina_bianca", label: "Note", icon: "📝" },
+];
+
+function renderFiltroTipi() {
+  const nessuno = cestinoFiltro.tabelle.size === 0;
+  const chips = CESTINO_TIPI.map(t => {
+    const attivo = cestinoFiltro.tabelle.has(t.value);
+    return `<button
+      onclick="toggleFiltroTipo('${t.value}')"
+      style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;border-radius:20px;cursor:pointer;border:1.5px solid;transition:all 0.15s;white-space:nowrap;${attivo ? "background:var(--primary,#2563eb);color:#fff;border-color:var(--primary,#2563eb);" : "background:transparent;color:var(--text-muted,#6b7280);border-color:var(--border,#e5e7eb);"}"
+    >${t.icon} ${t.label}</button>`;
+  }).join("");
+  const tuttiBtn = `<button
+    onclick="resetFiltroTipi()"
+    style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;border-radius:20px;cursor:pointer;border:1.5px solid;transition:all 0.15s;white-space:nowrap;${nessuno ? "background:var(--primary,#2563eb);color:#fff;border-color:var(--primary,#2563eb);" : "background:transparent;color:var(--text-muted,#6b7280);border-color:var(--border,#e5e7eb);"}"
+  >Tutti i tipi</button>`;
+  const el = document.getElementById("cestino-filter-chips");
+  if (el) el.innerHTML = tuttiBtn + chips;
+}
+
+function toggleFiltroTipo(valore) {
+  if (cestinoFiltro.tabelle.has(valore)) cestinoFiltro.tabelle.delete(valore);
+  else cestinoFiltro.tabelle.add(valore);
+  renderFiltroTipi();
+  applyCestinoFiltri();
+}
+
+function resetFiltroTipi() {
+  cestinoFiltro.tabelle.clear();
+  renderFiltroTipi();
+  applyCestinoFiltri();
+}
+
 function renderCestinoPage() {
   cestinoSelezione.clear();
+  cestinoFiltro.tabelle = new Set();
+  cestinoFiltro.search = "";
   document.getElementById("topbar-actions").innerHTML = `
-    <select class="input" id="cestino-filter-tabella" onchange="applyCestinoFiltri()" style="font-size:13px;max-width:180px">
-      <option value="">Tutti i tipi</option>
-      <option value="clienti">👥 Clienti</option>
-      <option value="adempimenti">📋 Adempimenti</option>
-      <option value="adempimenti_cliente">📅 Righe Scadenzario</option>
-      <option value="appunti">🗒️ Scadenze Studio</option>
-      <option value="pagina_bianca">📝 Note</option>
-    </select>
+    <div id="cestino-filter-chips" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div>
     <div class="search-wrap" style="width:220px">
       <span class="search-icon">🔍</span>
       <input class="input" id="cestino-search" placeholder="Cerca nel cestino…" oninput="applyCestinoFiltri()" style="font-size:13px">
     </div>
     <button class="btn btn-sm btn-danger no-print" onclick="svuotaCestino()" style="font-size:13px;background:#dc2626;color:#fff;border:none">🗑️ Svuota cestino</button>
   `;
+  renderFiltroTipi();
 
   document.getElementById("content").innerHTML = `
     <div id="cestino-content" style="padding:16px">
@@ -58,13 +92,17 @@ function renderCestinoPage() {
 }
 
 function applyCestinoFiltri() {
-  cestinoFiltro.tabella =
-    document.getElementById("cestino-filter-tabella")?.value || "";
   cestinoFiltro.search = document.getElementById("cestino-search")?.value || "";
+  // Il filtro per tipo avviene lato client in getCestinoDataFiltrato()
   socket.emit("get:cestino", {
-    tabella: cestinoFiltro.tabella || undefined,
     search: cestinoFiltro.search || undefined,
   });
+}
+
+// Restituisce solo gli elementi che passano il filtro tipi (lato client)
+function getCestinoDataFiltrato() {
+  if (cestinoFiltro.tabelle.size === 0) return cestinoData;
+  return cestinoData.filter(i => cestinoFiltro.tabelle.has(i.tabella));
 }
 
 socket.on("res:cestino", ({ success, data, error }) => {
@@ -83,7 +121,7 @@ socket.on("res:cestino", ({ success, data, error }) => {
   for (const id of cestinoSelezione) {
     if (!idSet.has(id)) cestinoSelezione.delete(id);
   }
-  renderCestinoTabella(container);
+  renderCestinoTabella(container, getCestinoDataFiltrato());
 });
 
 socket.on("broadcast:cestino_updated", () => {
@@ -95,8 +133,9 @@ socket.on("broadcast:cestino_updated", () => {
   }
 });
 
-function renderCestinoTabella(container) {
-  if (!cestinoData.length) {
+function renderCestinoTabella(container, filteredData) {
+  filteredData = filteredData || getCestinoDataFiltrato();
+  if (!filteredData.length) {
     container.innerHTML = `
       <div class="empty">
         <div class="empty-icon">🗑️</div>
@@ -108,16 +147,16 @@ function renderCestinoTabella(container) {
 
   const now = new Date();
   const tuttiSelezionati =
-    cestinoData.length > 0 &&
-    cestinoData.every((i) => cestinoSelezione.has(i.id));
+    filteredData.length > 0 &&
+    filteredData.every((i) => cestinoSelezione.has(i.id));
   const qualcunoSelezionato = cestinoSelezione.size > 0;
 
   // Calcola quanti selezionati sono ripristinabili
-  const selezionati = cestinoData.filter((i) => cestinoSelezione.has(i.id));
+  const selezionati = filteredData.filter((i) => cestinoSelezione.has(i.id));
   const selezionatiRipristinabili = selezionati.filter(isRipristinabile);
-  const tuttiRipristinabili = cestinoData.filter(isRipristinabile);
+  const tuttiRipristinabili = filteredData.filter(isRipristinabile);
 
-  const rows = cestinoData
+  const rows = filteredData
     .map((item) => {
       const info = TABELLA_LABELS[item.tabella] || {
         label: item.tabella,
@@ -272,7 +311,7 @@ function renderCestinoTabella(container) {
 
   container.innerHTML = `
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <span style="font-size:13px;color:var(--text-muted)">${cestinoData.length} element${cestinoData.length === 1 ? "o" : "i"} nel cestino</span>
+      <span style="font-size:13px;color:var(--text-muted)">${filteredData.length} element${filteredData.length === 1 ? "o" : "i"}${cestinoFiltro.tabelle.size > 0 ? " (filtrati)" : " nel cestino"}</span>
       <span style="font-size:12px;color:var(--text-muted)">· Gli elementi vengono eliminati automaticamente dopo 30 giorni</span>
       <div style="flex:1"></div>
       ${
@@ -315,12 +354,13 @@ function toggleSelezione(id) {
   if (cestinoSelezione.has(id)) cestinoSelezione.delete(id);
   else cestinoSelezione.add(id);
   const container = document.getElementById("cestino-content");
-  if (container) renderCestinoTabella(container);
+  if (container) renderCestinoTabella(container, getCestinoDataFiltrato());
 }
 
 function toggleSelezioneAll(checked) {
-  if (checked) cestinoData.forEach((i) => cestinoSelezione.add(i.id));
-  else cestinoSelezione.clear();
+  const visible = getCestinoDataFiltrato();
+  if (checked) visible.forEach((i) => cestinoSelezione.add(i.id));
+  else visible.forEach((i) => cestinoSelezione.delete(i.id));
   const container = document.getElementById("cestino-content");
   if (container) renderCestinoTabella(container);
 }
@@ -328,7 +368,7 @@ function toggleSelezioneAll(checked) {
 function deselezionaTutti() {
   cestinoSelezione.clear();
   const container = document.getElementById("cestino-content");
-  if (container) renderCestinoTabella(container);
+  if (container) renderCestinoTabella(container, getCestinoDataFiltrato());
 }
 
 // ── Ripristino singolo ─────────────────────────────────────────
@@ -354,13 +394,17 @@ function eliminaDefinitivoCestino(id) {
 
 // ── Ripristina tutto ──────────────────────────────────────────
 function ripristinaTutto() {
-  const ripristinabili = cestinoData.filter(isRipristinabile);
+  const visibili = getCestinoDataFiltrato();
+  const ripristinabili = visibili.filter(isRipristinabile);
   if (!ripristinabili.length) {
-    alert("Nessun elemento ripristinabile nel cestino.");
+    alert("Nessun elemento ripristinabile tra quelli visibili.");
     return;
   }
-  const nonRipristinabili = cestinoData.length - ripristinabili.length;
-  let msg = `Ripristinare tutti i ${ripristinabili.length} elementi ripristinabili?`;
+  const nonRipristinabili = visibili.length - ripristinabili.length;
+  const hasFiltro = cestinoFiltro.tabelle.size > 0 || cestinoFiltro.search;
+  let msg = hasFiltro
+    ? `Ripristinare i ${ripristinabili.length} elementi visibili (filtrati)?`
+    : `Ripristinare tutti i ${ripristinabili.length} elementi ripristinabili?`;
   if (nonRipristinabili > 0) {
     msg += `\n\n⚠️ ${nonRipristinabili} element${nonRipristinabili === 1 ? "o" : "i"} non verr${nonRipristinabili === 1 ? "à" : "anno"} ripristinato (dipendenze mancanti, es. cliente o adempimento già eliminato).`;
   }
@@ -422,17 +466,24 @@ socket.on("res:delete:cestino:bulk", ({ success, error }) => {
 
 // ── Svuota cestino ────────────────────────────────────────────
 function svuotaCestino() {
-  if (!cestinoData.length) {
-    alert("Il cestino è già vuoto.");
+  const visibili = getCestinoDataFiltrato();
+  const hasFiltro = cestinoFiltro.tabelle.size > 0 || cestinoFiltro.search;
+
+  if (!visibili.length) {
+    alert(hasFiltro ? "Nessun elemento visibile da eliminare." : "Il cestino è già vuoto.");
     return;
   }
-  if (
-    !confirm(
-      `Eliminare definitivamente tutti i ${cestinoData.length} elementi nel cestino? L'operazione non è reversibile.`,
-    )
-  )
-    return;
-  socket.emit("svuota:cestino");
+
+  if (hasFiltro) {
+    // Elimina solo gli elementi visibili (filtrati) tramite delete:cestino:bulk
+    if (!confirm(`Eliminare definitivamente i ${visibili.length} elementi visibili? L'operazione non è reversibile.`)) return;
+    socket.emit("delete:cestino:bulk", { ids: visibili.map(i => i.id) });
+    cestinoSelezione.clear();
+  } else {
+    // Nessun filtro: svuota tutto
+    if (!confirm(`Eliminare definitivamente tutti i ${cestinoData.length} elementi nel cestino? L'operazione non è reversibile.`)) return;
+    socket.emit("svuota:cestino");
+  }
 }
 
 socket.on("res:svuota:cestino", ({ success, eliminati, error }) => {
@@ -450,6 +501,8 @@ function escapeHtml(str) {
 
 window.renderCestinoPage = renderCestinoPage;
 window.applyCestinoFiltri = applyCestinoFiltri;
+window.toggleFiltroTipo = toggleFiltroTipo;
+window.resetFiltroTipi = resetFiltroTipi;
 window.ripristinaDaCestino = ripristinaDaCestino;
 window.eliminaDefinitivoCestino = eliminaDefinitivoCestino;
 window.svuotaCestino = svuotaCestino;
