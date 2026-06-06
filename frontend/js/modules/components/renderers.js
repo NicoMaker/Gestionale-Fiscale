@@ -2,6 +2,105 @@
 // RENDERERS.JS — Helper di rendering condivisi
 // ═══════════════════════════════════════════════════════════════
 
+// ─── OGGI GLOBALE — aggiornato automaticamente a mezzanotte ───
+// Usare sempre `OGGI` al posto di `new Date()` nelle comparazioni
+// di date per garantire coerenza e aggiornamento automatico.
+let OGGI = _calcolaOggi();
+
+function _calcolaOggi() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
+ * Schedula un aggiornamento automatico a mezzanotte.
+ * - Ricalcola OGGI
+ * - Ri-renderizza tutte le pills già presenti nel DOM che
+ *   mostrano un badge scaduto/non-scaduto (.periodo-pill[data-id])
+ * - Si auto-riprogramma per la mezzanotte successiva (loop)
+ *
+ * Chiama questa funzione UNA sola volta all'avvio della pagina,
+ * oppure esporta e chiama schedulaMezzanotte() da main.js.
+ */
+function schedulaMezzanotte() {
+  const ora = new Date();
+  const prossimaM = new Date(
+    ora.getFullYear(),
+    ora.getMonth(),
+    ora.getDate() + 1, // giorno dopo
+    0, 0, 0, 0
+  );
+  const msAllaMezzanotte = prossimaM - ora;
+
+  setTimeout(() => {
+    // 1. Aggiorna la variabile globale
+    OGGI = _calcolaOggi();
+
+    // 2. Ri-renderizza le pills nel DOM (se la funzione globale esiste)
+    //    Aspettati che il progetto esponga una funzione tipo
+    //    `refreshAllPills()` o `renderAdempimenti()`.
+    //    Fallback: aggiorna solo i badge già presenti nel DOM in modo leggero.
+    if (typeof refreshAllPills === "function") {
+      refreshAllPills();
+    } else {
+      _aggiornaBadgeScadutoNelDOM();
+    }
+
+    // 3. Riprogramma per la mezzanotte successiva
+    schedulaMezzanotte();
+  }, msAllaMezzanotte);
+}
+
+/**
+ * Fallback leggero: riscrive solo i badge .pp-scaduto-badge
+ * nelle pills già presenti nel DOM senza re-fetch né re-render completo.
+ * Funziona se i dati dell'adempimento sono accessibili via dataset
+ * o se il record è recuperabile tramite getAdpById(id).
+ */
+function _aggiornaBadgeScadutoNelDOM() {
+  document.querySelectorAll(".periodo-pill[data-id]").forEach((pill) => {
+    const id = parseInt(pill.dataset.id);
+    if (!id) return;
+
+    // Prova a recuperare il record dal registry globale (se esiste)
+    const r =
+      typeof getAdpById === "function" ? getAdpById(id) : null;
+    if (!r) return;
+
+    const _isSoloScad =
+      !isContabilita(r) && !hasRate(r) && !isCheckbox(r) && !isTextOnly(r);
+    if (!_isSoloScad || !r.data_scadenza) return;
+
+    const stato = r.stato || "da_fare";
+    if (stato === "n_a") return;
+
+    // Costruisce il nuovo badge
+    const _dataScad = new Date(r.data_scadenza);
+    _dataScad.setHours(0, 0, 0, 0);
+    const nuovoBadge = _dataScad < OGGI
+      ? `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--orange);color:#fff">⚠️ SCADUTO</div>`
+      : `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--green);color:#fff;opacity:0.85">✓ Non scaduto</div>`;
+
+    // Sostituisce il badge esistente oppure lo inserisce
+    const vecchioBadge = pill.querySelector(".pp-scaduto-badge");
+    if (vecchioBadge) {
+      vecchioBadge.outerHTML = nuovoBadge;
+    } else {
+      // Inserisce prima delle note, o in fondo alla pill
+      const note = pill.querySelector(".pp-note");
+      if (note) {
+        note.insertAdjacentHTML("beforebegin", nuovoBadge);
+      } else {
+        pill.insertAdjacentHTML("beforeend", nuovoBadge);
+      }
+    }
+  });
+}
+
+// Avvio automatico dello scheduler al caricamento del modulo
+schedulaMezzanotte();
+
 // ─── UTILITY ───────────────────────────────────────────────
 
 // ─── FORMATTAZIONE NUMERO IN FORMATO ITALIANO ────────────────
@@ -128,19 +227,16 @@ function renderImportoCellCompact(r) {
 }
 
 // ─── HELPER: adempimento "solo scadenza" con data già scaduta ─
-// Restituisce true solo per adempimenti di tipo semplice (solo scadenza),
-// con data_scadenza passata, e stato non ancora completato/n_a.
+// Usa OGGI globale (aggiornato a mezzanotte) invece di new Date().
 function isSoloScadenzaScaduto(r) {
   if (isContabilita(r) || hasRate(r) || isCheckbox(r) || isTextOnly(r))
     return false;
   const stato = r.stato || "da_fare";
   if (stato === "completato" || stato === "n_a") return false;
   if (!r.data_scadenza) return false;
-  const oggi = new Date();
-  oggi.setHours(0, 0, 0, 0);
   const dataScad = new Date(r.data_scadenza);
   dataScad.setHours(0, 0, 0, 0);
-  return dataScad < oggi;
+  return dataScad < OGGI; // ← usa OGGI globale
 }
 
 // ─── COLORE PILLOLA ───────────────────────────────────────────
@@ -182,10 +278,10 @@ function getPillColor(r, stato) {
     if (hasAnyRate || contDone) return "var(--accent)";
     return "var(--red)";
   }
-  // Solo scadenza
+  // Solo scadenza — usa isSoloScadenzaScaduto che legge OGGI globale
   if (isCompletato) return "var(--green)";
   if (isNA) return "var(--text3)";
-  if (isSoloScadenzaScaduto(r)) return "var(--orange)"; // scaduto e non fatto
+  if (isSoloScadenzaScaduto(r)) return "var(--orange)";
   return "var(--red)";
 }
 
@@ -292,14 +388,13 @@ function renderPeriodoPill(r) {
   if (isContabilita(r)) importiInline = _buildContabilitaLabel(r, pillColor);
   else if (hasRate(r)) importiInline = _buildRateLabel(r, pillColor);
 
-  // Badge SCADUTO / Non scaduto — solo per adempimenti "solo scadenza" con data_scadenza.
-  // La logica è puramente sulla data, indipendente dallo stato (completato o no).
+  // Badge SCADUTO / Non scaduto — usa OGGI globale aggiornato a mezzanotte
   let scadutoBadge = "";
   const _isSoloScad = !isContabilita(r) && !hasRate(r) && !isCheckbox(r) && !isTextOnly(r);
   if (_isSoloScad && r.data_scadenza && stato !== "n_a") {
-    const _oggi = new Date(); _oggi.setHours(0,0,0,0);
-    const _dataScad = new Date(r.data_scadenza); _dataScad.setHours(0,0,0,0);
-    if (_dataScad < _oggi) {
+    const _dataScad = new Date(r.data_scadenza);
+    _dataScad.setHours(0, 0, 0, 0);
+    if (_dataScad < OGGI) { // ← usa OGGI globale
       scadutoBadge = `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--orange);color:#fff">⚠️ SCADUTO</div>`;
     } else {
       scadutoBadge = `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--green);color:#fff;opacity:0.85">✓ Non scaduto</div>`;
@@ -534,19 +629,4 @@ function renderClienteDatiRiferimento(cliente) {
     );
   if (!items.length) return "";
   return `<div class="cpc-dati-riferimento"><div class="dati-ref-title">📋 Dati di Riferimento</div><div class="dati-ref-grid">${items.join("")}</div></div>`;
-}
-
-function renderTextOnlyPill(r) {
-  const ps = getPeriodoShort(r);
-  const pillColor = "var(--purple)";
-  return `<div class="periodo-pill text-only-pill" data-id="${r.id}"
-    onclick="openAdpById(${r.id})"
-    title="${escAttr(getPeriodoLabel(r))} — Click: modifica"
-    style="border-color:${pillColor};min-width:145px;flex:1 1 145px;position:relative">
-    <div class="pp-top">
-      <span class="pp-tag" style="border-color:${pillColor};color:${pillColor}">📝 ${ps}</span>
-    </div>
-    <div class="pp-nome" style="color:${pillColor};font-weight:600">${r.adempimento_nome || ""}</div>
-    ${r.note ? `<div class="pp-note" style="margin-top:4px">📝 ${r.note}</div>` : ""}
-  </div>`;
 }
