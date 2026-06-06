@@ -290,13 +290,15 @@ socket.on("res:copia:scadenzario", ({ success }) => {
 socket.on("res:copia:tutti", ({ success }) => {
   if (success) closeModal("modal-copia");
 });
-socket.on("res:update:adempimento_stato", ({ success }) => {
+socket.on("res:update:adempimento_stato", ({ success, error }) => {
   if (success) {
     closeModal("modal-adempimento");
     if (state.page === "scadenzario") loadScadenzario();
     if (state.page === "scadenzario_globale") loadGlobale();
     if (state.page === "dashboard")
       socket.emit("get:stats", { anno: state.anno });
+  } else {
+    showNotif("❌ Errore nel salvataggio: " + (error || "sconosciuto"), "error");
   }
 });
 socket.on("res:delete:adempimento_cliente", ({ success }) => {

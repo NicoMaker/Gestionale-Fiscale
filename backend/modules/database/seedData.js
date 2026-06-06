@@ -91,7 +91,7 @@ function createSchema(db) {
     mese INTEGER,
     trimestre INTEGER,
     semestre INTEGER,
-    stato TEXT CHECK(stato IN ('da_fare','fatto','non_applicabile','text_only')) DEFAULT 'da_fare',
+    stato TEXT CHECK(stato IN ('da_fare','in_corso','completato','n_a','text_only')) DEFAULT 'da_fare',
     data_scadenza TEXT,
     data_completamento TEXT,
     note TEXT,

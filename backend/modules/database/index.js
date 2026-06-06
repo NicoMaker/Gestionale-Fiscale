@@ -152,6 +152,48 @@ function migrateDB() {
     )`,
     `CREATE INDEX IF NOT EXISTS idx_cestino_tabella ON cestino(tabella)`,
     `CREATE INDEX IF NOT EXISTS idx_cestino_data ON cestino(data_eliminazione DESC)`,
+
+    // ── MIGRAZIONE STATO: vecchi valori → nuovi valori ──
+    // Converte: 'fatto' → 'completato', 'non_applicabile' → 'n_a', 'text_only' → 'text_only' (invariato)
+    // e ricrea la tabella con il CHECK aggiornato
+    `CREATE TABLE IF NOT EXISTS adempimenti_cliente_new (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_cliente INTEGER NOT NULL,
+      id_adempimento INTEGER NOT NULL,
+      anno INTEGER NOT NULL,
+      mese INTEGER,
+      trimestre INTEGER,
+      semestre INTEGER,
+      stato TEXT CHECK(stato IN ('da_fare','in_corso','completato','n_a','text_only')) DEFAULT 'da_fare',
+      data_scadenza TEXT,
+      data_completamento TEXT,
+      note TEXT,
+      importo REAL,
+      importo_saldo REAL,
+      importo_acconto1 REAL,
+      importo_acconto2 REAL,
+      importo_iva REAL,
+      importo_contabilita REAL,
+      cont_completata INTEGER DEFAULT 0,
+      FOREIGN KEY (id_cliente) REFERENCES clienti(id),
+      FOREIGN KEY (id_adempimento) REFERENCES adempimenti(id)
+    )`,
+    `INSERT OR IGNORE INTO adempimenti_cliente_new
+       SELECT id, id_cliente, id_adempimento, anno, mese, trimestre, semestre,
+         CASE stato
+           WHEN 'fatto'           THEN 'completato'
+           WHEN 'non_applicabile' THEN 'n_a'
+           ELSE COALESCE(stato, 'da_fare')
+         END,
+         data_scadenza, data_completamento, note,
+         importo, importo_saldo, importo_acconto1, importo_acconto2,
+         importo_iva, importo_contabilita,
+         COALESCE(cont_completata, 0)
+       FROM adempimenti_cliente`,
+    `DROP TABLE adempimenti_cliente`,
+    `ALTER TABLE adempimenti_cliente_new RENAME TO adempimenti_cliente`,
+    `CREATE INDEX IF NOT EXISTS idx_adempimenti_cliente_cliente ON adempimenti_cliente(id_cliente)`,
+    `CREATE INDEX IF NOT EXISTS idx_adempimenti_cliente_anno ON adempimenti_cliente(anno)`,
   ];
 
   migrations.forEach((sql) => {

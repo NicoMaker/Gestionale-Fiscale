@@ -127,6 +127,22 @@ function renderImportoCellCompact(r) {
   return `<span class="imp-empty">-</span>`;
 }
 
+// ─── HELPER: adempimento "solo scadenza" con data già scaduta ─
+// Restituisce true solo per adempimenti di tipo semplice (solo scadenza),
+// con data_scadenza passata, e stato non ancora completato/n_a.
+function isSoloScadenzaScaduto(r) {
+  if (isContabilita(r) || hasRate(r) || isCheckbox(r) || isTextOnly(r))
+    return false;
+  const stato = r.stato || "da_fare";
+  if (stato === "completato" || stato === "n_a") return false;
+  if (!r.data_scadenza) return false;
+  const oggi = new Date();
+  oggi.setHours(0, 0, 0, 0);
+  const dataScad = new Date(r.data_scadenza);
+  dataScad.setHours(0, 0, 0, 0);
+  return dataScad < oggi;
+}
+
 // ─── COLORE PILLOLA ───────────────────────────────────────────
 function getPillColor(r, stato) {
   if (isTextOnly(r)) return "var(--purple)";
@@ -166,7 +182,10 @@ function getPillColor(r, stato) {
     if (hasAnyRate || contDone) return "var(--accent)";
     return "var(--red)";
   }
+  // Solo scadenza
   if (isCompletato) return "var(--green)";
+  if (isNA) return "var(--text3)";
+  if (isSoloScadenzaScaduto(r)) return "var(--orange)"; // scaduto e non fatto
   return "var(--red)";
 }
 
@@ -273,8 +292,26 @@ function renderPeriodoPill(r) {
   if (isContabilita(r)) importiInline = _buildContabilitaLabel(r, pillColor);
   else if (hasRate(r)) importiInline = _buildRateLabel(r, pillColor);
 
+  // Badge SCADUTO / Non scaduto — solo per adempimenti "solo scadenza" con data_scadenza.
+  // La logica è puramente sulla data, indipendente dallo stato (completato o no).
+  let scadutoBadge = "";
+  const _isSoloScad = !isContabilita(r) && !hasRate(r) && !isCheckbox(r) && !isTextOnly(r);
+  if (_isSoloScad && r.data_scadenza && stato !== "n_a") {
+    const _oggi = new Date(); _oggi.setHours(0,0,0,0);
+    const _dataScad = new Date(r.data_scadenza); _dataScad.setHours(0,0,0,0);
+    if (_dataScad < _oggi) {
+      scadutoBadge = `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--orange);color:#fff">⚠️ SCADUTO</div>`;
+    } else {
+      scadutoBadge = `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--green);color:#fff;opacity:0.85">✓ Non scaduto</div>`;
+    }
+  }
+
+  // Per "solo scadenza": mostra solo la data di scadenza, mai quella di completamento
   let dateLine = "";
-  if (r.data_scadenza || r.data_completamento) {
+  if (_isSoloScad) {
+    if (r.data_scadenza)
+      dateLine = `<div class="pp-dates"><span class="pp-date" title="Data scadenza">📅 ${formattaDataItaliana(r.data_scadenza)}</span></div>`;
+  } else if (r.data_scadenza || r.data_completamento) {
     dateLine = `<div class="pp-dates">`;
     if (r.data_scadenza)
       dateLine += `<span class="pp-date" title="Data scadenza">📅 ${formattaDataItaliana(r.data_scadenza)}</span>`;
@@ -295,6 +332,7 @@ function renderPeriodoPill(r) {
     <div class="pp-nome" style="color:${pillColor}">${r.adempimento_nome || ""}</div>
     ${importiInline}
     ${dateLine}
+    ${scadutoBadge}
     ${!importiInline && hasImp ? `<div class="pp-imp">${impHtml}</div>` : ""}
     ${r.note ? `<div class="pp-note" title="${escAttr(r.note)}">📝 ${r.note}</div>` : ""}
   </div>`;

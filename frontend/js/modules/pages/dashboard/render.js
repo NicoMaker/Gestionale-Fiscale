@@ -411,19 +411,8 @@ if (typeof socket !== "undefined") {
 
 // ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
 
-window.openApplicaAdempimenti = openApplicaAdempimenti;
-window._applicaSetTipFiltro = _applicaSetTipFiltro;
-window._applicaToggleTipFiltro = _applicaToggleTipFiltro;
-window._applicaSelezionaTipologia = _applicaSelezionaTipologia;
-window._aggiornaApplicaSelezionaTuttiCounter =
-  _aggiornaApplicaSelezionaTuttiCounter;
-window.filtraClientiApplica = filtraClientiApplica;
-window.toggleSelezionaTuttiAdpApplica = toggleSelezionaTuttiAdpApplica;
-window.toggleSelezionaTuttiClientiApplica = toggleSelezionaTuttiClientiApplica;
-window.resetSelezioneAdpApplica = resetSelezioneAdpApplica;
-window.eseguiApplicaAdempimenti = eseguiApplicaAdempimenti;
-window.apriApplicaAdempimentiPerVuoti = apriApplicaAdempimentiPerVuoti;
-window.goToClienteScadenzarioDiretto = goToClienteScadenzarioDiretto;
+// Le esposizioni globali delle funzioni di applica sono in applica.js
+// (che viene caricato dopo questo file)
 window.caricaClientiSenzaAdempimenti = caricaClientiSenzaAdempimenti;
 window.goVistaGlobaleAdp = goVistaGlobaleAdp;
 window.onDashFiltroStatoAdp = onDashFiltroStatoAdp;
