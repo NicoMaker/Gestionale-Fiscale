@@ -880,7 +880,8 @@ window.openApplicaAdempimenti = openApplicaAdempimenti;
 window._applicaSetTipFiltro = _applicaSetTipFiltro;
 window._applicaToggleTipFiltro = _applicaToggleTipFiltro;
 window._applicaSelezionaTipologia = _applicaSelezionaTipologia;
-window._aggiornaApplicaSelezionaTuttiCounter = _aggiornaApplicaSelezionaTuttiCounter;
+window._aggiornaApplicaSelezionaTuttiCounter =
+  _aggiornaApplicaSelezionaTuttiCounter;
 window.filtraClientiApplica = filtraClientiApplica;
 window.toggleSelezionaTuttiAdpApplica = toggleSelezionaTuttiAdpApplica;
 window.toggleSelezionaTuttiClientiApplica = toggleSelezionaTuttiClientiApplica;

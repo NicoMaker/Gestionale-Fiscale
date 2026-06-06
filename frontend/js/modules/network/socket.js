@@ -298,7 +298,10 @@ socket.on("res:update:adempimento_stato", ({ success, error }) => {
     if (state.page === "dashboard")
       socket.emit("get:stats", { anno: state.anno });
   } else {
-    showNotif("❌ Errore nel salvataggio: " + (error || "sconosciuto"), "error");
+    showNotif(
+      "❌ Errore nel salvataggio: " + (error || "sconosciuto"),
+      "error",
+    );
   }
 });
 socket.on("res:delete:adempimento_cliente", ({ success }) => {

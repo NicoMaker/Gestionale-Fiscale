@@ -55,7 +55,7 @@ function openAdpModal(r) {
   );
   const statoGroup = document.getElementById("stato-group");
   if (dataCompletamentoGroup)
-    dataCompletamentoGroup.style.display = (isCont || isRate) ? "" : "none";
+    dataCompletamentoGroup.style.display = isCont || isRate ? "" : "none";
   if (statoGroup) statoGroup.style.display = isText ? "none" : "";
 
   const sectNormale = document.getElementById("sect-importo-normale");
@@ -345,8 +345,7 @@ function saveAdpStato() {
     if (data.stato === "completato")
       data.data_completamento =
         daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
-    else
-      data.data_completamento = null;
+    else data.data_completamento = null;
   }
 
   socket.emit("update:adempimento_stato", data);
