@@ -11,6 +11,10 @@
 //   • Mostra solo i valori salvati in storia: "2/3"
 //   • Quando sei sul valore live (non in navigazione) il
 //     contatore è nascosto oppure mostra solo il totale
+//
+// Reset giornaliero:
+//   • Alle 00:00 mantiene solo l'ultimo valore per campo
+//   • Durante la stessa giornata i nuovi push si accumulano
 // ═══════════════════════════════════════════════════════════════
 
 (function () {
@@ -18,6 +22,7 @@
 
   const MAX_HISTORY = 20;
   const STORAGE_KEY = "fh_v1";
+  const TODAY_KEY = "fh_date";
 
   // ── STORAGE ─────────────────────────────────────────────────
   let _db = {};
@@ -55,6 +60,46 @@
     _db[k] = filtered;
     _save();
   }
+
+  // ── RESET GIORNALIERO ────────────────────────────────────────
+  // Alle 00:00 mantiene solo l'ultimo valore per campo.
+  // Durante la stessa giornata i nuovi push si accumulano normalmente.
+  function _dailyReset() {
+    const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const lastDate = localStorage.getItem(TODAY_KEY);
+    if (lastDate === today) return; // stessa giornata → niente da fare
+
+    Object.keys(_db).forEach(function (k) {
+      const arr = _db[k];
+      if (arr && arr.length > 0) {
+        _db[k] = [arr[arr.length - 1]]; // tieni solo l'ultimo
+      } else {
+        delete _db[k];
+      }
+    });
+
+    localStorage.setItem(TODAY_KEY, today);
+    _save();
+  }
+
+  // Pianifica il prossimo reset esatto a mezzanotte (anche a browser aperto)
+  function _scheduleMidnightReset() {
+    const now = new Date();
+    const midnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+    );
+    const msDiff = midnight - now;
+
+    setTimeout(function () {
+      _dailyReset();
+      _scheduleMidnightReset(); // ripianifica per la notte successiva
+    }, msDiff);
+  }
+
+  _dailyReset(); // reset immediato se è un nuovo giorno
+  _scheduleMidnightReset(); // timer preciso per le 00:00
 
   // ── STATO NAVIGAZIONE ───────────────────────────────────────
   // idx === history.length  →  siamo sul valore "live" (non in navigazione)
@@ -125,6 +170,7 @@
       el.classList.remove("fh-flash");
     }, 350);
   }
+
   function _flashEmpty(el) {
     el.classList.add("fh-flash-empty");
     setTimeout(function () {
@@ -200,7 +246,7 @@
     const state = _nav.get(el);
     if (!state) return;
     const history = _getHistory(state.modalId, state.fieldId);
-    const total = history.length; // solo valori salvati
+    const total = history.length;
 
     const btnBack = wrap.querySelector(".fh-btn-back");
     const btnFwd = wrap.querySelector(".fh-btn-fwd");
@@ -208,7 +254,6 @@
 
     const onLive = state.idx === total;
     const canBack = state.idx > 0;
-    // puoi andare avanti solo se sei su un valore storico (non già sul live)
     const canFwd = !onLive && state.idx < total;
 
     btnBack.disabled = !canBack;
@@ -217,7 +262,6 @@
     btnFwd.classList.toggle("fh-btn-active", canFwd);
 
     if (total === 0 || onLive) {
-      // nessuna navigazione attiva: mostra solo il totale se > 0
       if (total > 0) {
         counter.textContent = String(total);
         counter.title = total + " valori salvati per questo campo";
@@ -226,7 +270,6 @@
         counter.style.display = "none";
       }
     } else {
-      // in navigazione: mostra posizione sul totale salvato  es. "2/3"
       const pos = state.idx + 1;
       counter.textContent = pos + "/" + total;
       counter.title = "Valore " + pos + " di " + total + " salvati";
@@ -263,7 +306,6 @@
     if (val) {
       _pushValue(state.modalId, state.fieldId, val);
     }
-    // dopo blur torna sempre al live (con idx aggiornato)
     _resetNavToLive(el);
     _updateButtons(el);
   }
@@ -338,6 +380,7 @@
     init();
   }
 
+  // ── API PUBBLICA ─────────────────────────────────────────────
   window._fieldHistory = {
     push: _pushValue,
     get: _getHistory,
