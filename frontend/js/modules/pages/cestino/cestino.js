@@ -189,7 +189,7 @@ function renderCestinoTabella(container, filteredData) {
       const eliminatoIl = new Date(
         dataEl.getFullYear(),
         dataEl.getMonth(),
-        dataEl.getDate()
+        dataEl.getDate(),
       );
       const giorni = Math.round((oggi - eliminatoIl) / (1000 * 60 * 60 * 24));
       const rimanenti = 15 - giorni;
@@ -222,8 +222,18 @@ function renderCestinoTabella(container, filteredData) {
         let periodo = "";
         if (dati.mese) {
           const mesi = [
-            "Gen", "Feb", "Mar", "Apr", "Mag", "Giu",
-            "Lug", "Ago", "Set", "Ott", "Nov", "Dic",
+            "Gen",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Mag",
+            "Giu",
+            "Lug",
+            "Ago",
+            "Set",
+            "Ott",
+            "Nov",
+            "Dic",
           ];
           periodo = mesi[(dati.mese || 1) - 1];
         } else if (dati.trimestre) {

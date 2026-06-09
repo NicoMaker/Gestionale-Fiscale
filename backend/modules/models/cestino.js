@@ -65,9 +65,7 @@ function eliminaScadutiCestino() {
   const result = queryOne(
     `SELECT COUNT(*) as cnt FROM cestino WHERE data_eliminazione < ${soglia}`,
   );
-  runQuery(
-    `DELETE FROM cestino WHERE data_eliminazione < ${soglia}`,
-  );
+  runQuery(`DELETE FROM cestino WHERE data_eliminazione < ${soglia}`);
   return result.cnt;
 }
 
