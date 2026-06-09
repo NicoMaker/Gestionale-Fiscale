@@ -3,8 +3,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 let cestinoData = [];
-let cestinoFiltro = { tabelle: new Set(), search: "" }; // tabelle = Set di tipi selezionati
-let cestinoSelezione = new Set(); // ids selezionati
+let cestinoFiltro = { tabelle: new Set(), search: "" };
+let cestinoSelezione = new Set();
+let cestinoTicker = null; // ← ticker per aggiornamento automatico badge
 
 const TABELLA_LABELS = {
   clienti: { label: "Cliente", icon: "👥" },
@@ -14,10 +15,7 @@ const TABELLA_LABELS = {
   pagina_bianca: { label: "Nota", icon: "📝" },
 };
 
-// Controlla se un elemento è ripristinabile (basato su tipo)
 function isRipristinabile(item) {
-  // adempimenti_cliente richiede che cliente e adempimento esistano: non possiamo saperlo lato client
-  // Tutti gli altri tipi supportati possono essere ripristinati
   return [
     "clienti",
     "adempimenti",
@@ -59,7 +57,6 @@ function renderFiltroTipi() {
 function toggleFiltroTipo(valore) {
   if (cestinoFiltro.tabelle.has(valore)) cestinoFiltro.tabelle.delete(valore);
   else cestinoFiltro.tabelle.add(valore);
-  // Se tutti i tipi sono selezionati, equivale a "Tutti i tipi" → reset
   if (cestinoFiltro.tabelle.size === CESTINO_TIPI.length)
     cestinoFiltro.tabelle.clear();
   renderFiltroTipi();
@@ -76,6 +73,21 @@ function renderCestinoPage() {
   cestinoSelezione.clear();
   cestinoFiltro.tabelle = new Set();
   cestinoFiltro.search = "";
+
+  // ── Avvia ticker: rirenderizza ogni 60s così il badge si aggiorna
+  // automaticamente a mezzanotte senza bisogno di refresh manuale
+  clearInterval(cestinoTicker);
+  cestinoTicker = setInterval(() => {
+    if (state.page !== "cestino") {
+      clearInterval(cestinoTicker);
+      cestinoTicker = null;
+      return;
+    }
+    const container = document.getElementById("cestino-content");
+    if (container && cestinoData.length)
+      renderCestinoTabella(container, getCestinoDataFiltrato());
+  }, 60_000);
+
   document.getElementById("topbar-actions").innerHTML = `
     <div id="cestino-filter-chips" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div>
     <div class="search-wrap" style="width:220px">
@@ -100,13 +112,11 @@ function renderCestinoPage() {
 
 function applyCestinoFiltri() {
   cestinoFiltro.search = document.getElementById("cestino-search")?.value || "";
-  // Il filtro per tipo avviene lato client in getCestinoDataFiltrato()
   socket.emit("get:cestino", {
     search: cestinoFiltro.search || undefined,
   });
 }
 
-// Restituisce solo gli elementi che passano il filtro tipi (lato client)
 function getCestinoDataFiltrato() {
   if (cestinoFiltro.tabelle.size === 0) return cestinoData;
   return cestinoData.filter((i) => cestinoFiltro.tabelle.has(i.tabella));
@@ -123,7 +133,6 @@ socket.on("res:cestino", ({ success, data, error }) => {
   }
 
   cestinoData = data || [];
-  // Rimuovi dalla selezione elementi che non sono più presenti
   const idSet = new Set(cestinoData.map((i) => i.id));
   for (const id of cestinoSelezione) {
     if (!idSet.has(id)) cestinoSelezione.delete(id);
@@ -131,10 +140,12 @@ socket.on("res:cestino", ({ success, data, error }) => {
   renderCestinoTabella(container, getCestinoDataFiltrato());
 });
 
+// ── Quando il server elimina elementi scaduti a mezzanotte (cron),
+// questo broadcast fa ricaricare i dati automaticamente su tutti i client
+// che hanno il cestino aperto — senza che l'utente faccia refresh.
 socket.on("broadcast:cestino_updated", () => {
   if (state.page === "cestino") {
     socket.emit("get:cestino", {
-      tabella: cestinoFiltro.tabella || undefined,
       search: cestinoFiltro.search || undefined,
     });
   }
@@ -153,7 +164,6 @@ function renderCestinoTabella(container, filteredData) {
   }
 
   const now = new Date();
-  // Data "oggi" senza orario, per confronto per giorni di calendario
   const oggi = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const tuttiSelezionati =
@@ -161,7 +171,6 @@ function renderCestinoTabella(container, filteredData) {
     filteredData.every((i) => cestinoSelezione.has(i.id));
   const qualcunoSelezionato = cestinoSelezione.size > 0;
 
-  // Calcola quanti selezionati sono ripristinabili
   const selezionati = filteredData.filter((i) => cestinoSelezione.has(i.id));
   const selezionatiRipristinabili = selezionati.filter(isRipristinabile);
   const tuttiRipristinabili = filteredData.filter(isRipristinabile);
@@ -181,11 +190,6 @@ function renderCestinoTabella(container, filteredData) {
           : dati.nome || dati.titolo || dati.codice || `#${item.record_id}`;
 
       const dataEl = new Date(item.data_eliminazione);
-
-      // ── FIX: confronto per giorni di calendario, non per millisecondi ──
-      // Azzera l'ora sia per "oggi" che per "data eliminazione" così
-      // un elemento eliminato ieri conta sempre 1 giorno, non 0 o 1
-      // a seconda dell'orario.
       const eliminatoIl = new Date(
         dataEl.getFullYear(),
         dataEl.getMonth(),
@@ -222,18 +226,8 @@ function renderCestinoTabella(container, filteredData) {
         let periodo = "";
         if (dati.mese) {
           const mesi = [
-            "Gen",
-            "Feb",
-            "Mar",
-            "Apr",
-            "Mag",
-            "Giu",
-            "Lug",
-            "Ago",
-            "Set",
-            "Ott",
-            "Nov",
-            "Dic",
+            "Gen","Feb","Mar","Apr","Mag","Giu",
+            "Lug","Ago","Set","Ott","Nov","Dic",
           ];
           periodo = mesi[(dati.mese || 1) - 1];
         } else if (dati.trimestre) {
@@ -300,7 +294,6 @@ function renderCestinoTabella(container, filteredData) {
     })
     .join("");
 
-  // Barra azioni bulk
   const bulkBar = qualcunoSelezionato
     ? `
     <div id="cestino-bulk-bar" style="
@@ -501,7 +494,6 @@ function svuotaCestino() {
   }
 
   if (hasFiltro) {
-    // Elimina solo gli elementi visibili (filtrati) tramite delete:cestino:bulk
     if (
       !confirm(
         `Eliminare definitivamente i ${visibili.length} elementi visibili? L'operazione non è reversibile.`,
@@ -511,7 +503,6 @@ function svuotaCestino() {
     socket.emit("delete:cestino:bulk", { ids: visibili.map((i) => i.id) });
     cestinoSelezione.clear();
   } else {
-    // Nessun filtro: svuota tutto
     if (
       !confirm(
         `Eliminare definitivamente tutti i ${cestinoData.length} elementi nel cestino? L'operazione non è reversibile.`,

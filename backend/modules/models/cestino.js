@@ -5,10 +5,6 @@ const {
   queryOne,
 } = require("../database");
 
-// ── FIX: usa < invece di <= così l'elemento sopravvive tutto il 15° giorno
-// e viene eliminato solo a partire dal 16° giorno di calendario.
-// Es: eliminato lunedì → scade il martedì della settimana successiva (16° giorno),
-// e per tutti i 15 giorni intermedi il badge mostra il numero corretto.
 const GIORNI_RETENTION = 15;
 
 function spostaInCestino({ tabella, record_id, dati_json, eliminato_da }) {
@@ -55,12 +51,9 @@ function svuotaCestino() {
 }
 
 function eliminaScadutiCestino() {
-  // Usa < (strettamente minore) invece di <=:
-  // con <= un elemento eliminato esattamente N giorni fa veniva cancellato
-  // durante il corso del giorno N, non alla sua fine.
-  // Con < viene cancellato solo dopo che il giorno N è completamente trascorso,
-  // garantendo che il badge mostri "0 giorni rimasti" per l'intero ultimo giorno
-  // prima della cancellazione notturna.
+  // Usa < (strettamente minore): l'elemento viene cancellato solo dopo che
+  // il 15° giorno è completamente trascorso, così il badge mostra sempre
+  // il numero corretto fino all'ultimo secondo dell'ultimo giorno.
   const soglia = `datetime('now', '-${GIORNI_RETENTION} days')`;
   const result = queryOne(
     `SELECT COUNT(*) as cnt FROM cestino WHERE data_eliminazione < ${soglia}`,

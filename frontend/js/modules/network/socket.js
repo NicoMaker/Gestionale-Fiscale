@@ -136,29 +136,41 @@ socket.on("res:appunti", ({ success, data }) => {
   )
     renderAppuntiTabella(data);
 });
+
 socket.on("res:create:appunto", ({ success }) => {
   if (success && typeof filterAppunti === "function") {
     filterAppunti();
     showNotif("Appunto creato con successo", "success");
   }
 });
+
 socket.on("res:update:appunto", ({ success }) => {
   if (success && typeof filterAppunti === "function") {
     filterAppunti();
     showNotif("Appunto aggiornato", "success");
   }
 });
+
 socket.on("res:delete:appunto", ({ success }) => {
   if (success && typeof filterAppunti === "function") {
     filterAppunti();
     showNotif("Appunto eliminato", "success");
   }
 });
+
 socket.on("res:delete:appunti:bulk", ({ success }) => {
   if (success && typeof filterAppunti === "function") filterAppunti();
 });
+
 socket.on("res:toggle:appunto_completato", ({ success }) => {
   if (success && typeof filterAppunti === "function") filterAppunti();
+});
+
+socket.on("res:copia:appunti_anno", ({ success, copiati }) => {
+  if (success && typeof filterAppunti === "function") {
+    filterAppunti();
+    showNotif(`✅ Copiati ${copiati} appunti`, "success");
+  }
 });
 
 // ─── RISPOSTA ELIMINA BULK SCADENZARIO CLIENTE ───────────────
@@ -218,9 +230,11 @@ socket.on("res:update:cliente", ({ success, error }) => {
     showNotif(getClienteSaveErrorMessage(error), "error");
   }
 });
+
 socket.on("res:delete:cliente", ({ success }) => {
   if (success) refreshPage();
 });
+
 socket.on("res:delete:clienti:bulk", ({ success }) => {
   if (success) refreshPage();
 });
@@ -233,6 +247,7 @@ socket.on("res:create:adempimento", ({ success, error }) => {
     socket.emit("get:adempimenti");
   } else showNotif(error, "error");
 });
+
 socket.on("res:update:adempimento", ({ success, error }) => {
   if (success) {
     closeModal("modal-adp-def");
@@ -240,12 +255,14 @@ socket.on("res:update:adempimento", ({ success, error }) => {
     socket.emit("get:adempimenti");
   } else showNotif(error, "error");
 });
+
 socket.on("res:delete:adempimento", ({ success }) => {
   if (success) {
     state._pending = "adempimenti";
     socket.emit("get:adempimenti");
   }
 });
+
 socket.on("res:delete:adempimenti:bulk", ({ success }) => {
   if (success) {
     state._pending = "adempimenti";
@@ -281,15 +298,18 @@ socket.on("res:rigenera:tutti", ({ success }) => {
       loadScadenzario();
   }
 });
+
 socket.on("res:copia:scadenzario", ({ success }) => {
   if (success) {
     closeModal("modal-copia");
     loadScadenzario();
   }
 });
+
 socket.on("res:copia:tutti", ({ success }) => {
   if (success) closeModal("modal-copia");
 });
+
 socket.on("res:update:adempimento_stato", ({ success, error }) => {
   if (success) {
     closeModal("modal-adempimento");
@@ -304,6 +324,7 @@ socket.on("res:update:adempimento_stato", ({ success, error }) => {
     );
   }
 });
+
 socket.on("res:delete:adempimento_cliente", ({ success }) => {
   if (success) {
     closeModal("modal-adempimento");
@@ -311,6 +332,7 @@ socket.on("res:delete:adempimento_cliente", ({ success }) => {
     if (state.page === "scadenzario_globale") loadGlobale();
   }
 });
+
 socket.on("res:add:adempimento_cliente", ({ success }) => {
   if (success) {
     closeModal("modal-add-adp");
@@ -391,47 +413,3 @@ socket.on(
     }
   },
 );
-
-// ─── APPUNTI ───────────────────────────────────────────────────
-socket.on("res:appunti", ({ success, data }) => {
-  if (
-    success &&
-    state.page === "appunti" &&
-    typeof renderAppuntiTabella === "function"
-  )
-    renderAppuntiTabella(data);
-});
-socket.on("res:create:appunto", ({ success }) => {
-  if (success && typeof filterAppunti === "function") {
-    filterAppunti();
-    showNotif("Appunto creato con successo", "success");
-  }
-});
-socket.on("res:update:appunto", ({ success }) => {
-  if (success && typeof filterAppunti === "function") {
-    filterAppunti();
-    showNotif("Appunto aggiornato", "success");
-  }
-});
-socket.on("res:delete:appunto", ({ success }) => {
-  if (success && typeof filterAppunti === "function") {
-    filterAppunti();
-    showNotif("Appunto eliminato", "success");
-  }
-});
-socket.on("res:delete:appunti:bulk", ({ success }) => {
-  if (success && typeof filterAppunti === "function") filterAppunti();
-});
-socket.on("res:toggle:appunto_completato", ({ success }) => {
-  if (success && typeof filterAppunti === "function") filterAppunti();
-});
-socket.on("res:copia:appunti_anno", ({ success, copiati }) => {
-  if (success && typeof filterAppunti === "function") {
-    filterAppunti();
-    showNotif(`✅ Copiati ${copiati} appunti`, "success");
-  }
-});
-socket.on("broadcast:appunti_updated", () => {
-  if (state.page === "appunti" && typeof filterAppunti === "function")
-    filterAppunti();
-});
