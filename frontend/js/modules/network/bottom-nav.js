@@ -14,7 +14,9 @@
   }
 
   function handleBnClick(el, page) {
-    const navItem = document.querySelector('.nav-item[data-page="' + page + '"]');
+    const navItem = document.querySelector(
+      '.nav-item[data-page="' + page + '"]',
+    );
     if (navItem) navItem.click();
     setActive(page);
   }
@@ -28,7 +30,9 @@
     });
 
     // Set initial active state from sidebar
-    const activeSidebarItem = document.querySelector(".nav-item.active[data-page]");
+    const activeSidebarItem = document.querySelector(
+      ".nav-item.active[data-page]",
+    );
     if (activeSidebarItem) {
       setActive(activeSidebarItem.getAttribute("data-page"));
     }

@@ -2,7 +2,10 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" content="#ffffff" />
@@ -175,7 +178,11 @@
         >
           <div class="riepilogo-header-row">
             <div class="riepilogo-title">📋 Riepilogo Classificazione</div>
-            <div id="riepilogo-tip-badge" class="riepilogo-tip-badge" style="display:none"></div>
+            <div
+              id="riepilogo-tip-badge"
+              class="riepilogo-tip-badge"
+              style="display: none"
+            ></div>
           </div>
           <div class="riepilogo-content" id="riepilogo-classificazione"></div>
         </div>
@@ -1560,27 +1567,46 @@
     <script src="js/modules/pages/cestino/cestino.js"></script>
     <script src="js/modules/network/bottom-nav.js"></script>
     <script src="js/script.js"></script>
-  
+
     <!-- ═══ BOTTOM NAV (mobile) ═══════════════════════════════ -->
     <nav class="bottom-nav" id="bottom-nav">
       <div class="bottom-nav-inner">
-        <button class="bn-item" data-page="dashboard" onclick="handleBnClick(this,'dashboard')">
+        <button
+          class="bn-item"
+          data-page="dashboard"
+          onclick="handleBnClick(this, 'dashboard')"
+        >
           <span class="bn-icon">📊</span>Dashboard
         </button>
-        <button class="bn-item" data-page="clienti" onclick="handleBnClick(this,'clienti')">
+        <button
+          class="bn-item"
+          data-page="clienti"
+          onclick="handleBnClick(this, 'clienti')"
+        >
           <span class="bn-icon">👥</span>Clienti
         </button>
-        <button class="bn-item" data-page="scadenzario" onclick="handleBnClick(this,'scadenzario')">
+        <button
+          class="bn-item"
+          data-page="scadenzario"
+          onclick="handleBnClick(this, 'scadenzario')"
+        >
           <span class="bn-icon">📅</span>Scadenze
         </button>
-        <button class="bn-item" data-page="adempimenti" onclick="handleBnClick(this,'adempimenti')">
+        <button
+          class="bn-item"
+          data-page="adempimenti"
+          onclick="handleBnClick(this, 'adempimenti')"
+        >
           <span class="bn-icon">📋</span>Ademp.
         </button>
-        <button class="bn-item" data-page="appunti" onclick="handleBnClick(this,'appunti')">
+        <button
+          class="bn-item"
+          data-page="appunti"
+          onclick="handleBnClick(this, 'appunti')"
+        >
           <span class="bn-icon">🗒️</span>Note
         </button>
       </div>
     </nav>
-
   </body>
 </html>
