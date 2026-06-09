@@ -462,7 +462,20 @@ textarea.input { resize: vertical; min-height: 68px; }
   padding: 14px 16px;
   margin-bottom: 18px;
 }
-.riepilogo-title { font-size: 11.5px; font-weight: 800; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.07em; }
+.riepilogo-header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.riepilogo-title { font-size: 11.5px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.07em; }
+.riepilogo-tip-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 800;
+  letter-spacing: 0.04em;
+  border: 1.5px solid currentColor;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.riepilogo-tip-badge .tip-badge-icon { font-size: 14px; line-height: 1; }
+.riepilogo-tip-badge .tip-badge-code { font-family: var(--mono); font-weight: 900; }
+.riepilogo-tip-badge .tip-badge-desc { font-size: 11px; opacity: .85; }
 .riepilogo-content { display: flex; flex-wrap: wrap; gap: 8px; }
 .riepilogo-chip {
   display: inline-flex; align-items: center; gap: 7px;

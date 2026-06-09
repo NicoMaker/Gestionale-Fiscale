@@ -258,11 +258,29 @@ function aggiornaRiepilogoClassificazione() {
   const col4Eff = annPer.includes(col3) ? annPer[0] || "annuale" : col4;
   const tipColor = (cfg.tipologie || {})[tipCodice]?.color || "var(--accent)";
 
+  // --- Aggiorna badge tipologia e colore bordo box ---
+  const badge = document.getElementById("riepilogo-tip-badge");
+  if (badge) {
+    if (tip && tipColor) {
+      const tipInfo = (cfg.tipologie || {})[tipCodice] || {};
+      badge.style.display = "";
+      badge.style.color = tipColor;
+      badge.style.background = tipColor + "18";
+      badge.style.borderColor = tipColor + "66";
+      badge.innerHTML = `<span class="tip-badge-icon">${tipInfo.icon || "📋"}</span><span class="tip-badge-code">${tip.codice}</span><span class="tip-badge-desc">— ${tip.nome}</span>`;
+    } else {
+      badge.style.display = "none";
+      badge.innerHTML = "";
+    }
+  }
+  // Aggiorna border-left del box col colore tipologia
+  if (tipColor && tip) {
+    box.style.borderLeftColor = tipColor;
+  } else {
+    box.style.borderLeftColor = "";
+  }
+
   let chips = [];
-  if (tip)
-    chips.push(
-      `<div class="riepilogo-chip" style="border-color:${tipColor}44;background:${tipColor}12"><span class="chip-label">Tipologia:</span><span class="chip-value" style="color:${tipColor}">${tip.codice} — ${tip.nome}</span></div>`,
-    );
   if (col2) {
     const opt = COL2_OPTIONS[tipCodice]?.find((o) => o.value === col2);
     if (opt)
@@ -283,7 +301,7 @@ function aggiornaRiepilogoClassificazione() {
       `<div class="riepilogo-chip"><span class="chip-label">Periodicità:</span><span class="chip-value">${perObj ? perObj.label : col4Eff}</span></div>`,
     );
   }
-  if (chips.length > 0) {
+  if (tip) {
     content.innerHTML = chips.join("");
     box.style.display = "";
   } else box.style.display = "none";
