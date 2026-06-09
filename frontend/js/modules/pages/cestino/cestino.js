@@ -226,8 +226,18 @@ function renderCestinoTabella(container, filteredData) {
         let periodo = "";
         if (dati.mese) {
           const mesi = [
-            "Gen","Feb","Mar","Apr","Mag","Giu",
-            "Lug","Ago","Set","Ott","Nov","Dic",
+            "Gen",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Mag",
+            "Giu",
+            "Lug",
+            "Ago",
+            "Set",
+            "Ott",
+            "Nov",
+            "Dic",
           ];
           periodo = mesi[(dati.mese || 1) - 1];
         } else if (dati.trimestre) {
