@@ -153,6 +153,9 @@ function renderCestinoTabella(container, filteredData) {
   }
 
   const now = new Date();
+  // Data "oggi" senza orario, per confronto per giorni di calendario
+  const oggi = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
   const tuttiSelezionati =
     filteredData.length > 0 &&
     filteredData.every((i) => cestinoSelezione.has(i.id));
@@ -176,9 +179,21 @@ function renderCestinoTabella(container, filteredData) {
             dati.adempimento_codice ||
             `Adempimento #${dati.id_adempimento}`
           : dati.nome || dati.titolo || dati.codice || `#${item.record_id}`;
+
       const dataEl = new Date(item.data_eliminazione);
-      const giorni = Math.floor((now - dataEl) / (1000 * 60 * 60 * 24));
+
+      // ── FIX: confronto per giorni di calendario, non per millisecondi ──
+      // Azzera l'ora sia per "oggi" che per "data eliminazione" così
+      // un elemento eliminato ieri conta sempre 1 giorno, non 0 o 1
+      // a seconda dell'orario.
+      const eliminatoIl = new Date(
+        dataEl.getFullYear(),
+        dataEl.getMonth(),
+        dataEl.getDate()
+      );
+      const giorni = Math.round((oggi - eliminatoIl) / (1000 * 60 * 60 * 24));
       const rimanenti = 15 - giorni;
+
       const dataFmt = dataEl.toLocaleDateString("it-IT", {
         day: "2-digit",
         month: "2-digit",
@@ -207,18 +222,8 @@ function renderCestinoTabella(container, filteredData) {
         let periodo = "";
         if (dati.mese) {
           const mesi = [
-            "Gen",
-            "Feb",
-            "Mar",
-            "Apr",
-            "Mag",
-            "Giu",
-            "Lug",
-            "Ago",
-            "Set",
-            "Ott",
-            "Nov",
-            "Dic",
+            "Gen", "Feb", "Mar", "Apr", "Mag", "Giu",
+            "Lug", "Ago", "Set", "Ott", "Nov", "Dic",
           ];
           periodo = mesi[(dati.mese || 1) - 1];
         } else if (dati.trimestre) {
@@ -319,7 +324,7 @@ function renderCestinoTabella(container, filteredData) {
   container.innerHTML = `
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <span style="font-size:13px;color:var(--text-muted)">${filteredData.length} element${filteredData.length === 1 ? "o" : "i"}${cestinoFiltro.tabelle.size > 0 ? " (filtrati)" : " nel cestino"}</span>
-      <span style="font-size:12px;color:var(--text-muted)">· Gli elementi vengono eliminati automaticamente dopo 30 giorni</span>
+      <span style="font-size:12px;color:var(--text-muted)">· Gli elementi vengono eliminati automaticamente dopo 15 giorni</span>
       <div style="flex:1"></div>
       ${
         tuttiRipristinabili.length > 0
