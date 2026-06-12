@@ -1,7 +1,7 @@
 erDiagram
     clienti {
         integer id PK
-        string nome
+        string nome UK
         string codice_fiscale
         string partita_iva
         string email
@@ -35,8 +35,8 @@ erDiagram
     sottotipologie {
         integer id PK
         integer id_tipologia FK
-        string codice
-        string nome
+        string codice UK
+        string nome UK
         integer is_separator
         integer ordine
     }
@@ -54,8 +54,8 @@ erDiagram
 
     adempimenti {
         integer id PK
-        string codice
-        string nome
+        string codice UK
+        string nome UK
         string descrizione
         string scadenza_tipo
         integer is_contabilita
