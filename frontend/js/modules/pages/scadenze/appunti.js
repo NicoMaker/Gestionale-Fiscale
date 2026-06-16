@@ -65,10 +65,13 @@ function renderAppuntiTopbar() {
       <select class="select" id="appunti-filtro-cliente" onchange="filterAppunti()" style="margin-top:0">
         <option value="">👥 Tutti i clienti</option>
         ${state.clienti.map((c) => `<option value="${c.id}">${escAttr(c.nome)}</option>`).join("")}
-      </select>
+      </select>      
     </div>
     <button class="btn btn-primary" onclick="openNuovoAppunto()">+ Scadenza</button>
     <button class="btn btn-print btn-sm" onclick="window.print()">🖨️</button>
+
+    <br />
+    <br />
   `;
 }
 

@@ -3322,3 +3322,52 @@ select {
     display: none;
   }
 }
+
+/* Cerca la classe della topbar e assicurati che abbia il corretto allineamento */
+.topbar {
+  display: flex;
+  align-items: center; /* Centra verticalmente tutti gli elementi interni */
+  padding: 0 24px;
+  height: 64px; /* O l'altezza che hai impostato */
+}
+
+/* Cerca il selettore del menu a tendina dentro l'header (es. .topbar select o .filter-select) */
+.topbar select, .search-box select {
+  height: 38px;             /* Forziamo un'altezza fissa comoda */
+  line-height: normal;      /* Resetta il calcolo dell'altezza del testo */
+  padding: 0 12px;          /* Dà spazio ai lati senza schiacciare il testo sopra e sotto */
+  display: inline-flex;
+  align-items: center;      /* Centra il testo all'interno della tendina */
+  box-sizing: border-box;   /* Include il padding nel calcolo dell'altezza */
+}
+
+/* Trova il selettore della select nella barra in alto e modificalo così */
+.topbar select, 
+.search-box select, 
+.filter-item select {
+  height: 36px !important;       /* Forza un'altezza corretta e fissa */
+  padding: 0 12px !important;     /* Rimuove il padding verticale che schiaccia il testo */
+  line-height: 36px !important;   /* Allinea il testo perfettamente al centro dell'altezza */
+  font-size: 14px;                /* Dimensione del testo leggibile */
+  display: inline-block;
+  vertical-align: middle;
+  box-sizing: border-box;         /* Impedisce al padding di sballare l'altezza totale */
+}
+
+/* Trova il contenitore che raggruppa la ricerca cliente e la tendina "Tutti i clienti" */
+.topbar-right, 
+.search-box-container {
+  display: flex !important;
+  flex-direction: row !important; /* Forza gli elementi a stare uno di fianco all'altro, non uno sotto l'altro */
+  align-items: center !important; /* Centra verticalmente gli elementi */
+  gap: 10px;                     /* Aggiunge un po' di spazio orizzontale tra i due moduli */
+  height: auto;                  /* Evita che l'altezza sia bloccata */
+}
+
+/* Assicurati che gli input e i select interni abbiano la stessa altezza */
+.topbar-right input,
+.topbar-right select {
+  height: 36px !important;
+  margin: 0 !important;          /* Rimuove margini che potrebbero spingerli in basso */
+  box-sizing: border-box;
+}
