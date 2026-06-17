@@ -36,9 +36,9 @@ const CESTINO_TIPI = [
 function renderFiltroTipi() {
   const nessuno = cestinoFiltro.tabelle.size === 0;
   const STILE_ATTIVO =
-    "background:var(--primary,#2563eb);color:#fff;border-color:var(--primary,#2563eb);font-weight:600;";
+    "background:var(--accent,#2563eb);color:#fff;border-color:var(--accent,#2563eb);font-weight:600;";
   const STILE_INATTIVO =
-    "background:transparent;color:var(--text-secondary,#374151);border-color:var(--border,#d1d5db);font-weight:400;";
+    "background:var(--bg);color:var(--text2,#374151);border-color:var(--border,#d1d5db);font-weight:400;";
   const chips = CESTINO_TIPI.map((t) => {
     const attivo = cestinoFiltro.tabelle.has(t.value);
     return `<button
@@ -94,7 +94,7 @@ function renderCestinoPage() {
       <span class="search-icon">🔍</span>
       <input class="input" id="cestino-search" placeholder="Cerca nel cestino…" oninput="applyCestinoFiltri()" style="font-size:13px">
     </div>
-    <button class="btn btn-sm btn-danger no-print" onclick="svuotaCestino()" style="font-size:13px;background:#dc2626;color:#fff;border:none">🗑️ Svuota cestino</button>
+    <button class="btn btn-sm btn-danger no-print" onclick="svuotaCestino()" style="font-size:13px">🗑️ Svuota cestino</button>
   `;
   renderFiltroTipi();
 
@@ -158,7 +158,7 @@ function renderCestinoTabella(container, filteredData) {
       <div class="empty">
         <div class="empty-icon">🗑️</div>
         <p style="font-size:15px;margin-bottom:6px">Il cestino è vuoto</p>
-        <p style="color:var(--text-muted);font-size:13px">Gli elementi eliminati appariranno qui per 15 giorni prima di essere rimossi definitivamente.</p>
+        <p style="color:var(--text3);font-size:13px">Gli elementi eliminati appariranno qui per 15 giorni prima di essere rimossi definitivamente.</p>
       </div>`;
     return;
   }
@@ -208,10 +208,10 @@ function renderCestinoTabella(container, filteredData) {
 
       const urgente = rimanenti <= 5;
       const badgeColor = urgente
-        ? "#dc2626"
+        ? "var(--red, #dc2626)"
         : rimanenti <= 10
-          ? "#d97706"
-          : "#6b7280";
+          ? "var(--yellow, #d97706)"
+          : "var(--text3, #6b7280)";
       const ripristinabile = isRipristinabile(item);
       const selezionato = cestinoSelezione.has(item.id);
 
@@ -271,7 +271,7 @@ function renderCestinoTabella(container, filteredData) {
 
       const ripristinaBtn = ripristinabile
         ? `<button class="btn btn-sm btn-primary" onclick="ripristinaDaCestino(${item.id})" style="font-size:12px;margin-right:6px" title="Ripristina">↩️ Ripristina</button>`
-        : `<button class="btn btn-sm" disabled style="font-size:12px;margin-right:6px;opacity:0.45;cursor:not-allowed" title="Non ripristinabile: dipendenze mancanti">↩️ N/R</button>`;
+        : `<button class="btn btn-sm" disabled style="font-size:12px;margin-right:6px;opacity:0.45;cursor:not-allowed;background:var(--s1);color:var(--text3);border-color:var(--border)" title="Non ripristinabile: dipendenze mancanti">↩️ N/R</button>`;
 
       return `
       <tr class="${selezionato ? "cestino-row-selected" : ""}" style="transition:background 0.15s">
@@ -279,18 +279,18 @@ function renderCestinoTabella(container, filteredData) {
           <input type="checkbox" class="cestino-checkbox"
             onchange="toggleSelezione(${item.id})"
             ${selezionato ? "checked" : ""}
-            style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary)">
+            style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent,#2563eb)">
         </td>
         <td style="white-space:nowrap">
           <span style="font-size:18px">${info.icon}</span>
-          <span style="font-size:12px;color:var(--text-muted);margin-left:4px">${info.label}</span>
-          ${!ripristinabile ? `<span style="font-size:10px;color:#9ca3af;margin-left:4px" title="Dipendenze mancanti">⚠️</span>` : ""}
+          <span style="font-size:12px;color:var(--text2);margin-left:4px">${info.label}</span>
+          ${!ripristinabile ? `<span style="font-size:10px;color:var(--text3);margin-left:4px" title="Dipendenze mancanti">⚠️</span>` : ""}
         </td>
         <td>
           <strong>${escapeHtml(nome)}</strong>
-          ${extra ? `<br><span style="font-size:12px;color:var(--text-muted)">${escapeHtml(extra)}</span>` : ""}
+          ${extra ? `<br><span style="font-size:12px;color:var(--text2)">${escapeHtml(extra)}</span>` : ""}
         </td>
-        <td style="white-space:nowrap;font-size:12px;color:var(--text-muted)">${dataFmt}</td>
+        <td style="white-space:nowrap;font-size:12px;color:var(--text2)">${dataFmt}</td>
         <td style="white-space:nowrap">
           <span style="font-size:12px;color:${badgeColor};font-weight:600">
             ${urgente ? "⚠️ " : ""}${rimanenti} giorn${rimanenti === 1 ? "o" : "i"} rimast${rimanenti === 1 ? "o" : "i"}
@@ -298,7 +298,7 @@ function renderCestinoTabella(container, filteredData) {
         </td>
         <td style="white-space:nowrap">
           ${ripristinaBtn}
-          <button class="btn btn-sm btn-danger" onclick="eliminaDefinitivoCestino(${item.id})" style="font-size:12px;background:#dc2626;color:#fff;border:none">🗑️ Elimina</button>
+          <button class="btn btn-sm btn-danger" onclick="eliminaDefinitivoCestino(${item.id})" style="font-size:12px">🗑️ Elimina</button>
         </td>
       </tr>`;
     })
@@ -308,14 +308,14 @@ function renderCestinoTabella(container, filteredData) {
     ? `
     <div id="cestino-bulk-bar" style="
       display:flex;align-items:center;gap:10px;
-      background:var(--bg-card,#fff);border:1.5px solid var(--primary,#2563eb);
+      background:var(--bg);border:1.5px solid var(--accent,#2563eb);
       border-radius:8px;padding:8px 14px;margin-bottom:12px;
       box-shadow:0 1px 6px rgba(37,99,235,0.08);
     ">
-      <span style="font-size:13px;font-weight:600;color:var(--primary,#2563eb)">
+      <span style="font-size:13px;font-weight:600;color:var(--accent,#2563eb)">
         ${cestinoSelezione.size} selezionat${cestinoSelezione.size === 1 ? "o" : "i"}
       </span>
-      <span style="color:var(--text-muted);font-size:12px">
+      <span style="color:var(--text2);font-size:12px">
         (${selezionatiRipristinabili.length} ripristinabil${selezionatiRipristinabili.length === 1 ? "e" : "i"})
       </span>
       <div style="flex:1"></div>
@@ -327,17 +327,17 @@ function renderCestinoTabella(container, filteredData) {
         </button>`
           : ""
       }
-      <button class="btn btn-sm btn-danger" onclick="eliminaBulk()" style="font-size:12px;background:#dc2626;color:#fff;border:none">
+      <button class="btn btn-sm btn-danger" onclick="eliminaBulk()" style="font-size:12px">
         🗑️ Elimina selezionati (${cestinoSelezione.size})
       </button>
-      <button class="btn btn-sm" onclick="deselezionaTutti()" style="font-size:12px">✕ Deseleziona</button>
+      <button class="btn btn-sm btn-secondary" onclick="deselezionaTutti()" style="font-size:12px">✕ Deseleziona</button>
     </div>`
     : "";
 
   container.innerHTML = `
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <span style="font-size:13px;color:var(--text-muted)">${filteredData.length} element${filteredData.length === 1 ? "o" : "i"}${cestinoFiltro.tabelle.size > 0 ? " (filtrati)" : " nel cestino"}</span>
-      <span style="font-size:12px;color:var(--text-muted)">· Gli elementi vengono eliminati automaticamente dopo 15 giorni</span>
+      <span style="font-size:13px;color:var(--text2)">${filteredData.length} element${filteredData.length === 1 ? "o" : "i"}${cestinoFiltro.tabelle.size > 0 ? " (filtrati)" : " nel cestino"}</span>
+      <span style="font-size:12px;color:var(--text3)">· Gli elementi vengono eliminati automaticamente dopo 15 giorni</span>
       <div style="flex:1"></div>
       ${
         tuttiRipristinabili.length > 0
@@ -357,7 +357,7 @@ function renderCestinoTabella(container, filteredData) {
               <input type="checkbox" id="cestino-check-all"
                 onchange="toggleSelezioneAll(this.checked)"
                 ${tuttiSelezionati ? "checked" : ""}
-                style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary)">
+                style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent,#2563eb)">
             </th>
             <th style="width:130px">Tipo</th>
             <th>Nome / Dettaglio</th>
@@ -370,7 +370,10 @@ function renderCestinoTabella(container, filteredData) {
       </table>
     </div>
     <style>
-      .cestino-row-selected { background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent) !important; }
+      .cestino-row-selected { background: color-mix(in srgb, var(--accent, #2563eb) 6%, transparent) !important; }
+      [data-theme="dark"] .cestino-row-selected { 
+        background: color-mix(in srgb, var(--accent, #4f8ef7) 12%, var(--s0, #161b22)) !important; 
+      }
     </style>`;
 }
 

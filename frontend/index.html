@@ -15,6 +15,15 @@
       rel="stylesheet"
     />
     <script src="/socket.io/socket.io.js"></script>
+    <!-- Tema: caricato subito per evitare flash di colore errato -->
+    <script>
+      (function(){
+        var k="gf_theme",s=null;
+        try{s=localStorage.getItem(k);}catch(e){}
+        var theme=s==="light"||s==="dark"?s:(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+        document.documentElement.setAttribute("data-theme",theme);
+      })();
+    </script>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
@@ -60,6 +69,12 @@
         <div class="nav-item" id="btn-scarica-db" style="cursor: pointer">
           <span class="nav-icon">💾</span> Scarica DB
         </div>
+        <div class="nav-sep"></div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Cambia tema chiaro/scuro">
+          <span class="theme-toggle-icon">🌙</span>
+          <span class="theme-toggle-label nav-label">Tema Scuro</span>
+          <span class="theme-toggle-pill"></span>
+        </button>
       </nav>
       <div class="sidebar-footer" id="conn-status">● Connessione...</div>
     </aside>
@@ -1536,6 +1551,7 @@
     <script src="js/modules/core/utils.js"></script>
     <script src="js/modules/core/date-utils.js"></script>
     <script src="js/modules/core/field-history.js"></script>
+    <script src="js/modules/core/theme.js"></script>
     <script src="js/modules/components/renderers.js"></script>
     <!-- dashboard -->
     <script src="js/modules/pages/dashboard/render.js"></script>
