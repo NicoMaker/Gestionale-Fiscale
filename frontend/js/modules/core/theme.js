@@ -53,7 +53,8 @@ function _updateToggleUI(theme) {
   const iconEl = document.querySelector(".theme-toggle-icon");
   const labelEl = document.querySelector(".theme-toggle-label");
   if (iconEl) iconEl.textContent = theme === "dark" ? "☀️" : "🌙";
-  if (labelEl) labelEl.textContent = theme === "dark" ? "Tema Chiaro" : "Tema Scuro";
+  if (labelEl)
+    labelEl.textContent = theme === "dark" ? "Tema Chiaro" : "Tema Scuro";
 }
 
 /**
@@ -72,7 +73,8 @@ function initTheme() {
     theme = saved;
   } else {
     // Prima visita: usa il tema del sistema operativo
-    const prefersDark = window.matchMedia &&
+    const prefersDark =
+      window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches;
     theme = prefersDark ? "dark" : "light";
   }
@@ -81,7 +83,8 @@ function initTheme() {
 
   // Ascolta i cambiamenti del sistema SOLO se non c'è una preferenza salvata
   if (!saved && window.matchMedia) {
-    window.matchMedia("(prefers-color-scheme: dark)")
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
       .addEventListener("change", (e) => {
         try {
           const hasSaved = localStorage.getItem(THEME_KEY);

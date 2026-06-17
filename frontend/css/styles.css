@@ -77,7 +77,8 @@
   --accent-dim: var(--accent-d);
 
   /* Theme transition */
-  --theme-transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  --theme-transition:
+    background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 /* ─── DARK MODE TOKENS ───────────────────────────────────────── */
@@ -115,10 +116,10 @@
   --t2: #94a3b8;
   --t3: #64748b;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.2);
-  --shadow-xl: 0 24px 48px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.25);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.25);
 
   --surface: var(--s1);
   --surface2: var(--s2);
@@ -141,7 +142,9 @@
   color: var(--t2);
   font-size: 13.5px;
   font-weight: 500;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   border-left: 3px solid transparent;
   user-select: none;
   white-space: nowrap;
@@ -178,7 +181,7 @@
   flex-shrink: 0;
 }
 .theme-toggle-pill::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 3px;
   left: 3px;
@@ -196,8 +199,20 @@
 }
 
 /* ─── GLOBAL TRANSITION ──────────────────────────────────────── */
-body, .sidebar, .topbar, .content, .modal, .card, .table, .input, .select, .btn {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+body,
+.sidebar,
+.topbar,
+.content,
+.modal,
+.card,
+.table,
+.input,
+.select,
+.btn {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.15s ease;
 }
 
 /* ─── DARK MODE: INPUTS & SELECTS ────────────────────────────── */
@@ -278,12 +293,24 @@ body, .sidebar, .topbar, .content, .modal, .card, .table, .input, .select, .btn 
   animation: fh-flash-empty-dark-kf 0.4s ease-out;
 }
 @keyframes fh-flash-dark-kf {
-  0% { background-color: rgba(52, 211, 153, 0.2); border-color: #34d399; }
-  100% { background-color: var(--s1); border-color: var(--b1); }
+  0% {
+    background-color: rgba(52, 211, 153, 0.2);
+    border-color: #34d399;
+  }
+  100% {
+    background-color: var(--s1);
+    border-color: var(--b1);
+  }
 }
 @keyframes fh-flash-empty-dark-kf {
-  0% { background-color: rgba(248, 113, 113, 0.2); border-color: #f87171; }
-  100% { background-color: var(--s1); border-color: var(--b1); }
+  0% {
+    background-color: rgba(248, 113, 113, 0.2);
+    border-color: #f87171;
+  }
+  100% {
+    background-color: var(--s1);
+    border-color: var(--b1);
+  }
 }
 
 /* ─── RESET ──────────────────────────────────────────────────── */
@@ -3558,43 +3585,44 @@ select {
 }
 
 /* Cerca il selettore del menu a tendina dentro l'header (es. .topbar select o .filter-select) */
-.topbar select, .search-box select {
-  height: 38px;             /* Forziamo un'altezza fissa comoda */
-  line-height: normal;      /* Resetta il calcolo dell'altezza del testo */
-  padding: 0 12px;          /* Dà spazio ai lati senza schiacciare il testo sopra e sotto */
+.topbar select,
+.search-box select {
+  height: 38px; /* Forziamo un'altezza fissa comoda */
+  line-height: normal; /* Resetta il calcolo dell'altezza del testo */
+  padding: 0 12px; /* Dà spazio ai lati senza schiacciare il testo sopra e sotto */
   display: inline-flex;
-  align-items: center;      /* Centra il testo all'interno della tendina */
-  box-sizing: border-box;   /* Include il padding nel calcolo dell'altezza */
+  align-items: center; /* Centra il testo all'interno della tendina */
+  box-sizing: border-box; /* Include il padding nel calcolo dell'altezza */
 }
 
 /* Trova il selettore della select nella barra in alto e modificalo così */
-.topbar select, 
-.search-box select, 
+.topbar select,
+.search-box select,
 .filter-item select {
-  height: 36px !important;       /* Forza un'altezza corretta e fissa */
-  padding: 0 12px !important;     /* Rimuove il padding verticale che schiaccia il testo */
-  line-height: 36px !important;   /* Allinea il testo perfettamente al centro dell'altezza */
-  font-size: 14px;                /* Dimensione del testo leggibile */
+  height: 36px !important; /* Forza un'altezza corretta e fissa */
+  padding: 0 12px !important; /* Rimuove il padding verticale che schiaccia il testo */
+  line-height: 36px !important; /* Allinea il testo perfettamente al centro dell'altezza */
+  font-size: 14px; /* Dimensione del testo leggibile */
   display: inline-block;
   vertical-align: middle;
-  box-sizing: border-box;         /* Impedisce al padding di sballare l'altezza totale */
+  box-sizing: border-box; /* Impedisce al padding di sballare l'altezza totale */
 }
 
 /* Trova il contenitore che raggruppa la ricerca cliente e la tendina "Tutti i clienti" */
-.topbar-right, 
+.topbar-right,
 .search-box-container {
   display: flex !important;
   flex-direction: row !important; /* Forza gli elementi a stare uno di fianco all'altro, non uno sotto l'altro */
   align-items: center !important; /* Centra verticalmente gli elementi */
-  gap: 10px;                     /* Aggiunge un po' di spazio orizzontale tra i due moduli */
-  height: auto;                  /* Evita che l'altezza sia bloccata */
+  gap: 10px; /* Aggiunge un po' di spazio orizzontale tra i due moduli */
+  height: auto; /* Evita che l'altezza sia bloccata */
 }
 
 /* Assicurati che gli input e i select interni abbiano la stessa altezza */
 .topbar-right input,
 .topbar-right select {
   height: 36px !important;
-  margin: 0 !important;          /* Rimuove margini che potrebbero spingerli in basso */
+  margin: 0 !important; /* Rimuove margini che potrebbero spingerli in basso */
   box-sizing: border-box;
 }
 
@@ -3619,7 +3647,10 @@ select {
   background: var(--s1) !important;
   color: var(--t0) !important;
   border-color: var(--b1) !important;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* Focus in tema scuro */
