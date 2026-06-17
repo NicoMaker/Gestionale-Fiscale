@@ -3808,3 +3808,309 @@ select {
   border-color: var(--accent) !important;
   background: var(--s0) !important;
 }
+
+/* ─── BOTTONI SELEZIONE TUTTI/DESELEZIONA TUTTI PER MODAL APPLICA ─── */
+
+/* Stile base per i bottoni di selezione nelle modali */
+.btn-selezione-tutti,
+#applica-adp-btn-seleziona-tutti,
+#applica-clienti-btn-seleziona-tutti,
+#del-adp-btn-seleziona-tutti,
+#add-adp-seleziona-tutti,
+#del-adp-seleziona-tutti {
+  font-size: 12px !important;
+  padding: 6px 14px !important;
+  border-radius: 20px !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--surface2) !important;
+  color: var(--text1) !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-selezione-tutti:hover,
+#applica-adp-btn-seleziona-tutti:hover,
+#applica-clienti-btn-seleziona-tutti:hover,
+#del-adp-btn-seleziona-tutti:hover,
+#add-adp-seleziona-tutti:hover,
+#del-adp-seleziona-tutti:hover {
+  background: var(--surface3) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+/* Versione attiva (quando tutti sono selezionati) */
+.btn-selezione-tutti.attivo,
+#applica-adp-btn-seleziona-tutti.attivo,
+#applica-clienti-btn-seleziona-tutti.attivo,
+#del-adp-btn-seleziona-tutti.attivo,
+#add-adp-seleziona-tutti.attivo,
+#del-adp-seleziona-tutti.attivo {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+.btn-selezione-tutti.attivo:hover,
+#applica-adp-btn-seleziona-tutti.attivo:hover,
+#applica-clienti-btn-seleziona-tutti.attivo:hover,
+#del-adp-btn-seleziona-tutti.attivo:hover,
+#add-adp-seleziona-tutti.attivo:hover,
+#del-adp-seleziona-tutti.attivo:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+  opacity: 0.9 !important;
+}
+
+/* ─── BOTTONI GRUPPO TIPOLOGIA (seleziona/deseleziona per tipologia) ─── */
+
+[data-gruppo-tc] {
+  padding: 3px 12px !important;
+  border-radius: 14px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface2) !important;
+  color: var(--text2) !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-gruppo-tc]:hover {
+  background: var(--surface3) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+[data-gruppo-tc].attivo {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+[data-gruppo-tc].attivo:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+/* ─── BOTTONI NELLA MODAL APPLICA ADEMPIMENTI ─── */
+
+#modal-applica-adempimenti .modal-actions .btn-primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+#modal-applica-adempimenti .modal-actions .btn-primary:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+/* ─── PULSANTI RAPIDI ELIMINA (seleziona/deseleziona tutti) ─── */
+
+#tab-panel-elimina .btn-xs {
+  font-size: 11px !important;
+  padding: 4px 12px !important;
+  border-radius: 16px !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--surface2) !important;
+  color: var(--text1) !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+#tab-panel-elimina .btn-xs:hover {
+  background: var(--surface3) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+#tab-panel-elimina .btn-xs.btn-selezione-attivo {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+#tab-panel-elimina .btn-xs.btn-selezione-attivo:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+/* ─── BOTTONI NELLA MODAL AGGIUNGI ADEMPIMENTI ─── */
+
+#tab-panel-aggiungi .flag-chip {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--text1) !important;
+  padding: 6px 12px !important;
+  border-radius: 20px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+#tab-panel-aggiungi .flag-chip:hover {
+  background: var(--surface3) !important;
+  border-color: var(--accent) !important;
+}
+
+#tab-panel-aggiungi .flag-chip input[type="checkbox"] {
+  accent-color: var(--accent) !important;
+  margin-right: 6px !important;
+}
+
+/* ─── BOTTONI NELLA MODAL ELIMINA ADEMPIMENTI ─── */
+
+#tab-panel-elimina .flag-chip {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--text1) !important;
+  padding: 6px 12px !important;
+  border-radius: 20px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+#tab-panel-elimina .flag-chip:hover {
+  background: var(--surface3) !important;
+  border-color: var(--red) !important;
+}
+
+#tab-panel-elimina .flag-chip input[type="checkbox"] {
+  accent-color: var(--red) !important;
+  margin-right: 6px !important;
+}
+
+/* ─── BOTTONI "SELEZIONA TUTTI" NEI PANEL DELLE CHECKBOX ─── */
+
+#applica-adp-list + div .btn-xs,
+#applica-clienti-list + div .btn-xs {
+  font-size: 12px !important;
+  padding: 5px 14px !important;
+  border-radius: 20px !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--surface2) !important;
+  color: var(--text1) !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+#applica-adp-list + div .btn-xs:hover,
+#applica-clienti-list + div .btn-xs:hover {
+  background: var(--surface3) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+#applica-adp-list + div .btn-xs.attivo,
+#applica-clienti-list + div .btn-xs.attivo {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+#applica-adp-list + div .btn-xs.attivo:hover,
+#applica-clienti-list + div .btn-xs.attivo:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+/* ─── BOTTONI NELLA MODAL APPLICA PER MODALITÀ INSERISCI/ELIMINA ─── */
+
+#applica-mode-inserisci,
+#applica-mode-elimina {
+  padding: 5px 16px !important;
+  border-radius: 20px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--surface2) !important;
+  color: var(--text2) !important;
+}
+
+#applica-mode-inserisci:hover,
+#applica-mode-elimina:hover {
+  transform: scale(1.02) !important;
+}
+
+#applica-mode-inserisci.attivo {
+  background: var(--green) !important;
+  border-color: var(--green) !important;
+  color: #fff !important;
+}
+
+#applica-mode-inserisci.attivo:hover {
+  background: var(--green-dark) !important;
+  border-color: var(--green-dark) !important;
+}
+
+#applica-mode-elimina.attivo {
+  background: var(--red) !important;
+  border-color: var(--red) !important;
+  color: #fff !important;
+}
+
+#applica-mode-elimina.attivo:hover {
+  background: var(--red-dark) !important;
+  border-color: var(--red-dark) !important;
+}
+
+/* ─── BOTTONE "ESEGUI APPLICA" ─── */
+
+#btn-esegui-applica {
+  font-weight: 700 !important;
+  padding: 8px 24px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+#btn-esegui-applica:hover:not(:disabled) {
+  background: var(--accent-hover) !important;
+  transform: scale(1.02) !important;
+}
+
+#btn-esegui-applica:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* ─── BOTTONE "ELIMINA SELEZIONATI" NELLA MODAL ELIMINA ─── */
+
+#btn-esegui-elimina-adp {
+  font-weight: 700 !important;
+  padding: 8px 20px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+#btn-esegui-elimina-adp:not(:disabled) {
+  background: var(--red) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+#btn-esegui-elimina-adp:not(:disabled):hover {
+  background: var(--red-dark) !important;
+  transform: scale(1.02) !important;
+}
+
+#btn-esegui-elimina-adp:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  background: var(--surface3) !important;
+  color: var(--text3) !important;
+}

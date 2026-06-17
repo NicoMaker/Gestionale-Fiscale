@@ -875,6 +875,94 @@ function eseguiApplicaAdempimenti() {
   closeModal("modal-applica-adempimenti");
 }
 
+// Aggiungi/modifica queste funzioni in dashboard/applica.js
+
+function _aggiornaAdpSelezionaTuttiBtn() {
+  var tot = document.querySelectorAll(".applica-adp-checkbox").length;
+  var checked = document.querySelectorAll(
+    ".applica-adp-checkbox:checked",
+  ).length;
+  var tuttiSelezionati = tot > 0 && checked === tot;
+  var btn = document.getElementById("applica-adp-btn-seleziona-tutti");
+  if (btn) {
+    if (tuttiSelezionati) {
+      btn.textContent = "☑️ Deseleziona tutti gli adempimenti";
+      btn.classList.add("attivo");
+    } else {
+      btn.textContent = "✅ Seleziona tutti gli adempimenti";
+      btn.classList.remove("attivo");
+    }
+  }
+}
+
+function _aggiornaApplicaSelezionaTuttiCounter() {
+  var tot = document.querySelectorAll(".applica-cliente-checkbox").length;
+  var checked = document.querySelectorAll(
+    ".applica-cliente-checkbox:checked",
+  ).length;
+  var tuttiSelezionati = tot > 0 && checked === tot;
+  var btn = document.getElementById("applica-clienti-btn-seleziona-tutti");
+  if (btn) {
+    if (tuttiSelezionati) {
+      btn.textContent = "☑️ Deseleziona tutti i clienti";
+      btn.classList.add("attivo");
+    } else {
+      btn.textContent = "✅ Seleziona tutti i clienti";
+      btn.classList.remove("attivo");
+    }
+  }
+}
+
+// Funzione per i bottoni di gruppo (tipologia)
+function _aggiornaBottoniGruppo() {
+  document.querySelectorAll("[data-gruppo-tc]").forEach(function (btn) {
+    var tc = btn.dataset.gruppoTc;
+    var checkboxes = Array.from(
+      document.querySelectorAll(
+        ".applica-cliente-checkbox[data-tc='" + tc + "']",
+      ),
+    );
+    if (checkboxes.length === 0) return;
+    var tuttiChecked = checkboxes.every(function (cb) {
+      return cb.checked;
+    });
+    btn.textContent = tuttiChecked
+      ? "− Deseleziona tutti"
+      : "+ Seleziona tutti";
+    if (tuttiChecked) {
+      btn.classList.add("attivo");
+    } else {
+      btn.classList.remove("attivo");
+    }
+  });
+}
+
+// Funzione per toggle seleziona tutti adp (chiamata dal bottone)
+function toggleSelezionaTuttiAdpApplicaBtn() {
+  var tot = document.querySelectorAll(".applica-adp-checkbox").length;
+  var checked = document.querySelectorAll(
+    ".applica-adp-checkbox:checked",
+  ).length;
+  var selezionaTutti = !(tot > 0 && checked === tot);
+  document.querySelectorAll(".applica-adp-checkbox").forEach(function (cb) {
+    cb.checked = selezionaTutti;
+  });
+  _aggiornaAdpSelezionaTuttiBtn();
+}
+
+// Funzione per toggle seleziona tutti clienti (chiamata dal bottone)
+function toggleSelezionaTuttiClientiApplicaBtn() {
+  var tot = document.querySelectorAll(".applica-cliente-checkbox").length;
+  var checked = document.querySelectorAll(
+    ".applica-cliente-checkbox:checked",
+  ).length;
+  var selezionaTutti = !(tot > 0 && checked === tot);
+  document.querySelectorAll(".applica-cliente-checkbox").forEach(function (cb) {
+    cb.checked = selezionaTutti;
+  });
+  _aggiornaApplicaSelezionaTuttiCounter();
+}
+
 // ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
 window.openApplicaAdempimenti = openApplicaAdempimenti;
 window._applicaSetTipFiltro = _applicaSetTipFiltro;
