@@ -243,7 +243,10 @@ function initSearchableMultiSelect(selectId) {
   panel.appendChild(list);
 
   function getAllOptions() {
-    return Array.from(sel.options).map((o) => ({ value: o.value, text: o.text }));
+    return Array.from(sel.options).map((o) => ({
+      value: o.value,
+      text: o.text,
+    }));
   }
   function getSelectedValues() {
     return Array.from(sel.selectedOptions).map((o) => o.value);

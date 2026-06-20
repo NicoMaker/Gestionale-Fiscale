@@ -358,7 +358,9 @@ function renderScadenzarioTabella(data) {
     ? `<div style="display:flex;flex-wrap:wrap;gap:6px">` +
       adpFiltroNomi
         .map(
-          (f) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">
+          (
+            f,
+          ) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">
         🔍 ${escAttr(f.nome)}
         <button onclick="filtraScadPerAdp(${f.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi questo filtro">✕</button>
       </span>`,

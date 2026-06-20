@@ -69,7 +69,9 @@ socket.on("broadcast:adempimenti_updated", () => {
   socket.once("res:adempimenti", ({ success }) => {
     if (
       success &&
-      document.getElementById("modal-applica-adempimenti")?.classList.contains("open") &&
+      document
+        .getElementById("modal-applica-adempimenti")
+        ?.classList.contains("open") &&
       typeof renderApplicaAdempimentiModal === "function"
     )
       renderApplicaAdempimentiModal();

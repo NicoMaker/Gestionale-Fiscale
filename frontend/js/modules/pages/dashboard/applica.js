@@ -402,7 +402,9 @@ function renderApplicaAdempimentiModal() {
   var adpOrdinati = state.adempimenti
     .filter(function (a) {
       // Mostra solo adempimenti senza vincolo d'anno, o validi per l'anno scelto
-      return a.anno_validita == null || Number(a.anno_validita) === annoCorrente;
+      return (
+        a.anno_validita == null || Number(a.anno_validita) === annoCorrente
+      );
     })
     .sort(function (a, b) {
       return a.nome.localeCompare(b.nome);

@@ -58,7 +58,7 @@ function _renderDashMultiselBar() {
   }
   bar.classList.add("is-visible");
   bar.innerHTML =
-    '<span><strong>' +
+    "<span><strong>" +
     sel.size +
     "</strong> adempiment" +
     (sel.size === 1 ? "o selezionato" : "i selezionati") +

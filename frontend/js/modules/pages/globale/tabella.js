@@ -134,9 +134,9 @@ function renderGlobaleTabella(rawData) {
           return (
             '<span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-d);padding:4px 12px;border-radius:20px">' +
             nome +
-            '<button onclick="_globToggleAdpFiltro(\'' +
+            "<button onclick=\"_globToggleAdpFiltro('" +
             nome.replace(/'/g, "\\'") +
-            "')\" style=\"background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;line-height:1\" title=\"Rimuovi questo filtro\">✕</button>" +
+            '\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;line-height:1" title="Rimuovi questo filtro">✕</button>' +
             "</span>"
           );
         })
