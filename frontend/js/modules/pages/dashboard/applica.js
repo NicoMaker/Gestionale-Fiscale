@@ -400,9 +400,17 @@ function renderApplicaAdempimentiModal() {
   )
     .toLowerCase()
     .trim();
-  var adpOrdinati = state.adempimenti.slice().sort(function (a, b) {
-    return a.nome.localeCompare(b.nome);
-  });
+  var annoCorrente = parseInt(
+    document.getElementById("applica-adempimenti-anno")?.value || state.anno,
+  );
+  var adpOrdinati = state.adempimenti
+    .filter(function (a) {
+      // Mostra solo adempimenti senza vincolo d'anno, o validi per l'anno scelto
+      return a.anno_validita == null || Number(a.anno_validita) === annoCorrente;
+    })
+    .sort(function (a, b) {
+      return a.nome.localeCompare(b.nome);
+    });
   var adpFiltrati = q
     ? adpOrdinati.filter(function (adp) {
         return (
@@ -414,7 +422,9 @@ function renderApplicaAdempimentiModal() {
 
   if (adpFiltrati.length === 0) {
     container.innerHTML =
-      '<div style="text-align:center;padding:20px;color:var(--text3)">Nessun adempimento trovato</div>';
+      '<div style="text-align:center;padding:20px;color:var(--text3)">Nessun adempimento valido per l\'anno ' +
+      annoCorrente +
+      "</div>";
     _aggiornaAdpSelezionaTuttiBtn();
     return;
   }

@@ -429,6 +429,16 @@ function applicaAdempimentiAClienti(adempimenti_ids, clienti_ids, anno) {
       [adpId],
     );
     if (!adp) continue;
+    // Coerenza con scadenziario/stats: non applicare un adempimento vincolato
+    // a un anno diverso da quello richiesto.
+    if (
+      adp.anno_validita !== null &&
+      adp.anno_validita !== undefined &&
+      String(adp.anno_validita) !== String(anno)
+    ) {
+      totaleSkipped += clienti_ids.length;
+      continue;
+    }
     for (const clienteId of clienti_ids) {
       const risultato = inserisciAdempimentoSeAssenteConDettagli(
         clienteId,
