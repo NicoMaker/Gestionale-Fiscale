@@ -423,8 +423,7 @@ function renderGlobalePage() {
     '<select class="select topbar-select" id="glob-sel-cliente" onchange="onGlobaleClienteChange()" title="Seleziona il cliente" style="min-width:200px;max-width:260px">' +
     '<option value="">-- Seleziona Cliente --</option>' +
     "</select>" +
-    '<select class="select" id="glob-filtro-adp" style="width:210px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per tipo di adempimento">' +
-    '<option value="">📋 Tutti adempimenti</option>' +
+    '<select class="select" id="glob-filtro-adp" multiple style="width:210px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per uno o più tipi di adempimento" data-placeholder="📋 Tutti adempimenti">' +
     "</select>" +
     '<select class="select" id="glob-filtro-stato" style="width:155px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per stato adempimento">' +
     '<option value="">🔵 Tutti stati</option>' +
@@ -437,7 +436,7 @@ function renderGlobalePage() {
     '<button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>';
 
   setTimeout(function () {
-    initSearchableSelect("glob-filtro-adp");
+    initSearchableMultiSelect("glob-filtro-adp");
     initSearchableSelect("glob-sel-cliente");
     populateGlobaleClienti();
     if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "") {
@@ -445,9 +444,12 @@ function renderGlobalePage() {
       var adpSel = document.getElementById("glob-filtro-adp");
       if (adpSel) {
         setTimeout(function () {
-          adpSel.value = filterValue;
+          var opt = Array.from(adpSel.options).find(function (o) {
+            return o.value === filterValue;
+          });
+          if (opt) opt.selected = true;
           if (adpSel._ssRefresh) adpSel._ssRefresh();
-          var filtri = { adempimento: filterValue };
+          var filtri = { adempimento: [filterValue] };
           socket.emit("get:scadenzario_globale", {
             anno: state.anno,
             filtri: filtri,
@@ -523,13 +525,18 @@ function loadGlobale() {
   var adpSel = document.getElementById("glob-filtro-adp");
   var statoSel = document.getElementById("glob-filtro-stato");
   var clienteSearch = document.getElementById("glob-search-cliente");
-  if (adpSel && adpSel.value) filtri.adempimento = adpSel.value;
+  var adpValori = adpSel
+    ? Array.from(adpSel.selectedOptions || []).map(function (o) {
+        return o.value;
+      })
+    : [];
+  if (adpValori.length) filtri.adempimento = adpValori;
   if (statoSel && statoSel.value) filtri.stato = statoSel.value;
   if (clienteSearch && clienteSearch.value) filtri.search = clienteSearch.value;
   if (state.globaleSelectedCliente && state.globaleSelectedCliente !== "")
     filtri.cliente_id = parseInt(state.globaleSelectedCliente);
   if (state.globalePreFiltroAdp && !filtri.adempimento)
-    filtri.adempimento = state.globalePreFiltroAdp;
+    filtri.adempimento = [state.globalePreFiltroAdp];
   socket.emit("get:scadenzario_globale", { anno: state.anno, filtri: filtri });
 }
 
@@ -548,12 +555,14 @@ function applyGlobaleFiltriLocali() {
 function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
   state.globaleSelectedCliente = "";
-  var ids = [
-    "glob-filtro-adp",
-    "glob-filtro-stato",
-    "glob-search-cliente",
-    "glob-sel-cliente",
-  ];
+  var adpSel = document.getElementById("glob-filtro-adp");
+  if (adpSel) {
+    Array.from(adpSel.options).forEach(function (o) {
+      o.selected = false;
+    });
+    if (adpSel._ssRefresh) adpSel._ssRefresh();
+  }
+  var ids = ["glob-filtro-stato", "glob-search-cliente", "glob-sel-cliente"];
   for (var i = 0; i < ids.length; i++) {
     var el = document.getElementById(ids[i]);
     if (el) {
@@ -586,19 +595,21 @@ function renderGlobaleHeader() {
   if (!st) return;
   var adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
-    var currentValue = adpSel.value;
+    var currentValues = new Set(
+      Array.from(adpSel.selectedOptions || []).map(function (o) {
+        return o.value;
+      }),
+    );
     if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "")
-      currentValue = state.globalePreFiltroAdp;
+      currentValues.add(state.globalePreFiltroAdp);
     var adpList = Array.from(st.adempimenti);
     adpList.sort(function (a, b) {
       return a.localeCompare(b, "it", { sensitivity: "base" });
     });
-    var options = '<option value="">📋 Tutti adempimenti</option>';
-    var foundValue = false;
+    var options = "";
     for (var i = 0; i < adpList.length; i++) {
       var adpName = adpList[i];
-      var selected = currentValue === adpName ? " selected" : "";
-      if (currentValue === adpName) foundValue = true;
+      var selected = currentValues.has(adpName) ? " selected" : "";
       options +=
         '<option value="' +
         escapeHtmlForSelect(adpName) +
@@ -609,24 +620,23 @@ function renderGlobaleHeader() {
         "</option>";
     }
     adpSel.innerHTML = options;
-    if (
-      !foundValue &&
-      state.globalePreFiltroAdp &&
-      state.globalePreFiltroAdp !== ""
-    )
-      adpSel.value = state.globalePreFiltroAdp;
-    if (!adpSel.dataset.ssinit) initSearchableSelect("glob-filtro-adp");
+    if (!adpSel.dataset.ssinit) initSearchableMultiSelect("glob-filtro-adp");
     else if (adpSel._ssRefresh) adpSel._ssRefresh();
-    if (state.globalePreFiltroAdp) {
-      var tempFilter = state.globalePreFiltroAdp;
-      state.globalePreFiltroAdp = "";
-      if (adpSel.value !== tempFilter) {
-        adpSel.value = tempFilter;
-        if (adpSel._ssRefresh) adpSel._ssRefresh();
-      }
-    }
+    state.globalePreFiltroAdp = "";
   }
 }
+
+function _globToggleAdpFiltro(nome) {
+  var adpSel = document.getElementById("glob-filtro-adp");
+  if (!adpSel) return;
+  var opt = Array.from(adpSel.options).find(function (o) {
+    return o.value === nome;
+  });
+  if (opt) opt.selected = false;
+  if (adpSel._ssRefresh) adpSel._ssRefresh();
+  applyGlobaleFiltri();
+}
+window._globToggleAdpFiltro = _globToggleAdpFiltro;
 
 function navigaAdempimento(direzione) {
   var adpSel = document.getElementById("glob-filtro-adp");
@@ -635,12 +645,20 @@ function navigaAdempimento(direzione) {
   lista.sort(function (a, b) {
     return a.localeCompare(b, "it", { sensitivity: "base" });
   });
-  var current = adpSel.value;
+  var currentSelected = Array.from(adpSel.selectedOptions || []).map(
+    function (o) {
+      return o.value;
+    },
+  );
+  var current = currentSelected.length === 1 ? currentSelected[0] : "";
   var idx = lista.indexOf(current);
   var newIdx;
   if (direzione === -1) newIdx = idx <= 0 ? lista.length - 1 : idx - 1;
   else newIdx = idx >= lista.length - 1 || idx === -1 ? 0 : idx + 1;
-  adpSel.value = lista[newIdx];
+  // La navigazione prev/next isola un singolo adempimento alla volta
+  Array.from(adpSel.options).forEach(function (o) {
+    o.selected = o.value === lista[newIdx];
+  });
   if (adpSel._ssRefresh) adpSel._ssRefresh();
   applyGlobaleFiltri();
 }

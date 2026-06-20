@@ -120,8 +120,15 @@ function getScadenzarioGlobale(anno, filtri = {}) {
     params.push(filtri.stato);
   }
   if (filtri.adempimento) {
-    sql += ` AND a.nome = ?`;
-    params.push(filtri.adempimento);
+    if (Array.isArray(filtri.adempimento)) {
+      if (filtri.adempimento.length) {
+        sql += ` AND a.nome IN (${filtri.adempimento.map(() => "?").join(",")})`;
+        params.push(...filtri.adempimento);
+      }
+    } else {
+      sql += ` AND a.nome = ?`;
+      params.push(filtri.adempimento);
+    }
   }
   if (filtri.search?.trim()) {
     const s = `%${filtri.search.trim()}%`;

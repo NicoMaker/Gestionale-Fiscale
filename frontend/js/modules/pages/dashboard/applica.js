@@ -227,34 +227,12 @@ function setApplicaModalita(m) {
   var btnIns = document.getElementById("applica-mode-inserisci");
   var btnEl = document.getElementById("applica-mode-elimina");
 
-  // Stato neutro (null) → entrambi grigi
-  if (!m) {
-    if (btnIns) {
-      btnIns.style.background = "var(--surface3)";
-      btnIns.style.color = "var(--text2)";
-      btnIns.style.borderColor = "var(--border)";
-    }
-    if (btnEl) {
-      btnEl.style.background = "var(--surface3)";
-      btnEl.style.color = "var(--text2)";
-      btnEl.style.borderColor = "var(--border)";
-    }
-  } else {
-    if (btnIns) {
-      btnIns.style.background =
-        m === "inserisci" ? "var(--green)" : "var(--surface3)";
-      btnIns.style.color = m === "inserisci" ? "#fff" : "var(--text2)";
-      btnIns.style.borderColor =
-        m === "inserisci" ? "var(--green)" : "var(--border)";
-    }
-    if (btnEl) {
-      btnEl.style.background =
-        m === "elimina" ? "var(--red)" : "var(--surface3)";
-      btnEl.style.color = m === "elimina" ? "#fff" : "var(--text2)";
-      btnEl.style.borderColor =
-        m === "elimina" ? "var(--red)" : "var(--border)";
-    }
-  }
+  // ⭐ Usa la classe "attivo" (già definita in CSS con stili !important)
+  // invece di stili inline, che venivano sovrascritti dalla regola di base
+  // #applica-mode-inserisci/#applica-mode-elimina { ... !important } e quindi
+  // non si vedeva mai il cambio di colore al click.
+  if (btnIns) btnIns.classList.toggle("attivo", m === "inserisci");
+  if (btnEl) btnEl.classList.toggle("attivo", m === "elimina");
 
   var btnApplica = document.getElementById("btn-esegui-applica");
   if (btnApplica) {

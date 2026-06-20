@@ -4034,10 +4034,7 @@ select {
   color: var(--text2) !important;
 }
 
-#applica-mode-inserisci:hover,
-#applica-mode-elimina:hover {
-  transform: scale(1.02) !important;
-}
+/* Hover rimosso: causava confusione con lo stato selezionato (.attivo) */
 
 #applica-mode-inserisci.attivo {
   background: var(--green) !important;

@@ -56,14 +56,18 @@ function renderGlobaleTabella(rawData) {
   var showTipBadge = isNone || (!isAll && activeFiltroKeys.size > 0);
 
   var adpSel = document.getElementById("glob-filtro-adp");
-  var adpFiltroAttivo = adpSel ? adpSel.value : "";
+  var adpFiltroAttivi = adpSel
+    ? Array.from(adpSel.selectedOptions || []).map(function (o) {
+        return o.value;
+      })
+    : [];
 
   if (
     state.globalePreFiltroAdp &&
     state.globalePreFiltroAdp !== "" &&
-    !adpFiltroAttivo
+    adpFiltroAttivi.length === 0
   ) {
-    adpFiltroAttivo = state.globalePreFiltroAdp;
+    adpFiltroAttivi = [state.globalePreFiltroAdp];
   }
 
   var filtroClienteStatoLabels = {
@@ -122,17 +126,21 @@ function renderGlobaleTabella(rawData) {
   }
 
   var navAdpHtml = "";
-  if (
-    adpFiltroAttivo &&
-    adpFiltroAttivo !== "" &&
-    st.adempimenti &&
-    st.adempimenti.length > 0
-  ) {
+  if (adpFiltroAttivi.length > 0) {
     navAdpHtml =
-      '<div class="glob-nav-adp" style="margin-top:14px;text-align:center">' +
-      '<span style="font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-d);padding:4px 12px;border-radius:20px">' +
-      adpFiltroAttivo +
-      "</span>" +
+      '<div class="glob-nav-adp" style="margin-top:14px;text-align:center;display:flex;flex-wrap:wrap;gap:6px;justify-content:center">' +
+      adpFiltroAttivi
+        .map(function (nome) {
+          return (
+            '<span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:13px;color:var(--accent);background:var(--accent-d);padding:4px 12px;border-radius:20px">' +
+            nome +
+            '<button onclick="_globToggleAdpFiltro(\'' +
+            nome.replace(/'/g, "\\'") +
+            "')\" style=\"background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;line-height:1\" title=\"Rimuovi questo filtro\">✕</button>" +
+            "</span>"
+          );
+        })
+        .join("") +
       "</div>";
   }
 

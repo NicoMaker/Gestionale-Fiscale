@@ -48,11 +48,21 @@ function renderBtnAddAdp(id_cliente) {
   </button>`;
 }
 
+function getScadFiltroAdpIds() {
+  const sel = document.getElementById("scad-filtro-adp");
+  if (!sel) return [];
+  return Array.from(sel.selectedOptions || []).map((o) => o.value);
+}
+
+// ⭐ Clic su una pill "Adempimenti del cliente" AGGIUNGE/TOGLIE quell'adempimento
+// dal filtro multiplo, senza deselezionare gli altri già scelti.
 function filtraScadPerAdp(idAdp) {
   const sel = document.getElementById("scad-filtro-adp");
   if (!sel) return;
 
-  sel.value = idAdp ? String(idAdp) : "";
+  const idStr = String(idAdp);
+  const opt = Array.from(sel.options).find((o) => o.value === idStr);
+  if (opt) opt.selected = !opt.selected;
   if (sel._ssRefresh) sel._ssRefresh();
 
   applyScadFiltriAdp();
@@ -62,44 +72,41 @@ function filtraScadPerAdp(idAdp) {
     scadContent.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  _aggiornaPillFiltroAdpUI();
+}
+
+function _aggiornaPillFiltroAdpUI() {
+  const selezionati = new Set(getScadFiltroAdpIds());
   document.querySelectorAll(".adempimento-filter-btn").forEach((btn) => {
     const btnId = btn
       .getAttribute("onclick")
       .match(/filtraScadPerAdp\((\d+)\)/)?.[1];
-    if (btnId === String(idAdp)) {
-      btn.style.background = "var(--accent)";
-      btn.style.borderColor = "var(--accent)";
-      btn.style.color = "white";
-    } else {
-      btn.style.background = "var(--surface3)";
-      btn.style.borderColor = "var(--border)";
-      btn.style.color = "var(--text1)";
-    }
+    btn.classList.toggle("active", !!(btnId && selezionati.has(btnId)));
   });
 }
 
 function aggiornaFiltroAdpScad(data) {
   const sel = document.getElementById("scad-filtro-adp");
   if (!sel) return;
-  const currentValue = sel.value;
+  const currentValues = new Set(getScadFiltroAdpIds());
 
   const adpSet = {};
   data.forEach((r) => {
     adpSet[r.id_adempimento] = r.adempimento_nome;
   });
 
-  sel.innerHTML =
-    `<option value="">📋 Tutti adempimenti</option>` +
-    Object.entries(adpSet)
-      .sort((a, b) => a[1].localeCompare(b[1]))
-      .map(
-        ([id, nome]) =>
-          `<option value="${id}" ${currentValue == id ? "selected" : ""}>${nome}</option>`,
-      )
-      .join("");
+  sel.innerHTML = Object.entries(adpSet)
+    .sort((a, b) => a[1].localeCompare(b[1]))
+    .map(
+      ([id, nome]) =>
+        `<option value="${id}" ${currentValues.has(String(id)) ? "selected" : ""}>${nome}</option>`,
+    )
+    .join("");
+
+  sel.dataset.placeholder = "📋 Tutti adempimenti";
 
   if (!sel.dataset.ssinit) {
-    initSearchableSelect("scad-filtro-adp");
+    initSearchableMultiSelect("scad-filtro-adp");
   } else if (sel._ssRefresh) {
     sel._ssRefresh();
   }
@@ -137,8 +144,7 @@ function renderScadenzarioSelect(clienti) {
       <span class="year-num">${state.anno}</span>
       <button onclick="changeAnnoScad(1)" title="Anno successivo">&#9654;</button>
     </div>
-    <select class="select topbar-select" id="scad-filtro-adp" onchange="applyScadFiltriAdp()" title="Filtra per adempimento specifico" style="min-width:160px;max-width:220px">
-      <option value="">📋 Tutti adempimenti</option>
+    <select class="select topbar-select" id="scad-filtro-adp" multiple onchange="applyScadFiltriAdp()" title="Filtra per uno o più adempimenti" style="min-width:160px;max-width:220px" data-placeholder="📋 Tutti adempimenti">
     </select>
     <select class="select topbar-select" id="scad-filtro-stato" onchange="applyScadFiltri()" title="Filtra per stato">
       <option value="">📋 Tutti gli stati</option>
@@ -170,7 +176,7 @@ function onClienteChange() {
         state.adpInseriti = [];
         const adpSel = document.getElementById("scad-filtro-adp");
         if (adpSel) {
-          adpSel.innerHTML = `<option value="">📋 Tutti adempimenti</option>`;
+          adpSel.innerHTML = "";
           if (adpSel._ssRefresh) adpSel._ssRefresh();
         }
         loadScadenzario();
@@ -181,7 +187,7 @@ function onClienteChange() {
     state.adpInseriti = [];
     const adpSel = document.getElementById("scad-filtro-adp");
     if (adpSel) {
-      adpSel.innerHTML = `<option value="">📋 Tutti adempimenti</option>`;
+      adpSel.innerHTML = "";
       if (adpSel._ssRefresh) adpSel._ssRefresh();
     }
     if (state.selectedCliente) loadScadenzario();
@@ -271,16 +277,14 @@ function resetScadFiltri() {
 
   if (statoSelect) statoSelect.value = "";
   if (adpSelect) {
-    adpSelect.value = "";
+    Array.from(adpSelect.options).forEach((o) => (o.selected = false));
     if (adpSelect._ssRefresh) adpSelect._ssRefresh();
   }
   if (searchInput) searchInput.value = "";
   if (adpFilterSearch) adpFilterSearch.value = "";
 
   document.querySelectorAll(".adempimento-filter-btn").forEach((btn) => {
-    btn.style.background = "var(--surface3)";
-    btn.style.borderColor = "var(--border)";
-    btn.style.color = "var(--text1)";
+    btn.classList.remove("active");
     btn.style.display = "";
   });
 
@@ -294,9 +298,9 @@ function renderScadenzarioTabella(data) {
 
   aggiornaFiltroAdpScad(data);
 
-  const adpFiltroId = document.getElementById("scad-filtro-adp")?.value || "";
-  const dataFiltrata = adpFiltroId
-    ? data.filter((r) => String(r.id_adempimento) === String(adpFiltroId))
+  const adpFiltroIds = getScadFiltroAdpIds();
+  const dataFiltrata = adpFiltroIds.length
+    ? data.filter((r) => adpFiltroIds.includes(String(r.id_adempimento)))
     : data;
 
   const totale = dataFiltrata.length;
@@ -346,15 +350,24 @@ function renderScadenzarioTabella(data) {
     generaBtnTitle = `Genera ${mancanti.length} adempimento/i mancante/i per l'anno selezionato`;
   }
 
-  const adpFiltroAttivo = adpFiltroId
-    ? data.find((r) => String(r.id_adempimento) === String(adpFiltroId))
-        ?.adempimento_nome || ""
-    : "";
-  const filtroBadge = adpFiltroAttivo
-    ? `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">
-        🔍 ${escAttr(adpFiltroAttivo)}
-        <button onclick="resetScadFiltri()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi filtro">✕</button>
-      </span>`
+  const adpFiltroNomi = adpFiltroIds.map((id) => {
+    const r = data.find((x) => String(x.id_adempimento) === id);
+    return { id, nome: r ? r.adempimento_nome : id };
+  });
+  const filtroBadge = adpFiltroNomi.length
+    ? `<div style="display:flex;flex-wrap:wrap;gap:6px">` +
+      adpFiltroNomi
+        .map(
+          (f) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">
+        🔍 ${escAttr(f.nome)}
+        <button onclick="filtraScadPerAdp(${f.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi questo filtro">✕</button>
+      </span>`,
+        )
+        .join("") +
+      (adpFiltroNomi.length > 1
+        ? `<button onclick="resetScadFiltri()" class="btn btn-xs" style="font-size:11px">✕ Cancella tutti</button>`
+        : "") +
+      `</div>`
     : "";
 
   const configAnnoInfo =
@@ -393,10 +406,8 @@ function renderScadenzarioTabella(data) {
             data-adp-codice="${escAttr(adp.codice.toLowerCase())}"
             data-adp-nome="${escAttr(adp.nome.toLowerCase())}"
             onclick="filtraScadPerAdp(${adp.id})"
-            title="Filtra per ${escAttr(adp.nome)}"
+            title="Filtra per ${escAttr(adp.nome)} (clic per aggiungere/togliere dal filtro)"
             style="background:var(--surface3);border:1px solid var(--border);color:var(--text1);font-size:12px;padding:6px 12px;border-radius:6px;transition:all 0.2s"
-            onmouseover="this.style.background='var(--accent)18';this.style.borderColor='var(--accent)44';this.style.color='var(--accent)'"
-            onmouseout="this.style.background='var(--surface3)';this.style.borderColor='var(--border)';this.style.color='var(--text1)'"
           >
             <span style="font-weight:600">${adp.codice}</span>
             <span style="margin-left:4px;opacity:0.8">${adp.nome}</span>
@@ -532,6 +543,8 @@ function renderScadenzarioTabella(data) {
 
   document.getElementById("content").innerHTML =
     configAnnoInfo + clienteCard + `<div id="scad-content">${content}</div>`;
+
+  _aggiornaPillFiltroAdpUI();
 
   // Aggiorna UI bulk selezione se modalità attiva
   if (typeof _pillBulkAttivo !== "undefined" && _pillBulkAttivo) {
