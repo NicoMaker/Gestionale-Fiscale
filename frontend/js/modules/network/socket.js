@@ -96,6 +96,16 @@ socket.on("res:adempimenti", ({ success, data }) => {
     if (modalOpen) refreshAddAdpSelect();
     updatePeriodoOptions();
   }
+  // Se siamo in Vista Globale, ripopola subito il filtro adempimenti
+  // con l'elenco completo appena arrivato (evita che voci non presenti
+  // nei dati filtrati correnti spariscano dalla tendina).
+  if (
+    success &&
+    document.getElementById("glob-filtro-adp") &&
+    typeof renderGlobaleHeader === "function"
+  ) {
+    renderGlobaleHeader();
+  }
 });
 
 socket.on("res:stats", ({ success, data }) => {

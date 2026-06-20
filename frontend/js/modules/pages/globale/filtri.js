@@ -618,7 +618,31 @@ function renderGlobaleHeader() {
         currentValues.add(n);
       });
     }
-    var adpList = Array.from(st.adempimenti);
+
+    // ⭐ Usa l'elenco COMPLETO degli adempimenti definiti (state.adempimenti),
+    // non quello derivato dai dati già filtrati (st.adempimenti). Altrimenti
+    // selezionando una sola voce, le altre sparirebbero dalla tendina stessa.
+    var adpList;
+    if (state.adempimenti && state.adempimenti.length) {
+      var nomiSet = {};
+      state.adempimenti.forEach(function (a) {
+        if (a && a.nome) nomiSet[a.nome] = true;
+      });
+      // Aggiunge eventuali nomi presenti solo nei dati filtrati correnti
+      // (es. adempimenti storici non più "attivi" ma con record esistenti)
+      Array.from(st.adempimenti || []).forEach(function (n) {
+        nomiSet[n] = true;
+      });
+      adpList = Object.keys(nomiSet);
+    } else {
+      adpList = Array.from(st.adempimenti || []);
+      // Lista completa non ancora disponibile: la richiediamo ora,
+      // così al prossimo aggiornamento la tendina mostrerà tutte le voci.
+      if (!state._globAdpFetchStarted) {
+        state._globAdpFetchStarted = true;
+        socket.emit("get:adempimenti");
+      }
+    }
     adpList.sort(function (a, b) {
       return a.localeCompare(b, "it", { sensitivity: "base" });
     });
