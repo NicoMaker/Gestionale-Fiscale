@@ -2116,6 +2116,44 @@ tr.clickable:hover td {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
+.dash-adp-card.is-selected {
+  border-color: var(--accent);
+  border-width: 2px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  box-shadow: var(--shadow-md);
+}
+.dash-adp-card-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--b1);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--bg);
+  transition: all 0.15s;
+  font-size: 12px;
+  color: #fff;
+}
+.dash-adp-card.is-selected .dash-adp-card-checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.dash-multisel-bar {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--s2);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  margin: 0 16px 16px 16px;
+  font-size: 13px;
+}
+.dash-multisel-bar.is-visible {
+  display: flex;
+}
 .dash-adp-card-top {
   display: flex;
   align-items: center;

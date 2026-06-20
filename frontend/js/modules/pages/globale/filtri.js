@@ -439,21 +439,29 @@ function renderGlobalePage() {
     initSearchableMultiSelect("glob-filtro-adp");
     initSearchableSelect("glob-sel-cliente");
     populateGlobaleClienti();
-    if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "") {
-      var filterValue = state.globalePreFiltroAdp;
+    var preFiltroMulti =
+      state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length
+        ? state.globalePreFiltroAdpMulti
+        : state.globalePreFiltroAdp && state.globalePreFiltroAdp !== ""
+          ? [state.globalePreFiltroAdp]
+          : null;
+    if (preFiltroMulti) {
       var adpSel = document.getElementById("glob-filtro-adp");
       if (adpSel) {
         setTimeout(function () {
-          var opt = Array.from(adpSel.options).find(function (o) {
-            return o.value === filterValue;
+          var valuesSet = {};
+          for (var i = 0; i < preFiltroMulti.length; i++)
+            valuesSet[preFiltroMulti[i]] = true;
+          Array.from(adpSel.options).forEach(function (o) {
+            o.selected = !!valuesSet[o.value];
           });
-          if (opt) opt.selected = true;
           if (adpSel._ssRefresh) adpSel._ssRefresh();
-          var filtri = { adempimento: [filterValue] };
+          var filtri = { adempimento: preFiltroMulti.slice() };
           socket.emit("get:scadenzario_globale", {
             anno: state.anno,
             filtri: filtri,
           });
+          state.globalePreFiltroAdpMulti = null;
         }, 150);
       }
     } else {
@@ -602,6 +610,14 @@ function renderGlobaleHeader() {
     );
     if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "")
       currentValues.add(state.globalePreFiltroAdp);
+    if (
+      state.globalePreFiltroAdpMulti &&
+      state.globalePreFiltroAdpMulti.length
+    ) {
+      state.globalePreFiltroAdpMulti.forEach(function (n) {
+        currentValues.add(n);
+      });
+    }
     var adpList = Array.from(st.adempimenti);
     adpList.sort(function (a, b) {
       return a.localeCompare(b, "it", { sensitivity: "base" });

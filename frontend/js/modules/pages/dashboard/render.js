@@ -5,8 +5,12 @@
 // ═══════════════════════════════════════════════════════════════
 // ─── VISTA GLOBALE ────────────────────────────────────────────
 
-function goVistaGlobaleAdp(nome) {
-  state.globalePreFiltroAdp = nome;
+function goVistaGlobaleAdp(nomi) {
+  // Accetta sia una singola stringa (click su una card) sia un array
+  // (apertura da selezione multipla) per filtrare la Vista Globale.
+  var lista = Array.isArray(nomi) ? nomi : [nomi];
+  state.globalePreFiltroAdp = lista.length === 1 ? lista[0] : "";
+  state.globalePreFiltroAdpMulti = lista;
   document.querySelectorAll(".nav-item").forEach(function (x) {
     x.classList.remove("active");
   });
@@ -15,6 +19,52 @@ function goVistaGlobaleAdp(nome) {
   state.dashSearch = "";
   state.dashFiltroStatoAdp = "";
   renderPage("scadenzario_globale");
+}
+
+// ─── SELEZIONE MULTIPLA CARD ADEMPIMENTO (DASHBOARD) ──────────
+
+function _getDashSelezionati() {
+  if (!state.dashAdpSelezionati) state.dashAdpSelezionati = new Set();
+  return state.dashAdpSelezionati;
+}
+
+function toggleDashAdpCard(nome, event) {
+  if (event) event.stopPropagation();
+  var sel = _getDashSelezionati();
+  if (sel.has(nome)) sel.delete(nome);
+  else sel.add(nome);
+  if (state.dashStats) updateDashboardContent(state.dashStats);
+}
+
+function clearDashAdpSelezione() {
+  _getDashSelezionati().clear();
+  if (state.dashStats) updateDashboardContent(state.dashStats);
+}
+
+function apriVistaGlobaleDaSelezione() {
+  var sel = Array.from(_getDashSelezionati());
+  if (sel.length === 0) return;
+  goVistaGlobaleAdp(sel);
+}
+
+function _renderDashMultiselBar() {
+  var bar = document.getElementById("dash-multisel-bar");
+  if (!bar) return;
+  var sel = _getDashSelezionati();
+  if (sel.size === 0) {
+    bar.classList.remove("is-visible");
+    bar.innerHTML = "";
+    return;
+  }
+  bar.classList.add("is-visible");
+  bar.innerHTML =
+    '<span><strong>' +
+    sel.size +
+    "</strong> adempiment" +
+    (sel.size === 1 ? "o selezionato" : "i selezionati") +
+    "</span>" +
+    '<button class="btn btn-sm btn-primary" onclick="apriVistaGlobaleDaSelezione()">🌐 Apri in Vista Globale</button>' +
+    '<button class="btn btn-sm btn-secondary" onclick="clearDashAdpSelezione()">✕ Deseleziona tutto</button>';
 }
 
 // ─── FILTRI STATO / SEARCH ────────────────────────────────────
@@ -33,6 +83,7 @@ function onDashAdpSearch(val) {
 function resetDashFiltri() {
   state.dashSearch = "";
   state.dashFiltroStatoAdp = "";
+  if (state.dashAdpSelezionati) state.dashAdpSelezionati.clear();
   var searchEl = document.getElementById("dash-adp-search");
   if (searchEl) searchEl.value = "";
   var statoEl = document.getElementById("dash-filtro-stato-adp");
@@ -298,6 +349,7 @@ function updateDashboardContent(stats) {
   }
 
   var html = "";
+  var dashSel = _getDashSelezionati();
   adpVis.forEach(function (adpItem) {
     var p =
       adpItem.totale > 0
@@ -309,11 +361,17 @@ function updateDashboardContent(stats) {
     );
     var pgColor =
       p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
+    var isSel = dashSel.has(adpItem.nome);
     html +=
-      '<div class="dash-adp-card" onclick="goVistaGlobaleAdp(\'' +
+      '<div class="dash-adp-card' +
+      (isSel ? " is-selected" : "") +
+      '" onclick="toggleDashAdpCard(\'' +
       adpItem.nome.replace(/'/g, "\\'") +
-      "')\">" +
+      "', event)\">" +
       '<div class="dash-adp-card-top">' +
+      '<span class="dash-adp-card-checkbox">' +
+      (isSel ? "✓" : "") +
+      "</span>" +
       '<span class="adp-def-codice">' +
       adpItem.codice +
       "</span>" +
@@ -349,6 +407,7 @@ function updateDashboardContent(stats) {
       "</div></div>";
   });
   grid.innerHTML = html;
+  _renderDashMultiselBar();
 }
 
 // ─── RENDER PRINCIPALE ────────────────────────────────────────
@@ -415,6 +474,9 @@ if (typeof socket !== "undefined") {
 // (che viene caricato dopo questo file)
 window.caricaClientiSenzaAdempimenti = caricaClientiSenzaAdempimenti;
 window.goVistaGlobaleAdp = goVistaGlobaleAdp;
+window.toggleDashAdpCard = toggleDashAdpCard;
+window.clearDashAdpSelezione = clearDashAdpSelezione;
+window.apriVistaGlobaleDaSelezione = apriVistaGlobaleDaSelezione;
 window.onDashFiltroStatoAdp = onDashFiltroStatoAdp;
 window.resetDashFiltri = resetDashFiltri;
 window.onDashAdpSearch = onDashAdpSearch;

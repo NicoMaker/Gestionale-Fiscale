@@ -86,6 +86,7 @@ function buildDashboardShell(stats) {
           </div>
         </div>
       </div>
+      <div id="dash-multisel-bar" class="dash-multisel-bar"></div>
       <div id="dash-adp-grid" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px"></div>
     </div>`;
 
