@@ -2951,6 +2951,21 @@ tr.clickable:hover td {
   border-left-color: var(--accent);
 }
 
+.ss-ms-btn {
+  background: var(--s1);
+  color: var(--t2);
+  border: 1px solid var(--b1);
+}
+.ss-ms-btn:hover {
+  background: var(--s2);
+  border-color: var(--b2);
+}
+.ss-ms-btn.ss-ms-active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
 /* ════════════════════════════════════════════════════════════════
    AVATAR ADATTIVO
    ════════════════════════════════════════════════════════════════ */

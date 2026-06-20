@@ -221,9 +221,21 @@ function initSearchableMultiSelect(selectId) {
   actionsRow.style.cssText =
     "display:flex;gap:6px;padding:6px 10px;border-bottom:1px solid var(--b1)";
   actionsRow.innerHTML =
-    '<button type="button" class="btn btn-xs" data-ms-all style="font-size:11px;flex:1">✅ Tutti</button>' +
-    '<button type="button" class="btn btn-xs" data-ms-none style="font-size:11px;flex:1">✕ Nessuno</button>';
+    '<button type="button" class="btn btn-xs ss-ms-btn" data-ms-all style="font-size:11px;flex:1">✅ Tutti</button>' +
+    '<button type="button" class="btn btn-xs ss-ms-btn" data-ms-none style="font-size:11px;flex:1">✕ Nessuno</button>';
   panel.appendChild(actionsRow);
+  const btnAll = actionsRow.querySelector("[data-ms-all]");
+  const btnNone = actionsRow.querySelector("[data-ms-none]");
+
+  function updateActionsState() {
+    const total = sel.options.length;
+    const selectedCount = sel.selectedOptions.length;
+    btnAll.classList.toggle(
+      "ss-ms-active",
+      total > 0 && selectedCount === total,
+    );
+    btnNone.classList.toggle("ss-ms-active", selectedCount === 0);
+  }
 
   const list = document.createElement("div");
   list.style.maxHeight = "240px";
@@ -285,11 +297,13 @@ function initSearchableMultiSelect(selectId) {
         item.classList.toggle("ss-selected", opt.selected);
         item.setAttribute("aria-selected", String(opt.selected));
         updateLabel();
+        updateActionsState();
         sel.dispatchEvent(new Event("change", { bubbles: true }));
       });
       frag.appendChild(item);
     });
     list.appendChild(frag);
+    updateActionsState();
   }
 
   function openPanel() {
@@ -346,6 +360,7 @@ function initSearchableMultiSelect(selectId) {
     Array.from(sel.options).forEach((o) => (o.selected = true));
     updateLabel();
     renderList(searchInput.value);
+    updateActionsState();
     sel.dispatchEvent(new Event("change", { bubbles: true }));
   });
   actionsRow.querySelector("[data-ms-none]").addEventListener("click", (e) => {
@@ -353,6 +368,7 @@ function initSearchableMultiSelect(selectId) {
     Array.from(sel.options).forEach((o) => (o.selected = false));
     updateLabel();
     renderList(searchInput.value);
+    updateActionsState();
     sel.dispatchEvent(new Event("change", { bubbles: true }));
   });
 
@@ -380,9 +396,11 @@ function initSearchableMultiSelect(selectId) {
 
   sel._ssRefresh = function () {
     updateLabel();
+    updateActionsState();
     if (panel.dataset.open) renderList(searchInput.value);
   };
   updateLabel();
+  updateActionsState();
 }
 
 // ─── INIT NAV ─────────────────────────────────────────────────
