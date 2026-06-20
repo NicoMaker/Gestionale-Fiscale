@@ -290,17 +290,14 @@ function apriApplicaAdempimentiPerVuoti() {
       var clientiVuotiIds = data.data.map(function (c) {
         return c.id;
       });
-      if (!state.adempimenti || state.adempimenti.length === 0) {
-        socket.emit("get:adempimenti");
-        socket.once("res:adempimenti", function (adpData) {
-          if (adpData.success) {
-            state.adempimenti = adpData.data;
-            apriModalConPreselezione(clientiVuotiIds);
-          }
-        });
-      } else {
-        apriModalConPreselezione(clientiVuotiIds);
-      }
+      // Ricarica sempre i dati freschi dal server (vedi openApplicaAdempimenti)
+      socket.emit("get:adempimenti");
+      socket.once("res:adempimenti", function (adpData) {
+        if (adpData.success) {
+          state.adempimenti = adpData.data;
+          apriModalConPreselezione(clientiVuotiIds);
+        }
+      });
     } else {
       showNotif("Nessun cliente senza adempimenti da assegnare", "info");
     }
@@ -343,17 +340,16 @@ function apriModalConPreselezione(clientiVuotiIds) {
 function openApplicaAdempimenti() {
   _applicaTipFiltro = new Set(); // reset filtro tipologia all'apertura
   _applicaModalita = null; // ⭐ reset modalità: obbligatorio scegliere ogni volta
-  if (!state.adempimenti || state.adempimenti.length === 0) {
-    socket.emit("get:adempimenti");
-    socket.once("res:adempimenti", function (data) {
-      if (data.success) {
-        state.adempimenti = data.data;
-        renderApplicaAdempimentiModal();
-      }
-    });
-  } else {
-    renderApplicaAdempimentiModal();
-  }
+  // Ricarica sempre i dati freschi dal server: usare la cache di state.adempimenti
+  // può mostrare adempimenti con anno_validita ormai superato (es. modificati
+  // in un'altra pagina/tab nella stessa sessione).
+  socket.emit("get:adempimenti");
+  socket.once("res:adempimenti", function (data) {
+    if (data.success) {
+      state.adempimenti = data.data;
+      renderApplicaAdempimentiModal();
+    }
+  });
   socket.emit("get:clienti", { anno: state.anno });
   socket.once("res:clienti", function (data) {
     if (data.success) {

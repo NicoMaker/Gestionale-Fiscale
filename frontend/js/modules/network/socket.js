@@ -60,6 +60,22 @@ socket.on("broadcast:appunti_updated", () => {
     filterAppunti();
 });
 
+// Un adempimento è stato creato/modificato/eliminato altrove (es. cambiato
+// l'anno_validita): lo state locale va ricaricato, altrimenti le viste già
+// aperte (dashboard, modale applica, pagina adempimenti) continuano a
+// mostrare dati vecchi finché non si ricarica manualmente la pagina.
+socket.on("broadcast:adempimenti_updated", () => {
+  socket.emit("get:adempimenti");
+  socket.once("res:adempimenti", ({ success }) => {
+    if (
+      success &&
+      document.getElementById("modal-applica-adempimenti")?.classList.contains("open") &&
+      typeof renderApplicaAdempimentiModal === "function"
+    )
+      renderApplicaAdempimentiModal();
+  });
+});
+
 // ─── RISPOSTA DATI ────────────────────────────────────────────
 socket.on("res:tipologie", ({ success, data }) => {
   if (success) state.tipologie = data;
