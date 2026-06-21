@@ -306,35 +306,6 @@ function renderSintesiTabella() {
     var isAll = !isNone && activeFiltroKeys.size === allKeysArr.length;
     var countDisplay = isNone ? "0" : isAll ? "" : activeFiltroKeys.size;
     var showBadge = isNone || (!isAll && activeFiltroKeys.size > 0);
-
-    tipFiltroHtml =
-      '<div class="glob-tip-filtro-wrap" style="margin-bottom:14px">' +
-      '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b0);border-radius:var(--r-sm);cursor:pointer;" onclick="toggleGlobTipFiltroPanel(event)">' +
-      '<span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em">🏷️ Filtro Tipologie Clienti</span>' +
-      '<span id="glob-tip-filtro-count" style="display:' +
-      (showBadge ? "inline-flex" : "none") +
-      ";align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:" +
-      (isNone ? "var(--red)" : "var(--accent)") +
-      ';color:#fff;border-radius:10px;font-size:11px;font-weight:700">' +
-      countDisplay +
-      "</span>" +
-      (isNone
-        ? '<span style="font-size:11px;color:var(--red);font-weight:700">⚠️ Nessuno selezionato</span>'
-        : "") +
-      '<div id="glob-tip-filtro-toggle-btn" style="margin-left:auto" onclick="event.stopPropagation()">' +
-      (typeof _globTipFiltroPanelOpen !== "undefined" && _globTipFiltroPanelOpen
-        ? '<button class="btn btn-xs btn-secondary" onclick="event.stopPropagation(); closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
-        : '<button class="btn btn-xs btn-secondary" onclick="event.stopPropagation(); toggleGlobTipFiltroPanel(event)">▼ Espandi</button>') +
-      "</div>" +
-      "</div>" +
-      '<div id="glob-tip-filtro-container" style="display:' +
-      (typeof _globTipFiltroPanelOpen !== "undefined" && _globTipFiltroPanelOpen
-        ? "block"
-        : "none") +
-      ';margin-top:8px" onclick="event.stopPropagation()">' +
-      renderTipologieFiltroPanel() +
-      "</div>" +
-      "</div>";
   }
 
   // ─── Header riepilogativo + legenda ───────────────────────────
