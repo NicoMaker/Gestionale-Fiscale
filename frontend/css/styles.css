@@ -2026,6 +2026,27 @@ tr.clickable:hover td {
   flex-wrap: wrap;
   align-items: flex-start;
 }
+.gpc-stat-btn {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px 12px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid transparent;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    transform 0.12s;
+}
+.gpc-stat-btn:hover {
+  background: var(--s1);
+  transform: translateY(-1px);
+}
+.gpc-stat-btn.active {
+  background: var(--accent-d);
+  border-color: var(--accent);
+}
 
 .glob-cliente-card {
   background: var(--bg);
@@ -4202,9 +4223,49 @@ select {
   color: var(--t2);
 }
 .sint-legend-item {
+  all: unset;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+  padding: 3px 10px 3px 6px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-size: 12px;
+  color: var(--t2);
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    transform 0.12s;
+}
+.sint-legend-item:hover {
+  background: var(--s1);
+  transform: translateY(-1px);
+}
+.sint-legend-item.active {
+  background: var(--accent-d);
+  border-color: var(--accent);
+  color: var(--t0);
+  font-weight: 700;
+}
+.sint-legend-item.active .sint-legend-dot {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.sint-legend-clear {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--accent);
+  transition: background 0.12s;
+}
+.sint-legend-clear:hover {
+  background: var(--accent-d);
 }
 .sint-legend-dot {
   display: inline-block;
@@ -4364,6 +4425,13 @@ select {
   color: var(--t3);
   font-size: 9.5px;
 }
+.sint-cell-dim {
+  opacity: 0.25;
+  filter: saturate(0.4);
+}
+.sint-cell-dim:hover {
+  opacity: 0.6;
+}
 
 #sint-dettaglio {
   display: none;
@@ -4393,6 +4461,89 @@ select {
   color: var(--t2);
   margin-top: 2px;
 }
+
+.sint-dett-grid-wrap {
+  margin-bottom: 16px;
+}
+.sint-dett-grid-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--t2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.sint-dett-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+  gap: 8px;
+}
+.sint-dett-chip {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--b1);
+  background: var(--bg);
+  transition:
+    transform 0.1s,
+    border-color 0.1s;
+}
+.sint-dett-chip:hover {
+  transform: scale(1.06);
+  border-color: var(--accent);
+}
+.sint-dett-chip-ico {
+  font-size: 14px;
+  line-height: 1;
+}
+.sint-dett-chip-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--t2);
+}
+.sint-dett-chip-completato {
+  background: var(--green-d);
+  border-color: var(--green);
+}
+.sint-dett-chip-completato .sint-dett-chip-lbl {
+  color: var(--green);
+}
+.sint-dett-chip-in_corso {
+  background: var(--yellow-d);
+  border-color: var(--yellow);
+}
+.sint-dett-chip-in_corso .sint-dett-chip-lbl {
+  color: var(--yellow);
+}
+.sint-dett-chip-da_fare {
+  background: var(--red-d);
+  border-color: var(--red);
+}
+.sint-dett-chip-da_fare .sint-dett-chip-lbl {
+  color: var(--red);
+}
+.sint-dett-chip-n_a {
+  background: var(--s2);
+  border-color: var(--b0);
+}
+.sint-dett-chip-n_a .sint-dett-chip-lbl {
+  color: var(--t3);
+}
+.sint-dett-chip-text_only {
+  background: var(--purple-d);
+  border-color: var(--purple);
+}
+.sint-dett-chip-text_only .sint-dett-chip-lbl {
+  color: var(--purple);
+}
 .sint-dett-table {
   width: 100%;
   border-collapse: collapse;
@@ -4410,6 +4561,10 @@ select {
 .sint-dett-table td {
   padding: 7px 10px;
   border-bottom: 1px solid var(--b0);
+}
+.sint-dett-table tr.flash {
+  background: var(--accent-d);
+  transition: background 0.3s ease;
 }
 
 @media (max-width: 860px) {

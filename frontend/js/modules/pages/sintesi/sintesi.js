@@ -173,9 +173,55 @@ function resetSintesiFiltri() {
     _refreshGlobTipFiltroPanel();
   if (typeof _aggiornaGlobTipFiltroCounter === "function")
     _aggiornaGlobTipFiltroCounter();
+  state.sintesiStatoFiltro = { done: false, partial: false, todo: false, na: false };
   state.sintesiActiveCellKey = null;
   renderSintesiTabella();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// FILTRO PER STATO CELLA (✅ Fatto / 🔄 Parziale / ⭕ Da fare / ➖ N/A)
+// Cliccabile sia dalla legenda che dai contatori dell'header. Funziona
+// in OR: se più stati sono attivi, basta che la cella corrisponda ad
+// almeno uno di essi. Righe senza nessuna cella corrispondente vengono
+// nascoste; le celle non corrispondenti restano visibili ma "sbiadite"
+// per mantenere il contesto dell'intera riga cliente.
+// ═══════════════════════════════════════════════════════════════
+
+function _sintesiStatoFiltroSafe() {
+  if (!state.sintesiStatoFiltro)
+    state.sintesiStatoFiltro = {
+      done: false,
+      partial: false,
+      todo: false,
+      na: false,
+    };
+  return state.sintesiStatoFiltro;
+}
+
+function _sintesiStatoFiltroAttivi() {
+  var f = _sintesiStatoFiltroSafe();
+  return Object.keys(f).filter(function (k) {
+    return f[k];
+  });
+}
+
+function toggleSintesiStatoFiltro(kind) {
+  var f = _sintesiStatoFiltroSafe();
+  f[kind] = !f[kind];
+  renderSintesiTabella();
+}
+window.toggleSintesiStatoFiltro = toggleSintesiStatoFiltro;
+
+function resetSintesiStatoFiltro() {
+  state.sintesiStatoFiltro = {
+    done: false,
+    partial: false,
+    todo: false,
+    na: false,
+  };
+  renderSintesiTabella();
+}
+window.resetSintesiStatoFiltro = resetSintesiStatoFiltro;
 
 // ═══════════════════════════════════════════════════════════════
 // LOGICA STATO CELLA
@@ -291,6 +337,22 @@ function renderSintesiTabella() {
     lookup[k].push(r);
   });
 
+  // ─── Filtro per stato cella (legenda / contatori header cliccabili).
+  // clienti = già filtrati per ricerca + tipologie; clientiVisibili applica
+  // in più il filtro di stato, nascondendo le righe senza nessuna cella
+  // corrispondente a uno degli stati selezionati. ──────────────────
+  var statoFiltroAttivi = _sintesiStatoFiltroAttivi();
+  var clientiVisibili = !statoFiltroAttivi.length
+    ? clienti
+    : clienti.filter(function (c) {
+        for (var fci = 0; fci < columns.length; fci++) {
+          var fk = c.id + "|" + columns[fci].id;
+          var fst = _sintesiStatoCella(lookup[fk]);
+          if (statoFiltroAttivi.indexOf(fst.kind) !== -1) return true;
+        }
+        return false;
+      });
+
   // ─── Pannello filtro tipologie (stesso markup/id di Vista Globale,
   // così le funzioni già esistenti restano riusabili senza modifiche) ──
   var tipFiltroHtml = "";
@@ -328,6 +390,36 @@ function renderSintesiTabella() {
   var percCompletato =
     baseCalc > 0 ? Math.round((doneCells / baseCalc) * 100) : 0;
 
+  // Etichetta numero clienti: se il filtro stato è attivo mostra "N di M"
+  var clientiCountLabel =
+    statoFiltroAttivi.length && clientiVisibili.length !== clienti.length
+      ? clientiVisibili.length + " di " + clienti.length
+      : String(clienti.length);
+  var clientiCountUnit = clienti.length === 1 ? "e" : "i";
+
+  // Box statistica cliccabile (header) — funge anche da filtro di stato
+  function _sintStatBoxHtml(kind, count, color, iconaLabel) {
+    var active = statoFiltroAttivi.indexOf(kind) !== -1;
+    return (
+      '<button type="button" class="gpc-stat-btn' +
+      (active ? " active" : "") +
+      '" onclick="toggleSintesiStatoFiltro(\'' +
+      kind +
+      '\')" title="Filtra: mostra solo ' +
+      escAttr(iconaLabel) +
+      '">' +
+      '<div style="font-family:var(--mono);font-weight:800;color:' +
+      color +
+      ';font-size:16px">' +
+      count +
+      "</div>" +
+      '<div style="font-size:10.5px;color:var(--t3)">' +
+      iconaLabel +
+      "</div>" +
+      "</button>"
+    );
+  }
+
   var headerCard =
     '<div class="globale-preview-card">' +
     '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">' +
@@ -338,9 +430,9 @@ function renderSintesiTabella() {
     state.anno +
     "</div>" +
     '<div class="gpc-sub">' +
-    clienti.length +
+    clientiCountLabel +
     " client" +
-    (clienti.length === 1 ? "e" : "i") +
+    clientiCountUnit +
     " · " +
     columns.length +
     " adempiment" +
@@ -351,38 +443,62 @@ function renderSintesiTabella() {
     "</div>" +
     "</div>" +
     '<div class="gpc-stats">' +
-    '<div style="text-align:center"><div style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:16px">' +
-    doneCells +
-    '</div><div style="font-size:10.5px;color:var(--t3)">✅ Fatti</div></div>' +
-    '<div style="text-align:center"><div style="font-family:var(--mono);font-weight:800;color:var(--yellow);font-size:16px">' +
-    partialCells +
-    '</div><div style="font-size:10.5px;color:var(--t3)">🔄 Parziali</div></div>' +
-    '<div style="text-align:center"><div style="font-family:var(--mono);font-weight:800;color:var(--red);font-size:16px">' +
-    todoCells +
-    '</div><div style="font-size:10.5px;color:var(--t3)">⭕ Da fare</div></div>' +
-    '<div style="text-align:center"><div style="font-family:var(--mono);font-weight:800;color:var(--t3);font-size:16px">' +
-    naCells +
-    '</div><div style="font-size:10.5px;color:var(--t3)">➖ N/A</div></div>' +
+    _sintStatBoxHtml("done", doneCells, "var(--green)", "✅ Fatti") +
+    _sintStatBoxHtml("partial", partialCells, "var(--yellow)", "🔄 Parziali") +
+    _sintStatBoxHtml("todo", todoCells, "var(--red)", "⭕ Da fare") +
+    _sintStatBoxHtml("na", naCells, "var(--t3)", "➖ N/A") +
     "</div>" +
     "</div>" +
     '<div style="font-size:11px;color:var(--t3);margin-top:8px">📖 Vista di sola lettura — i dati si modificano dallo Scadenzario Cliente o dalla Vista Globale.</div>' +
     "</div>";
 
+  // Voce di legenda cliccabile — fa anche da filtro di stato (stesso
+  // gruppo dei box dell'header, sincronizzati sullo stesso state)
+  function _sintLegendItemHtml(kind, label) {
+    var active = statoFiltroAttivi.indexOf(kind) !== -1;
+    return (
+      '<button type="button" class="sint-legend-item' +
+      (active ? " active" : "") +
+      '" onclick="toggleSintesiStatoFiltro(\'' +
+      kind +
+      '\')" title="Filtra: mostra solo ' +
+      escAttr(label) +
+      '">' +
+      '<span class="sint-legend-dot ' +
+      kind +
+      '"></span>' +
+      label +
+      "</button>"
+    );
+  }
+
   var legend =
     '<div class="sint-legend">' +
-    '<span class="sint-legend-item"><span class="sint-legend-dot done"></span>✅ Adempimento completato per tutti i periodi</span>' +
-    '<span class="sint-legend-item"><span class="sint-legend-dot partial"></span>🔄 Parzialmente completato</span>' +
-    '<span class="sint-legend-item"><span class="sint-legend-dot todo"></span>⭕ Da fare / non ancora iniziato</span>' +
-    '<span class="sint-legend-item"><span class="sint-legend-dot na"></span>➖ N/A — non applicato a questo cliente</span>' +
-    '<span style="color:var(--t3)">· Clicca una cella per vedere il dettaglio mese per mese / trimestre</span>' +
+    _sintLegendItemHtml(
+      "done",
+      "✅ Adempimento completato per tutti i periodi",
+    ) +
+    _sintLegendItemHtml("partial", "🔄 Parzialmente completato") +
+    _sintLegendItemHtml("todo", "⭕ Da fare / non ancora iniziato") +
+    _sintLegendItemHtml(
+      "na",
+      "➖ N/A — non applicato a questo cliente",
+    ) +
+    (statoFiltroAttivi.length
+      ? '<button type="button" class="sint-legend-clear" onclick="resetSintesiStatoFiltro()">✕ Rimuovi filtro stato</button>'
+      : "") +
+    '<span style="color:var(--t3)">· Clicca una voce per filtrare, clicca una cella per vedere il dettaglio mese per mese / trimestre</span>' +
     "</div>";
+
 
   // ─── Tabella ───────────────────────────────────────────────────
   var bodyHtml = "";
-  if (!clienti.length || !columns.length) {
+  if (!clientiVisibili.length || !columns.length) {
     var msgVuoto = !columns.length
       ? "Nessun adempimento selezionato — usa il filtro in alto o clicca ⟳ Tutti"
-      : "Nessun cliente corrisponde ai filtri attivi per " + state.anno;
+      : statoFiltroAttivi.length
+        ? "Nessun cliente ha celle nello stato selezionato, per " + state.anno
+        : "Nessun cliente corrisponde ai filtri attivi per " + state.anno;
     bodyHtml =
       '<div class="empty">' +
       '<div class="empty-icon">🧮</div>' +
@@ -390,6 +506,9 @@ function renderSintesiTabella() {
       msgVuoto +
       "</p>" +
       '<button class="btn btn-sm btn-primary" onclick="resetSintesiFiltri()" style="margin-top:12px">⟳ Rimuovi filtri</button>' +
+      (statoFiltroAttivi.length
+        ? '<button class="btn btn-sm btn-secondary" onclick="resetSintesiStatoFiltro()" style="margin-top:12px;margin-left:8px">✕ Solo filtro stato</button>'
+        : "") +
       "</div>";
   } else {
     var theadCols = columns
@@ -410,8 +529,8 @@ function renderSintesiTabella() {
       .join("");
 
     var rowsHtml = "";
-    for (var i = 0; i < clienti.length; i++) {
-      var c = clienti[i];
+    for (var i = 0; i < clientiVisibili.length; i++) {
+      var c = clientiVisibili[i];
       var tipColor =
         c.tipologia_colore ||
         (typeof getTipologiaColor === "function"
@@ -424,6 +543,9 @@ function renderSintesiTabella() {
         var periodi = lookup[key] || [];
         var st = _sintesiStatoCella(periodi);
         var isActive = state.sintesiActiveCellKey === key;
+        var isDim =
+          statoFiltroAttivi.length > 0 &&
+          statoFiltroAttivi.indexOf(st.kind) === -1;
         var cellContent =
           st.kind === "done"
             ? "✓"
@@ -436,6 +558,7 @@ function renderSintesiTabella() {
           '<td class="sint-td"><button type="button" class="sint-cell sint-cell-' +
           st.kind +
           (isActive ? " active" : "") +
+          (isDim ? " sint-cell-dim" : "") +
           '" data-key="' +
           key +
           '" onclick="sintesiToggleDettaglio(\'' +
@@ -535,6 +658,66 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
   });
   periodi = _sintesiOrdinaPeriodi(periodi);
 
+  // ─── Griglia "colpo d'occhio" — tutti i periodi (es. i 12 mesi
+  // Gen…Dic, oppure i 4 trimestri) visibili subito, colorati per stato.
+  // Cliccando un riquadro si scorre/evidenzia la riga corrispondente
+  // nella tabella sottostante. ──────────────────────────────────
+  var gridHtml = "";
+  var doneN = 0,
+    totN = periodi.length;
+  if (periodi.length) {
+    var chips = periodi
+      .map(function (p, idx) {
+        var stato = p.stato || "da_fare";
+        if (stato === "completato") doneN++;
+        var info = _SINT_STATO_INFO[stato] || _SINT_STATO_INFO.da_fare;
+        var shortLabel =
+          typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
+        var fullLabel =
+          typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
+        var tooltip =
+          fullLabel +
+          " — " +
+          info.label +
+          (p.data_scadenza
+            ? " · Scad. " + formattaDataItaliana(p.data_scadenza)
+            : "") +
+          (p.data_completamento
+            ? " · Completato " + formattaDataItaliana(p.data_completamento)
+            : "");
+        return (
+          '<button type="button" class="sint-dett-chip sint-dett-chip-' +
+          stato +
+          '" data-pidx="' +
+          idx +
+          '" onclick="_sintesiDettScrollTo(' +
+          idx +
+          ')" title="' +
+          escAttr(tooltip) +
+          '"><span class="sint-dett-chip-ico">' +
+          info.icon +
+          '</span><span class="sint-dett-chip-lbl">' +
+          escAttr(shortLabel) +
+          "</span></button>"
+        );
+      })
+      .join("");
+    gridHtml =
+      '<div class="sint-dett-grid-wrap">' +
+      '<div class="sint-dett-grid-label">📅 Vista rapida — ' +
+      totN +
+      (totN === 1 ? " periodo" : " periodi") +
+      " · " +
+      doneN +
+      "/" +
+      totN +
+      " completati</div>" +
+      '<div class="sint-dett-grid">' +
+      chips +
+      "</div>" +
+      "</div>";
+  }
+
   var rowsHtml = "";
   if (!periodi.length) {
     rowsHtml =
@@ -542,13 +725,15 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
       state.anno +
       "</td></tr>";
   } else {
-    periodi.forEach(function (p) {
+    periodi.forEach(function (p, idx) {
       var stato = p.stato || "da_fare";
       var info = _SINT_STATO_INFO[stato] || _SINT_STATO_INFO.da_fare;
       var periodoLabel =
         typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
       rowsHtml +=
-        "<tr><td>" +
+        '<tr data-pidx="' +
+        idx +
+        '"><td>' +
         escAttr(periodoLabel) +
         '</td><td><span style="color:' +
         info.color +
@@ -581,6 +766,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
     "</div>" +
     '<button type="button" class="btn btn-xs btn-secondary" onclick="sintesiCloseDettaglio()">✕ Chiudi</button>' +
     "</div>" +
+    gridHtml +
     '<div style="overflow-x:auto"><table class="sint-dett-table">' +
     "<thead><tr><th>Periodo</th><th>Stato</th><th>Scadenza</th><th>Completato il</th></tr></thead>" +
     "<tbody>" +
@@ -595,6 +781,21 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
   var cellEl = document.querySelector('.sint-cell[data-key="' + key + '"]');
   if (cellEl) cellEl.classList.add("active");
 }
+
+// Scorre/evidenzia (flash) la riga della tabella dettaglio corrispondente
+// al riquadro "colpo d'occhio" cliccato — collega le due viste della card.
+function _sintesiDettScrollTo(idx) {
+  var row = document.querySelector(
+    '.sint-dett-table tr[data-pidx="' + idx + '"]',
+  );
+  if (!row) return;
+  row.scrollIntoView({ behavior: "smooth", block: "center" });
+  row.classList.add("flash");
+  setTimeout(function () {
+    row.classList.remove("flash");
+  }, 900);
+}
+window._sintesiDettScrollTo = _sintesiDettScrollTo;
 
 // ═══════════════════════════════════════════════════════════════
 // ESPOSIZIONE GLOBALE

@@ -28,4 +28,6 @@ const state = {
   sintesiData: [],
   sintesiAnno: null,
   sintesiActiveCellKey: null,
+  // Filtro per stato cella (done/partial/todo/na) — pannello legenda cliccabile
+  sintesiStatoFiltro: { done: false, partial: false, todo: false, na: false },
 };
