@@ -420,6 +420,9 @@ function renderGlobalePage() {
     "</span>" +
     '<button onclick="changeAnnoGlobale(1)" title="Anno successivo">&#9654;</button>' +
     "</div>" +
+    '<div class="search-wrap" style="width:200px"><span class="search-icon">🔍</span><input class="input" id="glob-search-cliente" placeholder="Cerca cliente…" value="' +
+    escAttr(getSharedClienteSearch()) +
+    '" oninput="setSharedClienteSearch(this.value);applyGlobaleFiltriLocali()" style="font-size:13px"></div>' +
     '<select class="select topbar-select" id="glob-sel-cliente" onchange="onGlobaleClienteChange()" title="Seleziona il cliente" style="min-width:200px;max-width:260px">' +
     '<option value="">-- Seleziona Cliente --</option>' +
     "</select>" +
@@ -563,6 +566,7 @@ function applyGlobaleFiltriLocali() {
 function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
   state.globaleSelectedCliente = "";
+  setSharedClienteSearch("");
   var adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
     Array.from(adpSel.options).forEach(function (o) {

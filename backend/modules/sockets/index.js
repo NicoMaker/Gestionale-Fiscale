@@ -507,6 +507,20 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    // ── SINTESI ADEMPIMENTI (matrice clienti × adempimenti, sola lettura) ──
+    socket.on("get:sintesi", ({ anno } = {}) => {
+      try {
+        const annoVal = anno || new Date().getFullYear();
+        // Riusa lo stesso modello dati dello Scadenzario Globale: nessun filtro
+        // lato server, la pagina Sintesi filtra tutto lato client (ricerca,
+        // adempimenti selezionati, tipologie) per restare reattiva.
+        const data = scadenzarioModel.getScadenzarioGlobale(annoVal, {});
+        socket.emit("res:sintesi", { success: true, data, anno: annoVal });
+      } catch (e) {
+        socket.emit("res:sintesi", { success: false, error: e.message });
+      }
+    });
+
     // ── STATISTICHE ──
     socket.on("get:stats", ({ anno }) => {
       try {

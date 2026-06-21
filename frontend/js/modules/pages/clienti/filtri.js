@@ -653,6 +653,7 @@ function applyClientiFiltri() {
 function resetClientiFiltri() {
   const s = document.getElementById("global-search-clienti");
   if (s) s.value = "";
+  setSharedClienteSearch("");
   const annoSelect = document.getElementById("filter-anno");
   if (annoSelect) annoSelect.value = new Date().getFullYear();
   initializeTipologieFilter();

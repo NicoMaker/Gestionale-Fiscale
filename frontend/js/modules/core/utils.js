@@ -614,3 +614,29 @@ function coloraInputImporto(input) {
     input.style.color = "";
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// RICERCA CLIENTE CONDIVISA TRA SEZIONI (Clienti, Vista Globale, Sintesi)
+// Persistita in localStorage così digitando in una pagina la ritrovi
+// già impostata nelle altre.
+// ═══════════════════════════════════════════════════════════════
+const SHARED_SEARCH_KEY = "gestionale_search_cliente";
+
+function getSharedClienteSearch() {
+  try {
+    return localStorage.getItem(SHARED_SEARCH_KEY) || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function setSharedClienteSearch(value) {
+  try {
+    localStorage.setItem(SHARED_SEARCH_KEY, value || "");
+  } catch (e) {
+    /* ignora storage non disponibile */
+  }
+}
+
+window.getSharedClienteSearch = getSharedClienteSearch;
+window.setSharedClienteSearch = setSharedClienteSearch;

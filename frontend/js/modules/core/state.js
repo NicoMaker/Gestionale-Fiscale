@@ -24,4 +24,8 @@ const state = {
   _currentClienteDettaglio: null,
   _pending: null,
   _gotoClienteId: null,
+  // ── Sintesi Adempimenti (matrice clienti × adempimenti, sola lettura) ──
+  sintesiData: [],
+  sintesiAnno: null,
+  sintesiActiveCellKey: null,
 };

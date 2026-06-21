@@ -52,6 +52,7 @@ function renderPage(page) {
     clienti: "Clienti",
     scadenzario: "Scadenzario Cliente",
     scadenzario_globale: "Vista Globale",
+    sintesi: "Sintesi Adempimenti",
     adempimenti: "Adempimenti Fiscali",
     tipologie: "Tipologie Clienti",
     appunti: "Scadenze Studio",
@@ -74,7 +75,7 @@ function renderPage(page) {
   } else if (page === "clienti") {
     state._pending = "clienti";
     document.getElementById("topbar-actions").innerHTML =
-      `<div class="search-wrap" style="width:240px"><span class="search-icon">🔍</span><input class="input" id="global-search-clienti" placeholder="Cerca nome, CF, P.IVA…" oninput="applyClientiFiltri()" style="font-size:13px"></div><button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="font-size:13px">⟳</button><button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️</button><button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Cliente</button>`;
+      `<div class="search-wrap" style="width:240px"><span class="search-icon">🔍</span><input class="input" id="global-search-clienti" placeholder="Cerca nome, CF, P.IVA…" value="${escAttr(getSharedClienteSearch())}" oninput="setSharedClienteSearch(this.value);applyClientiFiltri()" style="font-size:13px"></div><button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="font-size:13px">⟳</button><button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️</button><button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Cliente</button>`;
     setTimeout(() => {
       if (typeof applyClientiFiltriImmediate === "function")
         applyClientiFiltriImmediate();
@@ -91,6 +92,8 @@ function renderPage(page) {
     socket.emit("get:clienti");
   } else if (page === "scadenzario_globale") {
     renderGlobalePage();
+  } else if (page === "sintesi") {
+    renderSintesiPage();
   } else if (page === "adempimenti") {
     state._pending = "adempimenti";
     document.getElementById("topbar-actions").innerHTML =
