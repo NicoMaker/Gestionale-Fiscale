@@ -71,7 +71,8 @@ function renderSintesiPage() {
 function changeAnnoSintesi(d) {
   state.anno += d;
   var yearNums = document.querySelectorAll(".year-num");
-  for (var i = 0; i < yearNums.length; i++) yearNums[i].textContent = state.anno;
+  for (var i = 0; i < yearNums.length; i++)
+    yearNums[i].textContent = state.anno;
   state.sintesiActiveCellKey = null;
   loadSintesi();
 }
@@ -373,7 +374,7 @@ function renderSintesiTabella() {
     '<span class="sint-legend-item"><span class="sint-legend-dot partial"></span>🔄 Parzialmente completato</span>' +
     '<span class="sint-legend-item"><span class="sint-legend-dot todo"></span>⭕ Da fare / non ancora iniziato</span>' +
     '<span class="sint-legend-item"><span class="sint-legend-dot na"></span>➖ N/A — non applicato a questo cliente</span>' +
-    "<span style=\"color:var(--t3)\">· Clicca una cella per vedere il dettaglio mese per mese / trimestre</span>" +
+    '<span style="color:var(--t3)">· Clicca una cella per vedere il dettaglio mese per mese / trimestre</span>' +
     "</div>";
 
   // ─── Tabella ───────────────────────────────────────────────────
@@ -457,7 +458,11 @@ function renderSintesiTabella() {
         '</div><div class="sint-cliente-sub">' +
         (c.codice_fiscale || c.partita_iva || "-") +
         (c.tipologia_codice
-          ? ' · <span style="color:' + tipColor + '">' + c.tipologia_codice + "</span>"
+          ? ' · <span style="color:' +
+            tipColor +
+            '">' +
+            c.tipologia_codice +
+            "</span>"
           : "") +
         "</div></td>" +
         cellsHtml +
@@ -466,7 +471,7 @@ function renderSintesiTabella() {
 
     bodyHtml =
       '<div class="sint-table-wrap"><table class="sint-table">' +
-      "<thead><tr><th class=\"sint-th-corner\">Cliente</th>" +
+      '<thead><tr><th class="sint-th-corner">Cliente</th>' +
       theadCols +
       "</tr></thead><tbody>" +
       rowsHtml +
@@ -491,8 +496,7 @@ function renderSintesiTabella() {
 // ═══════════════════════════════════════════════════════════════
 
 function sintesiToggleDettaglio(key, clienteId, adempimentoId) {
-  state.sintesiActiveCellKey =
-    state.sintesiActiveCellKey === key ? null : key;
+  state.sintesiActiveCellKey = state.sintesiActiveCellKey === key ? null : key;
   renderSintesiTabella();
   if (state.sintesiActiveCellKey) {
     setTimeout(function () {
@@ -568,7 +572,9 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
     escAttr(cliente ? cliente.nome : "—") +
     "</div>" +
     '<div class="sint-dett-adp">📋 ' +
-    escAttr(adp ? (adp.codice ? adp.codice + " — " + adp.nome : adp.nome) : "—") +
+    escAttr(
+      adp ? (adp.codice ? adp.codice + " — " + adp.nome : adp.nome) : "—",
+    ) +
     " · Anno " +
     state.anno +
     "</div>" +

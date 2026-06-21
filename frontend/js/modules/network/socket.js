@@ -31,8 +31,7 @@ socket.on("broadcast:scadenzario_updated", ({ id_cliente, anno }) => {
 socket.on("broadcast:globale_updated", ({ anno }) => {
   if (state.page === "scadenzario_globale")
     if (!anno || state.anno === anno) loadGlobale();
-  if (state.page === "sintesi")
-    if (!anno || state.anno === anno) loadSintesi();
+  if (state.page === "sintesi") if (!anno || state.anno === anno) loadSintesi();
 });
 
 socket.on("broadcast:stats_updated", ({ anno }) => {
@@ -162,7 +161,10 @@ socket.on("res:sintesi", ({ success, data, anno, error }) => {
   if (success) {
     state.sintesiData = data;
     state.sintesiAnno = anno;
-    if (state.page === "sintesi" && typeof renderSintesiTabella === "function") {
+    if (
+      state.page === "sintesi" &&
+      typeof renderSintesiTabella === "function"
+    ) {
       renderSintesiTabella();
     }
   } else {
