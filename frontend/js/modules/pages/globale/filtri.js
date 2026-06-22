@@ -633,7 +633,8 @@ function renderGlobaleHeader() {
       state.adempimenti.forEach(function (a) {
         if (!a || !a.nome) return;
         // Escludi adempimenti validi solo per un anno diverso da quello corrente
-        if (a.anno_validita != null && Number(a.anno_validita) !== _annoGlob) return;
+        if (a.anno_validita != null && Number(a.anno_validita) !== _annoGlob)
+          return;
         nomiSet[a.nome] = true;
       });
       // Aggiunge eventuali nomi presenti solo nei dati filtrati correnti

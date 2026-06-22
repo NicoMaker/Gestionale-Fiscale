@@ -173,7 +173,12 @@ function resetSintesiFiltri() {
     _refreshGlobTipFiltroPanel();
   if (typeof _aggiornaGlobTipFiltroCounter === "function")
     _aggiornaGlobTipFiltroCounter();
-  state.sintesiStatoFiltro = { done: false, partial: false, todo: false, na: false };
+  state.sintesiStatoFiltro = {
+    done: false,
+    partial: false,
+    todo: false,
+    na: false,
+  };
   state.sintesiActiveCellKey = null;
   renderSintesiTabella();
 }
@@ -480,16 +485,12 @@ function renderSintesiTabella() {
     ) +
     _sintLegendItemHtml("partial", "🔄 Parzialmente completato") +
     _sintLegendItemHtml("todo", "⭕ Da fare / non ancora iniziato") +
-    _sintLegendItemHtml(
-      "na",
-      "➖ N/A — non applicato a questo cliente",
-    ) +
+    _sintLegendItemHtml("na", "➖ N/A — non applicato a questo cliente") +
     (statoFiltroAttivi.length
       ? '<button type="button" class="sint-legend-clear" onclick="resetSintesiStatoFiltro()">✕ Rimuovi filtro stato</button>'
       : "") +
     '<span style="color:var(--t3)">· Clicca una voce per filtrare, clicca una cella per vedere il dettaglio mese per mese / trimestre</span>' +
     "</div>";
-
 
   // ─── Tabella ───────────────────────────────────────────────────
   var bodyHtml = "";
@@ -547,34 +548,62 @@ function renderSintesiTabella() {
           statoFiltroAttivi.length > 0 &&
           statoFiltroAttivi.indexOf(st.kind) === -1;
         // ─── Pill periodi inline + contatore X/Y ───
-        var sortedP = periodi.slice().sort(function(a, b) {
+        var sortedP = periodi.slice().sort(function (a, b) {
           if (a.mese != null && b.mese != null) return a.mese - b.mese;
-          if (a.trimestre != null && b.trimestre != null) return a.trimestre - b.trimestre;
-          if (a.semestre != null && b.semestre != null) return a.semestre - b.semestre;
+          if (a.trimestre != null && b.trimestre != null)
+            return a.trimestre - b.trimestre;
+          if (a.semestre != null && b.semestre != null)
+            return a.semestre - b.semestre;
           return 0;
         });
         var doneCount = 0;
-        var pillsHtml = sortedP.map(function(p) {
-          var pStato = p.stato || "da_fare";
-          if (pStato === "completato") doneCount++;
-          var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
-          var pShort = typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
-          var bgColor = pStato === "completato" ? "var(--green)" :
-                        pStato === "in_corso"   ? "var(--yellow)" :
-                        pStato === "n_a"        ? "var(--t3)" : "var(--red)";
-          return '<span style="display:inline-flex;align-items:center;gap:2px;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:' + bgColor + '22;border:1px solid ' + bgColor + '55;color:' + bgColor + ';line-height:1.2">' +
-            pInfo.icon + ' ' + escAttr(pShort) + '</span>';
-        }).join("");
+        var pillsHtml = sortedP
+          .map(function (p) {
+            var pStato = p.stato || "da_fare";
+            if (pStato === "completato") doneCount++;
+            var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
+            var pShort =
+              typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
+            var bgColor =
+              pStato === "completato"
+                ? "var(--green)"
+                : pStato === "in_corso"
+                  ? "var(--yellow)"
+                  : pStato === "n_a"
+                    ? "var(--t3)"
+                    : "var(--red)";
+            return (
+              '<span style="display:inline-flex;align-items:center;gap:2px;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:' +
+              bgColor +
+              "22;border:1px solid " +
+              bgColor +
+              "55;color:" +
+              bgColor +
+              ';line-height:1.2">' +
+              pInfo.icon +
+              " " +
+              escAttr(pShort) +
+              "</span>"
+            );
+          })
+          .join("");
 
         var cellContent;
         if (periodi.length > 0) {
           cellContent =
-            '<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center">' + pillsHtml + '</div>' +
-            '<div style="font-size:10px;color:var(--t3);margin-top:3px;font-weight:700">' + doneCount + '/' + periodi.length + '</div>';
+            '<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center">' +
+            pillsHtml +
+            "</div>" +
+            '<div style="font-size:10px;color:var(--t3);margin-top:3px;font-weight:700">' +
+            doneCount +
+            "/" +
+            periodi.length +
+            "</div>";
         } else {
-          cellContent = st.kind === "na"
-            ? '<span style="font-size:11px">N/A</span>'
-            : '<span>—</span>';
+          cellContent =
+            st.kind === "na"
+              ? '<span style="font-size:11px">N/A</span>'
+              : "<span>—</span>";
         }
 
         cellsHtml +=
