@@ -5,7 +5,6 @@
 // Riusa il filtro tipologie condiviso (stesso pannello di Vista Globale
 // e Clienti) e la ricerca cliente condivisa (localStorage).
 // Dipende da: core/state.js, core/utils.js, core/constants.js,
-//             pages/globale/filtri.js (pannello tipologie, helper),
 //             network/socket.js (eventi get:sintesi / res:sintesi)
 // ═══════════════════════════════════════════════════════════════
 
@@ -17,35 +16,81 @@ var _SINT_STATO_INFO = {
   text_only: { icon: "📝", label: "Testo", color: "var(--purple)" },
 };
 
+// Stato per il filtro clienti
+var _sintesiClienteFiltro = null; // id del cliente selezionato, null = tutti
+
 // ═══════════════════════════════════════════════════════════════
 // RENDER PAGINA PRINCIPALE
 // ═══════════════════════════════════════════════════════════════
 
 function renderSintesiPage() {
-  // Il filtro tipologie è condiviso con Clienti / Vista Globale (var globali)
-  if (
-    typeof _getActiveFiltroKeys === "function" &&
-    _getActiveFiltroKeys().size === 0 &&
-    !(typeof _isManualNessuno === "function" && _isManualNessuno()) &&
-    typeof initializeTipologieFilter === "function"
-  ) {
-    initializeTipologieFilter();
-  }
-  if (typeof _caricaFiltriGlobaleDaStorage === "function") {
-    _caricaFiltriGlobaleDaStorage();
-  }
+  // NON inizializzare il filtro tipologie - lo rimuoviamo completamente
 
-  // Si riaggancia allo stesso evento di sync usato da Vista Globale, così
-  // selezionando le tipologie da una pagina, l'altra resta coerente.
-  window.addEventListener("filtriTipologieAggiornati", function () {
-    if (state.page === "sintesi") {
-      if (typeof _aggiornaGlobTipFiltroCounter === "function")
-        _aggiornaGlobTipFiltroCounter();
-      renderSintesiTabella();
+  // Carica i clienti per il selettore
+  if (!state.clienti || state.clienti.length === 0) {
+    if (typeof socket !== "undefined") {
+      socket.emit("get:clienti", { anno: state.anno });
+      socket.once("res:clienti", function (d) {
+        if (d.success) {
+          state.clienti = d.data;
+          _renderSintesiTopbar();
+          if (state.page === "sintesi") renderSintesiTabella();
+        }
+      });
     }
-  });
+  } else {
+    _renderSintesiTopbar();
+  }
 
-  document.getElementById("topbar-actions").innerHTML =
+  // Carica gli adempimenti
+  if (!state.adempimenti || state.adempimenti.length === 0) {
+    if (typeof socket !== "undefined") {
+      socket.emit("get:adempimenti");
+      socket.once("res:adempimenti", function (d) {
+        if (d.success) {
+          state.adempimenti = d.data;
+          _popolaSintesiAdpSelect();
+          if (state.page === "sintesi") renderSintesiTabella();
+        }
+      });
+    }
+  } else {
+    _popolaSintesiAdpSelect();
+  }
+
+  // Carica i dati della sintesi
+  loadSintesi();
+}
+
+function _renderSintesiTopbar() {
+  var topbar = document.getElementById("topbar-actions");
+  if (!topbar) return;
+
+  // Costruisce le opzioni del selettore clienti
+  var clientiOpts = '<option value="">-- Tutti i clienti --</option>';
+  if (state.clienti) {
+    var sorted = state.clienti.slice().sort(function (a, b) {
+      return (a.nome || "").localeCompare(b.nome || "", "it", {
+        sensitivity: "base",
+      });
+    });
+    sorted.forEach(function (c) {
+      // Salta clienti inattivi
+      if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return;
+      var selected = _sintesiClienteFiltro === c.id ? "selected" : "";
+      clientiOpts +=
+        '<option value="' +
+        c.id +
+        '" ' +
+        selected +
+        ">" +
+        escAttr(c.nome || "") +
+        (c.tipologia_codice ? " (" + escAttr(c.tipologia_codice) + ")" : "") +
+        "</option>";
+    });
+  }
+
+  topbar.innerHTML =
     '<div class="year-sel">' +
     '<button onclick="changeAnnoSintesi(-1)" title="Anno precedente">&#9664;</button>' +
     '<span class="year-num">' +
@@ -53,20 +98,40 @@ function renderSintesiPage() {
     "</span>" +
     '<button onclick="changeAnnoSintesi(1)" title="Anno successivo">&#9654;</button>' +
     "</div>" +
-    '<div class="search-wrap" style="width:220px"><span class="search-icon">🔍</span><input class="input" id="sint-search-cliente" placeholder="Cerca nome, CF, P.IVA…" value="' +
+    '<select class="select topbar-select" id="sint-filtro-cliente" onchange="onSintesiClienteChange()" title="Filtra per cliente" style="min-width:180px;max-width:250px">' +
+    clientiOpts +
+    "</select>" +
+    '<div class="search-wrap" style="width:200px"><span class="search-icon">🔍</span><input class="input" id="sint-search-cliente" placeholder="Cerca nome, CF, P.IVA…" value="' +
     escAttr(getSharedClienteSearch()) +
     '" oninput="onSintesiSearchInput(this.value)" style="font-size:13px"></div>' +
-    '<select class="select" id="sint-filtro-adp" multiple style="width:230px;font-size:13px" onchange="applySintesiFiltriLocali()" title="Mostra in tabella solo gli adempimenti selezionati" data-placeholder="📋 Tutti gli adempimenti">' +
+    '<select class="select" id="sint-filtro-adp" multiple style="width:200px;font-size:13px" onchange="applySintesiFiltriLocali()" title="Mostra in tabella solo gli adempimenti selezionati" data-placeholder="📋 Tutti gli adempimenti">' +
     "</select>" +
     '<button class="btn btn-sm btn-primary" onclick="resetSintesiFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>' +
+    '<button class="btn btn-sm btn-stampa-completa" onclick="stampaSintesiCompleta()" title="Stampa completa con TUTTI gli adempimenti per TUTTI i clienti" style="font-size:13px;background:var(--accent);color:#fff;border-color:var(--accent)">🖨️ Stampa Completa</button>' +
     '<button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>';
 
+  // Inizializza il select dei clienti come searchable
+  if (typeof initSearchableSelect === "function") {
+    setTimeout(function () {
+      initSearchableSelect("sint-filtro-cliente");
+    }, 50);
+  }
+
+  // Inizializza il select multiplo degli adempimenti
   setTimeout(function () {
     initSearchableMultiSelect("sint-filtro-adp");
     _popolaSintesiAdpSelect();
-    loadSintesi();
   }, 50);
 }
+
+function onSintesiClienteChange() {
+  var sel = document.getElementById("sint-filtro-cliente");
+  if (!sel) return;
+  var val = sel.value;
+  _sintesiClienteFiltro = val ? parseInt(val) : null;
+  renderSintesiTabella();
+}
+window.onSintesiClienteChange = onSintesiClienteChange;
 
 function changeAnnoSintesi(d) {
   state.anno += d;
@@ -74,7 +139,19 @@ function changeAnnoSintesi(d) {
   for (var i = 0; i < yearNums.length; i++)
     yearNums[i].textContent = state.anno;
   state.sintesiActiveCellKey = null;
-  loadSintesi();
+  // Ricarica il selettore clienti con l'anno aggiornato
+  if (typeof socket !== "undefined") {
+    socket.emit("get:clienti", { anno: state.anno });
+    socket.once("res:clienti", function (d) {
+      if (d.success) {
+        state.clienti = d.data;
+        _renderSintesiTopbar();
+        loadSintesi();
+      }
+    });
+  } else {
+    loadSintesi();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -87,6 +164,7 @@ function loadSintesi() {
     socket.once("res:clienti", function (d) {
       if (d.success) {
         state.clienti = d.data;
+        _renderSintesiTopbar();
         if (state.page === "sintesi") renderSintesiTabella();
       }
     });
@@ -142,7 +220,7 @@ function _popolaSintesiAdpSelect() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FILTRI (ricerca condivisa, adempimenti, tipologie) — tutto locale,
+// FILTRI (ricerca condivisa, adempimenti) — tutto locale,
 // nessuna richiesta al server: la pagina è già in possesso di tutti
 // i dati dell'anno corrente.
 // ═══════════════════════════════════════════════════════════════
@@ -167,12 +245,12 @@ function resetSintesiFiltri() {
     });
     if (adpSel._ssRefresh) adpSel._ssRefresh();
   }
-  if (typeof initializeTipologieFilter === "function")
-    initializeTipologieFilter();
-  if (typeof _refreshGlobTipFiltroPanel === "function")
-    _refreshGlobTipFiltroPanel();
-  if (typeof _aggiornaGlobTipFiltroCounter === "function")
-    _aggiornaGlobTipFiltroCounter();
+  var clienteSel = document.getElementById("sint-filtro-cliente");
+  if (clienteSel) {
+    clienteSel.value = "";
+    if (clienteSel._ssRefresh) clienteSel._ssRefresh();
+  }
+  _sintesiClienteFiltro = null;
   state.sintesiStatoFiltro = {
     done: false,
     partial: false,
@@ -306,15 +384,12 @@ function renderSintesiTabella() {
     });
   });
 
-  // ─── Righe (clienti): ricerca condivisa + filtro tipologie condiviso ──
+  // ─── Righe (clienti): ricerca condivisa + filtro cliente ──
   var searchTerm = (getSharedClienteSearch() || "").toLowerCase();
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
-    if (
-      typeof clientePassaFiltroTipologie === "function" &&
-      !clientePassaFiltroTipologie(c)
-    )
-      return false;
+    // Filtro per cliente specifico
+    if (_sintesiClienteFiltro && c.id !== _sintesiClienteFiltro) return false;
     if (searchTerm) {
       var nome = (c.nome || "").toLowerCase();
       var cf = (c.codice_fiscale || "").toLowerCase();
@@ -342,10 +417,7 @@ function renderSintesiTabella() {
     lookup[k].push(r);
   });
 
-  // ─── Filtro per stato cella (legenda / contatori header cliccabili).
-  // clienti = già filtrati per ricerca + tipologie; clientiVisibili applica
-  // in più il filtro di stato, nascondendo le righe senza nessuna cella
-  // corrispondente a uno degli stati selezionati. ──────────────────
+  // ─── Filtro per stato cella ──────────────────────────────────
   var statoFiltroAttivi = _sintesiStatoFiltroAttivi();
   var clientiVisibili = !statoFiltroAttivi.length
     ? clienti
@@ -357,24 +429,6 @@ function renderSintesiTabella() {
         }
         return false;
       });
-
-  // ─── Pannello filtro tipologie (stesso markup/id di Vista Globale,
-  // così le funzioni già esistenti restano riusabili senza modifiche) ──
-  var tipFiltroHtml = "";
-  if (typeof renderTipologieFiltroPanel === "function") {
-    var activeFiltroKeys =
-      typeof _getActiveFiltroKeys === "function"
-        ? _getActiveFiltroKeys()
-        : new Set();
-    var allKeysArr =
-      typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
-    var isNone =
-      (typeof _isManualNessuno === "function" && _isManualNessuno()) ||
-      activeFiltroKeys.size === 0;
-    var isAll = !isNone && activeFiltroKeys.size === allKeysArr.length;
-    var countDisplay = isNone ? "0" : isAll ? "" : activeFiltroKeys.size;
-    var showBadge = isNone || (!isAll && activeFiltroKeys.size > 0);
-  }
 
   // ─── Header riepilogativo + legenda ───────────────────────────
   var doneCells = 0,
@@ -655,7 +709,6 @@ function renderSintesiTabella() {
 
   container.innerHTML =
     headerCard +
-    tipFiltroHtml +
     legend +
     bodyHtml +
     '<div id="sint-dettaglio"></div>';
@@ -710,10 +763,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
   });
   periodi = _sintesiOrdinaPeriodi(periodi);
 
-  // ─── Griglia "colpo d'occhio" — tutti i periodi (es. i 12 mesi
-  // Gen…Dic, oppure i 4 trimestri) visibili subito, colorati per stato.
-  // Cliccando un riquadro si scorre/evidenzia la riga corrispondente
-  // nella tabella sottostante. ──────────────────────────────────
+  // ─── Griglia "colpo d'occhio" ──────────────────────────────────
   var gridHtml = "";
   var doneN = 0,
     totN = periodi.length;
@@ -850,6 +900,87 @@ function _sintesiDettScrollTo(idx) {
 window._sintesiDettScrollTo = _sintesiDettScrollTo;
 
 // ═══════════════════════════════════════════════════════════════
+// STAMPA COMPLETA — stampa la tabella con TUTTI gli adempimenti,
+// senza filtri, mostrando tutti i dettagli.
+// ═══════════════════════════════════════════════════════════════
+
+function stampaSintesiCompleta() {
+  // Salva lo stato corrente dei filtri
+  var statoPrecedente = {
+    clienteFiltro: _sintesiClienteFiltro,
+    searchTerm: getSharedClienteSearch(),
+    statoFiltro: JSON.parse(JSON.stringify(state.sintesiStatoFiltro || {})),
+    adpSelezionati: []
+  };
+
+  // Salva gli adempimenti selezionati
+  var adpSel = document.getElementById("sint-filtro-adp");
+  if (adpSel) {
+    statoPrecedente.adpSelezionati = Array.from(adpSel.selectedOptions || []).map(function(o) {
+      return o.value;
+    });
+  }
+
+  // Rimuovi temporaneamente TUTTI i filtri
+  _sintesiClienteFiltro = null;
+  setSharedClienteSearch("");
+
+  // Reset del filtro stato
+  state.sintesiStatoFiltro = {
+    done: false,
+    partial: false,
+    todo: false,
+    na: false,
+  };
+
+  // Deseleziona tutti gli adempimenti nel filtro (mostra TUTTI)
+  if (adpSel) {
+    Array.from(adpSel.options).forEach(function (o) {
+      o.selected = false;
+    });
+    if (adpSel._ssRefresh) adpSel._ssRefresh();
+  }
+
+  // Rigenera la tabella senza filtri
+  renderSintesiTabella();
+
+  // Attendi il rendering, poi stampa
+  setTimeout(function () {
+    window.print();
+
+    // Ripristina lo stato precedente dopo la stampa
+    setTimeout(function () {
+      _sintesiClienteFiltro = statoPrecedente.clienteFiltro;
+      setSharedClienteSearch(statoPrecedente.searchTerm || "");
+      state.sintesiStatoFiltro = statoPrecedente.statoFiltro;
+
+      // Ripristina il selettore clienti
+      var clienteSel = document.getElementById("sint-filtro-cliente");
+      if (clienteSel) {
+        clienteSel.value = _sintesiClienteFiltro || "";
+        if (clienteSel._ssRefresh) clienteSel._ssRefresh();
+      }
+
+      // Ripristina il campo di ricerca
+      var searchEl = document.getElementById("sint-search-cliente");
+      if (searchEl) searchEl.value = statoPrecedente.searchTerm || "";
+
+      // Ripristina la selezione degli adempimenti
+      if (adpSel) {
+        Array.from(adpSel.options).forEach(function (o) {
+          o.selected = statoPrecedente.adpSelezionati.indexOf(o.value) !== -1;
+        });
+        if (adpSel._ssRefresh) adpSel._ssRefresh();
+      }
+
+      // Rigenera la tabella con i filtri originali
+      renderSintesiTabella();
+    }, 100);
+  }, 300);
+}
+window.stampaSintesiCompleta = stampaSintesiCompleta;
+
+// ═══════════════════════════════════════════════════════════════
 // ESPOSIZIONE GLOBALE
 // ═══════════════════════════════════════════════════════════════
 window.renderSintesiPage = renderSintesiPage;
@@ -859,3 +990,4 @@ window.renderSintesiTabella = renderSintesiTabella;
 window.onSintesiSearchInput = onSintesiSearchInput;
 window.applySintesiFiltriLocali = applySintesiFiltriLocali;
 window.resetSintesiFiltri = resetSintesiFiltri;
+window.stampaSintesiCompleta = stampaSintesiCompleta;

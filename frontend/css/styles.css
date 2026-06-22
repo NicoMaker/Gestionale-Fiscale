@@ -4622,3 +4622,143 @@ select {
     position: static !important;
   }
 }
+
+/* Stili per il selettore clienti nella sintesi */
+#sint-filtro-cliente {
+  min-width: 180px;
+  max-width: 250px;
+  font-size: 13px;
+}
+
+/* Stili per il pulsante di stampa completa */
+.btn-stampa-completa {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-stampa-completa:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Stampa: nasconde elementi non necessari */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  #sint-dettaglio {
+    page-break-before: avoid;
+    page-break-after: avoid;
+  }
+  
+  .sint-dett-grid-wrap {
+    page-break-inside: avoid;
+  }
+}
+
+/* Stili per il selettore clienti nella sintesi */
+#sint-filtro-cliente {
+  min-width: 180px;
+  max-width: 250px;
+  font-size: 13px;
+}
+
+/* Stili per il pulsante di stampa completa */
+.btn-stampa-completa {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-stampa-completa:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Stampa: nasconde elementi non necessari e mostra tutto */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  #sint-dettaglio {
+    page-break-before: avoid;
+    page-break-after: avoid;
+  }
+  
+  .sint-dett-grid-wrap {
+    page-break-inside: avoid;
+  }
+  
+  /* Mostra tutte le celle senza troncamenti */
+  .sint-cell {
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+  
+  .sint-table {
+    font-size: 9px !important;
+  }
+  
+  .sint-th, .sint-td {
+    padding: 3px 4px !important;
+  }
+}
+
+/* Stili per il selettore clienti nella sintesi */
+#sint-filtro-cliente {
+  min-width: 180px;
+  max-width: 250px;
+  font-size: 13px;
+}
+
+/* Stili per il pulsante di stampa completa */
+.btn-stampa-completa {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-stampa-completa:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Stampa: nasconde elementi non necessari e mostra tutto */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  #sint-dettaglio {
+    page-break-before: avoid;
+    page-break-after: avoid;
+  }
+  
+  .sint-dett-grid-wrap {
+    page-break-inside: avoid;
+  }
+  
+  /* Mostra tutte le celle senza troncamenti */
+  .sint-cell {
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+  
+  .sint-table {
+    font-size: 9px !important;
+  }
+  
+  .sint-th, .sint-td {
+    padding: 3px 4px !important;
+  }
+  
+  /* Nasconde il filtro tipologie */
+  .tipologie-filtro-panel,
+  #tipologie-filtro-panel,
+  .sint-tip-filtro {
+    display: none !important;
+  }
+}
