@@ -994,8 +994,6 @@ function _generaFinestraStampa() {
     }
     htmlParts.push('</div>');
   });
-
-  htmlParts.push('<div class="footer">Studio Fiscale - Sintesi Adempimenti ' + state.anno + ' - Pagina 1/1</div>');
   htmlParts.push('</body></html>');
 
   var html = htmlParts.join('');
