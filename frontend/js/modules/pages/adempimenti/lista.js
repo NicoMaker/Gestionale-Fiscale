@@ -61,7 +61,11 @@ const applyAdempimentiFiltriSearch = debounce(() => {
     document
       .getElementById("global-search-adempimenti")
       ?.value?.toLowerCase() || "";
+  const annoCorrente = state.anno || new Date().getFullYear();
   const filtered = state.adempimenti.filter((a) => {
+    // Nascondi adempimenti validi solo per un anno diverso da quello corrente
+    if (a.anno_validita != null && Number(a.anno_validita) !== annoCorrente)
+      return false;
     if (
       q &&
       !a.codice.toLowerCase().includes(q) &&
@@ -73,14 +77,21 @@ const applyAdempimentiFiltriSearch = debounce(() => {
   renderAdempimentiTabella(filtered);
 }, 300);
 
+function _adempimentiPerAnnoCorrente() {
+  const annoCorrente = state.anno || new Date().getFullYear();
+  return (state.adempimenti || []).filter(
+    (a) => a.anno_validita == null || Number(a.anno_validita) === annoCorrente,
+  );
+}
+
 function resetAdempimentiFiltri() {
   const s = document.getElementById("global-search-adempimenti");
   if (s) s.value = "";
-  renderAdempimentiTabella(state.adempimenti);
+  renderAdempimentiTabella(_adempimentiPerAnnoCorrente());
 }
 
 function renderAdempimentiPage() {
-  renderAdempimentiTabella(state.adempimenti);
+  renderAdempimentiTabella(_adempimentiPerAnnoCorrente());
 }
 
 function renderAdempimentiTabella(adempimenti) {

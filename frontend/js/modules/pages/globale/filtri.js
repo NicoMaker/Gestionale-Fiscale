@@ -629,8 +629,12 @@ function renderGlobaleHeader() {
     var adpList;
     if (state.adempimenti && state.adempimenti.length) {
       var nomiSet = {};
+      var _annoGlob = state.anno || new Date().getFullYear();
       state.adempimenti.forEach(function (a) {
-        if (a && a.nome) nomiSet[a.nome] = true;
+        if (!a || !a.nome) return;
+        // Escludi adempimenti validi solo per un anno diverso da quello corrente
+        if (a.anno_validita != null && Number(a.anno_validita) !== _annoGlob) return;
+        nomiSet[a.nome] = true;
       });
       // Aggiunge eventuali nomi presenti solo nei dati filtrati correnti
       // (es. adempimenti storici non più "attivi" ma con record esistenti)

@@ -280,8 +280,12 @@ function updateDashboardContent(stats) {
   var allAdp = stats.adempimentiStats || [];
   var sq = (state.dashSearch || "").toLowerCase();
   var ss = state.dashFiltroStatoAdp || "";
+  var _annoDash = state.anno || new Date().getFullYear();
 
   var adpVis = allAdp.filter(function (a) {
+    // Escludi adempimenti validi solo per un anno diverso da quello corrente
+    if (a.anno_validita != null && Number(a.anno_validita) !== _annoDash)
+      return false;
     if (
       sq &&
       a.nome.toLowerCase().indexOf(sq) === -1 &&
