@@ -4647,12 +4647,12 @@ select {
   .no-print {
     display: none !important;
   }
-  
+
   #sint-dettaglio {
     page-break-before: avoid;
     page-break-after: avoid;
   }
-  
+
   .sint-dett-grid-wrap {
     page-break-inside: avoid;
   }
@@ -4682,27 +4682,28 @@ select {
   .no-print {
     display: none !important;
   }
-  
+
   #sint-dettaglio {
     page-break-before: avoid;
     page-break-after: avoid;
   }
-  
+
   .sint-dett-grid-wrap {
     page-break-inside: avoid;
   }
-  
+
   /* Mostra tutte le celle senza troncamenti */
   .sint-cell {
     overflow: visible !important;
     white-space: normal !important;
   }
-  
+
   .sint-table {
     font-size: 9px !important;
   }
-  
-  .sint-th, .sint-td {
+
+  .sint-th,
+  .sint-td {
     padding: 3px 4px !important;
   }
 }
@@ -4731,30 +4732,31 @@ select {
   .no-print {
     display: none !important;
   }
-  
+
   #sint-dettaglio {
     page-break-before: avoid;
     page-break-after: avoid;
   }
-  
+
   .sint-dett-grid-wrap {
     page-break-inside: avoid;
   }
-  
+
   /* Mostra tutte le celle senza troncamenti */
   .sint-cell {
     overflow: visible !important;
     white-space: normal !important;
   }
-  
+
   .sint-table {
     font-size: 9px !important;
   }
-  
-  .sint-th, .sint-td {
+
+  .sint-th,
+  .sint-td {
     padding: 3px 4px !important;
   }
-  
+
   /* Nasconde il filtro tipologie */
   .tipologie-filtro-panel,
   #tipologie-filtro-panel,
@@ -4787,16 +4789,16 @@ select {
   .no-print {
     display: none !important;
   }
-  
+
   body {
     background: #fff !important;
   }
-  
+
   #stampa-lista-completa {
     padding: 20px !important;
     max-width: 100% !important;
   }
-  
+
   #stampa-lista-completa > div {
     page-break-inside: avoid !important;
   }
