@@ -4428,8 +4428,7 @@ select {
   white-space: nowrap;
 }
 .sint-cell:hover {
-  transform: scale(1.08);
-  border-color: var(--accent);
+  border-color: var(--b1);
 }
 .sint-cell.active {
   outline: 2px solid var(--accent);
