@@ -5,6 +5,7 @@
 // Riusa il filtro tipologie condiviso (stesso pannello di Vista Globale
 // e Clienti) e la ricerca cliente condivisa (localStorage).
 // Dipende da: core/state.js, core/utils.js, core/constants.js,
+//             pages/globale/filtri.js (pannello tipologie, helper),
 //             network/socket.js (eventi get:sintesi / res:sintesi)
 // ═══════════════════════════════════════════════════════════════
 
@@ -107,7 +108,7 @@ function _renderSintesiTopbar() {
     '<select class="select" id="sint-filtro-adp" multiple style="width:200px;font-size:13px" onchange="applySintesiFiltriLocali()" title="Mostra in tabella solo gli adempimenti selezionati" data-placeholder="📋 Tutti gli adempimenti">' +
     "</select>" +
     '<button class="btn btn-sm btn-primary" onclick="resetSintesiFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>' +
-    '<button class="btn btn-sm btn-stampa-completa" onclick="stampaSintesiCompleta()" title="Stampa completa con TUTTI gli adempimenti per TUTTI i clienti" style="font-size:13px;background:var(--accent);color:#fff;border-color:var(--accent)">🖨️ Stampa Completa</button>' +
+    '<button class="btn btn-sm btn-stampa-completa" onclick="stampaSintesiCompleta()" title="Stampa lista completa con TUTTI gli adempimenti per TUTTI i clienti" style="font-size:13px;background:var(--accent);color:#fff;border-color:var(--accent)">🖨️ Stampa Lista Completa</button>' +
     '<button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>';
 
   // Inizializza il select dei clienti come searchable
@@ -263,11 +264,6 @@ function resetSintesiFiltri() {
 
 // ═══════════════════════════════════════════════════════════════
 // FILTRO PER STATO CELLA (✅ Fatto / 🔄 Parziale / ⭕ Da fare / ➖ N/A)
-// Cliccabile sia dalla legenda che dai contatori dell'header. Funziona
-// in OR: se più stati sono attivi, basta che la cella corrisponda ad
-// almeno uno di essi. Righe senza nessuna cella corrispondente vengono
-// nascoste; le celle non corrispondenti restano visibili ma "sbiadite"
-// per mantenere il contesto dell'intera riga cliente.
 // ═══════════════════════════════════════════════════════════════
 
 function _sintesiStatoFiltroSafe() {
@@ -384,11 +380,10 @@ function renderSintesiTabella() {
     });
   });
 
-  // ─── Righe (clienti): ricerca condivisa + filtro cliente ──
+  // ─── Righe (clienti) ──────────────────────────────────────────
   var searchTerm = (getSharedClienteSearch() || "").toLowerCase();
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
-    // Filtro per cliente specifico
     if (_sintesiClienteFiltro && c.id !== _sintesiClienteFiltro) return false;
     if (searchTerm) {
       var nome = (c.nome || "").toLowerCase();
@@ -430,7 +425,7 @@ function renderSintesiTabella() {
         return false;
       });
 
-  // ─── Header riepilogativo + legenda ───────────────────────────
+  // ─── Header riepilogativo ─────────────────────────────────────
   var doneCells = 0,
     naCells = 0,
     partialCells = 0,
@@ -449,14 +444,12 @@ function renderSintesiTabella() {
   var percCompletato =
     baseCalc > 0 ? Math.round((doneCells / baseCalc) * 100) : 0;
 
-  // Etichetta numero clienti: se il filtro stato è attivo mostra "N di M"
   var clientiCountLabel =
     statoFiltroAttivi.length && clientiVisibili.length !== clienti.length
       ? clientiVisibili.length + " di " + clienti.length
       : String(clienti.length);
   var clientiCountUnit = clienti.length === 1 ? "e" : "i";
 
-  // Box statistica cliccabile (header) — funge anche da filtro di stato
   function _sintStatBoxHtml(kind, count, color, iconaLabel) {
     var active = statoFiltroAttivi.indexOf(kind) !== -1;
     return (
@@ -511,8 +504,7 @@ function renderSintesiTabella() {
     '<div style="font-size:11px;color:var(--t3);margin-top:8px">📖 Vista di sola lettura — i dati si modificano dallo Scadenzario Cliente o dalla Vista Globale.</div>' +
     "</div>";
 
-  // Voce di legenda cliccabile — fa anche da filtro di stato (stesso
-  // gruppo dei box dell'header, sincronizzati sullo stesso state)
+  // ─── Legenda ───────────────────────────────────────────────────
   function _sintLegendItemHtml(kind, label) {
     var active = statoFiltroAttivi.indexOf(kind) !== -1;
     return (
@@ -601,7 +593,7 @@ function renderSintesiTabella() {
         var isDim =
           statoFiltroAttivi.length > 0 &&
           statoFiltroAttivi.indexOf(st.kind) === -1;
-        // ─── Pill periodi inline + contatore X/Y ───
+        
         var sortedP = periodi.slice().sort(function (a, b) {
           if (a.mese != null && b.mese != null) return a.mese - b.mese;
           if (a.trimestre != null && b.trimestre != null)
@@ -763,7 +755,6 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
   });
   periodi = _sintesiOrdinaPeriodi(periodi);
 
-  // ─── Griglia "colpo d'occhio" ──────────────────────────────────
   var gridHtml = "";
   var doneN = 0,
     totN = periodi.length;
@@ -884,8 +875,6 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
   if (cellEl) cellEl.classList.add("active");
 }
 
-// Scorre/evidenzia (flash) la riga della tabella dettaglio corrispondente
-// al riquadro "colpo d'occhio" cliccato — collega le due viste della card.
 function _sintesiDettScrollTo(idx) {
   var row = document.querySelector(
     '.sint-dett-table tr[data-pidx="' + idx + '"]',
@@ -900,8 +889,8 @@ function _sintesiDettScrollTo(idx) {
 window._sintesiDettScrollTo = _sintesiDettScrollTo;
 
 // ═══════════════════════════════════════════════════════════════
-// STAMPA COMPLETA — stampa la tabella con TUTTI gli adempimenti,
-// senza filtri, mostrando tutti i dettagli.
+// STAMPA LISTA COMPLETA — stampa una lista verticale per ogni cliente
+// con NOME ADEMPIMENTO e dettaglio dei periodi (stato, scadenza)
 // ═══════════════════════════════════════════════════════════════
 
 function stampaSintesiCompleta() {
@@ -941,42 +930,187 @@ function stampaSintesiCompleta() {
     if (adpSel._ssRefresh) adpSel._ssRefresh();
   }
 
-  // Rigenera la tabella senza filtri
-  renderSintesiTabella();
-
-  // Attendi il rendering, poi stampa
-  setTimeout(function () {
-    window.print();
-
-    // Ripristina lo stato precedente dopo la stampa
-    setTimeout(function () {
-      _sintesiClienteFiltro = statoPrecedente.clienteFiltro;
-      setSharedClienteSearch(statoPrecedente.searchTerm || "");
-      state.sintesiStatoFiltro = statoPrecedente.statoFiltro;
-
-      // Ripristina il selettore clienti
-      var clienteSel = document.getElementById("sint-filtro-cliente");
-      if (clienteSel) {
-        clienteSel.value = _sintesiClienteFiltro || "";
-        if (clienteSel._ssRefresh) clienteSel._ssRefresh();
+  // Assicurati che i dati siano caricati
+  if (!state.sintesiData || state.sintesiData.length === 0) {
+    showNotif("⏳ Caricamento dati in corso...", "info");
+    socket.emit("get:sintesi", { anno: state.anno });
+    socket.once("res:sintesi", function(data) {
+      if (data.success) {
+        state.sintesiData = data.data;
+        _generaStampaLista();
       }
+    });
+    return;
+  }
 
-      // Ripristina il campo di ricerca
-      var searchEl = document.getElementById("sint-search-cliente");
-      if (searchEl) searchEl.value = statoPrecedente.searchTerm || "";
+  _generaStampaLista();
 
-      // Ripristina la selezione degli adempimenti
-      if (adpSel) {
-        Array.from(adpSel.options).forEach(function (o) {
-          o.selected = statoPrecedente.adpSelezionati.indexOf(o.value) !== -1;
+  function _generaStampaLista() {
+    // Crea un container per la stampa
+    var printContainer = document.createElement('div');
+    printContainer.id = 'stampa-lista-completa';
+    printContainer.style.cssText = 'padding:20px;font-family:Arial,sans-serif;max-width:1200px;margin:0 auto;';
+    
+    // Intestazione
+    printContainer.innerHTML = `
+      <div style="text-align:center;margin-bottom:30px;border-bottom:2px solid #333;padding-bottom:15px;">
+        <h1 style="font-size:24px;margin:0;color:#333;">Sintesi Adempimenti ${state.anno}</h1>
+        <p style="font-size:14px;color:#666;margin:5px 0 0;">Lista completa di tutti gli adempimenti per cliente</p>
+        <p style="font-size:12px;color:#999;margin:2px 0 0;">Stampato il ${new Date().toLocaleDateString('it-IT')}</p>
+      </div>
+    `;
+
+    // Prepara i dati
+    var allClienti = (state.clienti || []).filter(function(c) {
+      if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
+      return true;
+    }).sort(function(a, b) {
+      return (a.nome || "").localeCompare(b.nome || "", "it", { sensitivity: "base" });
+    });
+
+    var allAdp = (state.adempimenti || []).filter(function(a) {
+      return !a.anno_validita || parseInt(a.anno_validita) === parseInt(state.anno);
+    }).sort(function(a, b) {
+      return (a.nome || "").localeCompare(b.nome || "", "it", { sensitivity: "base" });
+    });
+
+    var lookup = {};
+    (state.sintesiData || []).forEach(function(r) {
+      var k = r.cliente_id + "|" + r.id_adempimento;
+      if (!lookup[k]) lookup[k] = [];
+      lookup[k].push(r);
+    });
+
+    // Genera la lista per ogni cliente
+    allClienti.forEach(function(cliente) {
+      var tipColor = cliente.tipologia_colore || 
+        (typeof getTipologiaColor === "function" ? getTipologiaColor(cliente.tipologia_codice) : "#888");
+      
+      var clienteHtml = `
+        <div style="margin-bottom:25px;border:1px solid #ddd;border-radius:8px;padding:15px;page-break-inside:avoid;background:#f9f9f9;">
+          <div style="display:flex;align-items:center;gap:15px;margin-bottom:12px;border-bottom:2px solid ${tipColor};padding-bottom:10px;">
+            <div style="font-size:20px;font-weight:700;color:#333;">${escAttr(cliente.nome)}</div>
+            <div style="font-size:12px;color:#666;background:${tipColor}22;padding:2px 10px;border-radius:12px;border:1px solid ${tipColor};">${cliente.tipologia_codice || '-'}</div>
+            ${cliente.codice_fiscale ? `<div style="font-size:11px;color:#888;">CF: ${cliente.codice_fiscale}</div>` : ''}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:6px;">
+      `;
+
+      var hasData = false;
+      allAdp.forEach(function(adp) {
+        var key = cliente.id + "|" + adp.id;
+        var periodi = lookup[key] || [];
+        var st = _sintesiStatoCella(periodi);
+        
+        if (st.kind === "na" && periodi.length === 0) {
+          // Non mostrare gli N/A senza periodi
+          return;
+        }
+
+        hasData = true;
+        var sortedP = periodi.slice().sort(function(a, b) {
+          if (a.mese != null && b.mese != null) return a.mese - b.mese;
+          if (a.trimestre != null && b.trimestre != null) return a.trimestre - b.trimestre;
+          if (a.semestre != null && b.semestre != null) return a.semestre - b.semestre;
+          return 0;
         });
-        if (adpSel._ssRefresh) adpSel._ssRefresh();
+
+        var statoIcon = st.kind === "done" ? "✅" : 
+                        st.kind === "partial" ? "🔄" : 
+                        st.kind === "todo" ? "⭕" : "➖";
+        var statoColor = st.kind === "done" ? "#2e7d32" : 
+                         st.kind === "partial" ? "#f9a825" : 
+                         st.kind === "todo" ? "#c62828" : "#888";
+
+        var periodiDetails = sortedP.map(function(p) {
+          var pStato = p.stato || "da_fare";
+          var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
+          var pLabel = typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
+          var scadenza = p.data_scadenza ? formattaDataItaliana(p.data_scadenza) : "-";
+          var completato = p.data_completamento ? formattaDataItaliana(p.data_completamento) : "-";
+          return `<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:4px;font-size:11px;background:${pInfo.color}22;border:1px solid ${pInfo.color}55;color:${pInfo.color};">${pInfo.icon} ${pLabel}</span>`;
+        }).join('');
+
+        var scadenzaDate = sortedP.map(function(p) {
+          return p.data_scadenza ? formattaDataItaliana(p.data_scadenza) : '-';
+        }).filter(function(d) { return d !== '-'; });
+
+        clienteHtml += `
+          <div style="display:grid;grid-template-columns:180px 1fr;gap:10px;padding:6px 10px;border-radius:4px;background:#fff;border:1px solid #eee;align-items:center;">
+            <div style="font-weight:600;font-size:13px;color:#333;">
+              ${escAttr(adp.nome)}
+              <span style="font-size:10px;color:#999;font-weight:400;display:block;">${escAttr(adp.codice || '')}</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+              <span style="font-size:13px;font-weight:700;color:${statoColor};min-width:80px;">${statoIcon} ${st.label}</span>
+              ${periodi.length > 0 ? `<span style="font-size:11px;color:#888;">${periodi.length} periodi</span>` : ''}
+              ${periodiDetails}
+              ${scadenzaDate.length > 0 ? `<span style="font-size:10px;color:#999;margin-left:4px;">📅 ${scadenzaDate.join(', ')}</span>` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      if (!hasData) {
+        clienteHtml += `
+          <div style="padding:10px;text-align:center;color:#999;font-size:13px;background:#fff;border-radius:4px;border:1px dashed #ddd;">
+            Nessun adempimento registrato per questo cliente nell'anno ${state.anno}
+          </div>
+        `;
       }
 
-      // Rigenera la tabella con i filtri originali
-      renderSintesiTabella();
-    }, 100);
-  }, 300);
+      clienteHtml += `
+          </div>
+        </div>
+      `;
+
+      printContainer.innerHTML += clienteHtml;
+    });
+
+    // Footer
+    printContainer.innerHTML += `
+      <div style="text-align:center;margin-top:30px;padding-top:15px;border-top:1px solid #ddd;font-size:11px;color:#999;">
+        Studio Fiscale - Sintesi Adempimenti ${state.anno} - Pagina 1/1
+      </div>
+    `;
+
+    // Sostituisci il contenuto con la lista per la stampa
+    var container = document.getElementById("content");
+    var originalContent = container.innerHTML;
+    container.innerHTML = printContainer.innerHTML;
+
+    // Stampa
+    setTimeout(function() {
+      window.print();
+
+      // Ripristina il contenuto originale
+      setTimeout(function() {
+        // Ripristina i filtri
+        _sintesiClienteFiltro = statoPrecedente.clienteFiltro;
+        setSharedClienteSearch(statoPrecedente.searchTerm || "");
+        state.sintesiStatoFiltro = statoPrecedente.statoFiltro;
+
+        var clienteSel = document.getElementById("sint-filtro-cliente");
+        if (clienteSel) {
+          clienteSel.value = _sintesiClienteFiltro || "";
+          if (clienteSel._ssRefresh) clienteSel._ssRefresh();
+        }
+
+        var searchEl = document.getElementById("sint-search-cliente");
+        if (searchEl) searchEl.value = statoPrecedente.searchTerm || "";
+
+        if (adpSel) {
+          Array.from(adpSel.options).forEach(function (o) {
+            o.selected = statoPrecedente.adpSelezionati.indexOf(o.value) !== -1;
+          });
+          if (adpSel._ssRefresh) adpSel._ssRefresh();
+        }
+
+        // Rigenera la tabella originale
+        renderSintesiTabella();
+      }, 100);
+    }, 300);
+  }
 }
 window.stampaSintesiCompleta = stampaSintesiCompleta;
 

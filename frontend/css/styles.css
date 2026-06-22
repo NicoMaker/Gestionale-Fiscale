@@ -4762,3 +4762,42 @@ select {
     display: none !important;
   }
 }
+
+/* Stili per il selettore clienti nella sintesi */
+#sint-filtro-cliente {
+  min-width: 180px;
+  max-width: 250px;
+  font-size: 13px;
+}
+
+/* Stili per il pulsante di stampa completa */
+.btn-stampa-completa {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-stampa-completa:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Stampa lista completa */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: #fff !important;
+  }
+  
+  #stampa-lista-completa {
+    padding: 20px !important;
+    max-width: 100% !important;
+  }
+  
+  #stampa-lista-completa > div {
+    page-break-inside: avoid !important;
+  }
+}
