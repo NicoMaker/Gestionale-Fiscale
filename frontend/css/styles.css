@@ -4399,6 +4399,34 @@ select {
     transform 0.1s,
     border-color 0.1s;
 }
+#sint-pill-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  background: var(--s2, #1e2027);
+  border: 1px solid var(--b1, #333);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 240px;
+  pointer-events: none;
+}
+#sint-pill-tooltip.visible {
+  display: flex;
+}
+.sint-hover-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
 .sint-cell:hover {
   transform: scale(1.08);
   border-color: var(--accent);
