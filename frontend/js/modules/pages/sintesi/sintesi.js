@@ -1,12 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
 // SINTESI.JS — Pagina "Sintesi Adempimenti": matrice CLIENTI × ADEMPIMENTI
-// Sola lettura: i dati (clienti / adempimenti / stato periodi) vengono
-// sempre letti dal DB tramite socket, non sono mai modificabili da qui.
-// Riusa il filtro tipologie condiviso (stesso pannello di Vista Globale
-// e Clienti) e la ricerca cliente condivisa (localStorage).
-// Dipende da: core/state.js, core/utils.js, core/constants.js,
-//             pages/globale/filtri.js (pannello tipologie, helper),
-//             network/socket.js (eventi get:sintesi / res:sintesi)
 // ═══════════════════════════════════════════════════════════════
 
 var _SINT_STATO_INFO = {
@@ -18,15 +11,30 @@ var _SINT_STATO_INFO = {
 };
 
 // Stato per il filtro clienti
-var _sintesiClienteFiltro = null; // id del cliente selezionato, null = tutti
+var _sintesiClienteFiltro = null;
+
+// Stato per i filtri di stato (done, partial, todo, na)
+var _sintesiStatoFiltri = {
+  done: false,
+  partial: false,
+  todo: false,
+  na: false
+};
+
+// Cache per i dati della sintesi
+var _sintesiCache = {
+  clienti: null,
+  adempimenti: null,
+  sintesiData: null,
+  lookup: null,
+  statiClienti: null
+};
 
 // ═══════════════════════════════════════════════════════════════
 // RENDER PAGINA PRINCIPALE
 // ═══════════════════════════════════════════════════════════════
 
 function renderSintesiPage() {
-  // NON inizializzare il filtro tipologie - lo rimuoviamo completamente
-
   // Carica i clienti per il selettore
   if (!state.clienti || state.clienti.length === 0) {
     if (typeof socket !== "undefined") {
@@ -34,12 +42,14 @@ function renderSintesiPage() {
       socket.once("res:clienti", function (d) {
         if (d.success) {
           state.clienti = d.data;
+          _sintesiCache.clienti = d.data;
           _renderSintesiTopbar();
           if (state.page === "sintesi") renderSintesiTabella();
         }
       });
     }
   } else {
+    _sintesiCache.clienti = state.clienti;
     _renderSintesiTopbar();
   }
 
@@ -50,12 +60,14 @@ function renderSintesiPage() {
       socket.once("res:adempimenti", function (d) {
         if (d.success) {
           state.adempimenti = d.data;
+          _sintesiCache.adempimenti = d.data;
           _popolaSintesiAdpSelect();
           if (state.page === "sintesi") renderSintesiTabella();
         }
       });
     }
   } else {
+    _sintesiCache.adempimenti = state.adempimenti;
     _popolaSintesiAdpSelect();
   }
 
@@ -67,7 +79,6 @@ function _renderSintesiTopbar() {
   var topbar = document.getElementById("topbar-actions");
   if (!topbar) return;
 
-  // Costruisce le opzioni del selettore clienti
   var clientiOpts = '<option value="">-- Tutti i clienti --</option>';
   if (state.clienti) {
     var sorted = state.clienti.slice().sort(function (a, b) {
@@ -76,7 +87,6 @@ function _renderSintesiTopbar() {
       });
     });
     sorted.forEach(function (c) {
-      // Salta clienti inattivi
       if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return;
       var selected = _sintesiClienteFiltro === c.id ? "selected" : "";
       clientiOpts +=
@@ -111,14 +121,12 @@ function _renderSintesiTopbar() {
     '<button class="btn btn-sm btn-stampa-completa" onclick="stampaSintesiCompleta()" title="Stampa lista completa con TUTTI gli adempimenti per TUTTI i clienti" style="font-size:13px;background:var(--accent);color:#fff;border-color:var(--accent)">🖨️ Stampa Lista Completa</button>' +
     '<button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>';
 
-  // Inizializza il select dei clienti come searchable
   if (typeof initSearchableSelect === "function") {
     setTimeout(function () {
       initSearchableSelect("sint-filtro-cliente");
     }, 50);
   }
 
-  // Inizializza il select multiplo degli adempimenti
   setTimeout(function () {
     initSearchableMultiSelect("sint-filtro-adp");
     _popolaSintesiAdpSelect();
@@ -140,12 +148,13 @@ function changeAnnoSintesi(d) {
   for (var i = 0; i < yearNums.length; i++)
     yearNums[i].textContent = state.anno;
   state.sintesiActiveCellKey = null;
-  // Ricarica il selettore clienti con l'anno aggiornato
+  _sintesiCache = { clienti: null, adempimenti: null, sintesiData: null, lookup: null, statiClienti: null };
   if (typeof socket !== "undefined") {
     socket.emit("get:clienti", { anno: state.anno });
     socket.once("res:clienti", function (d) {
       if (d.success) {
         state.clienti = d.data;
+        _sintesiCache.clienti = d.data;
         _renderSintesiTopbar();
         loadSintesi();
       }
@@ -156,7 +165,7 @@ function changeAnnoSintesi(d) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CARICAMENTO DATI (sola lettura dal DB)
+// CARICAMENTO DATI
 // ═══════════════════════════════════════════════════════════════
 
 function loadSintesi() {
@@ -165,6 +174,7 @@ function loadSintesi() {
     socket.once("res:clienti", function (d) {
       if (d.success) {
         state.clienti = d.data;
+        _sintesiCache.clienti = d.data;
         _renderSintesiTopbar();
         if (state.page === "sintesi") renderSintesiTabella();
       }
@@ -175,12 +185,24 @@ function loadSintesi() {
     socket.once("res:adempimenti", function (d) {
       if (d.success) {
         state.adempimenti = d.data;
+        _sintesiCache.adempimenti = d.data;
         _popolaSintesiAdpSelect();
         if (state.page === "sintesi") renderSintesiTabella();
       }
     });
   }
   socket.emit("get:sintesi", { anno: state.anno });
+  
+  // Ascolta la risposta
+  socket.once("res:sintesi", function(data) {
+    if (data.success) {
+      state.sintesiData = data.data;
+      _sintesiCache.sintesiData = data.data;
+      _sintesiCache.lookup = null;
+      _sintesiCache.statiClienti = null;
+      if (state.page === "sintesi") renderSintesiTabella();
+    }
+  });
 }
 
 function _popolaSintesiAdpSelect() {
@@ -221,9 +243,7 @@ function _popolaSintesiAdpSelect() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FILTRI (ricerca condivisa, adempimenti) — tutto locale,
-// nessuna richiesta al server: la pagina è già in possesso di tutti
-// i dati dell'anno corrente.
+// FILTRI
 // ═══════════════════════════════════════════════════════════════
 
 function onSintesiSearchInput(value) {
@@ -252,55 +272,42 @@ function resetSintesiFiltri() {
     if (clienteSel._ssRefresh) clienteSel._ssRefresh();
   }
   _sintesiClienteFiltro = null;
-  state.sintesiStatoFiltro = {
+  _sintesiStatoFiltri = {
     done: false,
     partial: false,
     todo: false,
-    na: false,
+    na: false
   };
   state.sintesiActiveCellKey = null;
   renderSintesiTabella();
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FILTRO PER STATO CELLA (✅ Fatto / 🔄 Parziale / ⭕ Da fare / ➖ N/A)
+// FILTRO PER STATO CELLA
 // ═══════════════════════════════════════════════════════════════
 
-function _sintesiStatoFiltroSafe() {
-  if (!state.sintesiStatoFiltro)
-    state.sintesiStatoFiltro = {
-      done: false,
-      partial: false,
-      todo: false,
-      na: false,
-    };
-  return state.sintesiStatoFiltro;
-}
-
-function _sintesiStatoFiltroAttivi() {
-  var f = _sintesiStatoFiltroSafe();
-  return Object.keys(f).filter(function (k) {
-    return f[k];
-  });
-}
-
 function toggleSintesiStatoFiltro(kind) {
-  var f = _sintesiStatoFiltroSafe();
-  f[kind] = !f[kind];
+  _sintesiStatoFiltri[kind] = !_sintesiStatoFiltri[kind];
   renderSintesiTabella();
 }
 window.toggleSintesiStatoFiltro = toggleSintesiStatoFiltro;
 
 function resetSintesiStatoFiltro() {
-  state.sintesiStatoFiltro = {
+  _sintesiStatoFiltri = {
     done: false,
     partial: false,
     todo: false,
-    na: false,
+    na: false
   };
   renderSintesiTabella();
 }
 window.resetSintesiStatoFiltro = resetSintesiStatoFiltro;
+
+function _sintesiStatoFiltriAttivi() {
+  return Object.keys(_sintesiStatoFiltri).filter(function (k) {
+    return _sintesiStatoFiltri[k];
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════
 // LOGICA STATO CELLA
@@ -316,8 +323,7 @@ function _sintesiStatoCella(periodi) {
   if (nonNA.length === 0) {
     return { kind: "na", label: "N/A" };
   }
-  var doneCount = 0,
-    avanzCount = 0;
+  var doneCount = 0, avanzCount = 0;
   for (var i = 0; i < nonNA.length; i++) {
     if (nonNA[i].stato === "completato") doneCount++;
     else if (nonNA[i].stato === "in_corso") avanzCount++;
@@ -343,7 +349,7 @@ function _sintesiOrdinaPeriodi(periodi) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RENDER TABELLA PRINCIPALE
+// RENDER TABELLA PRINCIPALE - CON FILTRI STATO CORRETTI
 // ═══════════════════════════════════════════════════════════════
 
 function renderSintesiTabella() {
@@ -351,7 +357,7 @@ function renderSintesiTabella() {
   var container = document.getElementById("content");
   if (!container) return;
 
-  if (!state.clienti || !state.adempimenti) {
+  if (!state.clienti || !state.adempimenti || !state.sintesiData) {
     container.innerHTML =
       '<div class="empty"><div class="empty-icon">⏳</div><p style="font-size:15px">Caricamento dati…</p></div>';
     return;
@@ -380,6 +386,14 @@ function renderSintesiTabella() {
     });
   });
 
+  // ─── Build lookup ─────────────────────────────────────────────
+  var lookup = {};
+  (state.sintesiData || []).forEach(function (r) {
+    var k = r.cliente_id + "|" + r.id_adempimento;
+    if (!lookup[k]) lookup[k] = [];
+    lookup[k].push(r);
+  });
+
   // ─── Righe (clienti) ──────────────────────────────────────────
   var searchTerm = (getSharedClienteSearch() || "").toLowerCase();
   var clienti = (state.clienti || []).filter(function (c) {
@@ -404,62 +418,63 @@ function renderSintesiTabella() {
     });
   });
 
-  // ─── Lookup periodi per cliente+adempimento ──────────────────
-  var lookup = {};
-  (state.sintesiData || []).forEach(function (r) {
-    var k = r.cliente_id + "|" + r.id_adempimento;
-    if (!lookup[k]) lookup[k] = [];
-    lookup[k].push(r);
+  // ─── Calcola stato per ogni cliente+adempimento ──────────────
+  var statiClienti = {};
+  var stats = { done: 0, partial: 0, todo: 0, na: 0 };
+  
+  clienti.forEach(function(c) {
+    statiClienti[c.id] = {};
+    columns.forEach(function(a) {
+      var key = c.id + "|" + a.id;
+      var st = _sintesiStatoCella(lookup[key] || []);
+      statiClienti[c.id][a.id] = st;
+      stats[st.kind] = (stats[st.kind] || 0) + 1;
+    });
   });
 
-  // ─── Filtro per stato cella ──────────────────────────────────
-  var statoFiltroAttivi = _sintesiStatoFiltroAttivi();
-  var clientiVisibili = !statoFiltroAttivi.length
-    ? clienti
-    : clienti.filter(function (c) {
-        for (var fci = 0; fci < columns.length; fci++) {
-          var fk = c.id + "|" + columns[fci].id;
-          var fst = _sintesiStatoCella(lookup[fk]);
-          if (statoFiltroAttivi.indexOf(fst.kind) !== -1) return true;
+  // ─── FILTRO STATO: determina quali clienti mostrare ──────────
+  var statoFiltriAttivi = _sintesiStatoFiltriAttivi();
+  var clientiVisibili = clienti;
+  
+  if (statoFiltriAttivi.length > 0) {
+    clientiVisibili = clienti.filter(function(c) {
+      // Il cliente è visibile se HA ALMENO UNA cella che corrisponde a uno dei filtri attivi
+      for (var j = 0; j < columns.length; j++) {
+        var a = columns[j];
+        var st = statiClienti[c.id][a.id];
+        if (st && statoFiltriAttivi.indexOf(st.kind) !== -1) {
+          return true;
         }
-        return false;
-      });
-
-  // ─── Header riepilogativo ─────────────────────────────────────
-  var doneCells = 0,
-    naCells = 0,
-    partialCells = 0,
-    todoCells = 0;
-  for (var ci = 0; ci < clienti.length; ci++) {
-    for (var cj = 0; cj < columns.length; cj++) {
-      var k2 = clienti[ci].id + "|" + columns[cj].id;
-      var st2 = _sintesiStatoCella(lookup[k2]);
-      if (st2.kind === "done") doneCells++;
-      else if (st2.kind === "na") naCells++;
-      else if (st2.kind === "partial") partialCells++;
-      else todoCells++;
-    }
+      }
+      return false;
+    });
   }
-  var baseCalc = doneCells + partialCells + todoCells;
-  var percCompletato =
-    baseCalc > 0 ? Math.round((doneCells / baseCalc) * 100) : 0;
 
-  var clientiCountLabel =
-    statoFiltroAttivi.length && clientiVisibili.length !== clienti.length
-      ? clientiVisibili.length + " di " + clienti.length
-      : String(clienti.length);
+  // ─── Calcola statistiche ──────────────────────────────────────
+  var doneCells = stats.done || 0;
+  var naCells = stats.na || 0;
+  var partialCells = stats.partial || 0;
+  var todoCells = stats.todo || 0;
+  
+  var baseCalc = doneCells + partialCells + todoCells;
+  var percCompletato = baseCalc > 0 ? Math.round((doneCells / baseCalc) * 100) : 0;
+
+  var clientiCountLabel = statoFiltriAttivi.length > 0 && clientiVisibili.length !== clienti.length
+    ? clientiVisibili.length + " di " + clienti.length
+    : String(clienti.length);
   var clientiCountUnit = clienti.length === 1 ? "e" : "i";
 
+  // ─── Header ────────────────────────────────────────────────────
   function _sintStatBoxHtml(kind, count, color, iconaLabel) {
-    var active = statoFiltroAttivi.indexOf(kind) !== -1;
+    var active = _sintesiStatoFiltri[kind] || false;
     return (
       '<button type="button" class="gpc-stat-btn' +
       (active ? " active" : "") +
       '" onclick="toggleSintesiStatoFiltro(\'' +
       kind +
-      '\')" title="Filtra: mostra solo ' +
-      escAttr(iconaLabel) +
-      '">' +
+      '\')" title="Filtra: mostra solo clienti con almeno un adempimento ' + 
+      escAttr(iconaLabel.toLowerCase()) +
+      '" style="cursor:pointer;">' +
       '<div style="font-family:var(--mono);font-weight:800;color:' +
       color +
       ';font-size:16px">' +
@@ -501,20 +516,20 @@ function renderSintesiTabella() {
     _sintStatBoxHtml("na", naCells, "var(--t3)", "➖ N/A") +
     "</div>" +
     "</div>" +
-    '<div style="font-size:11px;color:var(--t3);margin-top:8px">📖 Vista di sola lettura — i dati si modificano dallo Scadenzario Cliente o dalla Vista Globale.</div>' +
+    '<div style="font-size:11px;color:var(--t3);margin-top:8px">📖 Filtri stato: mostrano i clienti che hanno ALMENO un adempimento nello stato selezionato</div>' +
     "</div>";
 
   // ─── Legenda ───────────────────────────────────────────────────
   function _sintLegendItemHtml(kind, label) {
-    var active = statoFiltroAttivi.indexOf(kind) !== -1;
+    var active = _sintesiStatoFiltri[kind] || false;
     return (
       '<button type="button" class="sint-legend-item' +
       (active ? " active" : "") +
       '" onclick="toggleSintesiStatoFiltro(\'' +
       kind +
-      '\')" title="Filtra: mostra solo ' +
-      escAttr(label) +
-      '">' +
+      '\')" title="Filtra: mostra solo clienti con almeno un adempimento ' +
+      escAttr(label.toLowerCase()) +
+      '" style="cursor:pointer;">' +
       '<span class="sint-legend-dot ' +
       kind +
       '"></span>' +
@@ -525,17 +540,14 @@ function renderSintesiTabella() {
 
   var legend =
     '<div class="sint-legend">' +
-    _sintLegendItemHtml(
-      "done",
-      "✅ Adempimento completato per tutti i periodi",
-    ) +
+    _sintLegendItemHtml("done", "✅ Completato per tutti i periodi") +
     _sintLegendItemHtml("partial", "🔄 Parzialmente completato") +
-    _sintLegendItemHtml("todo", "⭕ Da fare / non ancora iniziato") +
-    _sintLegendItemHtml("na", "➖ N/A — non applicato a questo cliente") +
-    (statoFiltroAttivi.length
+    _sintLegendItemHtml("todo", "⭕ Da fare / non iniziato") +
+    _sintLegendItemHtml("na", "➖ N/A — non applicato") +
+    (statoFiltriAttivi.length > 0
       ? '<button type="button" class="sint-legend-clear" onclick="resetSintesiStatoFiltro()">✕ Rimuovi filtro stato</button>'
       : "") +
-    '<span style="color:var(--t3)">· Clicca una voce per filtrare, clicca una cella per vedere il dettaglio mese per mese / trimestre</span>' +
+    '<span style="color:var(--t3);font-size:11px;">· Clicca per filtrare i clienti</span>' +
     "</div>";
 
   // ─── Tabella ───────────────────────────────────────────────────
@@ -543,8 +555,8 @@ function renderSintesiTabella() {
   if (!clientiVisibili.length || !columns.length) {
     var msgVuoto = !columns.length
       ? "Nessun adempimento selezionato — usa il filtro in alto o clicca ⟳ Tutti"
-      : statoFiltroAttivi.length
-        ? "Nessun cliente ha celle nello stato selezionato, per " + state.anno
+      : statoFiltriAttivi.length > 0
+        ? "Nessun cliente ha adempimenti nello stato selezionato per " + state.anno
         : "Nessun cliente corrisponde ai filtri attivi per " + state.anno;
     bodyHtml =
       '<div class="empty">' +
@@ -553,7 +565,7 @@ function renderSintesiTabella() {
       msgVuoto +
       "</p>" +
       '<button class="btn btn-sm btn-primary" onclick="resetSintesiFiltri()" style="margin-top:12px">⟳ Rimuovi filtri</button>' +
-      (statoFiltroAttivi.length
+      (statoFiltriAttivi.length > 0
         ? '<button class="btn btn-sm btn-secondary" onclick="resetSintesiStatoFiltro()" style="margin-top:12px;margin-left:8px">✕ Solo filtro stato</button>'
         : "") +
       "</div>";
@@ -578,46 +590,36 @@ function renderSintesiTabella() {
     var rowsHtml = "";
     for (var i = 0; i < clientiVisibili.length; i++) {
       var c = clientiVisibili[i];
-      var tipColor =
-        c.tipologia_colore ||
-        (typeof getTipologiaColor === "function"
-          ? getTipologiaColor(c.tipologia_codice)
-          : "#888");
+      var tipColor = c.tipologia_colore ||
+        (typeof getTipologiaColor === "function" ? getTipologiaColor(c.tipologia_codice) : "#888");
       var cellsHtml = "";
+      
       for (var j = 0; j < columns.length; j++) {
         var a = columns[j];
         var key = c.id + "|" + a.id;
-        var periodi = lookup[key] || [];
-        var st = _sintesiStatoCella(periodi);
+        var st = statiClienti[c.id][a.id] || { kind: "na", label: "N/A" };
         var isActive = state.sintesiActiveCellKey === key;
-        var isDim =
-          statoFiltroAttivi.length > 0 &&
-          statoFiltroAttivi.indexOf(st.kind) === -1;
+        // La cella è "dim" se NON corrisponde ai filtri attivi
+        var isDim = statoFiltriAttivi.length > 0 && statoFiltriAttivi.indexOf(st.kind) === -1;
         
+        var periodi = lookup[key] || [];
         var sortedP = periodi.slice().sort(function (a, b) {
           if (a.mese != null && b.mese != null) return a.mese - b.mese;
-          if (a.trimestre != null && b.trimestre != null)
-            return a.trimestre - b.trimestre;
-          if (a.semestre != null && b.semestre != null)
-            return a.semestre - b.semestre;
+          if (a.trimestre != null && b.trimestre != null) return a.trimestre - b.trimestre;
+          if (a.semestre != null && b.semestre != null) return a.semestre - b.semestre;
           return 0;
         });
+        
         var doneCount = 0;
         var pillsHtml = sortedP
           .map(function (p) {
             var pStato = p.stato || "da_fare";
             if (pStato === "completato") doneCount++;
             var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
-            var pShort =
-              typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
-            var bgColor =
-              pStato === "completato"
-                ? "var(--green)"
-                : pStato === "in_corso"
-                  ? "var(--yellow)"
-                  : pStato === "n_a"
-                    ? "var(--t3)"
-                    : "var(--red)";
+            var pShort = typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
+            var bgColor = pStato === "completato" ? "var(--green)" :
+                          pStato === "in_corso" ? "var(--yellow)" :
+                          pStato === "n_a" ? "var(--t3)" : "var(--red)";
             return (
               '<span style="display:inline-flex;align-items:center;gap:2px;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:' +
               bgColor +
@@ -646,31 +648,24 @@ function renderSintesiTabella() {
             periodi.length +
             "</div>";
         } else {
-          cellContent =
-            st.kind === "na"
-              ? '<span style="font-size:11px">N/A</span>'
-              : "<span>—</span>";
+          cellContent = st.kind === "na" ? '<span style="font-size:11px">N/A</span>' : "<span>—</span>";
         }
 
+        // Aggiungi una classe per lo stato della cella
+        var cellClass = "sint-cell sint-cell-" + st.kind;
+        if (isActive) cellClass += " active";
+        if (isDim) cellClass += " sint-cell-dim";
+
         cellsHtml +=
-          '<td class="sint-td"><button type="button" class="sint-cell sint-cell-' +
-          st.kind +
-          (isActive ? " active" : "") +
-          (isDim ? " sint-cell-dim" : "") +
-          '" data-key="' +
-          key +
-          '" onclick="sintesiToggleDettaglio(\'' +
-          key +
-          "'," +
-          c.id +
-          "," +
-          a.id +
-          ')" title="' +
-          escAttr(c.nome + " · " + a.nome + " — " + st.label) +
-          '">' +
+          '<td class="sint-td"><button type="button" class="' + cellClass +
+          '" data-key="' + key +
+          '" onclick="sintesiToggleDettaglio(\'' + key + "'," + c.id + "," + a.id + ')"' +
+          ' title="' + escAttr(c.nome + " · " + a.nome + " — " + st.label) +
+          (isDim ? ' (nascosto dal filtro)' : '') + '">' +
           cellContent +
           "</button></td>";
       }
+      
       rowsHtml +=
         '<tr><td class="sint-td-cliente" style="border-left:3px solid ' +
         tipColor +
@@ -699,11 +694,7 @@ function renderSintesiTabella() {
       "</tbody></table></div>";
   }
 
-  container.innerHTML =
-    headerCard +
-    legend +
-    bodyHtml +
-    '<div id="sint-dettaglio"></div>';
+  container.innerHTML = headerCard + legend + bodyHtml + '<div id="sint-dettaglio"></div>';
 
   if (state.sintesiActiveCellKey) {
     var parts = state.sintesiActiveCellKey.split("|");
@@ -712,7 +703,7 @@ function renderSintesiTabella() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DETTAGLIO PERIODI (sotto-tabella mese/trimestre per la cella scelta)
+// DETTAGLIO PERIODI
 // ═══════════════════════════════════════════════════════════════
 
 function sintesiToggleDettaglio(key, clienteId, adempimentoId) {
@@ -744,40 +735,26 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
   var panel = document.getElementById("sint-dettaglio");
   if (!panel) return;
 
-  var cliente = (state.clienti || []).find(function (c) {
-    return c.id === clienteId;
-  });
-  var adp = (state.adempimenti || []).find(function (a) {
-    return a.id === adempimentoId;
-  });
+  var cliente = (state.clienti || []).find(function (c) { return c.id === clienteId; });
+  var adp = (state.adempimenti || []).find(function (a) { return a.id === adempimentoId; });
   var periodi = (state.sintesiData || []).filter(function (r) {
     return r.cliente_id === clienteId && r.id_adempimento === adempimentoId;
   });
   periodi = _sintesiOrdinaPeriodi(periodi);
 
   var gridHtml = "";
-  var doneN = 0,
-    totN = periodi.length;
+  var doneN = 0, totN = periodi.length;
   if (periodi.length) {
     var chips = periodi
       .map(function (p, idx) {
         var stato = p.stato || "da_fare";
         if (stato === "completato") doneN++;
         var info = _SINT_STATO_INFO[stato] || _SINT_STATO_INFO.da_fare;
-        var shortLabel =
-          typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
-        var fullLabel =
-          typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
-        var tooltip =
-          fullLabel +
-          " — " +
-          info.label +
-          (p.data_scadenza
-            ? " · Scad. " + formattaDataItaliana(p.data_scadenza)
-            : "") +
-          (p.data_completamento
-            ? " · Completato " + formattaDataItaliana(p.data_completamento)
-            : "");
+        var shortLabel = typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
+        var fullLabel = typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
+        var tooltip = fullLabel + " — " + info.label +
+          (p.data_scadenza ? " · Scad. " + formattaDataItaliana(p.data_scadenza) : "") +
+          (p.data_completamento ? " · Completato " + formattaDataItaliana(p.data_completamento) : "");
         return (
           '<button type="button" class="sint-dett-chip sint-dett-chip-' +
           stato +
@@ -821,8 +798,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
     periodi.forEach(function (p, idx) {
       var stato = p.stato || "da_fare";
       var info = _SINT_STATO_INFO[stato] || _SINT_STATO_INFO.da_fare;
-      var periodoLabel =
-        typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
+      var periodoLabel = typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
       rowsHtml +=
         '<tr data-pidx="' +
         idx +
@@ -837,9 +813,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
         "</span></td><td>" +
         (p.data_scadenza ? formattaDataItaliana(p.data_scadenza) : "—") +
         "</td><td>" +
-        (p.data_completamento
-          ? formattaDataItaliana(p.data_completamento)
-          : "—") +
+        (p.data_completamento ? formattaDataItaliana(p.data_completamento) : "—") +
         "</td></tr>";
     });
   }
@@ -850,9 +824,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
     escAttr(cliente ? cliente.nome : "—") +
     "</div>" +
     '<div class="sint-dett-adp">📋 ' +
-    escAttr(
-      adp ? (adp.codice ? adp.codice + " — " + adp.nome : adp.nome) : "—",
-    ) +
+    escAttr(adp ? (adp.codice ? adp.codice + " — " + adp.nome : adp.nome) : "—") +
     " · Anno " +
     state.anno +
     "</div>" +
@@ -876,9 +848,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
 }
 
 function _sintesiDettScrollTo(idx) {
-  var row = document.querySelector(
-    '.sint-dett-table tr[data-pidx="' + idx + '"]',
-  );
+  var row = document.querySelector('.sint-dett-table tr[data-pidx="' + idx + '"]');
   if (!row) return;
   row.scrollIntoView({ behavior: "smooth", block: "center" });
   row.classList.add("flash");
@@ -889,228 +859,169 @@ function _sintesiDettScrollTo(idx) {
 window._sintesiDettScrollTo = _sintesiDettScrollTo;
 
 // ═══════════════════════════════════════════════════════════════
-// STAMPA LISTA COMPLETA — stampa una lista verticale per ogni cliente
-// con NOME ADEMPIMENTO e dettaglio dei periodi (stato, scadenza)
+// STAMPA LISTA COMPLETA - VELOCE (usa finestra separata)
 // ═══════════════════════════════════════════════════════════════
 
 function stampaSintesiCompleta() {
-  // Salva lo stato corrente dei filtri
-  var statoPrecedente = {
-    clienteFiltro: _sintesiClienteFiltro,
-    searchTerm: getSharedClienteSearch(),
-    statoFiltro: JSON.parse(JSON.stringify(state.sintesiStatoFiltro || {})),
-    adpSelezionati: []
-  };
-
-  // Salva gli adempimenti selezionati
-  var adpSel = document.getElementById("sint-filtro-adp");
-  if (adpSel) {
-    statoPrecedente.adpSelezionati = Array.from(adpSel.selectedOptions || []).map(function(o) {
-      return o.value;
-    });
-  }
-
-  // Rimuovi temporaneamente TUTTI i filtri
-  _sintesiClienteFiltro = null;
-  setSharedClienteSearch("");
-
-  // Reset del filtro stato
-  state.sintesiStatoFiltro = {
-    done: false,
-    partial: false,
-    todo: false,
-    na: false,
-  };
-
-  // Deseleziona tutti gli adempimenti nel filtro (mostra TUTTI)
-  if (adpSel) {
-    Array.from(adpSel.options).forEach(function (o) {
-      o.selected = false;
-    });
-    if (adpSel._ssRefresh) adpSel._ssRefresh();
-  }
-
-  // Assicurati che i dati siano caricati
-  if (!state.sintesiData || state.sintesiData.length === 0) {
+  // Usa i dati in cache
+  var data = _sintesiCache;
+  
+  // Se i dati non sono in cache, caricali
+  if (!data.sintesiData || data.sintesiData.length === 0) {
     showNotif("⏳ Caricamento dati in corso...", "info");
     socket.emit("get:sintesi", { anno: state.anno });
-    socket.once("res:sintesi", function(data) {
-      if (data.success) {
-        state.sintesiData = data.data;
-        _generaStampaLista();
+    socket.once("res:sintesi", function(res) {
+      if (res.success) {
+        state.sintesiData = res.data;
+        _sintesiCache.sintesiData = res.data;
+        _sintesiCache.lookup = null;
+        _generaFinestraStampa();
       }
     });
     return;
   }
+  _generaFinestraStampa();
+}
 
-  _generaStampaLista();
+function _generaFinestraStampa() {
+  var allClienti = (state.clienti || []).filter(function(c) {
+    if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
+    return true;
+  }).sort(function(a, b) {
+    return (a.nome || "").localeCompare(b.nome || "", "it", { sensitivity: "base" });
+  });
 
-  function _generaStampaLista() {
-    // Crea un container per la stampa
-    var printContainer = document.createElement('div');
-    printContainer.id = 'stampa-lista-completa';
-    printContainer.style.cssText = 'padding:20px;font-family:Arial,sans-serif;max-width:1200px;margin:0 auto;';
+  var allAdp = (state.adempimenti || []).filter(function(a) {
+    return !a.anno_validita || parseInt(a.anno_validita) === parseInt(state.anno);
+  }).sort(function(a, b) {
+    return (a.nome || "").localeCompare(b.nome || "", "it", { sensitivity: "base" });
+  });
+
+  var lookup = {};
+  (state.sintesiData || []).forEach(function(r) {
+    var k = r.cliente_id + "|" + r.id_adempimento;
+    if (!lookup[k]) lookup[k] = [];
+    lookup[k].push(r);
+  });
+
+  // Costruisci HTML velocemente
+  var htmlParts = [];
+  htmlParts.push('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sintesi Adempimenti ' + state.anno + '</title><style>');
+  htmlParts.push('body{font-family:Arial,sans-serif;padding:20px;max-width:1200px;margin:0 auto}');
+  htmlParts.push('.header{text-align:center;margin-bottom:30px;border-bottom:2px solid #333;padding-bottom:15px}');
+  htmlParts.push('.header h1{font-size:24px;margin:0;color:#333}');
+  htmlParts.push('.header p{font-size:14px;color:#666;margin:5px 0 0}');
+  htmlParts.push('.header .date{font-size:12px;color:#999;margin:2px 0 0}');
+  htmlParts.push('.cliente-card{margin-bottom:25px;border:1px solid #ddd;border-radius:8px;padding:15px;page-break-inside:avoid;background:#f9f9f9}');
+  htmlParts.push('.cliente-header{display:flex;align-items:center;gap:15px;margin-bottom:12px;border-bottom:2px solid #888;padding-bottom:10px;flex-wrap:wrap}');
+  htmlParts.push('.cliente-nome{font-size:20px;font-weight:700;color:#333}');
+  htmlParts.push('.cliente-tip{font-size:12px;color:#666;background:#eee;padding:2px 10px;border-radius:12px}');
+  htmlParts.push('.cliente-cf{font-size:11px;color:#888}');
+  htmlParts.push('.adp-row{display:grid;grid-template-columns:180px 1fr;gap:10px;padding:6px 10px;border-radius:4px;background:#fff;border:1px solid #eee;align-items:center;margin-bottom:4px}');
+  htmlParts.push('.adp-nome{font-weight:600;font-size:13px;color:#333}');
+  htmlParts.push('.adp-codice{font-size:10px;color:#999;font-weight:400;display:block}');
+  htmlParts.push('.adp-stato{font-size:13px;font-weight:700;min-width:80px}');
+  htmlParts.push('.adp-periodi{display:flex;flex-wrap:wrap;align-items:center;gap:4px}');
+  htmlParts.push('.periodo-chip{display:inline-block;margin:1px 2px;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600}');
+  htmlParts.push('.adp-scadenze{font-size:10px;color:#999;margin-left:4px}');
+  htmlParts.push('.no-data{padding:10px;text-align:center;color:#999;font-size:13px;background:#fff;border-radius:4px;border:1px dashed #ddd}');
+  htmlParts.push('.footer{text-align:center;margin-top:30px;padding-top:15px;border-top:1px solid #ddd;font-size:11px;color:#999}');
+  htmlParts.push('.stato-done{color:#2e7d32}');
+  htmlParts.push('.stato-partial{color:#f9a825}');
+  htmlParts.push('.stato-todo{color:#c62828}');
+  htmlParts.push('.stato-na{color:#888}');
+  htmlParts.push('.bg-done{background:#e8f5e9;border-color:#a5d6a7}');
+  htmlParts.push('.bg-partial{background:#fff8e1;border-color:#ffcc02}');
+  htmlParts.push('.bg-todo{background:#ffebee;border-color:#ef9a9a}');
+  htmlParts.push('.bg-na{background:#f5f5f5;border-color:#e0e0e0}');
+  htmlParts.push('</style></head><body>');
+  
+  htmlParts.push('<div class="header"><h1>🧮 Sintesi Adempimenti ' + state.anno + '</h1>');
+  htmlParts.push('<p>Lista completa di tutti gli adempimenti per cliente</p>');
+  htmlParts.push('<div class="date">Stampato il ' + new Date().toLocaleDateString('it-IT') + ' alle ' + new Date().toLocaleTimeString('it-IT') + '</div></div>');
+
+  allClienti.forEach(function(cliente) {
+    var tipColor = cliente.tipologia_colore || 
+      (typeof getTipologiaColor === "function" ? getTipologiaColor(cliente.tipologia_codice) : "#888");
     
-    // Intestazione
-    printContainer.innerHTML = `
-      <div style="text-align:center;margin-bottom:30px;border-bottom:2px solid #333;padding-bottom:15px;">
-        <h1 style="font-size:24px;margin:0;color:#333;">Sintesi Adempimenti ${state.anno}</h1>
-        <p style="font-size:14px;color:#666;margin:5px 0 0;">Lista completa di tutti gli adempimenti per cliente</p>
-        <p style="font-size:12px;color:#999;margin:2px 0 0;">Stampato il ${new Date().toLocaleDateString('it-IT')}</p>
-      </div>
-    `;
+    htmlParts.push('<div class="cliente-card">');
+    htmlParts.push('<div class="cliente-header" style="border-bottom-color:' + tipColor + '">');
+    htmlParts.push('<div class="cliente-nome">' + escAttr(cliente.nome) + '</div>');
+    htmlParts.push('<div class="cliente-tip">' + (cliente.tipologia_codice || '-') + '</div>');
+    if (cliente.codice_fiscale) {
+      htmlParts.push('<div class="cliente-cf">CF: ' + cliente.codice_fiscale + '</div>');
+    }
+    htmlParts.push('</div>');
 
-    // Prepara i dati
-    var allClienti = (state.clienti || []).filter(function(c) {
-      if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
-      return true;
-    }).sort(function(a, b) {
-      return (a.nome || "").localeCompare(b.nome || "", "it", { sensitivity: "base" });
-    });
-
-    var allAdp = (state.adempimenti || []).filter(function(a) {
-      return !a.anno_validita || parseInt(a.anno_validita) === parseInt(state.anno);
-    }).sort(function(a, b) {
-      return (a.nome || "").localeCompare(b.nome || "", "it", { sensitivity: "base" });
-    });
-
-    var lookup = {};
-    (state.sintesiData || []).forEach(function(r) {
-      var k = r.cliente_id + "|" + r.id_adempimento;
-      if (!lookup[k]) lookup[k] = [];
-      lookup[k].push(r);
-    });
-
-    // Genera la lista per ogni cliente
-    allClienti.forEach(function(cliente) {
-      var tipColor = cliente.tipologia_colore || 
-        (typeof getTipologiaColor === "function" ? getTipologiaColor(cliente.tipologia_codice) : "#888");
+    var hasData = false;
+    allAdp.forEach(function(adp) {
+      var key = cliente.id + "|" + adp.id;
+      var periodi = lookup[key] || [];
+      var st = _sintesiStatoCella(periodi);
       
-      var clienteHtml = `
-        <div style="margin-bottom:25px;border:1px solid #ddd;border-radius:8px;padding:15px;page-break-inside:avoid;background:#f9f9f9;">
-          <div style="display:flex;align-items:center;gap:15px;margin-bottom:12px;border-bottom:2px solid ${tipColor};padding-bottom:10px;">
-            <div style="font-size:20px;font-weight:700;color:#333;">${escAttr(cliente.nome)}</div>
-            <div style="font-size:12px;color:#666;background:${tipColor}22;padding:2px 10px;border-radius:12px;border:1px solid ${tipColor};">${cliente.tipologia_codice || '-'}</div>
-            ${cliente.codice_fiscale ? `<div style="font-size:11px;color:#888;">CF: ${cliente.codice_fiscale}</div>` : ''}
-          </div>
-          <div style="display:grid;grid-template-columns:1fr;gap:6px;">
-      `;
-
-      var hasData = false;
-      allAdp.forEach(function(adp) {
-        var key = cliente.id + "|" + adp.id;
-        var periodi = lookup[key] || [];
-        var st = _sintesiStatoCella(periodi);
-        
-        if (st.kind === "na" && periodi.length === 0) {
-          // Non mostrare gli N/A senza periodi
-          return;
-        }
-
-        hasData = true;
-        var sortedP = periodi.slice().sort(function(a, b) {
-          if (a.mese != null && b.mese != null) return a.mese - b.mese;
-          if (a.trimestre != null && b.trimestre != null) return a.trimestre - b.trimestre;
-          if (a.semestre != null && b.semestre != null) return a.semestre - b.semestre;
-          return 0;
-        });
-
-        var statoIcon = st.kind === "done" ? "✅" : 
-                        st.kind === "partial" ? "🔄" : 
-                        st.kind === "todo" ? "⭕" : "➖";
-        var statoColor = st.kind === "done" ? "#2e7d32" : 
-                         st.kind === "partial" ? "#f9a825" : 
-                         st.kind === "todo" ? "#c62828" : "#888";
-
-        var periodiDetails = sortedP.map(function(p) {
-          var pStato = p.stato || "da_fare";
-          var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
-          var pLabel = typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
-          var scadenza = p.data_scadenza ? formattaDataItaliana(p.data_scadenza) : "-";
-          var completato = p.data_completamento ? formattaDataItaliana(p.data_completamento) : "-";
-          return `<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:4px;font-size:11px;background:${pInfo.color}22;border:1px solid ${pInfo.color}55;color:${pInfo.color};">${pInfo.icon} ${pLabel}</span>`;
-        }).join('');
-
-        var scadenzaDate = sortedP.map(function(p) {
-          return p.data_scadenza ? formattaDataItaliana(p.data_scadenza) : '-';
-        }).filter(function(d) { return d !== '-'; });
-
-        clienteHtml += `
-          <div style="display:grid;grid-template-columns:180px 1fr;gap:10px;padding:6px 10px;border-radius:4px;background:#fff;border:1px solid #eee;align-items:center;">
-            <div style="font-weight:600;font-size:13px;color:#333;">
-              ${escAttr(adp.nome)}
-              <span style="font-size:10px;color:#999;font-weight:400;display:block;">${escAttr(adp.codice || '')}</span>
-            </div>
-            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
-              <span style="font-size:13px;font-weight:700;color:${statoColor};min-width:80px;">${statoIcon} ${st.label}</span>
-              ${periodi.length > 0 ? `<span style="font-size:11px;color:#888;">${periodi.length} periodi</span>` : ''}
-              ${periodiDetails}
-              ${scadenzaDate.length > 0 ? `<span style="font-size:10px;color:#999;margin-left:4px;">📅 ${scadenzaDate.join(', ')}</span>` : ''}
-            </div>
-          </div>
-        `;
+      if (st.kind === "na" && periodi.length === 0) return;
+      hasData = true;
+      
+      var sortedP = periodi.slice().sort(function(a, b) {
+        if (a.mese != null && b.mese != null) return a.mese - b.mese;
+        if (a.trimestre != null && b.trimestre != null) return a.trimestre - b.trimestre;
+        if (a.semestre != null && b.semestre != null) return a.semestre - b.semestre;
+        return 0;
       });
 
-      if (!hasData) {
-        clienteHtml += `
-          <div style="padding:10px;text-align:center;color:#999;font-size:13px;background:#fff;border-radius:4px;border:1px dashed #ddd;">
-            Nessun adempimento registrato per questo cliente nell'anno ${state.anno}
-          </div>
-        `;
+      var statoIcon = st.kind === "done" ? "✅" : 
+                      st.kind === "partial" ? "🔄" : 
+                      st.kind === "todo" ? "⭕" : "➖";
+      var statoClass = "stato-" + st.kind;
+      var bgClass = "bg-" + st.kind;
+
+      var periodiDetails = sortedP.map(function(p) {
+        var pStato = p.stato || "da_fare";
+        var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
+        var pLabel = typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
+        return '<span class="periodo-chip" style="background:' + pInfo.color + '22;border:1px solid ' + pInfo.color + '55;color:' + pInfo.color + ';">' + pInfo.icon + ' ' + pLabel + '</span>';
+      }).join('');
+
+      var scadenzaDates = sortedP.map(function(p) {
+        return p.data_scadenza ? formattaDataItaliana(p.data_scadenza) : null;
+      }).filter(function(d) { return d; });
+
+      htmlParts.push('<div class="adp-row ' + bgClass + '">');
+      htmlParts.push('<div class="adp-nome">' + escAttr(adp.nome) + '<span class="adp-codice">' + escAttr(adp.codice || '') + '</span></div>');
+      htmlParts.push('<div><div class="adp-periodi">');
+      htmlParts.push('<span class="adp-stato ' + statoClass + '">' + statoIcon + ' ' + st.label + '</span>');
+      if (periodi.length > 0) {
+        htmlParts.push('<span style="font-size:11px;color:#888;">' + periodi.length + ' periodi</span>');
       }
-
-      clienteHtml += `
-          </div>
-        </div>
-      `;
-
-      printContainer.innerHTML += clienteHtml;
+      htmlParts.push(periodiDetails);
+      if (scadenzaDates.length > 0) {
+        htmlParts.push('<span class="adp-scadenze">📅 ' + scadenzaDates.join(', ') + '</span>');
+      }
+      htmlParts.push('</div></div></div>');
     });
 
-    // Footer
-    printContainer.innerHTML += `
-      <div style="text-align:center;margin-top:30px;padding-top:15px;border-top:1px solid #ddd;font-size:11px;color:#999;">
-        Studio Fiscale - Sintesi Adempimenti ${state.anno} - Pagina 1/1
-      </div>
-    `;
+    if (!hasData) {
+      htmlParts.push('<div class="no-data">Nessun adempimento registrato per questo cliente nell\'anno ' + state.anno + '</div>');
+    }
+    htmlParts.push('</div>');
+  });
 
-    // Sostituisci il contenuto con la lista per la stampa
-    var container = document.getElementById("content");
-    var originalContent = container.innerHTML;
-    container.innerHTML = printContainer.innerHTML;
+  htmlParts.push('<div class="footer">Studio Fiscale - Sintesi Adempimenti ' + state.anno + ' - Pagina 1/1</div>');
+  htmlParts.push('</body></html>');
 
-    // Stampa
-    setTimeout(function() {
-      window.print();
+  var html = htmlParts.join('');
 
-      // Ripristina il contenuto originale
-      setTimeout(function() {
-        // Ripristina i filtri
-        _sintesiClienteFiltro = statoPrecedente.clienteFiltro;
-        setSharedClienteSearch(statoPrecedente.searchTerm || "");
-        state.sintesiStatoFiltro = statoPrecedente.statoFiltro;
-
-        var clienteSel = document.getElementById("sint-filtro-cliente");
-        if (clienteSel) {
-          clienteSel.value = _sintesiClienteFiltro || "";
-          if (clienteSel._ssRefresh) clienteSel._ssRefresh();
-        }
-
-        var searchEl = document.getElementById("sint-search-cliente");
-        if (searchEl) searchEl.value = statoPrecedente.searchTerm || "";
-
-        if (adpSel) {
-          Array.from(adpSel.options).forEach(function (o) {
-            o.selected = statoPrecedente.adpSelezionati.indexOf(o.value) !== -1;
-          });
-          if (adpSel._ssRefresh) adpSel._ssRefresh();
-        }
-
-        // Rigenera la tabella originale
-        renderSintesiTabella();
-      }, 100);
-    }, 300);
+  // Apri finestra di stampa
+  var win = window.open('', '_blank', 'width=1100,height=800,scrollbars=yes');
+  if (!win) {
+    showNotif("⚠️ Il browser ha bloccato la finestra popup. Permetti i popup per questa pagina.", "error");
+    return;
   }
+  win.document.write(html);
+  win.document.close();
+  win.onload = function() {
+    setTimeout(function() { win.print(); }, 300);
+  };
 }
 window.stampaSintesiCompleta = stampaSintesiCompleta;
 
