@@ -112,14 +112,8 @@ function _renderSintesiTopbar() {
     '<select class="select topbar-select" id="sint-filtro-cliente" onchange="onSintesiClienteChange()" title="Filtra per cliente" style="min-width:180px;max-width:250px">' +
     clientiOpts +
     "</select>" +
-    '<div class="search-wrap" style="width:200px"><span class="search-icon">🔍</span><input class="input" id="sint-search-cliente" placeholder="Cerca nome, CF, P.IVA…" value="' +
-    escAttr(getSharedClienteSearch()) +
-    '" oninput="onSintesiSearchInput(this.value)" style="font-size:13px"></div>' +
-    '<select class="select" id="sint-filtro-adp" multiple style="width:200px;font-size:13px" onchange="applySintesiFiltriLocali()" title="Mostra in tabella solo gli adempimenti selezionati" data-placeholder="📋 Tutti gli adempimenti">' +
-    "</select>" +
     '<button class="btn btn-sm btn-primary" onclick="resetSintesiFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>' +
-    '<button class="btn btn-sm btn-stampa-completa" onclick="stampaSintesiCompleta()" title="Stampa lista completa con TUTTI gli adempimenti per TUTTI i clienti" style="font-size:13px;background:var(--accent);color:#fff;border-color:var(--accent)">🖨️ Stampa Lista Completa</button>' +
-    '<button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>';
+    '<button class="btn btn-sm btn-stampa-completa" onclick="stampaSintesiCompleta()" title="Stampa lista completa con TUTTI gli adempimenti per TUTTI i clienti" style="font-size:13px;background:var(--accent);color:#fff;border-color:var(--accent)">🖨️ Stampa</button>'
 
   if (typeof initSearchableSelect === "function") {
     setTimeout(function () {
@@ -193,7 +187,6 @@ function loadSintesi() {
   }
   socket.emit("get:sintesi", { anno: state.anno });
   
-  // Ascolta la risposta
   socket.once("res:sintesi", function(data) {
     if (data.success) {
       state.sintesiData = data.data;
@@ -283,7 +276,7 @@ function resetSintesiFiltri() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FILTRO PER STATO CELLA
+// FILTRO PER STATO CELLA - NASCONDE LE CELLE NON CORRISPONDENTI
 // ═══════════════════════════════════════════════════════════════
 
 function toggleSintesiStatoFiltro(kind) {
@@ -349,7 +342,7 @@ function _sintesiOrdinaPeriodi(periodi) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RENDER TABELLA PRINCIPALE - CON FILTRI STATO CORRETTI
+// RENDER TABELLA PRINCIPALE - NASCONDE LE CELLE NON FILTRATE
 // ═══════════════════════════════════════════════════════════════
 
 function renderSintesiTabella() {
@@ -432,13 +425,12 @@ function renderSintesiTabella() {
     });
   });
 
-  // ─── FILTRO STATO: determina quali clienti mostrare ──────────
+  // ─── FILTRO STATO: mostra clienti con ALMENO una cella corrispondente ──
   var statoFiltriAttivi = _sintesiStatoFiltriAttivi();
   var clientiVisibili = clienti;
   
   if (statoFiltriAttivi.length > 0) {
     clientiVisibili = clienti.filter(function(c) {
-      // Il cliente è visibile se HA ALMENO UNA cella che corrisponde a uno dei filtri attivi
       for (var j = 0; j < columns.length; j++) {
         var a = columns[j];
         var st = statiClienti[c.id][a.id];
@@ -516,7 +508,7 @@ function renderSintesiTabella() {
     _sintStatBoxHtml("na", naCells, "var(--t3)", "➖ N/A") +
     "</div>" +
     "</div>" +
-    '<div style="font-size:11px;color:var(--t3);margin-top:8px">📖 Filtri stato: mostrano i clienti che hanno ALMENO un adempimento nello stato selezionato</div>' +
+    '<div style="font-size:11px;color:var(--t3);margin-top:8px">📖 Filtri stato: mostrano le celle che corrispondono allo stato selezionato. Le altre celle sono nascoste.</div>' +
     "</div>";
 
   // ─── Legenda ───────────────────────────────────────────────────
@@ -547,7 +539,7 @@ function renderSintesiTabella() {
     (statoFiltriAttivi.length > 0
       ? '<button type="button" class="sint-legend-clear" onclick="resetSintesiStatoFiltro()">✕ Rimuovi filtro stato</button>'
       : "") +
-    '<span style="color:var(--t3);font-size:11px;">· Clicca per filtrare i clienti</span>' +
+    '<span style="color:var(--t3);font-size:11px;">· Clicca per filtrare le celle</span>' +
     "</div>";
 
   // ─── Tabella ───────────────────────────────────────────────────
@@ -599,8 +591,9 @@ function renderSintesiTabella() {
         var key = c.id + "|" + a.id;
         var st = statiClienti[c.id][a.id] || { kind: "na", label: "N/A" };
         var isActive = state.sintesiActiveCellKey === key;
-        // La cella è "dim" se NON corrisponde ai filtri attivi
-        var isDim = statoFiltriAttivi.length > 0 && statoFiltriAttivi.indexOf(st.kind) === -1;
+        
+        // Se ci sono filtri attivi, nascondi le celle che NON corrispondono
+        var isHidden = statoFiltriAttivi.length > 0 && statoFiltriAttivi.indexOf(st.kind) === -1;
         
         var periodi = lookup[key] || [];
         var sortedP = periodi.slice().sort(function (a, b) {
@@ -651,17 +644,16 @@ function renderSintesiTabella() {
           cellContent = st.kind === "na" ? '<span style="font-size:11px">N/A</span>' : "<span>—</span>";
         }
 
-        // Aggiungi una classe per lo stato della cella
         var cellClass = "sint-cell sint-cell-" + st.kind;
         if (isActive) cellClass += " active";
-        if (isDim) cellClass += " sint-cell-dim";
+        if (isHidden) cellClass += " sint-cell-hidden";
 
         cellsHtml +=
           '<td class="sint-td"><button type="button" class="' + cellClass +
           '" data-key="' + key +
           '" onclick="sintesiToggleDettaglio(\'' + key + "'," + c.id + "," + a.id + ')"' +
           ' title="' + escAttr(c.nome + " · " + a.nome + " — " + st.label) +
-          (isDim ? ' (nascosto dal filtro)' : '') + '">' +
+          (isHidden ? ' (nascosto dal filtro)' : '') + '">' +
           cellContent +
           "</button></td>";
       }
@@ -859,14 +851,12 @@ function _sintesiDettScrollTo(idx) {
 window._sintesiDettScrollTo = _sintesiDettScrollTo;
 
 // ═══════════════════════════════════════════════════════════════
-// STAMPA LISTA COMPLETA - VELOCE (usa finestra separata)
+// STAMPA LISTA COMPLETA - VELOCE
 // ═══════════════════════════════════════════════════════════════
 
 function stampaSintesiCompleta() {
-  // Usa i dati in cache
   var data = _sintesiCache;
   
-  // Se i dati non sono in cache, caricali
   if (!data.sintesiData || data.sintesiData.length === 0) {
     showNotif("⏳ Caricamento dati in corso...", "info");
     socket.emit("get:sintesi", { anno: state.anno });
@@ -904,7 +894,6 @@ function _generaFinestraStampa() {
     lookup[k].push(r);
   });
 
-  // Costruisci HTML velocemente
   var htmlParts = [];
   htmlParts.push('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sintesi Adempimenti ' + state.anno + '</title><style>');
   htmlParts.push('body{font-family:Arial,sans-serif;padding:20px;max-width:1200px;margin:0 auto}');
@@ -1011,7 +1000,6 @@ function _generaFinestraStampa() {
 
   var html = htmlParts.join('');
 
-  // Apri finestra di stampa
   var win = window.open('', '_blank', 'width=1100,height=800,scrollbars=yes');
   if (!win) {
     showNotif("⚠️ Il browser ha bloccato la finestra popup. Permetti i popup per questa pagina.", "error");
