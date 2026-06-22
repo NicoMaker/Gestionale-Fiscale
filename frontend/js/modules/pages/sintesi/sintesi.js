@@ -546,14 +546,34 @@ function renderSintesiTabella() {
         var isDim =
           statoFiltroAttivi.length > 0 &&
           statoFiltroAttivi.indexOf(st.kind) === -1;
-        var cellContent =
-          st.kind === "done"
-            ? "✓"
-            : st.kind === "na"
-              ? "N/A"
-              : st.kind === "partial"
-                ? st.label
-                : "—";
+        // ─── Mini pill grid: mostra i periodi direttamente nella cella ───
+        var miniPills = "";
+        if (periodi.length > 0) {
+          var sortedP = periodi.slice().sort(function(a, b) {
+            if (a.mese != null && b.mese != null) return a.mese - b.mese;
+            if (a.trimestre != null && b.trimestre != null) return a.trimestre - b.trimestre;
+            if (a.semestre != null && b.semestre != null) return a.semestre - b.semestre;
+            return 0;
+          });
+          var doneCount = 0;
+          miniPills = sortedP.map(function(p) {
+            var pStato = p.stato || "da_fare";
+            if (pStato === "completato") doneCount++;
+            var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
+            var pShort = typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
+            var bgColor = pStato === "completato" ? "var(--green)" :
+                          pStato === "in_corso"   ? "var(--yellow)" :
+                          pStato === "n_a"        ? "var(--t3)" : "var(--red)";
+            return '<span style="display:inline-flex;align-items:center;gap:2px;padding:2px 5px;border-radius:4px;font-size:10px;font-weight:700;background:' + bgColor + '22;border:1px solid ' + bgColor + '55;color:' + bgColor + ';line-height:1.2" title="' + escAttr(pShort + ' — ' + pInfo.label) + '">' +
+              pInfo.icon + ' ' + escAttr(pShort) +
+              '</span>';
+          }).join("");
+          miniPills = '<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:4px">' + miniPills + '</div>' +
+            '<div style="font-size:10px;color:var(--t3);text-align:center;margin-top:3px">' + doneCount + '/' + periodi.length + '</div>';
+        }
+        var cellContent = periodi.length > 0 ? miniPills :
+          (st.kind === "na" ? '<span style="color:var(--t3);font-size:11px">N/A</span>' :
+           '<span style="color:var(--t3)">—</span>');
         cellsHtml +=
           '<td class="sint-td"><button type="button" class="sint-cell sint-cell-' +
           st.kind +
@@ -569,7 +589,7 @@ function renderSintesiTabella() {
           a.id +
           ')" title="' +
           escAttr(c.nome + " · " + a.nome + " — " + st.label) +
-          '">' +
+          '" style="min-width:80px;height:auto;padding:6px 4px;display:flex;flex-direction:column;align-items:center">' +
           cellContent +
           "</button></td>";
       }
