@@ -158,7 +158,7 @@ function renderCestinoTabella(container, filteredData) {
       <div class="empty">
         <div class="empty-icon">🗑️</div>
         <p style="font-size:15px;margin-bottom:6px">Il cestino è vuoto</p>
-        <p style="color:var(--text3);font-size:13px">Gli elementi eliminati appariranno qui per 14 giorni prima di essere rimossi definitivamente.</p>
+        <p style="color:var(--text3);font-size:13px">Gli elementi eliminati appariranno qui per 15 giorni prima di essere rimossi definitivamente.</p>
       </div>`;
     return;
   }
@@ -196,11 +196,7 @@ function renderCestinoTabella(container, filteredData) {
         dataEl.getDate(),
       );
       const giorni = Math.round((oggi - eliminatoIl) / (1000 * 60 * 60 * 24));
-      const rimanenti = 14 - giorni;
-
-      // Gli elementi con 0 giorni rimasti vengono eliminati stanotte dal backend:
-      // non li mostriamo nel cestino per evitare di visualizzare "0 giorni rimasti"
-      if (rimanenti <= 0) return null;
+      const rimanenti = 15 - giorni;
 
       const dataFmt = dataEl.toLocaleDateString("it-IT", {
         day: "2-digit",
@@ -306,7 +302,6 @@ function renderCestinoTabella(container, filteredData) {
         </td>
       </tr>`;
     })
-    .filter(Boolean)
     .join("");
 
   const bulkBar = qualcunoSelezionato
@@ -342,7 +337,7 @@ function renderCestinoTabella(container, filteredData) {
   container.innerHTML = `
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <span style="font-size:13px;color:var(--text2)">${filteredData.length} element${filteredData.length === 1 ? "o" : "i"}${cestinoFiltro.tabelle.size > 0 ? " (filtrati)" : " nel cestino"}</span>
-      <span style="font-size:12px;color:var(--text3)">· Gli elementi vengono eliminati automaticamente dopo 14 giorni</span>
+      <span style="font-size:12px;color:var(--text3)">· Gli elementi vengono eliminati automaticamente dopo 15 giorni</span>
       <div style="flex:1"></div>
       ${
         tuttiRipristinabili.length > 0
