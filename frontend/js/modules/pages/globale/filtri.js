@@ -434,7 +434,7 @@ function renderGlobalePage() {
     initSearchableSelect("glob-sel-cliente");
     populateGlobaleClienti();
 
-    // ⭐ MODIFICA: Gestione pre‑filtri senza manipolare direttamente il select
+    // Gestione pre‑filtri multipli
     var preFiltroMulti =
       state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length
         ? state.globalePreFiltroAdpMulti
@@ -443,7 +443,6 @@ function renderGlobalePage() {
           : null;
 
     if (preFiltroMulti) {
-      // Imposta i pre‑filtri nello state e lascia che loadGlobale li usi
       state.globalePreFiltroAdpMulti = preFiltroMulti;
       state.globalePreFiltroAdp = "";
       loadGlobale();
@@ -511,7 +510,6 @@ function onGlobaleClienteChange() {
   applyGlobaleFiltri();
 }
 
-// ⭐ MODIFICA: loadGlobale ora usa state.globalePreFiltroAdpMulti come fallback
 function loadGlobale() {
   var filtri = {};
   var adpSel = document.getElementById("glob-filtro-adp");
@@ -524,8 +522,6 @@ function loadGlobale() {
       })
     : [];
 
-  // Costruisci il filtro adempimento: priorità a ciò che è selezionato nel select,
-  // altrimenti usa i pre‑filtri Multi (se presenti), altrimenti il singolo pre‑filtro.
   if (adpValori.length) {
     filtri.adempimento = adpValori;
   } else if (state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length) {
@@ -544,16 +540,11 @@ function loadGlobale() {
 
 var applyGlobaleFiltriDebounced = debounce(function () {
   state.globalePreFiltroAdp = "";
-  // Non resettare Multi qui, altrimenti perderemmo i pre‑filtri se il select è vuoto
   loadGlobale();
 }, 300);
 
 function applyGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
-  // Non resettare Multi qui: se l'utente ha deselezionato tutto dal select,
-  // i pre‑filtri non devono riapparire; ma se il select è vuoto, loadGlobale
-  // userà eventuali pre‑filtri rimasti. Per evitare che i pre‑filtri persistano
-  // dopo che l'utente interagisce manualmente, li azzeriamo in renderGlobaleHeader()
   loadGlobale();
 }
 
@@ -612,7 +603,6 @@ function renderGlobaleHeader() {
       }),
     );
 
-    // Aggiungi eventuali pre‑filtri ancora presenti (singolo o multiplo)
     if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "")
       currentValues.add(state.globalePreFiltroAdp);
     if (
@@ -624,7 +614,6 @@ function renderGlobaleHeader() {
       });
     }
 
-    // Costruisci la lista degli adempimenti disponibili
     var adpList;
     if (state.adempimenti && state.adempimenti.length) {
       var nomiSet = {};
@@ -669,9 +658,7 @@ function renderGlobaleHeader() {
     if (!adpSel.dataset.ssinit) initSearchableMultiSelect("glob-filtro-adp");
     else if (adpSel._ssRefresh) adpSel._ssRefresh();
 
-    // ⭐ MODIFICA: Dopo aver popolato il select, azzera i pre‑filtri
-    // in modo che non vengano riutilizzati in future chiamate (l'utente ora ha
-    // le selezioni visibili nel select).
+    // Azzera i pre‑filtri dopo averli applicati
     state.globalePreFiltroAdp = "";
     state.globalePreFiltroAdpMulti = null;
   }

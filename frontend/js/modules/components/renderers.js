@@ -635,3 +635,5 @@ function renderClienteDatiRiferimento(cliente) {
   if (!items.length) return "";
   return `<div class="cpc-dati-riferimento"><div class="dati-ref-title">📋 Dati di Riferimento</div><div class="dati-ref-grid">${items.join("")}</div></div>`;
 }
+
+
