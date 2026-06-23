@@ -198,6 +198,9 @@ function renderCestinoTabella(container, filteredData) {
       const giorni = Math.round((oggi - eliminatoIl) / (1000 * 60 * 60 * 24));
       const rimanenti = 15 - giorni;
 
+      // 0 giorni rimasti = verrà eliminato stanotte: non mostrarlo
+      if (rimanenti <= 0) return null;
+
       const dataFmt = dataEl.toLocaleDateString("it-IT", {
         day: "2-digit",
         month: "2-digit",
@@ -302,6 +305,7 @@ function renderCestinoTabella(container, filteredData) {
         </td>
       </tr>`;
     })
+    .filter(Boolean)
     .join("");
 
   const bulkBar = qualcunoSelezionato
