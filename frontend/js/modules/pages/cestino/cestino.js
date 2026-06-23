@@ -597,14 +597,18 @@ function selezionaTuttiDashAdpVisibili() {
   // Seleziona tutte le card attualmente visibili (dopo filtri stato/search)
   var grid = document.getElementById("dash-adp-grid");
   if (!grid) return;
-  var cardNomi = Array.from(grid.querySelectorAll(".dash-adp-card")).map(function (card) {
-    // Il nome è nel div .dash-adp-nome
-    var nomeEl = card.querySelector(".dash-adp-nome");
-    return nomeEl ? nomeEl.textContent.trim() : null;
-  }).filter(Boolean);
+  var cardNomi = Array.from(grid.querySelectorAll(".dash-adp-card"))
+    .map(function (card) {
+      // Il nome è nel div .dash-adp-nome
+      var nomeEl = card.querySelector(".dash-adp-nome");
+      return nomeEl ? nomeEl.textContent.trim() : null;
+    })
+    .filter(Boolean);
 
   var sel = _getDashSelezionati();
-  cardNomi.forEach(function (nome) { sel.add(nome); });
+  cardNomi.forEach(function (nome) {
+    sel.add(nome);
+  });
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
 

@@ -524,7 +524,10 @@ function loadGlobale() {
 
   if (adpValori.length) {
     filtri.adempimento = adpValori;
-  } else if (state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length) {
+  } else if (
+    state.globalePreFiltroAdpMulti &&
+    state.globalePreFiltroAdpMulti.length
+  ) {
     filtri.adempimento = state.globalePreFiltroAdpMulti.slice();
   } else if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "") {
     filtri.adempimento = [state.globalePreFiltroAdp];
