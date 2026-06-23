@@ -5,7 +5,10 @@ const {
   queryOne,
 } = require("../database");
 
-const GIORNI_RETENTION = 15;
+// Eliminazione dopo 14 giorni completi: la pulizia notturna avviene
+// nella notte tra il 14° e il 15° giorno, così il badge non mostra mai
+// "0 giorni rimasti" (il frontend nasconde già gli elementi con ≤ 0 giorni).
+const GIORNI_RETENTION = 14;
 
 function spostaInCestino({ tabella, record_id, dati_json, eliminato_da }) {
   return runQueryAndGetId(
@@ -51,9 +54,9 @@ function svuotaCestino() {
 }
 
 function eliminaScadutiCestino() {
-  // Usa < (strettamente minore): l'elemento viene cancellato solo dopo che
-  // il 15° giorno è completamente trascorso, così il badge mostra sempre
-  // il numero corretto fino all'ultimo secondo dell'ultimo giorno.
+  // Eliminazione nella notte tra il 14° e il 15° giorno (GIORNI_RETENTION=14).
+  // Il frontend già nasconde gli elementi con rimanenti ≤ 0, quindi
+  // il badge non mostra mai "0 giorni rimasti".
   const soglia = `datetime('now', '-${GIORNI_RETENTION} days')`;
   const result = queryOne(
     `SELECT COUNT(*) as cnt FROM cestino WHERE data_eliminazione < ${soglia}`,
