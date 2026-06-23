@@ -121,7 +121,7 @@ function toggleGlobTipFiltroPanel(event) {
     event.preventDefault();
   }
   _globTipFiltroPanelOpen = !_globTipFiltroPanelOpen;
-  _salvaFiltriGlobaleSuStorage(); // Salva stato pannello
+  _salvaFiltriGlobaleSuStorage();
   _aggiornaGlobPanelVisibility();
 }
 
@@ -131,7 +131,7 @@ function closeGlobTipFiltroPanel(event) {
     event.preventDefault();
   }
   _globTipFiltroPanelOpen = false;
-  _salvaFiltriGlobaleSuStorage(); // Salva stato pannello
+  _salvaFiltriGlobaleSuStorage();
   _aggiornaGlobPanelVisibility();
 }
 
@@ -139,7 +139,6 @@ function _aggiornaGlobPanelVisibility() {
   var container = document.getElementById("glob-tip-filtro-container");
   if (!container) return;
   container.style.display = _globTipFiltroPanelOpen ? "block" : "none";
-  // Impedisce che i click dentro il pannello salgano all'header e lo chiudano
   container.onclick = function (e) {
     e.stopPropagation();
   };
@@ -192,7 +191,6 @@ function clientePassaFiltroTipologie(c) {
   var allKeys =
     typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
 
-  // Se non ci sono filtri o tutti sono selezionati, mostra tutto
   if (
     activeFiltroKeys.size === 0 ||
     (allKeys.length > 0 && activeFiltroKeys.size === allKeys.length)
@@ -200,7 +198,6 @@ function clientePassaFiltroTipologie(c) {
     return true;
   }
 
-  // Se è stato selezionato "Nessuno" manualmente, nascondi tutto
   if (isNone) {
     return false;
   }
@@ -394,16 +391,10 @@ function renderGlobalePage() {
     initializeTipologieFilter();
   }
 
-  // Carica stato pannello da storage
   _caricaFiltriGlobaleDaStorage();
 
-  // Event listener per sincronizzazione filtri solo se siamo nella vista globale
   window.addEventListener("filtriTipologieAggiornati", function (e) {
-    // Verifica che siamo effettivamente nella vista globale prima di aggiornare
     if (document.getElementById("glob-tip-filtro-container")) {
-      // NON sovrascrivere _globTipFiltroPanelOpen con pannelloAperto di clienti.js:
-      // i due pannelli sono indipendenti e hanno stati separati.
-      // Aggiorna solo il contatore, non fare refresh completo del pannello
       _aggiornaGlobTipFiltroCounter();
       if (state.scadGlobale) renderGlobaleTabella(state.scadGlobale);
     }
@@ -442,31 +433,20 @@ function renderGlobalePage() {
     initSearchableMultiSelect("glob-filtro-adp");
     initSearchableSelect("glob-sel-cliente");
     populateGlobaleClienti();
+
+    // ⭐ MODIFICA: Gestione pre‑filtri senza manipolare direttamente il select
     var preFiltroMulti =
       state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length
         ? state.globalePreFiltroAdpMulti
         : state.globalePreFiltroAdp && state.globalePreFiltroAdp !== ""
           ? [state.globalePreFiltroAdp]
           : null;
+
     if (preFiltroMulti) {
-      var adpSel = document.getElementById("glob-filtro-adp");
-      if (adpSel) {
-        setTimeout(function () {
-          var valuesSet = {};
-          for (var i = 0; i < preFiltroMulti.length; i++)
-            valuesSet[preFiltroMulti[i]] = true;
-          Array.from(adpSel.options).forEach(function (o) {
-            o.selected = !!valuesSet[o.value];
-          });
-          if (adpSel._ssRefresh) adpSel._ssRefresh();
-          var filtri = { adempimento: preFiltroMulti.slice() };
-          socket.emit("get:scadenzario_globale", {
-            anno: state.anno,
-            filtri: filtri,
-          });
-          state.globalePreFiltroAdpMulti = null;
-        }, 150);
-      }
+      // Imposta i pre‑filtri nello state e lascia che loadGlobale li usi
+      state.globalePreFiltroAdpMulti = preFiltroMulti;
+      state.globalePreFiltroAdp = "";
+      loadGlobale();
     } else {
       loadGlobale();
     }
@@ -531,40 +511,59 @@ function onGlobaleClienteChange() {
   applyGlobaleFiltri();
 }
 
+// ⭐ MODIFICA: loadGlobale ora usa state.globalePreFiltroAdpMulti come fallback
 function loadGlobale() {
   var filtri = {};
   var adpSel = document.getElementById("glob-filtro-adp");
   var statoSel = document.getElementById("glob-filtro-stato");
   var clienteSearch = document.getElementById("glob-search-cliente");
+
   var adpValori = adpSel
     ? Array.from(adpSel.selectedOptions || []).map(function (o) {
         return o.value;
       })
     : [];
-  if (adpValori.length) filtri.adempimento = adpValori;
+
+  // Costruisci il filtro adempimento: priorità a ciò che è selezionato nel select,
+  // altrimenti usa i pre‑filtri Multi (se presenti), altrimenti il singolo pre‑filtro.
+  if (adpValori.length) {
+    filtri.adempimento = adpValori;
+  } else if (state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length) {
+    filtri.adempimento = state.globalePreFiltroAdpMulti.slice();
+  } else if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "") {
+    filtri.adempimento = [state.globalePreFiltroAdp];
+  }
+
   if (statoSel && statoSel.value) filtri.stato = statoSel.value;
   if (clienteSearch && clienteSearch.value) filtri.search = clienteSearch.value;
   if (state.globaleSelectedCliente && state.globaleSelectedCliente !== "")
     filtri.cliente_id = parseInt(state.globaleSelectedCliente);
-  if (state.globalePreFiltroAdp && !filtri.adempimento)
-    filtri.adempimento = [state.globalePreFiltroAdp];
+
   socket.emit("get:scadenzario_globale", { anno: state.anno, filtri: filtri });
 }
 
 var applyGlobaleFiltriDebounced = debounce(function () {
   state.globalePreFiltroAdp = "";
+  // Non resettare Multi qui, altrimenti perderemmo i pre‑filtri se il select è vuoto
   loadGlobale();
 }, 300);
+
 function applyGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
+  // Non resettare Multi qui: se l'utente ha deselezionato tutto dal select,
+  // i pre‑filtri non devono riapparire; ma se il select è vuoto, loadGlobale
+  // userà eventuali pre‑filtri rimasti. Per evitare che i pre‑filtri persistano
+  // dopo che l'utente interagisce manualmente, li azzeriamo in renderGlobaleHeader()
   loadGlobale();
 }
+
 function applyGlobaleFiltriLocali() {
   if (state.scadGlobale) renderGlobaleTabella(state.scadGlobale);
 }
 
 function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
+  state.globalePreFiltroAdpMulti = null;
   state.globaleSelectedCliente = "";
   setSharedClienteSearch("");
   var adpSel = document.getElementById("glob-filtro-adp");
@@ -612,6 +611,8 @@ function renderGlobaleHeader() {
         return o.value;
       }),
     );
+
+    // Aggiungi eventuali pre‑filtri ancora presenti (singolo o multiplo)
     if (state.globalePreFiltroAdp && state.globalePreFiltroAdp !== "")
       currentValues.add(state.globalePreFiltroAdp);
     if (
@@ -623,38 +624,33 @@ function renderGlobaleHeader() {
       });
     }
 
-    // ⭐ Usa l'elenco COMPLETO degli adempimenti definiti (state.adempimenti),
-    // non quello derivato dai dati già filtrati (st.adempimenti). Altrimenti
-    // selezionando una sola voce, le altre sparirebbero dalla tendina stessa.
+    // Costruisci la lista degli adempimenti disponibili
     var adpList;
     if (state.adempimenti && state.adempimenti.length) {
       var nomiSet = {};
       var _annoGlob = state.anno || new Date().getFullYear();
       state.adempimenti.forEach(function (a) {
         if (!a || !a.nome) return;
-        // Escludi adempimenti validi solo per un anno diverso da quello corrente
         if (a.anno_validita != null && Number(a.anno_validita) !== _annoGlob)
           return;
         nomiSet[a.nome] = true;
       });
-      // Aggiunge eventuali nomi presenti solo nei dati filtrati correnti
-      // (es. adempimenti storici non più "attivi" ma con record esistenti)
       Array.from(st.adempimenti || []).forEach(function (n) {
         nomiSet[n] = true;
       });
       adpList = Object.keys(nomiSet);
     } else {
       adpList = Array.from(st.adempimenti || []);
-      // Lista completa non ancora disponibile: la richiediamo ora,
-      // così al prossimo aggiornamento la tendina mostrerà tutte le voci.
       if (!state._globAdpFetchStarted) {
         state._globAdpFetchStarted = true;
         socket.emit("get:adempimenti");
       }
     }
+
     adpList.sort(function (a, b) {
       return a.localeCompare(b, "it", { sensitivity: "base" });
     });
+
     var options = "";
     for (var i = 0; i < adpList.length; i++) {
       var adpName = adpList[i];
@@ -669,9 +665,15 @@ function renderGlobaleHeader() {
         "</option>";
     }
     adpSel.innerHTML = options;
+
     if (!adpSel.dataset.ssinit) initSearchableMultiSelect("glob-filtro-adp");
     else if (adpSel._ssRefresh) adpSel._ssRefresh();
+
+    // ⭐ MODIFICA: Dopo aver popolato il select, azzera i pre‑filtri
+    // in modo che non vengano riutilizzati in future chiamate (l'utente ora ha
+    // le selezioni visibili nel select).
     state.globalePreFiltroAdp = "";
+    state.globalePreFiltroAdpMulti = null;
   }
 }
 
@@ -704,7 +706,7 @@ function navigaAdempimento(direzione) {
   var newIdx;
   if (direzione === -1) newIdx = idx <= 0 ? lista.length - 1 : idx - 1;
   else newIdx = idx >= lista.length - 1 || idx === -1 ? 0 : idx + 1;
-  // La navigazione prev/next isola un singolo adempimento alla volta
+
   Array.from(adpSel.options).forEach(function (o) {
     o.selected = o.value === lista[newIdx];
   });
@@ -718,22 +720,17 @@ function navigaAdempimento(direzione) {
 // ═══════════════════════════════════════════════════════════════
 
 function _buildPeriodiOrdinatiHtml(periodi) {
-  // ⭐ ORDINA i periodi: data_scadenza ASC (29/04 prima di 30/05), parità → alfabetico
   var periodiOrdinati = periodi.slice().sort(function (a, b) {
-    // Ordine ASC: data più vicina (es. 29/04) prima di data più lontana (es. 30/05)
     if (a.data_scadenza && b.data_scadenza) {
       var dateA = new Date(a.data_scadenza);
       var dateB = new Date(b.data_scadenza);
       if (dateA - dateB !== 0) return dateA - dateB;
-      // Parità di data → alfabetico per nome adempimento
       return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
         sensitivity: "base",
       });
     }
-    // Chi ha data va prima di chi non ha data
     if (a.data_scadenza) return -1;
     if (b.data_scadenza) return 1;
-    // Se nessuna data → alfabetico
     return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
       sensitivity: "base",
     });
