@@ -26,6 +26,10 @@ socket.on("broadcast:scadenzario_updated", ({ id_cliente, anno }) => {
     if (!id_cliente || state.selectedCliente.id === id_cliente)
       if (!anno || state.anno === anno) loadScadenzario();
   }
+  // 🔄 Ricarica la sintesi se siamo in quella pagina
+  if (state.page === "sintesi") {
+    if (!anno || state.anno === anno) loadSintesi();
+  }
 });
 
 socket.on("broadcast:globale_updated", ({ anno }) => {
@@ -54,6 +58,8 @@ socket.on("broadcast:clienti_updated", () => {
       }
     }, 100);
   }
+  // 🔄 Ricarica la sintesi
+  if (state.page === "sintesi") loadSintesi();
 });
 
 socket.on("broadcast:appunti_updated", () => {
@@ -61,10 +67,6 @@ socket.on("broadcast:appunti_updated", () => {
     filterAppunti();
 });
 
-// Un adempimento è stato creato/modificato/eliminato altrove (es. cambiato
-// l'anno_validita): lo state locale va ricaricato, altrimenti le viste già
-// aperte (dashboard, modale applica, pagina adempimenti) continuano a
-// mostrare dati vecchi finché non si ricarica manualmente la pagina.
 socket.on("broadcast:adempimenti_updated", () => {
   socket.emit("get:adempimenti");
   socket.once("res:adempimenti", ({ success }) => {
@@ -77,6 +79,8 @@ socket.on("broadcast:adempimenti_updated", () => {
     )
       renderApplicaAdempimentiModal();
   });
+  // 🔄 Ricarica la sintesi
+  if (state.page === "sintesi") loadSintesi();
 });
 
 // ─── RISPOSTA DATI ────────────────────────────────────────────
@@ -115,9 +119,6 @@ socket.on("res:adempimenti", ({ success, data }) => {
     if (modalOpen) refreshAddAdpSelect();
     updatePeriodoOptions();
   }
-  // Se siamo in Vista Globale, ripopola subito il filtro adempimenti
-  // con l'elenco completo appena arrivato (evita che voci non presenti
-  // nei dati filtrati correnti spariscano dalla tendina).
   if (
     success &&
     document.getElementById("glob-filtro-adp") &&
@@ -156,7 +157,7 @@ socket.on("res:scadenzario_globale", ({ success, data }) => {
   }
 });
 
-// ─── SINTESI ADEMPIMENTI (matrice clienti × adempimenti) ────────
+// ─── SINTESI ADEMPIMENTI ────────────────────────────────────────
 socket.on("res:sintesi", ({ success, data, anno, error }) => {
   if (success) {
     state.sintesiData = data;
@@ -240,6 +241,8 @@ socket.on(
       if (state.page === "scadenzario_globale") loadGlobale();
       if (state.page === "dashboard")
         socket.emit("get:stats", { anno: state.anno });
+      // 🔄 Ricarica la sintesi
+      if (state.page === "sintesi") loadSintesi();
     } else {
       showNotif(
         "❌ Errore eliminazione: " + (error || "Operazione fallita"),
@@ -318,6 +321,8 @@ socket.on("res:delete:adempimenti:bulk", ({ success }) => {
 // ─── RISPOSTA SCADENZARIO ─────────────────────────────────────
 socket.on("res:genera:scadenzario", ({ success }) => {
   if (success && state.selectedCliente) loadScadenzario();
+  // 🔄 Ricarica la sintesi
+  if (state.page === "sintesi") loadSintesi();
 });
 
 socket.on(
@@ -331,6 +336,8 @@ socket.on(
       );
       if (state.page === "scadenzario_globale") loadGlobale();
       if (state.selectedCliente) loadScadenzario();
+      // 🔄 Ricarica la sintesi
+      if (state.page === "sintesi") loadSintesi();
     }
   },
 );
@@ -341,6 +348,8 @@ socket.on("res:rigenera:tutti", ({ success }) => {
     if (state.page === "scadenzario_globale") loadGlobale();
     else if (state.page === "scadenzario" && state.selectedCliente)
       loadScadenzario();
+    // 🔄 Ricarica la sintesi
+    if (state.page === "sintesi") loadSintesi();
   }
 });
 
@@ -348,11 +357,15 @@ socket.on("res:copia:scadenzario", ({ success }) => {
   if (success) {
     closeModal("modal-copia");
     loadScadenzario();
+    // 🔄 Ricarica la sintesi
+    if (state.page === "sintesi") loadSintesi();
   }
 });
 
 socket.on("res:copia:tutti", ({ success }) => {
   if (success) closeModal("modal-copia");
+  // 🔄 Ricarica la sintesi
+  if (state.page === "sintesi") loadSintesi();
 });
 
 socket.on("res:update:adempimento_stato", ({ success, error }) => {
@@ -362,6 +375,8 @@ socket.on("res:update:adempimento_stato", ({ success, error }) => {
     if (state.page === "scadenzario_globale") loadGlobale();
     if (state.page === "dashboard")
       socket.emit("get:stats", { anno: state.anno });
+    // 🔄 Ricarica la sintesi
+    if (state.page === "sintesi") loadSintesi();
   } else {
     showNotif(
       "❌ Errore nel salvataggio: " + (error || "sconosciuto"),
@@ -375,6 +390,8 @@ socket.on("res:delete:adempimento_cliente", ({ success }) => {
     closeModal("modal-adempimento");
     if (state.page === "scadenzario") loadScadenzario();
     if (state.page === "scadenzario_globale") loadGlobale();
+    // 🔄 Ricarica la sintesi
+    if (state.page === "sintesi") loadSintesi();
   }
 });
 
@@ -382,6 +399,8 @@ socket.on("res:add:adempimento_cliente", ({ success }) => {
   if (success) {
     closeModal("modal-add-adp");
     loadScadenzario();
+    // 🔄 Ricarica la sintesi
+    if (state.page === "sintesi") loadSintesi();
   }
 });
 
@@ -397,6 +416,8 @@ socket.on(
         else if (state.page === "scadenzario" && state.selectedCliente)
           loadScadenzario();
       }
+      // 🔄 Ricarica la sintesi
+      if (state.page === "sintesi") loadSintesi();
     } else {
       alert("Errore nella creazione dell'adempimento personalizzato");
     }
@@ -426,6 +447,8 @@ socket.on(
       }
       if (state.page === "scadenzario_globale") loadGlobale();
       if (state.selectedCliente) loadScadenzario();
+      // 🔄 Ricarica la sintesi
+      if (state.page === "sintesi") loadSintesi();
     } else {
       showNotif(`❌ Errore: ${error || "Applicazione fallita"}`, "error");
     }
@@ -453,6 +476,8 @@ socket.on(
       }
       if (state.page === "scadenzario_globale") loadGlobale();
       if (state.selectedCliente) loadScadenzario();
+      // 🔄 Ricarica la sintesi
+      if (state.page === "sintesi") loadSintesi();
     } else {
       showNotif(`❌ Errore: ${error || "Eliminazione fallita"}`, "error");
     }
