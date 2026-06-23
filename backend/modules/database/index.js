@@ -83,7 +83,7 @@ function migrateDB() {
       titolo TEXT NOT NULL,
       contenuto TEXT,
       id_cliente INTEGER,
-      data_inserimento TEXT DEFAULT (datetime('now')),
+      data_inserimento TEXT DEFAULT (datetime('now','localtime')),
       data_scadenza TEXT,
       priorita TEXT CHECK(priorita IN ('bassa','media','alta')) DEFAULT 'media',
       completato INTEGER DEFAULT 0,
@@ -101,8 +101,8 @@ function migrateDB() {
       contenuto TEXT,
       allegati TEXT,
       id_cliente INTEGER,
-      data_creazione TEXT DEFAULT (datetime('now')),
-      data_modifica TEXT DEFAULT (datetime('now')),
+      data_creazione TEXT DEFAULT (datetime('now','localtime')),
+      data_modifica TEXT DEFAULT (datetime('now','localtime')),
       FOREIGN KEY (id_cliente) REFERENCES clienti(id)
     )`,
     `CREATE INDEX IF NOT EXISTS idx_pagina_bianca_tipo ON pagina_bianca(tipo)`,
@@ -113,7 +113,7 @@ function migrateDB() {
     `CREATE TRIGGER IF NOT EXISTS update_pagina_bianca_modifica 
     AFTER UPDATE ON pagina_bianca
     BEGIN
-      UPDATE pagina_bianca SET data_modifica = datetime('now') WHERE id = NEW.id;
+      UPDATE pagina_bianca SET data_modifica = datetime('now','localtime') WHERE id = NEW.id;
     END`,
 
     // Ricreazione tabella adempimenti
@@ -148,7 +148,7 @@ function migrateDB() {
       record_id INTEGER,
       dati_json TEXT NOT NULL,
       eliminato_da TEXT DEFAULT 'utente',
-      data_eliminazione TEXT DEFAULT (datetime('now'))
+      data_eliminazione TEXT DEFAULT (datetime('now','localtime'))
     )`,
     `CREATE INDEX IF NOT EXISTS idx_cestino_tabella ON cestino(tabella)`,
     `CREATE INDEX IF NOT EXISTS idx_cestino_data ON cestino(data_eliminazione DESC)`,
