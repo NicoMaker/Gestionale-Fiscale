@@ -10,6 +10,7 @@ const setupSocketHandlers = require("./modules/sockets");
 const downloadDbRouter = require("./modules/routes/downloadDb");
 const avvioHtmlRouter = require("./modules/routes/avviohtml");
 const cestinoModel = require("./modules/models/cestino");
+const { runQuery, queryOne } = require("./modules/database");
 
 const app = express();
 const server = http.createServer(app);
@@ -55,8 +56,6 @@ cron.schedule("5 0 * * *", () => {
       console.log(
         `🗑️ Cron cestino: eliminati ${eliminati} elementi scaduti (>${cestinoModel.GIORNI_RETENTION} giorni)`,
       );
-      // Notifica tutti i client connessi: la pagina cestino si aggiorna
-      // automaticamente senza che l'utente debba fare refresh
       io.emit("broadcast:cestino_updated");
     }
   } catch (e) {
@@ -69,6 +68,27 @@ const PORT = process.env.PORT || 3000;
 initDB().then(async () => {
   const localIP = getLocalIP();
   const publicIP = await getPublicIP();
+
+  // ── PULIZIA IMMEDIATA all'avvio ──────────────────────────────────────────
+  // Elimina i record scaduti confrontando con ENTRAMBI i formati di soglia
+  // (UTC e localtime) per coprire i record inseriti prima del fix timezone.
+  try {
+    const giorni = cestinoModel.GIORNI_RETENTION;
+    const result = queryOne(`SELECT COUNT(*) as cnt FROM cestino WHERE
+      data_eliminazione <= datetime('now', '-${giorni} days')
+      OR data_eliminazione <= datetime('now', 'localtime', '-${giorni} days')`);
+    if (result && result.cnt > 0) {
+      runQuery(`DELETE FROM cestino WHERE
+        data_eliminazione <= datetime('now', '-${giorni} days')
+        OR data_eliminazione <= datetime('now', 'localtime', '-${giorni} days')`);
+      console.log(
+        `🗑️ Avvio: eliminati ${result.cnt} elementi scaduti dal cestino (>${giorni} giorni)`,
+      );
+      io.emit("broadcast:cestino_updated");
+    }
+  } catch (e) {
+    console.error("❌ Pulizia cestino all'avvio errore:", e.message);
+  }
 
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`\n🚀 Server avviato con successo!`);
