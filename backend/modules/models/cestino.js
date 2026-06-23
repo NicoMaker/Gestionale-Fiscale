@@ -7,15 +7,28 @@ const {
 
 const GIORNI_RETENTION = 15;
 
+// Calcola la soglia in JavaScript (evita problemi con datetime() in sql.js/WASM)
+function getSoglia() {
+  const d = new Date();
+  d.setDate(d.getDate() - GIORNI_RETENTION);
+  // Formato SQLite: YYYY-MM-DD HH:MM:SS
+  return d.toISOString().replace("T", " ").substring(0, 19);
+}
+
 function spostaInCestino({ tabella, record_id, dati_json, eliminato_da }) {
+  // Salva il timestamp in formato ISO locale calcolato in JS
+  const ora = new Date().toISOString().replace("T", " ").substring(0, 19);
   return runQueryAndGetId(
     `INSERT INTO cestino (tabella, record_id, dati_json, eliminato_da, data_eliminazione)
-     VALUES (?,?,?,?,datetime('now','localtime'))`,
-    [tabella, record_id, JSON.stringify(dati_json), eliminato_da || "utente"],
+     VALUES (?,?,?,?,?)`,
+    [tabella, record_id, JSON.stringify(dati_json), eliminato_da || "utente", ora],
   );
 }
 
 function getCestino(filtri = {}) {
+  // Elimina subito i record scaduti ogni volta che si apre il cestino
+  eliminaScadutiCestino();
+
   let sql = `SELECT * FROM cestino WHERE 1=1`;
   const params = [];
   if (filtri.tabella) {
@@ -51,14 +64,14 @@ function svuotaCestino() {
 }
 
 function eliminaScadutiCestino() {
-  // Confronto tutto in localtime per coerenza con l'inserimento.
-  // Usa <= così gli elementi con 0 giorni rimasti vengono eliminati subito.
-  const soglia = `datetime('now','localtime', '-${GIORNI_RETENTION} days')`;
+  // Soglia calcolata in JS: funziona sia con timestamp UTC che localtime
+  const soglia = getSoglia();
   const result = queryOne(
-    `SELECT COUNT(*) as cnt FROM cestino WHERE data_eliminazione <= ${soglia}`,
+    `SELECT COUNT(*) as cnt FROM cestino WHERE data_eliminazione <= ?`,
+    [soglia],
   );
-  runQuery(`DELETE FROM cestino WHERE data_eliminazione <= ${soglia}`);
-  return result.cnt;
+  runQuery(`DELETE FROM cestino WHERE data_eliminazione <= ?`, [soglia]);
+  return result ? result.cnt : 0;
 }
 
 function safeParseJson(str) {
