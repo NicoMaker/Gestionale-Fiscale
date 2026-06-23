@@ -21,7 +21,13 @@ function spostaInCestino({ tabella, record_id, dati_json, eliminato_da }) {
   return runQueryAndGetId(
     `INSERT INTO cestino (tabella, record_id, dati_json, eliminato_da, data_eliminazione)
      VALUES (?,?,?,?,?)`,
-    [tabella, record_id, JSON.stringify(dati_json), eliminato_da || "utente", ora],
+    [
+      tabella,
+      record_id,
+      JSON.stringify(dati_json),
+      eliminato_da || "utente",
+      ora,
+    ],
   );
 }
 

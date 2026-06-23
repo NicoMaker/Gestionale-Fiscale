@@ -119,11 +119,19 @@ function _renderSintesiTopbar() {
     "</select>" +
     '<select class="select topbar-select" id="sint-filtro-tipo-utente" onchange="onSintesiTipoUtenteChange()" title="Filtra per tipo utente" style="min-width:155px">' +
     '<option value="">-- Tutti i tipi --</option>' +
-    '<option value="PF"' + (_sintesiTipoUtenteFiltro === 'PF' ? ' selected' : '') + '>👤 PF – Persona Fisica</option>' +
-    '<option value="SP"' + (_sintesiTipoUtenteFiltro === 'SP' ? ' selected' : '') + '>🤝 SP – Soc. Persone</option>' +
-    '<option value="SC"' + (_sintesiTipoUtenteFiltro === 'SC' ? ' selected' : '') + '>🏢 SC – Soc. Capitali</option>' +
-    '<option value="ASS"' + (_sintesiTipoUtenteFiltro === 'ASS' ? ' selected' : '') + '>🏛️ ASS – Associazione</option>' +
-    '</select>' +
+    '<option value="PF"' +
+    (_sintesiTipoUtenteFiltro === "PF" ? " selected" : "") +
+    ">👤 PF – Persona Fisica</option>" +
+    '<option value="SP"' +
+    (_sintesiTipoUtenteFiltro === "SP" ? " selected" : "") +
+    ">🤝 SP – Soc. Persone</option>" +
+    '<option value="SC"' +
+    (_sintesiTipoUtenteFiltro === "SC" ? " selected" : "") +
+    ">🏢 SC – Soc. Capitali</option>" +
+    '<option value="ASS"' +
+    (_sintesiTipoUtenteFiltro === "ASS" ? " selected" : "") +
+    ">🏛️ ASS – Associazione</option>" +
+    "</select>" +
     '<button class="btn btn-sm btn-primary" onclick="resetSintesiFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>' +
     '<button class="btn btn-sm btn-stampa-completa" onclick="stampaSintesiCompleta()" title="Stampa lista completa con TUTTI gli adempimenti per TUTTI i clienti" style="font-size:13px;background:var(--accent);color:#fff;border-color:var(--accent)">🖨️ Stampa</button>';
 
@@ -150,7 +158,7 @@ window.onSintesiClienteChange = onSintesiClienteChange;
 
 function onSintesiTipoUtenteChange() {
   var sel = document.getElementById("sint-filtro-tipo-utente");
-  _sintesiTipoUtenteFiltro = sel ? (sel.value || null) : null;
+  _sintesiTipoUtenteFiltro = sel ? sel.value || null : null;
   renderSintesiTabella();
 }
 window.onSintesiTipoUtenteChange = onSintesiTipoUtenteChange;
@@ -426,7 +434,11 @@ function renderSintesiTabella() {
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
     if (_sintesiClienteFiltro && c.id !== _sintesiClienteFiltro) return false;
-    if (_sintesiTipoUtenteFiltro && c.tipologia_codice !== _sintesiTipoUtenteFiltro) return false;
+    if (
+      _sintesiTipoUtenteFiltro &&
+      c.tipologia_codice !== _sintesiTipoUtenteFiltro
+    )
+      return false;
     if (searchTerm) {
       var nome = (c.nome || "").toLowerCase();
       var cf = (c.codice_fiscale || "").toLowerCase();
@@ -973,7 +985,7 @@ function _generaFinestraStampa() {
     clienteSel && clienteSel.value ? parseInt(clienteSel.value) : null;
 
   var tipoUtenteSel = document.getElementById("sint-filtro-tipo-utente");
-  var filtroTipoUtente = tipoUtenteSel ? (tipoUtenteSel.value || null) : null;
+  var filtroTipoUtente = tipoUtenteSel ? tipoUtenteSel.value || null : null;
 
   var searchTerm = (getSharedClienteSearch() || "").toLowerCase();
 
@@ -981,7 +993,8 @@ function _generaFinestraStampa() {
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
     if (filtroClienteId && c.id !== filtroClienteId) return false;
-    if (filtroTipoUtente && c.tipologia_codice !== filtroTipoUtente) return false;
+    if (filtroTipoUtente && c.tipologia_codice !== filtroTipoUtente)
+      return false;
     if (searchTerm) {
       var nome = (c.nome || "").toLowerCase();
       var cf = (c.codice_fiscale || "").toLowerCase();
