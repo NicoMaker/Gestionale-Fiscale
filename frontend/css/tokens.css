@@ -1,0 +1,315 @@
+/* ═══════════════════════════════════════════════════════════════
+   GESTIONALE FISCALE — styles.css  (Light + Dark Edition)
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
+/* ─── DESIGN TOKENS ──────────────────────────────────────────── */
+:root {
+  /* Backgrounds — pure white system */
+  --bg: #ffffff;
+  --s0: #fafafa;
+  --s1: #f5f6f8;
+  --s2: #edf0f4;
+  --s3: #e2e6ec;
+
+  /* Borders */
+  --b0: #e2e6ec;
+  --b1: #d0d6e0;
+  --b2: #b4bcc8;
+
+  /* Accent — professional blue */
+  --accent: #2563eb;
+  --accent-d: rgba(37, 99, 235, 0.07);
+  --accent-b: rgba(37, 99, 235, 0.15);
+  --accent-hov: #1d4ed8;
+
+  /* Semantic colours */
+  --green: #16a34a;
+  --green-d: rgba(22, 163, 74, 0.08);
+  --red: #dc2626;
+  --red-d: rgba(220, 38, 38, 0.08);
+  --yellow: #d97706;
+  --yellow-d: rgba(217, 119, 6, 0.08);
+  --purple: #7c3aed;
+  --purple-d: rgba(124, 58, 237, 0.08);
+  --cyan: #0891b2;
+  --cyan-d: rgba(8, 145, 178, 0.08);
+  --orange: #ea580c;
+  --orange-d: rgba(234, 88, 12, 0.08);
+
+  /* Text scale */
+  --t0: #111827;
+  --t1: #1f2937;
+  --t2: #6b7280;
+  --t3: #9ca3af;
+
+  /* Typography */
+  --sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", monospace;
+
+  /* Radii */
+  --radius: 12px;
+  --r-sm: 8px;
+  --r-xs: 5px;
+  --r-lg: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.05);
+
+  /* Layout */
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 60px;
+  --topbar-h: 60px;
+
+  /* Legacy aliases */
+  --surface: var(--s1);
+  --surface2: var(--s2);
+  --surface3: var(--s3);
+  --border: var(--b0);
+  --border2: var(--b1);
+  --text: var(--t0);
+  --text2: var(--t2);
+  --text3: var(--t3);
+  --accent-dim: var(--accent-d);
+
+  /* Theme transition */
+  --theme-transition:
+    background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ─── DARK MODE TOKENS ───────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg: #0f1117;
+  --s0: #161b22;
+  --s1: #1c2230;
+  --s2: #222b3a;
+  --s3: #2a3549;
+
+  --b0: #2d3748;
+  --b1: #3a4a60;
+  --b2: #4a5c78;
+
+  --accent: #4f8ef7;
+  --accent-d: rgba(79, 142, 247, 0.12);
+  --accent-b: rgba(79, 142, 247, 0.22);
+  --accent-hov: #6da4ff;
+
+  --green: #34d399;
+  --green-d: rgba(52, 211, 153, 0.12);
+  --red: #f87171;
+  --red-d: rgba(248, 113, 113, 0.12);
+  --yellow: #fbbf24;
+  --yellow-d: rgba(251, 191, 36, 0.12);
+  --purple: #a78bfa;
+  --purple-d: rgba(167, 139, 250, 0.12);
+  --cyan: #22d3ee;
+  --cyan-d: rgba(34, 211, 238, 0.12);
+  --orange: #fb923c;
+  --orange-d: rgba(251, 146, 60, 0.12);
+
+  --t0: #e2e8f0;
+  --t1: #cbd5e1;
+  --t2: #94a3b8;
+  --t3: #64748b;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.25);
+
+  --surface: var(--s1);
+  --surface2: var(--s2);
+  --surface3: var(--s3);
+  --border: var(--b0);
+  --border2: var(--b1);
+  --text: var(--t0);
+  --text2: var(--t2);
+  --text3: var(--t3);
+  --accent-dim: var(--accent-d);
+}
+
+/* ─── THEME TOGGLE BUTTON ────────────────────────────────────── */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 10px 12px;
+  cursor: pointer;
+  color: var(--t2);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  border-left: 3px solid transparent;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  margin: 1px 10px 1px 0;
+  width: 100%;
+  background: none;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  font-family: var(--sans);
+}
+.theme-toggle:hover {
+  color: var(--t0);
+  background: var(--s2);
+}
+.theme-toggle-icon {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.theme-toggle-label {
+  flex: 1;
+}
+.theme-toggle-pill {
+  width: 34px;
+  height: 18px;
+  background: var(--b1);
+  border-radius: 9px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.theme-toggle-pill::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+[data-theme="dark"] .theme-toggle-pill {
+  background: var(--accent);
+}
+[data-theme="dark"] .theme-toggle-pill::after {
+  transform: translateX(16px);
+}
+
+/* ─── GLOBAL TRANSITION ──────────────────────────────────────── */
+body,
+.sidebar,
+.topbar,
+.content,
+.modal,
+.card,
+.table,
+.input,
+.select,
+.btn {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.15s ease;
+}
+
+/* ─── DARK MODE: INPUTS & SELECTS ────────────────────────────── */
+[data-theme="dark"] .input,
+[data-theme="dark"] .select,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--s1);
+  color: var(--t0);
+  border-color: var(--b1);
+}
+[data-theme="dark"] .input::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--t3);
+}
+[data-theme="dark"] .input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: var(--accent);
+  background: var(--s0);
+}
+
+/* ─── DARK MODE: MODALS ──────────────────────────────────────── */
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+[data-theme="dark"] .modal {
+  background: var(--s1);
+  border-color: var(--b1);
+}
+
+/* ─── DARK MODE: TABLES ──────────────────────────────────────── */
+[data-theme="dark"] thead th {
+  background: var(--s2);
+  color: var(--t2);
+  border-color: var(--b1);
+}
+[data-theme="dark"] tbody tr:hover td {
+  background: var(--s2);
+}
+[data-theme="dark"] tbody tr:nth-child(even) td {
+  background: var(--s0);
+}
+
+/* ─── DARK MODE: CARDS ───────────────────────────────────────── */
+[data-theme="dark"] .card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .infobox,
+[data-theme="dark"] .alert {
+  background: var(--s1);
+  border-color: var(--b0);
+}
+
+/* ─── DARK MODE: SCROLLBAR ───────────────────────────────────── */
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--s0);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--b2);
+}
+
+/* ─── DARK MODE: PRINT ───────────────────────────────────────── */
+[data-theme="dark"] .btn-print,
+[data-theme="dark"] .no-print {
+  /* print buttons stay visible in dark */
+}
+
+/* ─── DARK MODE: KEYFRAMES FIX ───────────────────────────────── */
+[data-theme="dark"] .fh-flash {
+  animation: fh-flash-dark-kf 0.35s ease-out;
+}
+[data-theme="dark"] .fh-flash-empty {
+  animation: fh-flash-empty-dark-kf 0.4s ease-out;
+}
+@keyframes fh-flash-dark-kf {
+  0% {
+    background-color: rgba(52, 211, 153, 0.2);
+    border-color: #34d399;
+  }
+  100% {
+    background-color: var(--s1);
+    border-color: var(--b1);
+  }
+}
+@keyframes fh-flash-empty-dark-kf {
+  0% {
+    background-color: rgba(248, 113, 113, 0.2);
+    border-color: #f87171;
+  }
+  100% {
+    background-color: var(--s1);
+    border-color: var(--b1);
+  }
+}
+

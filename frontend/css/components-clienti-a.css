@@ -1,0 +1,552 @@
+/* ════════════════════════════════════════════════════════════════
+   MINI BAR
+   ════════════════════════════════════════════════════════════════ */
+.mini-bar {
+  width: 68px;
+  height: 5px;
+  background: var(--b0);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mini-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   IMPORTI
+   ════════════════════════════════════════════════════════════════ */
+.importi-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.imp-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.imp-lbl {
+  color: var(--t2);
+}
+.imp-val {
+  color: var(--green);
+  font-weight: 700;
+}
+.imp-empty {
+  color: var(--t3);
+  font-size: 12px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   AVATAR
+   ════════════════════════════════════════════════════════════════ */
+.cliente-avatar-sm {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--mono);
+  border: 2px solid;
+  flex-shrink: 0;
+  overflow: hidden;
+  word-break: break-all;
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   INFO BOX CLIENTE
+   ════════════════════════════════════════════════════════════════ */
+.adp-cliente-info-box,
+.add-adp-cliente-info {
+  background: var(--s0);
+  border: 1px solid var(--b1);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.cliente-info-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.cliente-info-avatar {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 9px;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: var(--mono);
+  flex-shrink: 0;
+  overflow: hidden;
+  word-break: break-all;
+  line-height: 1;
+}
+.cliente-info-nome {
+  font-size: 15px;
+  font-weight: 700;
+}
+.cliente-info-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+.cliente-info-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.meta-chip {
+  font-size: 12px;
+  color: var(--t2);
+  padding: 3px 10px;
+  background: var(--s1);
+  border-radius: var(--r-xs);
+  border: 1px solid var(--b0);
+}
+.meta-chip strong {
+  color: var(--t0);
+}
+
+/* ─── CLASSIFICAZIONE PILLS ──────────────────────────────────── */
+.cliente-class-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.class-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t2);
+}
+.class-pill .cp-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 800;
+}
+.per-pill {
+  background: var(--accent-d);
+  border-color: var(--accent-b);
+  color: var(--accent);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CARD ANTEPRIMA CLIENTE
+   ════════════════════════════════════════════════════════════════ */
+.cliente-preview-card {
+  background: var(--bg);
+  border: 1px solid var(--b0);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
+}
+.cpc-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.cpc-avatar {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  border-radius: 13px;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  font-family: var(--mono);
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+  overflow: hidden;
+}
+.cpc-info {
+  flex: 1;
+  min-width: 0;
+}
+.cpc-nome {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+@media (max-width: 480px) {
+  .cpc-nome {
+    font-size: 16px;
+  }
+}
+.cpc-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.cpc-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+.cpc-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+.cpc-meta-chip {
+  font-size: 12px;
+  color: var(--t2);
+  padding: 4px 10px;
+  background: var(--s1);
+  border-radius: var(--r-xs);
+  border: 1px solid var(--b0);
+  white-space: nowrap;
+}
+.cpc-meta-chip strong {
+  color: var(--t0);
+}
+.cpc-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+.cpc-stat-item {
+  text-align: center;
+  min-width: 48px;
+}
+.cpc-stat-num {
+  font-size: 26px;
+  font-weight: 800;
+  font-family: var(--mono);
+  line-height: 1;
+}
+@media (max-width: 480px) {
+  .cpc-stat-num {
+    font-size: 20px;
+  }
+}
+.cpc-stat-lbl {
+  font-size: 11px;
+  color: var(--t2);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-top: 3px;
+}
+.cpc-actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--b0);
+  align-items: center;
+}
+
+/* ─── DATI RIFERIMENTO ───────────────────────────────────────── */
+.cpc-dati-riferimento {
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--b0);
+}
+.dati-ref-title {
+  font-size: 11px;
+  color: var(--t2);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.dati-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 7px;
+}
+@media (max-width: 480px) {
+  .dati-ref-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.dati-ref-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 7px 10px;
+  background: var(--s1);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--b0);
+}
+.dati-ref-item .ref-icon {
+  font-size: 13px;
+  opacity: 0.6;
+}
+.dati-ref-item .ref-label {
+  color: var(--t2);
+  min-width: 52px;
+  font-size: 11.5px;
+}
+.dati-ref-item .ref-value {
+  color: var(--t0);
+  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SCADENZARIO
+   ════════════════════════════════════════════════════════════════ */
+.cat-section {
+  margin-bottom: 22px;
+}
+.cat-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--s0);
+  border-radius: var(--radius) var(--radius) 0 0;
+  border: 1px solid var(--b0);
+  border-bottom: none;
+}
+.cat-section-icon {
+  font-size: 19px;
+}
+.cat-section-nome {
+  font-size: 15px;
+  font-weight: 800;
+}
+.cat-section-count {
+  font-size: 12.5px;
+  color: var(--t2);
+  margin-left: auto;
+  font-family: var(--mono);
+}
+.cat-section-body {
+  background: var(--bg);
+  border: 1px solid var(--b0);
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Adempimento Card */
+.adp-card {
+  background: var(--s0);
+  border: 1px solid var(--b0);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.adp-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--b0);
+  flex-wrap: wrap;
+}
+.adp-codice {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 700;
+  background: var(--accent-d);
+  padding: 3px 9px;
+  border-radius: var(--r-xs);
+}
+.adp-nome {
+  font-size: 14.5px;
+  font-weight: 700;
+  flex: 1;
+}
+.adp-tipo-badge {
+  font-size: 11px;
+  color: var(--t3);
+  background: var(--s2);
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-family: var(--mono);
+}
+.adp-card-periodi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 16px;
+  align-items: flex-start;
+}
+.adp-card-periodi.periodi-mensili {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 10px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PERIODO PILL
+   ════════════════════════════════════════════════════════════════ */
+.periodo-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1.5px solid var(--b1);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 145px;
+  flex: 1 1 145px;
+  box-sizing: border-box;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+.periodo-pill:hover {
+  border-color: var(--accent);
+  background: var(--s0);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.periodo-pill.s-completato {
+  border-left: 4px solid var(--green);
+  background: rgba(22, 163, 74, 0.04);
+}
+.periodo-pill.s-in_corso {
+  border-left: 4px solid var(--yellow);
+  background: rgba(217, 119, 6, 0.04);
+}
+.periodo-pill.s-da_fare {
+  border-left: 4px solid var(--red);
+}
+.periodo-pill.s-n_a {
+  opacity: 0.5;
+}
+
+.pp-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.pp-tag {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border: 1.5px solid;
+  border-radius: 6px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.pp-stato-icon {
+  font-size: 17px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.pp-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pp-date {
+  font-size: 11px;
+  color: var(--t2);
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.pp-note {
+  font-size: 11px;
+  color: var(--t2);
+  line-height: 1.3;
+}
+.pp-nome {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.periodo-pill:hover::after {
+  content: "🖱️ Tasto DX = toggle";
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--t2);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.pp-cont-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pp-cont-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-family: var(--mono);
+}
+.pp-cont-check {
+  font-size: 12px;
+  width: 14px;
+  flex-shrink: 0;
+}
+.pp-cont-lbl {
+  flex: 1;
+  color: var(--t2);
+}
+.pp-cont-val {
+  font-weight: 700;
+}
+

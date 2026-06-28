@@ -1,0 +1,593 @@
+/* ════════════════════════════════════════════════════════════════
+   SINTESI ADEMPIMENTI — Matrice clienti × adempimenti (sola lettura)
+   ════════════════════════════════════════════════════════════════ */
+
+.sint-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 2px 0 16px;
+  font-size: 12px;
+  color: var(--t2);
+}
+.sint-legend-item {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 3px 10px 3px 6px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-size: 12px;
+  color: var(--t2);
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    transform 0.12s;
+}
+.sint-legend-item:hover {
+  background: var(--s1);
+  transform: translateY(-1px);
+}
+.sint-legend-item.active {
+  background: var(--accent-d);
+  border-color: var(--accent);
+  color: var(--t0);
+  font-weight: 700;
+}
+.sint-legend-item.active .sint-legend-dot {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.sint-legend-clear {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--accent);
+  transition: background 0.12s;
+}
+.sint-legend-clear:hover {
+  background: var(--accent-d);
+}
+.sint-legend-dot {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1.5px solid var(--b1);
+  flex-shrink: 0;
+}
+.sint-legend-dot.done {
+  background: var(--green-d);
+  border-color: var(--green);
+}
+.sint-legend-dot.partial {
+  background: var(--yellow-d);
+  border-color: var(--yellow);
+}
+.sint-legend-dot.todo {
+  background: var(--bg);
+  border-color: var(--b1);
+}
+.sint-legend-dot.na {
+  background: var(--s2);
+  border-color: var(--b0);
+}
+
+.sint-table-wrap {
+  background: var(--bg);
+  border: 1px solid var(--b0);
+  border-radius: var(--r-lg);
+  overflow: auto;
+  max-height: 72vh;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 18px;
+}
+.sint-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-family: var(--sans);
+}
+.sint-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--s1);
+  z-index: 3;
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--b0);
+  border-left: 1px solid var(--b0);
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.sint-table thead th.sint-th-corner {
+  left: 0;
+  z-index: 4;
+  text-align: left;
+  min-width: 190px;
+  border-left: none;
+}
+.sint-th-cod {
+  display: block;
+  font-family: var(--mono);
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--t1);
+}
+.sint-th-nome {
+  display: block;
+  font-weight: 500;
+  color: var(--t3);
+  font-size: 10px;
+  max-width: 110px;
+  white-space: normal;
+  line-height: 1.2;
+  margin: 2px auto 0;
+}
+.sint-td-cliente {
+  position: sticky;
+  left: 0;
+  background: var(--bg);
+  z-index: 1;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--b0);
+  white-space: nowrap;
+  min-width: 190px;
+}
+.sint-table tbody tr:hover .sint-td-cliente,
+.sint-table tbody tr:hover .sint-td {
+  background: var(--s0);
+}
+.sint-cliente-nome {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--t0);
+}
+.sint-cliente-sub {
+  font-size: 11px;
+  color: var(--t2);
+  font-family: var(--mono);
+  margin-top: 1px;
+}
+.sint-td {
+  border-bottom: 1px solid var(--b0);
+  border-left: 1px solid var(--b0);
+  text-align: center;
+  padding: 4px;
+  background: var(--bg);
+}
+.sint-cell {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: auto;
+  min-height: 30px;
+  padding: 6px 4px;
+  width: 100%;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-family: var(--mono);
+  border: 1.5px solid var(--b1);
+  background: var(--bg);
+  color: var(--t3);
+  transition:
+    transform 0.1s,
+    border-color 0.1s;
+}
+#sint-pill-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  background: var(--s2, #1e2027);
+  border: 1px solid var(--b1, #333);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 240px;
+  pointer-events: none;
+}
+#sint-pill-tooltip.visible {
+  display: flex;
+}
+.sint-hover-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.sint-cell:hover {
+  border-color: var(--b1);
+}
+.sint-cell.active {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.sint-cell-done {
+  background: var(--green-d);
+  border-color: var(--green);
+  color: var(--green);
+}
+.sint-cell-partial {
+  background: var(--yellow-d);
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+.sint-cell-todo {
+  background: var(--bg);
+  border-color: var(--b1);
+  color: var(--t3);
+}
+.sint-cell-na {
+  background: var(--s2);
+  border-color: var(--b0);
+  color: var(--t3);
+  font-size: 9.5px;
+}
+.sint-cell-dim {
+  opacity: 0.25;
+  filter: saturate(0.4);
+}
+.sint-cell-dim:hover {
+  opacity: 0.6;
+}
+
+#sint-dettaglio {
+  display: none;
+  margin-top: 4px;
+  margin-bottom: 18px;
+  background: var(--bg);
+  border: 1px solid var(--b0);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-md);
+}
+.sint-dett-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.sint-dett-cliente {
+  font-weight: 800;
+  font-size: 15px;
+}
+.sint-dett-adp {
+  font-size: 12.5px;
+  color: var(--t2);
+  margin-top: 2px;
+}
+
+.sint-dett-grid-wrap {
+  margin-bottom: 16px;
+}
+.sint-dett-grid-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--t2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.sint-dett-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+  gap: 8px;
+}
+.sint-dett-chip {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--b1);
+  background: var(--bg);
+  transition:
+    transform 0.1s,
+    border-color 0.1s;
+}
+.sint-dett-chip:hover {
+  transform: scale(1.06);
+  border-color: var(--accent);
+}
+.sint-dett-chip-ico {
+  font-size: 14px;
+  line-height: 1;
+}
+.sint-dett-chip-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--t2);
+}
+.sint-dett-chip-completato {
+  background: var(--green-d);
+  border-color: var(--green);
+}
+.sint-dett-chip-completato .sint-dett-chip-lbl {
+  color: var(--green);
+}
+.sint-dett-chip-in_corso {
+  background: var(--yellow-d);
+  border-color: var(--yellow);
+}
+.sint-dett-chip-in_corso .sint-dett-chip-lbl {
+  color: var(--yellow);
+}
+.sint-dett-chip-da_fare {
+  background: var(--red-d);
+  border-color: var(--red);
+}
+.sint-dett-chip-da_fare .sint-dett-chip-lbl {
+  color: var(--red);
+}
+.sint-dett-chip-n_a {
+  background: var(--s2);
+  border-color: var(--b0);
+}
+.sint-dett-chip-n_a .sint-dett-chip-lbl {
+  color: var(--t3);
+}
+.sint-dett-chip-text_only {
+  background: var(--purple-d);
+  border-color: var(--purple);
+}
+.sint-dett-chip-text_only .sint-dett-chip-lbl {
+  color: var(--purple);
+}
+.sint-dett-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.sint-dett-table th {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 2px solid var(--b0);
+  color: var(--t2);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sint-dett-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--b0);
+}
+.sint-dett-table tr.flash {
+  background: var(--accent-d);
+  transition: background 0.3s ease;
+}
+
+@media (max-width: 860px) {
+  .sint-table-wrap {
+    max-height: 64vh;
+  }
+  .sint-th-nome {
+    display: none;
+  }
+  .sint-td-cliente {
+    min-width: 140px;
+  }
+  .sint-table thead th.sint-th-corner {
+    min-width: 140px;
+  }
+}
+
+@media print {
+  .sint-table-wrap {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .sint-table thead th,
+  .sint-td-cliente {
+    position: static !important;
+  }
+}
+
+/* Stili per il selettore clienti nella sintesi */
+#sint-filtro-cliente {
+  min-width: 180px;
+  max-width: 250px;
+  font-size: 13px;
+}
+
+/* Stili per il pulsante di stampa completa */
+.btn-stampa-completa {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-stampa-completa:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Stampa: nasconde elementi non necessari */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  #sint-dettaglio {
+    page-break-before: avoid;
+    page-break-after: avoid;
+  }
+
+  .sint-dett-grid-wrap {
+    page-break-inside: avoid;
+  }
+}
+
+/* Stili per il selettore clienti nella sintesi */
+#sint-filtro-cliente {
+  min-width: 180px;
+  max-width: 250px;
+  font-size: 13px;
+}
+
+/* Stili per il pulsante di stampa completa */
+.btn-stampa-completa {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-stampa-completa:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Stampa: nasconde elementi non necessari e mostra tutto */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  #sint-dettaglio {
+    page-break-before: avoid;
+    page-break-after: avoid;
+  }
+
+  .sint-dett-grid-wrap {
+    page-break-inside: avoid;
+  }
+
+  /* Mostra tutte le celle senza troncamenti */
+  .sint-cell {
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  .sint-table {
+    font-size: 9px !important;
+  }
+
+  .sint-th,
+  .sint-td {
+    padding: 3px 4px !important;
+  }
+}
+
+/* Stili per il selettore clienti nella sintesi */
+#sint-filtro-cliente {
+  min-width: 180px;
+  max-width: 250px;
+  font-size: 13px;
+}
+
+/* Stili per il pulsante di stampa completa */
+.btn-stampa-completa {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-stampa-completa:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Stampa: nasconde elementi non necessari e mostra tutto */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  #sint-dettaglio {
+    page-break-before: avoid;
+    page-break-after: avoid;
+  }
+
+  .sint-dett-grid-wrap {
+    page-break-inside: avoid;
+  }
+
+  /* Mostra tutte le celle senza troncamenti */
+  .sint-cell {
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  .sint-table {
+    font-size: 9px !important;
+  }
+
+  .sint-th,
+  .sint-td {
+    padding: 3px 4px !important;
+  }
+
+  /* Nasconde il filtro tipologie */
+  .tipologie-filtro-panel,
+  #tipologie-filtro-panel,
+  .sint-tip-filtro {
+    display: none !important;
+  }
+}
+
+/* Stili per il selettore clienti nella sintesi */
+#sint-filtro-cliente {
+  min-width: 180px;
+  max-width: 250px;
+  font-size: 13px;
+}
+
+/* Stili per il pulsante di stampa completa */
+.btn-stampa-completa {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-stampa-completa:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Stampa lista completa */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  #stampa-lista-completa {
+    padding: 20px !important;
+    max-width: 100% !important;
+  }
+
+  #stampa-lista-completa > div {
+    page-break-inside: avoid !important;
+  }
+}

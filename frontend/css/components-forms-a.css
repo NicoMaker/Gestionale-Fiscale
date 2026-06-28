@@ -1,0 +1,280 @@
+/* ════════════════════════════════════════════════════════════════
+   FORM INPUTS IN MODAL
+   ════════════════════════════════════════════════════════════════ */
+.modal .input,
+.modal .select,
+.modal textarea.input,
+.modal .select-search-input,
+.form-group .input,
+.form-group .select,
+.form-group textarea.input {
+  background: #ffffff;
+  border: 1.5px solid var(--b1);
+  color: var(--t0);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    color 0.2s;
+}
+.modal .input:focus,
+.modal .select:focus,
+.modal textarea.input:focus,
+.form-group .input:focus,
+.form-group .select:focus {
+  border-color: var(--accent);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.modal .input::placeholder,
+.form-group .input::placeholder {
+  color: var(--t3);
+}
+.modal .select-search-input:focus {
+  border-color: var(--accent);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FIELD-HISTORY
+   ════════════════════════════════════════════════════════════════ */
+.fh-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+.fh-wrap > input.input,
+.fh-wrap > textarea.input {
+  flex: 1;
+  min-width: 0;
+}
+.fh-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-xs);
+  border: 1.5px solid var(--b1);
+  background: var(--s1);
+  color: var(--t3);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+  line-height: 1;
+  user-select: none;
+}
+.fh-btn:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+.fh-btn.fh-btn-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-d);
+}
+.fh-btn.fh-btn-active:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: scale(1.1);
+}
+.fh-counter {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--t3);
+  min-width: 26px;
+  text-align: center;
+  white-space: nowrap;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+@keyframes fh-flash-kf {
+  0% {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+  }
+  100% {
+    background-color: #ffffff;
+    border-color: var(--b1);
+  }
+}
+.fh-flash {
+  animation: fh-flash-kf 0.35s ease-out;
+}
+
+@keyframes fh-flash-empty-kf {
+  0% {
+    background-color: #fdecea;
+    border-color: #e57373;
+  }
+  100% {
+    background-color: #ffffff;
+    border-color: var(--b1);
+  }
+}
+.fh-flash-empty {
+  animation: fh-flash-empty-kf 0.4s ease-out;
+}
+
+.fh-wrap:has(textarea) {
+  align-items: flex-start;
+}
+.fh-wrap:has(textarea) .fh-btn,
+.fh-wrap:has(textarea) .fh-counter {
+  margin-top: 4px;
+}
+
+/* ─── BULK SELECTION ─────────────────────────────────────────── */
+.adp-bulk-card:has(.adp-bulk-cb:checked) {
+  border-color: var(--red) !important;
+  background: var(--red-d);
+}
+.clienti-bulk-row:has(.clienti-bulk-cb:checked) td {
+  background: var(--red-d);
+}
+.appunti-bulk-row:has(.appunti-bulk-cb:checked) td {
+  background: var(--red-d);
+}
+.pb-bulk-card:has(.pb-bulk-cb:checked) {
+  border-color: var(--red) !important;
+  background: var(--red-d);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   BOTTOM NAV (mobile quick-access)
+   ════════════════════════════════════════════════════════════════ */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--b0);
+  padding: 6px 4px env(safe-area-inset-bottom, 8px);
+  z-index: 180;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.07);
+}
+.bottom-nav-inner {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.bn-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  color: var(--t3);
+  transition: color 0.15s;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  background: none;
+  border: none;
+  font-family: var(--sans);
+  min-width: 52px;
+}
+.bn-item:active {
+  background: var(--s1);
+}
+.bn-item.active {
+  color: var(--accent);
+}
+.bn-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: block;
+  }
+  .content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 8px));
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TOUCH OPTIMIZATIONS
+   ════════════════════════════════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+  }
+  .nav-item {
+    min-height: 48px;
+  }
+  .periodo-pill {
+    min-height: 72px;
+  }
+  .flag-chip {
+    min-height: 44px;
+  }
+  .input,
+  .select {
+    min-height: 44px;
+  }
+  /* Hide hover tooltip on touch devices */
+  .periodo-pill:hover::after {
+    display: none;
+  }
+}
+
+/* Cerca la classe della topbar e assicurati che abbia il corretto allineamento */
+.topbar {
+  display: flex;
+  align-items: center; /* Centra verticalmente tutti gli elementi interni */
+  padding: 0 24px;
+  height: 64px; /* O l'altezza che hai impostato */
+}
+
+/* Cerca il selettore del menu a tendina dentro l'header (es. .topbar select o .filter-select) */
+.topbar select,
+.search-box select {
+  height: 38px; /* Forziamo un'altezza fissa comoda */
+  line-height: normal; /* Resetta il calcolo dell'altezza del testo */
+  padding: 0 12px; /* Dà spazio ai lati senza schiacciare il testo sopra e sotto */
+  display: inline-flex;
+  align-items: center; /* Centra il testo all'interno della tendina */
+  box-sizing: border-box; /* Include il padding nel calcolo dell'altezza */
+}
+
+/* Trova il selettore della select nella barra in alto e modificalo così */
+.topbar select,
+.search-box select,
+.filter-item select {
+  height: 36px !important; /* Forza un'altezza corretta e fissa */
+  padding: 0 12px !important; /* Rimuove il padding verticale che schiaccia il testo */
+  line-height: 36px !important; /* Allinea il testo perfettamente al centro dell'altezza */
+  font-size: 14px; /* Dimensione del testo leggibile */
+  display: inline-block;
+  vertical-align: middle;
+  box-sizing: border-box; /* Impedisce al padding di sballare l'altezza totale */
+}
+
+/* Trova il contenitore che raggruppa la ricerca cliente e la tendina "Tutti i clienti" */
+.topbar-right,
+.search-box-container {
+  display: flex !important;
+  flex-direction: row !important; /* Forza gli elementi a stare uno di fianco all'altro, non uno sotto l'altro */
+  align-items: center !important; /* Centra verticalmente gli elementi */
+  gap: 10px; /* Aggiunge un po' di spazio orizzontale tra i due moduli */
+  height: auto; /* Evita che l'altezza sia bloccata */
+}
+
+/* Assicurati che gli input e i select interni abbiano la stessa altezza */
+.topbar-right input,
+.topbar-right select {
+  height: 36px !important;
+  margin: 0 !important; /* Rimuove margini che potrebbero spingerli in basso */
+  box-sizing: border-box;
+}
+

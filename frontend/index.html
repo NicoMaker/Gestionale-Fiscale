@@ -33,7 +33,28 @@
         document.documentElement.setAttribute("data-theme", theme);
       })();
     </script>
-    <link rel="stylesheet" href="css/styles.css" />
+    <!-- CSS — design tokens e variabili -->
+    <link rel="stylesheet" href="css/tokens.css" />
+    <!-- CSS — layout (sidebar, main) -->
+    <link rel="stylesheet" href="css/layout.css" />
+    <!-- CSS — layout responsive (collapsed, mobile) -->
+    <link rel="stylesheet" href="css/layout-responsive.css" />
+    <!-- CSS — componenti base (btn, form, tabella, badges, stats) -->
+    <link rel="stylesheet" href="css/components-base.css" />
+    <!-- CSS — componenti clienti (mini-bar, avatar, card, scadenzario) -->
+    <link rel="stylesheet" href="css/components-clienti-a.css" />
+    <!-- CSS — componenti clienti (adempimenti def, globale, dashboard, riepilogo) -->
+    <link rel="stylesheet" href="css/components-clienti-b.css" />
+    <!-- CSS — modal e overlay -->
+    <link rel="stylesheet" href="css/components-modals-a.css" />
+    <!-- CSS — modal secondarie (avatar, print, filtri, tipologie) -->
+    <link rel="stylesheet" href="css/components-modals-b.css" />
+    <!-- CSS — form, checkbox, dark-mode fix, bottom-nav -->
+    <link rel="stylesheet" href="css/components-forms-a.css" />
+    <!-- CSS — bottoni applica/elimina/seleziona modali -->
+    <link rel="stylesheet" href="css/components-forms-b.css" />
+    <!-- CSS — sintesi adempimenti (matrice) -->
+    <link rel="stylesheet" href="css/sintesi.css" />
   </head>
   <body>
     <!-- ═══ SIDEBAR ═════════════════════════════════════════ -->
@@ -1572,10 +1593,12 @@
     <script src="js/modules/components/renderers.js"></script>
     <!-- dashboard -->
     <script src="js/modules/pages/dashboard/render.js"></script>
-    <script src="js/modules/pages/dashboard/applica.js"></script>
+    <script src="js/modules/pages/dashboard/applica-modal.js"></script>
+    <script src="js/modules/pages/dashboard/applica-azioni.js"></script>
     <!-- clienti -->
     <script src="js/modules/pages/clienti/dettaglio.js"></script>
-    <script src="js/modules/pages/clienti/filtri.js"></script>
+    <script src="js/modules/pages/clienti/filtri-tipologie.js"></script>
+    <script src="js/modules/pages/clienti/filtri-clienti.js"></script>
     <script src="js/modules/pages/clienti/form.js"></script>
     <!-- scadenzario -->
     <script src="js/modules/pages/scadenziario/render.js"></script>
@@ -1583,9 +1606,12 @@
     <script src="js/modules/pages/scadenziario/bulk.js"></script>
     <script src="js/modules/pages/adempimenti/adp-pill-bulk.js"></script>
     <!-- globale -->
-    <script src="js/modules/pages/globale/filtri.js"></script>
+    <script src="js/modules/pages/globale/filtri-render.js"></script>
+    <script src="js/modules/pages/globale/filtri-apply.js"></script>
     <script src="js/modules/pages/globale/tabella.js"></script>
-    <script src="js/modules/pages/sintesi/sintesi.js"></script>
+    <script src="js/modules/pages/sintesi/sintesi-init.js"></script>
+    <script src="js/modules/pages/sintesi/sintesi-render.js"></script>
+    <script src="js/modules/pages/sintesi/sintesi-dettaglio.js"></script>
     <!-- adempimenti -->
     <script src="js/modules/pages/adempimenti/lista.js"></script>
     <script src="js/modules/pages/adempimenti/stato.js"></script>
@@ -1598,7 +1624,8 @@
     <script src="js/modules/network/socket.js"></script>
     <script src="js/modules/network/mobile.js"></script>
     <script src="js/modules/network/nav.js"></script>
-    <script src="js/modules/pages/cestino/cestino.js"></script>
+    <script src="js/modules/pages/cestino/cestino-render.js"></script>
+    <script src="js/modules/pages/cestino/cestino-azioni.js"></script>
     <script src="js/modules/network/bottom-nav.js"></script>
     <script src="js/script.js"></script>
   </body>
