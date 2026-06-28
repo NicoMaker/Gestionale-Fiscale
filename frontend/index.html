@@ -15,44 +15,26 @@
       rel="stylesheet"
     />
     <script src="/socket.io/socket.io.js"></script>
-    <!-- Tema: caricato subito per evitare flash di colore errato -->
-    <script>
-      (function () {
-        var k = "gf_theme",
-          s = null;
-        try {
-          s = localStorage.getItem(k);
-        } catch (e) {}
-        var theme =
-          s === "light" || s === "dark"
-            ? s
-            : window.matchMedia &&
-                window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
-        document.documentElement.setAttribute("data-theme", theme);
-      })();
-    </script>
     <!-- CSS — design tokens e variabili -->
     <link rel="stylesheet" href="css/tokens.css" />
     <!-- CSS — layout (sidebar, main) -->
-    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/layout/layout.css" />
     <!-- CSS — layout responsive (collapsed, mobile) -->
-    <link rel="stylesheet" href="css/layout-responsive.css" />
+    <link rel="stylesheet" href="css/layout/layout-responsive.css" />
     <!-- CSS — componenti base (btn, form, tabella, badges, stats) -->
-    <link rel="stylesheet" href="css/components-base.css" />
+    <link rel="stylesheet" href="css/components/components-base.css" />
     <!-- CSS — componenti clienti (mini-bar, avatar, card, scadenzario) -->
-    <link rel="stylesheet" href="css/components-clienti-a.css" />
+    <link rel="stylesheet" href="css/components/components-clienti-a.css" />
     <!-- CSS — componenti clienti (adempimenti def, globale, dashboard, riepilogo) -->
-    <link rel="stylesheet" href="css/components-clienti-b.css" />
+    <link rel="stylesheet" href="css/components/components-clienti-b.css" />
     <!-- CSS — modal e overlay -->
-    <link rel="stylesheet" href="css/components-modals-a.css" />
+    <link rel="stylesheet" href="css/components/components-modals-a.css" />
     <!-- CSS — modal secondarie (avatar, print, filtri, tipologie) -->
-    <link rel="stylesheet" href="css/components-modals-b.css" />
+    <link rel="stylesheet" href="css/components/components-modals-b.css" />
     <!-- CSS — form, checkbox, dark-mode fix, bottom-nav -->
     <link rel="stylesheet" href="css/components-forms-a.css" />
     <!-- CSS — bottoni applica/elimina/seleziona modali -->
-    <link rel="stylesheet" href="css/components-forms-b.css" />
+    <link rel="stylesheet" href="css/components/components-forms-b.css" />
     <!-- CSS — sintesi adempimenti (matrice) -->
     <link rel="stylesheet" href="css/sintesi.css" />
   </head>

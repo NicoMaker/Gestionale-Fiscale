@@ -104,3 +104,19 @@ window.getCurrentTheme = getCurrentTheme;
 
 // Inizializza subito (prima che il DOM sia completo, per evitare flash)
 initTheme();
+
+(function () {
+  var k = "gf_theme",
+    s = null;
+  try {
+    s = localStorage.getItem(k);
+  } catch (e) {}
+  var theme =
+    s === "light" || s === "dark"
+      ? s
+      : window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+  document.documentElement.setAttribute("data-theme", theme);
+})();

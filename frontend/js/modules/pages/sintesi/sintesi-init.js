@@ -386,4 +386,3 @@ function _sintesiOrdinaPeriodi(periodi) {
 // ═══════════════════════════════════════════════════════════════
 // RENDER TABELLA PRINCIPALE - NASCONDE LE CELLE NON FILTRATE
 // ═══════════════════════════════════════════════════════════════
-

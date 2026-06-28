@@ -545,4 +545,3 @@ var applyGlobaleFiltriDebounced = debounce(function () {
   state.globalePreFiltroAdp = "";
   loadGlobale();
 }, 300);
-

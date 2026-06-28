@@ -639,4 +639,3 @@ function _aggiornaAdpSelezionaTuttiBtn() {
     }
   }
 }
-
