@@ -93,10 +93,9 @@ function ripristinaItem(id) {
   switch (item.tabella) {
     case "clienti": {
       // Verifica che non esista già un cliente con lo stesso ID
-      const esistente = queryOne(
-        `SELECT id FROM clienti WHERE id = ?`,
-        [item.record_id],
-      );
+      const esistente = queryOne(`SELECT id FROM clienti WHERE id = ?`, [
+        item.record_id,
+      ]);
       if (esistente) throw new Error("Esiste già un cliente con questo ID");
       runQuery(
         `INSERT INTO clienti (id, nome, codice_fiscale, partita_iva, email, tipologia,
@@ -122,10 +121,9 @@ function ripristinaItem(id) {
     }
 
     case "adempimenti": {
-      const esistente = queryOne(
-        `SELECT id FROM adempimenti WHERE id = ?`,
-        [item.record_id],
-      );
+      const esistente = queryOne(`SELECT id FROM adempimenti WHERE id = ?`, [
+        item.record_id,
+      ]);
       if (esistente) throw new Error("Esiste già un adempimento con questo ID");
       runQuery(
         `INSERT INTO adempimenti (id, nome, codice, descrizione, scadenza_tipo,
@@ -147,18 +145,16 @@ function ripristinaItem(id) {
 
     case "adempimenti_cliente": {
       // Verifica che il cliente e l'adempimento di riferimento esistano ancora
-      const cliente = queryOne(
-        `SELECT id FROM clienti WHERE id = ?`,
-        [dati.id_cliente],
-      );
+      const cliente = queryOne(`SELECT id FROM clienti WHERE id = ?`, [
+        dati.id_cliente,
+      ]);
       if (!cliente)
         throw new Error(
           `Cliente #${dati.id_cliente} non trovato — ripristina prima il cliente`,
         );
-      const adp = queryOne(
-        `SELECT id FROM adempimenti WHERE id = ?`,
-        [dati.id_adempimento],
-      );
+      const adp = queryOne(`SELECT id FROM adempimenti WHERE id = ?`, [
+        dati.id_adempimento,
+      ]);
       if (!adp)
         throw new Error(
           `Adempimento #${dati.id_adempimento} non trovato — ripristina prima l'adempimento`,
@@ -225,7 +221,9 @@ function ripristinaItem(id) {
     }
 
     default:
-      throw new Error(`Tabella non supportata per il ripristino: ${item.tabella}`);
+      throw new Error(
+        `Tabella non supportata per il ripristino: ${item.tabella}`,
+      );
   }
 
   // Rimuovi dal cestino dopo il ripristino riuscito
