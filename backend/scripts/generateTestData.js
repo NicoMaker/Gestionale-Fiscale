@@ -99,13 +99,11 @@ function assegnaAdempimentiACliente(id_cliente, anno, adempimenti) {
   const scelti = shuffled.slice(0, numAdp);
 
   scelti.forEach(adp => {
-    // Inserisce l'adempimento per il cliente (se non esiste già)
     scadenzarioModel.addAdempimentoCliente({
       id_cliente,
       id_adempimento: adp.id,
       anno,
     });
-    // Recupera le righe create e le aggiorna con dati casuali
     const righe = queryAll(
       `SELECT id FROM adempimenti_cliente WHERE id_cliente = ? AND id_adempimento = ? AND anno = ?`,
       [id_cliente, adp.id, anno]
@@ -148,13 +146,13 @@ function generaAppuntiPerCliente(id_cliente, anno) {
 
 // ─── GENERA APPUNTI "STUDIO" (senza cliente) ──────────────────────────────
 function generaAppuntiStudio(anno) {
-  const numAppunti = Math.floor(Math.random() * 5) + 3; // 3-8 appunti studio
+  const numAppunti = Math.floor(Math.random() * 5) + 3;
   for (let i = 0; i < numAppunti; i++) {
     const dataScadenza = faker.date.future({ years: 1 }).toISOString().split('T')[0];
     appuntiModel.createAppunto({
       titolo: faker.lorem.words({ min: 3, max: 7 }),
       contenuto: faker.lorem.paragraphs({ min: 1, max: 3 }),
-      id_cliente: null,  // appunto generale
+      id_cliente: null,
       data_scadenza: dataScadenza,
       priorita: casuale(['bassa', 'media', 'alta']),
       completato: Math.random() > 0.8 ? 1 : 0,
@@ -164,7 +162,7 @@ function generaAppuntiStudio(anno) {
 
 // ─── GENERA PAGINA BIANCA PER CLIENTE ───────────────────────────────────────
 function generaPaginaBiancaPerCliente(id_cliente) {
-  if (Math.random() > 0.6) return; // 40% dei clienti ha almeno una nota
+  if (Math.random() > 0.6) return;
   const numNote = Math.floor(Math.random() * 2) + 1;
   for (let i = 0; i < numNote; i++) {
     paginaBiancaModel.createPaginaBianca({
@@ -179,7 +177,7 @@ function generaPaginaBiancaPerCliente(id_cliente) {
 
 // ─── GENERA PAGINA BIANCA "STUDIO" ──────────────────────────────────────────
 function generaPaginaBiancaStudio() {
-  const numNote = Math.floor(Math.random() * 3) + 1; // 1-3 note studio
+  const numNote = Math.floor(Math.random() * 3) + 1;
   for (let i = 0; i < numNote; i++) {
     paginaBiancaModel.createPaginaBianca({
       tipo: 'studio',
@@ -198,7 +196,6 @@ async function generateTestData() {
 
   const annoCorrente = new Date().getFullYear();
 
-  // 1. Tipologie e sottotipologie (già presenti dal seed)
   const tipologie = getTipologie();
   if (!tipologie.length) {
     console.error('❌ Nessuna tipologia trovata. Esegui prima il seed iniziale.');
@@ -209,12 +206,10 @@ async function generateTestData() {
     sottotipologieMap[t.id] = getSottotipologiePerTipologia(t.id);
   });
 
-  // 2. Crea adempimenti di esempio se non esistono
   console.log('📋 Verifica adempimenti...');
   const adempimenti = creaAdempimentiEsempio();
   console.log(`   ${adempimenti.length} adempimenti disponibili`);
 
-  // 3. Genera 100 clienti
   console.log('👤 Generazione 100 clienti...');
   const clientiIds = [];
   for (let i = 0; i < 100; i++) {
@@ -229,16 +224,14 @@ async function generateTestData() {
   }
   console.log(`\n✅ Creati ${clientiIds.length} clienti`);
 
-  // 4. Assegna adempimenti a ogni cliente (tranne alcuni che resteranno senza per il cestino)
   console.log('📅 Assegnazione adempimenti ai clienti...');
-  const clientiConAdempimenti = clientiIds.slice(0, 90); // 90 con adempimenti, 10 senza
+  const clientiConAdempimenti = clientiIds.slice(0, 90);
   for (const id of clientiConAdempimenti) {
     assegnaAdempimentiACliente(id, annoCorrente, adempimenti);
     if (id % 10 === 0) process.stdout.write('.');
   }
   console.log(`\n✅ Adempimenti assegnati a ${clientiConAdempimenti.length} clienti`);
 
-  // 5. Genera appunti per tutti i clienti
   console.log('📝 Generazione appunti per clienti...');
   for (const id of clientiIds) {
     generaAppuntiPerCliente(id, annoCorrente);
@@ -246,12 +239,10 @@ async function generateTestData() {
   }
   console.log('\n✅ Appunti clienti generati');
 
-  // 5b. Genera appunti "studio" (senza cliente)
   console.log('📝 Generazione appunti studio (generali)...');
   generaAppuntiStudio(annoCorrente);
   console.log('   Appunti studio creati');
 
-  // 6. Genera pagina bianca per alcuni clienti
   console.log('📄 Generazione pagina bianca per clienti...');
   for (const id of clientiIds) {
     generaPaginaBiancaPerCliente(id);
@@ -259,15 +250,14 @@ async function generateTestData() {
   }
   console.log('\n✅ Pagina bianca clienti generata');
 
-  // 6b. Genera pagina bianca "studio"
   console.log('📄 Generazione pagina bianca studio...');
   generaPaginaBiancaStudio();
   console.log('   Pagina bianca studio creata');
 
-  // 7. Crea alcuni adempimenti extra non associati per poterli cestinare
-  console.log('🧩 Creazione adempimenti extra per il cestino...');
+  // ─── CREA PIÙ ADEMPIMENTI EXTRA PER IL CESTINO ──────────────────────────
+  console.log('🧩 Creazione adempimenti extra per il cestino (10)...');
   const adpExtra = [];
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     const data = {
       codice: `EXTRA_${i}`,
       nome: `Adempimento Extra ${i}`,
@@ -285,11 +275,31 @@ async function generateTestData() {
   }
   console.log(`   Creati ${adpExtra.length} adempimenti extra`);
 
-  // 8. Sposta alcuni elementi nel cestino
+  // ─── ELIMINA ANCHE 2 ADEMPIMENTI ESISTENTI (dopo aver rimosso i collegamenti) ──
+  console.log('🧹 Rimozione di 2 adempimenti esistenti per cestinarli...');
+  const adpDaEliminare = adempimenti.slice(0, 2); // prendi i primi 2
+  for (const adp of adpDaEliminare) {
+    // 1. Elimina tutte le righe in adempimenti_cliente per questo adempimento
+    const righe = queryAll(`SELECT id FROM adempimenti_cliente WHERE id_adempimento = ?`, [adp.id]);
+    for (const r of righe) {
+      try {
+        scadenzarioModel.deleteAdempimentoCliente(r.id);
+      } catch (_) {}
+    }
+    // 2. Ora elimina l'adempimento (finirà nel cestino)
+    try {
+      adempimentiModel.deleteAdempimento(adp.id);
+      console.log(`   Adempimento "${adp.nome}" (ID ${adp.id}) eliminato e spostato nel cestino`);
+    } catch (e) {
+      console.error(`   Errore eliminazione adempimento ${adp.id}:`, e.message);
+    }
+  }
+
+  // ─── POPOLA IL CESTINO ────────────────────────────────────────────────────
   console.log('🗑️  Popolazione cestino...');
 
   // 8a. Elimina i 10 clienti senza adempimenti (li sposta nel cestino)
-  const clientiDaEliminare = clientiIds.slice(90, 100); // ultimi 10
+  const clientiDaEliminare = clientiIds.slice(90, 100);
   for (const id of clientiDaEliminare) {
     try {
       clientiModel.deleteCliente(id);
@@ -299,7 +309,7 @@ async function generateTestData() {
     }
   }
 
-  // 8b. Elimina alcuni adempimenti extra (non associati)
+  // 8b. Elimina gli adempimenti extra (non associati)
   for (const id of adpExtra) {
     try {
       adempimentiModel.deleteAdempimento(id);
@@ -373,5 +383,4 @@ async function generateTestData() {
   console.log('\n🎉 Dati di test generati con successo!');
 }
 
-// Esegui lo script
 generateTestData().catch(console.error);
