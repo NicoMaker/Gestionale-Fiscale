@@ -265,6 +265,16 @@
 .search-wrap:focus-within .search-icon {
   background-color: var(--accent);
 }
+
+/* Rimossa icona lente per i campi "Cerca adempimento" e "Cerca cliente" */
+.search-wrap:has(#applica-adp-search) .search-icon,
+.search-wrap:has(#applica-clienti-search) .search-icon {
+  display: none;
+}
+.search-wrap:has(#applica-adp-search) .input,
+.search-wrap:has(#applica-clienti-search) .input {
+  padding-left: 14px;
+}
 @media (max-width: 768px) {
   .search-wrap {
     width: 140px !important;
