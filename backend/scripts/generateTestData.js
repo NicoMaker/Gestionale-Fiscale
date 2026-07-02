@@ -1,20 +1,16 @@
 // scripts/generateTestData.js
 const { faker } = require('@faker-js/faker/locale/it');
+
 const { initDB, runQuery, queryAll, queryOne } = require('../modules/database');
 const clientiModel = require('../modules/models/clienti');
 const adempimentiModel = require('../modules/models/adempimenti');
 const scadenzarioModel = require('../modules/models/scadenzario');
 const appuntiModel = require('../modules/models/appunti');
 const paginaBiancaModel = require('../modules/models/paginaBianca');
-const cestinoModel = require('../modules/models/cestino');
 
 // ─── UTILITY ──────────────────────────────────────────────────────────────────
 function casuale(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function range(n) {
-  return Array.from({ length: n }, (_, i) => i);
 }
 
 function getTipologie() {
@@ -150,6 +146,22 @@ function generaAppuntiPerCliente(id_cliente, anno) {
   }
 }
 
+// ─── GENERA APPUNTI "STUDIO" (senza cliente) ──────────────────────────────
+function generaAppuntiStudio(anno) {
+  const numAppunti = Math.floor(Math.random() * 5) + 3; // 3-8 appunti studio
+  for (let i = 0; i < numAppunti; i++) {
+    const dataScadenza = faker.date.future({ years: 1 }).toISOString().split('T')[0];
+    appuntiModel.createAppunto({
+      titolo: faker.lorem.words({ min: 3, max: 7 }),
+      contenuto: faker.lorem.paragraphs({ min: 1, max: 3 }),
+      id_cliente: null,  // appunto generale
+      data_scadenza: dataScadenza,
+      priorita: casuale(['bassa', 'media', 'alta']),
+      completato: Math.random() > 0.8 ? 1 : 0,
+    });
+  }
+}
+
 // ─── GENERA PAGINA BIANCA PER CLIENTE ───────────────────────────────────────
 function generaPaginaBiancaPerCliente(id_cliente) {
   if (Math.random() > 0.6) return; // 40% dei clienti ha almeno una nota
@@ -161,6 +173,20 @@ function generaPaginaBiancaPerCliente(id_cliente) {
       contenuto: faker.lorem.paragraphs({ min: 1, max: 2 }),
       allegati: Math.random() > 0.8 ? faker.system.fileName() : null,
       id_cliente,
+    });
+  }
+}
+
+// ─── GENERA PAGINA BIANCA "STUDIO" ──────────────────────────────────────────
+function generaPaginaBiancaStudio() {
+  const numNote = Math.floor(Math.random() * 3) + 1; // 1-3 note studio
+  for (let i = 0; i < numNote; i++) {
+    paginaBiancaModel.createPaginaBianca({
+      tipo: 'studio',
+      titolo: faker.lorem.words({ min: 3, max: 6 }),
+      contenuto: faker.lorem.paragraphs({ min: 1, max: 3 }),
+      allegati: Math.random() > 0.8 ? faker.system.fileName() : null,
+      id_cliente: null,
     });
   }
 }
@@ -213,20 +239,30 @@ async function generateTestData() {
   console.log(`\n✅ Adempimenti assegnati a ${clientiConAdempimenti.length} clienti`);
 
   // 5. Genera appunti per tutti i clienti
-  console.log('📝 Generazione appunti...');
+  console.log('📝 Generazione appunti per clienti...');
   for (const id of clientiIds) {
     generaAppuntiPerCliente(id, annoCorrente);
     if (id % 10 === 0) process.stdout.write('.');
   }
-  console.log('\n✅ Appunti generati');
+  console.log('\n✅ Appunti clienti generati');
+
+  // 5b. Genera appunti "studio" (senza cliente)
+  console.log('📝 Generazione appunti studio (generali)...');
+  generaAppuntiStudio(annoCorrente);
+  console.log('   Appunti studio creati');
 
   // 6. Genera pagina bianca per alcuni clienti
-  console.log('📄 Generazione pagina bianca...');
+  console.log('📄 Generazione pagina bianca per clienti...');
   for (const id of clientiIds) {
     generaPaginaBiancaPerCliente(id);
     if (id % 10 === 0) process.stdout.write('.');
   }
-  console.log('\n✅ Pagina bianca generata');
+  console.log('\n✅ Pagina bianca clienti generata');
+
+  // 6b. Genera pagina bianca "studio"
+  console.log('📄 Generazione pagina bianca studio...');
+  generaPaginaBiancaStudio();
+  console.log('   Pagina bianca studio creata');
 
   // 7. Crea alcuni adempimenti extra non associati per poterli cestinare
   console.log('🧩 Creazione adempimenti extra per il cestino...');
