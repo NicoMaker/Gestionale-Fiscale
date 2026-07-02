@@ -5,7 +5,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "seed:test": "node scripts/generateTestData.js",
+    "seed:test:full": "node scripts/generateTestData.js && echo '✅ Seeding completato'",
+    "start:with-seed": "npm run seed:test && npm start",
+    "dev:with-seed": "npm run seed:test && npm run dev"
   },
   "author": "Nico Maker",
   "license": "ISC",
@@ -18,5 +22,8 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "sql.js": "^1.14.1"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.5.0"
   }
 }
