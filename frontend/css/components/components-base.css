@@ -22,7 +22,9 @@
 .select:focus {
   border-color: var(--accent);
   background: var(--s0);
-  box-shadow: 0 0 0 3px var(--accent-d), var(--shadow-sm);
+  box-shadow:
+    0 0 0 3px var(--accent-d),
+    var(--shadow-sm);
 }
 .input::placeholder {
   color: var(--t3);
