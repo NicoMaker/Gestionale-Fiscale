@@ -1,3 +1,58 @@
+// ═══════════════════════════════════════════════════════════════
+// SINTESI DETTAGLIO — Gestione dettaglio e stampa
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Helper per stampa in iframe nascosto (senza doppia esecuzione) ──
+function stampaHTMLInIframe(html) {
+  var iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "1px";
+  iframe.style.height = "1px";
+  iframe.style.border = "0";
+  iframe.style.opacity = "0.01";
+  iframe.style.pointerEvents = "none";
+  iframe.style.zIndex = "-9999";
+  document.body.appendChild(iframe);
+
+  var doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(html);
+  doc.close();
+
+  var alreadyPrinted = false;
+
+  function doPrint() {
+    if (alreadyPrinted) return;
+    alreadyPrinted = true;
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {
+      console.warn("Errore durante la stampa:", e);
+    } finally {
+      setTimeout(function () {
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 2000);
+    }
+  }
+
+  iframe.onload = function () {
+    setTimeout(doPrint, 300);
+  };
+
+  // Fallback: se onload non si attiva entro 1s, esegui comunque (una sola volta)
+  setTimeout(function () {
+    if (
+      iframe.contentWindow &&
+      iframe.contentWindow.document.readyState === "complete"
+    ) {
+      doPrint();
+    }
+  }, 1000);
+}
+
 function sintesiToggleDettaglio(key, clienteId, adempimentoId) {
   state.sintesiActiveCellKey = state.sintesiActiveCellKey === key ? null : key;
   renderSintesiTabella();
@@ -280,7 +335,6 @@ function _generaFinestraStampa() {
       ) {
         return; // cella nascosta
       }
-      // Se il cliente non ha periodi per questo adempimento e lo stato è "na", lo mostriamo comunque come N/A
       adempimentiCliente.push({
         adp: adp,
         periodi: periodi,
@@ -500,33 +554,8 @@ function _generaFinestraStampa() {
 
   var html = htmlParts.join("");
 
-  var win = window.open("", "_blank", "width=1100,height=800,scrollbars=yes");
-  if (!win) {
-    showNotif(
-      "⚠️ Il browser ha bloccato la finestra popup. Permetti i popup per questa pagina.",
-      "error",
-    );
-    return;
-  }
-  win.document.write(html);
-  win.document.close();
-  win.onload = function () {
-    setTimeout(function () {
-      win.print();
-    }, 300);
-  };
+  // Usa l'iframe nascosto (ora corretto per non stampare due volte)
+  stampaHTMLInIframe(html);
 }
-window.stampaSintesiCompleta = stampaSintesiCompleta;
 
-// ═══════════════════════════════════════════════════════════════
-// ESPOSIZIONE GLOBALE
-// ═══════════════════════════════════════════════════════════════
-window.renderSintesiPage = renderSintesiPage;
-window.changeAnnoSintesi = changeAnnoSintesi;
-window.loadSintesi = loadSintesi;
-window.renderSintesiTabella = renderSintesiTabella;
-window.onSintesiSearchInput = onSintesiSearchInput;
-window.applySintesiFiltriLocali = applySintesiFiltriLocali;
-window.resetSintesiFiltri = resetSintesiFiltri;
 window.stampaSintesiCompleta = stampaSintesiCompleta;
-window.onSintesiTipoUtenteChange = onSintesiTipoUtenteChange;
