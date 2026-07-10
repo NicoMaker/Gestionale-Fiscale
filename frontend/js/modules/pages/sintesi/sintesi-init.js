@@ -373,14 +373,7 @@ function _sintesiStatoCella(periodi) {
 }
 
 function _sintesiOrdinaPeriodi(periodi) {
-  return periodi.slice().sort(function (a, b) {
-    if (a.mese != null && b.mese != null) return a.mese - b.mese;
-    if (a.trimestre != null && b.trimestre != null)
-      return a.trimestre - b.trimestre;
-    if (a.semestre != null && b.semestre != null)
-      return a.semestre - b.semestre;
-    return 0;
-  });
+  return periodi.slice().sort(confrontaPeriodi);
 }
 
 // ═══════════════════════════════════════════════════════════════

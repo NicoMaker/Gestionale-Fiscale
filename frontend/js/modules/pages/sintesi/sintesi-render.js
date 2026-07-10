@@ -262,14 +262,7 @@ function renderSintesiTabella() {
           statoFiltriAttivi.indexOf(st.kind) === -1;
 
         var periodi = lookup[key] || [];
-        var sortedP = periodi.slice().sort(function (a, b) {
-          if (a.mese != null && b.mese != null) return a.mese - b.mese;
-          if (a.trimestre != null && b.trimestre != null)
-            return a.trimestre - b.trimestre;
-          if (a.semestre != null && b.semestre != null)
-            return a.semestre - b.semestre;
-          return 0;
-        });
+        var sortedP = periodi.slice().sort(confrontaPeriodi);
 
         var doneCount = 0;
         var pillsHtml = sortedP

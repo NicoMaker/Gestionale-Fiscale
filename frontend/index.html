@@ -35,7 +35,17 @@
     <link rel="stylesheet" href="css/sintesi.css" />
     <!-- CSS — modern polish -->
     <link rel="stylesheet" href="css/modern-polish.css" />
-    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <!-- CSS — identità premium "Aurora" (layer finale) -->
+    <link rel="stylesheet" href="css/premium.css" />
+    <!-- Icone Lucide: self-hosted (funziona anche offline/LAN), con fallback CDN -->
+    <script src="js/vendor/lucide.min.js"></script>
+    <script>
+      if (typeof lucide === "undefined") {
+        document.write(
+          '<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"><\/script>',
+        );
+      }
+    </script>
   </head>
   <body>
     <!-- ═══ SIDEBAR ═════════════════════════════════════════ -->
@@ -1588,6 +1598,10 @@
     <script src="js/modules/core/constants.js"></script>
     <script src="js/modules/core/state.js"></script>
     <script src="js/modules/core/utils.js"></script>
+    <!-- Modulo CONDIVISO backend/frontend: logica date unica -->
+    <script src="shared/date-core.js"></script>
+    <!-- Modulo CONDIVISO: ordinamento naturale periodi fiscali (T1→T2→T3→T4) -->
+    <script src="shared/periodi.js"></script>
     <script src="js/modules/core/date-utils.js"></script>
     <script src="js/modules/core/field-history.js"></script>
     <script src="js/modules/core/theme.js"></script>

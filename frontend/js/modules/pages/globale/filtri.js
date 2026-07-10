@@ -706,25 +706,14 @@ function navigaAdempimento(direzione) {
 
 // ═══════════════════════════════════════════════════════════════
 // HELPER INTERNO: costruisce l'HTML dei periodi ordinati per un cliente
-// Ordine: data_scadenza ASC (29/04 prima di 30/05), parità → alfabetico
+// Ordine: adempimento, poi periodo naturale (T1 prima di T2), poi data
 // ═══════════════════════════════════════════════════════════════
 
 function _buildPeriodiOrdinatiHtml(periodi) {
-  var periodiOrdinati = periodi.slice().sort(function (a, b) {
-    if (a.data_scadenza && b.data_scadenza) {
-      var dateA = new Date(a.data_scadenza);
-      var dateB = new Date(b.data_scadenza);
-      if (dateA - dateB !== 0) return dateA - dateB;
-      return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
-        sensitivity: "base",
-      });
-    }
-    if (a.data_scadenza) return -1;
-    if (b.data_scadenza) return 1;
-    return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
-      sensitivity: "base",
-    });
-  });
+  // Ordine NATURALE: adempimento A→Z, poi T1 → T2 → T3 → T4 (mai il
+  // contrario), Gen → Dic, S1 → S2, quindi data crescente.
+  // Comparatore nel modulo condiviso /shared/periodi.js
+  var periodiOrdinati = periodi.slice().sort(confrontaPeriodi);
 
   var html = "";
   for (var i = 0; i < periodiOrdinati.length; i++) {

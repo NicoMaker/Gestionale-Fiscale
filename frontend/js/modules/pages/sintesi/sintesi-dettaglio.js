@@ -466,14 +466,7 @@ function _generaFinestraStampa() {
       var statoClass = "stato-" + st.kind;
       var bgClass = "bg-" + st.kind;
 
-      var sortedP = periodi.slice().sort(function (a, b) {
-        if (a.mese != null && b.mese != null) return a.mese - b.mese;
-        if (a.trimestre != null && b.trimestre != null)
-          return a.trimestre - b.trimestre;
-        if (a.semestre != null && b.semestre != null)
-          return a.semestre - b.semestre;
-        return 0;
-      });
+      var sortedP = periodi.slice().sort(confrontaPeriodi);
 
       var periodiDetails = sortedP
         .map(function (p) {
