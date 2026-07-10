@@ -71,8 +71,10 @@
     if (ordA !== ordB) return ordA - ordB;
 
     // 3) A parità di periodo: data scadenza crescente (chi ha la data prima)
-    const dataA = a && a.data_scadenza ? new Date(a.data_scadenza).getTime() : null;
-    const dataB = b && b.data_scadenza ? new Date(b.data_scadenza).getTime() : null;
+    const dataA =
+      a && a.data_scadenza ? new Date(a.data_scadenza).getTime() : null;
+    const dataB =
+      b && b.data_scadenza ? new Date(b.data_scadenza).getTime() : null;
     if (dataA != null && dataB != null && dataA !== dataB) return dataA - dataB;
     if (dataA != null && dataB == null) return -1;
     if (dataB != null && dataA == null) return 1;
