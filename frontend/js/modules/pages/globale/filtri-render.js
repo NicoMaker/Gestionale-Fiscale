@@ -401,13 +401,13 @@ function renderGlobalePage() {
   });
 
   if (!Array.isArray(state.globaleSelectedClienti)) {
-    // Migrazione da vecchio stato a selezione singola, se presente
     state.globaleSelectedClienti =
       state.globaleSelectedCliente && state.globaleSelectedCliente !== ""
         ? [state.globaleSelectedCliente]
         : [];
   }
 
+  // ⬇️ RIMOSSO L'INPUT DI RICERCA DALLA TOPBAR
   document.getElementById("topbar-actions").innerHTML =
     '<div class="year-sel">' +
     '<button onclick="changeAnnoGlobale(-1)" title="Anno precedente">&#9664;</button>' +
@@ -416,9 +416,6 @@ function renderGlobalePage() {
     "</span>" +
     '<button onclick="changeAnnoGlobale(1)" title="Anno successivo">&#9654;</button>' +
     "</div>" +
-    '<div class="search-wrap" style="width:200px"><span class="search-icon">🔍</span><input class="input" id="glob-search-cliente" placeholder="Cerca cliente…" value="' +
-    escAttr(getSharedClienteSearch()) +
-    '" oninput="setSharedClienteSearch(this.value);applyGlobaleFiltriLocali()" style="font-size:13px"></div>' +
     '<select class="select topbar-select" id="glob-sel-cliente" multiple onchange="onGlobaleClienteChange()" title="Seleziona uno o più clienti" style="min-width:200px;max-width:260px">' +
     "</select>" +
     '<select class="select" id="glob-filtro-adp" multiple style="width:210px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per uno o più tipi di adempimento" data-placeholder="📋 Tutti adempimenti">' +
@@ -437,7 +434,6 @@ function renderGlobalePage() {
     initSearchableMultiSelect("glob-filtro-adp");
     populateGlobaleClienti();
 
-    // Gestione pre‑filtri multipli
     var preFiltroMulti =
       state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length
         ? state.globalePreFiltroAdpMulti
@@ -500,7 +496,7 @@ function renderGlobaleClientiSelect() {
   clienteSel.innerHTML = opts;
   if (!clienteSel.dataset.ssinit) {
     initSearchableMultiSelect("glob-sel-cliente", {
-      showSearch: false,
+      showSearch: true,   // 🔍 ricerca integrata nel dropdown
       placeholder: "-- Seleziona Cliente --",
     });
   } else if (clienteSel._ssRefresh) {
@@ -517,10 +513,6 @@ function onGlobaleClienteChange() {
     : [];
   state.globaleSelectedClienti = clienteIds;
 
-  // ⭐ Selezionando uno o più clienti, attiva automaticamente tutte le
-  // tipologie configurate (tranne quelle non impostate), così i clienti
-  // scelti non vengono nascosti dal filtro tipologie. Lo stato è condiviso
-  // (storage + evento) quindi si sincronizza anche su Clienti e Dashboard.
   if (clienteIds.length > 0 && typeof selezionaTuttiTipFiltro === "function") {
     selezionaTuttiTipFiltro();
   }
@@ -532,7 +524,6 @@ function loadGlobale() {
   var filtri = {};
   var adpSel = document.getElementById("glob-filtro-adp");
   var statoSel = document.getElementById("glob-filtro-stato");
-  var clienteSearch = document.getElementById("glob-search-cliente");
 
   var adpValori = adpSel
     ? Array.from(adpSel.selectedOptions || []).map(function (o) {
@@ -552,7 +543,7 @@ function loadGlobale() {
   }
 
   if (statoSel && statoSel.value) filtri.stato = statoSel.value;
-  if (clienteSearch && clienteSearch.value) filtri.search = clienteSearch.value;
+  // ⬇️ RIMOSSO il filtro search
   if (state.globaleSelectedClienti && state.globaleSelectedClienti.length)
     filtri.cliente_id = state.globaleSelectedClienti.slice();
 

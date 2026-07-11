@@ -16,8 +16,7 @@ function renderGlobaleTabella(rawData) {
     ? filtroClienteStatoEl.value
     : "";
 
-  var clienteSearch = document.getElementById("glob-search-cliente");
-  var searchTerm = clienteSearch ? clienteSearch.value.toLowerCase() : "";
+  // ⬇️ RIMOSSO searchTerm (non più presente)
   var selectedClienteIds =
     state.globaleSelectedClienti && state.globaleSelectedClienti.length
       ? state.globaleSelectedClienti.map(function (id) {
@@ -33,18 +32,7 @@ function renderGlobaleTabella(rawData) {
       selectedClienteIds.indexOf(r.cliente_id) === -1
     )
       continue;
-    if (searchTerm) {
-      var clienteNome = (r.cliente_nome || "").toLowerCase();
-      var clienteCf = (r.cliente_cf || "").toLowerCase();
-      var clientePiva = (r.cliente_piva || "").toLowerCase();
-      if (
-        clienteNome.indexOf(searchTerm) === -1 &&
-        clienteCf.indexOf(searchTerm) === -1 &&
-        clientePiva.indexOf(searchTerm) === -1
-      ) {
-        continue;
-      }
-    }
+    // ⬇️ RIMOSSO il filtro per searchTerm
     data.push(r);
   }
 
@@ -128,17 +116,7 @@ function renderGlobaleTabella(rawData) {
     }
   }
 
-  var searchBadge = "";
-  if (searchTerm) {
-    searchBadge =
-      '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:10px;padding:5px 12px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">' +
-      "<span>🔍 Ricerca:</span>" +
-      "<strong>" +
-      searchTerm +
-      "</strong>" +
-      '<button onclick="document.getElementById(\'glob-search-cliente\').value=\'\';applyGlobaleFiltri()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi filtro">✕</button>' +
-      "</div>";
-  }
+  // ⬇️ RIMOSSO searchBadge
 
   var navAdpHtml = "";
   if (adpFiltroAttivi.length > 0) {
@@ -206,7 +184,7 @@ function renderGlobaleTabella(rawData) {
     '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px">' +
     filtroClienteStatoBadge +
     clienteSelBadge +
-    searchBadge +
+    // ⬇️ RIMOSSO searchBadge
     "</div>" +
     "</div>" +
     "</div>" +
@@ -295,11 +273,7 @@ function renderGlobaleTabella(rawData) {
       clientiFiltrati.push(c);
     }
 
-    // ⭐ Per Solo Scad.: ordina clienti per data_scadenza ASC (29/04 prima di 30/05),
-    //    parità → alfabetico per nome cliente.
-    //    Per gli altri tipi: solo alfabetico per nome.
     clientiFiltrati.sort(function (a, b) {
-      // Determina se il gruppo è Solo Scadenza dal primo periodo disponibile
       var primoA = a.periodi && a.periodi[0];
       var isSemplice =
         primoA &&
@@ -308,7 +282,6 @@ function renderGlobaleTabella(rawData) {
         !parseInt(primoA.is_checkbox);
 
       if (isSemplice) {
-        // Prendi la data scadenza più vicina di ciascun cliente
         var minDateA = null,
           minDateB = null;
         for (var pi = 0; pi < a.periodi.length; pi++) {
@@ -324,11 +297,10 @@ function renderGlobaleTabella(rawData) {
           }
         }
         if (minDateA && minDateB) {
-          if (minDateA - minDateB !== 0) return minDateA - minDateB; // ASC
+          if (minDateA - minDateB !== 0) return minDateA - minDateB;
         } else if (minDateA) return -1;
         else if (minDateB) return 1;
       }
-      // Fallback (e tutti gli altri tipi): alfabetico per nome
       return a.nome.localeCompare(b.nome, "it", { sensitivity: "base" });
     });
 
@@ -394,7 +366,6 @@ function renderGlobaleTabella(rawData) {
       var classBadgesHtml = _renderGlobaleClienteClassBadges(client);
       var sottotipoLabel = client.sottotipologia_nome || "";
 
-      // ⭐ Usa l'helper che gestisce il sort ASC per data
       var periodiHtml = _buildPeriodiOrdinatiHtml(client.periodi);
       var isMensile = client.periodi.length > 4;
 
@@ -506,8 +477,7 @@ function renderGlobaleTabella(rawData) {
       ? "Nessun filtro tipologia selezionato — clicca <strong>✦ Tutti</strong> nel pannello Tipologie per vedere i clienti"
       : filtroClienteStato ||
           hasFiltroTipologie ||
-          searchTerm ||
-          selectedClienteId
+          selectedClienteIds.length
         ? "Nessun cliente corrisponde ai filtri attivi per " + state.anno
         : "Nessun adempimento trovato per " + state.anno;
 
@@ -527,7 +497,6 @@ function renderGlobaleTabella(rawData) {
     state.globalePreFiltroAdp = "";
   }
 
-  // Aggiorna UI bulk selezione se modalità attiva
   if (typeof _pillBulkAttivo !== "undefined" && _pillBulkAttivo) {
     _renderBarraBulkPill();
     _aggiornaPillBulkUI();
@@ -542,7 +511,6 @@ window.toggleGlobTipFiltroPanel = toggleGlobTipFiltroPanel;
 window.closeGlobTipFiltroPanel = closeGlobTipFiltroPanel;
 window.resetGlobaleFiltri = resetGlobaleFiltri;
 
-// Helper per attivare selezione bulk da vista globale (per singolo cliente)
 function attivaModalitaSelezioneGlobale(clienteId) {
   if (typeof attivaModalitaSelezione === "function") {
     attivaModalitaSelezione("globale");

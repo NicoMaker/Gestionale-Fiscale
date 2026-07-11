@@ -11,7 +11,7 @@ function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
   state.globalePreFiltroAdpMulti = null;
   state.globaleSelectedClienti = [];
-  setSharedClienteSearch("");
+  // ⬇️ RIMOSSO setSharedClienteSearch("") perché non serve più
   var adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
     Array.from(adpSel.options).forEach(function (o) {
@@ -26,7 +26,8 @@ function resetGlobaleFiltri() {
     });
     if (clienteSel._ssRefresh) clienteSel._ssRefresh();
   }
-  var ids = ["glob-filtro-stato", "glob-search-cliente"];
+  // ⬇️ RIMOSSO il reset di glob-search-cliente
+  var ids = ["glob-filtro-stato"];
   for (var i = 0; i < ids.length; i++) {
     var el = document.getElementById(ids[i]);
     if (el) {
@@ -122,7 +123,6 @@ function renderGlobaleHeader() {
     if (!adpSel.dataset.ssinit) initSearchableMultiSelect("glob-filtro-adp");
     else if (adpSel._ssRefresh) adpSel._ssRefresh();
 
-    // Azzera i pre‑filtri dopo averli applicati
     state.globalePreFiltroAdp = "";
     state.globalePreFiltroAdpMulti = null;
   }
@@ -167,7 +167,6 @@ function navigaAdempimento(direzione) {
 
 // ═══════════════════════════════════════════════════════════════
 // HELPER INTERNO: costruisce l'HTML dei periodi ordinati per un cliente
-// Ordine: data_scadenza ASC (29/04 prima di 30/05), parità → alfabetico
 // ═══════════════════════════════════════════════════════════════
 
 function _buildPeriodiOrdinatiHtml(periodi) {
