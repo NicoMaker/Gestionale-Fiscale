@@ -7,124 +7,124 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ─── Helper per stampa in iframe nascosto (senza doppia esecuzione) ──
-function stampaHTMLInIframe(html) {
-  var iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "1px";
-  iframe.style.height = "1px";
-  iframe.style.border = "0";
-  iframe.style.opacity = "0.01";
-  iframe.style.pointerEvents = "none";
-  iframe.style.zIndex = "-9999";
-  document.body.appendChild(iframe);
+function stampaHTMLInIframe (html) {
+  var iframe = document.createElement('iframe')
+  iframe.style.position = 'fixed'
+  iframe.style.right = '0'
+  iframe.style.bottom = '0'
+  iframe.style.width = '1px'
+  iframe.style.height = '1px'
+  iframe.style.border = '0'
+  iframe.style.opacity = '0.01'
+  iframe.style.pointerEvents = 'none'
+  iframe.style.zIndex = '-9999'
+  document.body.appendChild(iframe)
 
-  var doc = iframe.contentWindow.document;
-  doc.open();
-  doc.write(html);
-  doc.close();
+  var doc = iframe.contentWindow.document
+  doc.open()
+  doc.write(html)
+  doc.close()
 
-  var alreadyPrinted = false;
+  var alreadyPrinted = false
 
-  function doPrint() {
-    if (alreadyPrinted) return;
-    alreadyPrinted = true;
+  function doPrint () {
+    if (alreadyPrinted) return
+    alreadyPrinted = true
     try {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
+      iframe.contentWindow.focus()
+      iframe.contentWindow.print()
     } catch (e) {
-      console.warn("Errore durante la stampa:", e);
+      console.warn('Errore durante la stampa:', e)
     } finally {
       setTimeout(function () {
-        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-      }, 2000);
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe)
+      }, 2000)
     }
   }
 
   iframe.onload = function () {
-    setTimeout(doPrint, 300);
-  };
+    setTimeout(doPrint, 300)
+  }
 
   // Fallback: se onload non si attiva entro 1s, esegui comunque (una sola volta)
   setTimeout(function () {
     if (
       iframe.contentWindow &&
-      iframe.contentWindow.document.readyState === "complete"
+      iframe.contentWindow.document.readyState === 'complete'
     ) {
-      doPrint();
+      doPrint()
     }
-  }, 1000);
+  }, 1000)
 }
 
 let paginaBiancaFilter = {
-  tipo: "studio",
-  id_cliente: "",
-  search: "",
-};
+  tipo: 'studio',
+  id_cliente: '',
+  search: ''
+}
 
-let paginaBiancaCurrentEntry = null;
-let paginaBiancaEditMode = false;
-let paginaBiancaListenersRegistered = false;
-let paginaBiancaClientiSearchTerm = "";
+let paginaBiancaCurrentEntry = null
+let paginaBiancaEditMode = false
+let paginaBiancaListenersRegistered = false
+let paginaBiancaClientiSearchTerm = ''
 
 // ═══════════════════════════════════════════════════════════════
 // CLEANUP — Rimuove i listener quando si esce dalla pagina
 // ═══════════════════════════════════════════════════════════════
-function cleanupPaginaBianca() {
-  if (typeof socket !== "undefined" && paginaBiancaListenersRegistered) {
-    socket.off("res:pagina_bianca");
-    socket.off("res:create:pagina_bianca");
-    socket.off("res:update:pagina_bianca");
-    socket.off("res:delete:pagina_bianca");
-    socket.off("res:delete:pagina_bianca:bulk");
-    socket.off("broadcast:pagina_bianca_updated");
-    paginaBiancaListenersRegistered = false;
+function cleanupPaginaBianca () {
+  if (typeof socket !== 'undefined' && paginaBiancaListenersRegistered) {
+    socket.off('res:pagina_bianca')
+    socket.off('res:create:pagina_bianca')
+    socket.off('res:update:pagina_bianca')
+    socket.off('res:delete:pagina_bianca')
+    socket.off('res:delete:pagina_bianca:bulk')
+    socket.off('broadcast:pagina_bianca_updated')
+    paginaBiancaListenersRegistered = false
   }
 
   paginaBiancaFilter = {
-    tipo: "studio",
-    id_cliente: "",
-    search: "",
-  };
-  paginaBiancaCurrentEntry = null;
-  paginaBiancaEditMode = false;
-  paginaBiancaClientiSearchTerm = "";
+    tipo: 'studio',
+    id_cliente: '',
+    search: ''
+  }
+  paginaBiancaCurrentEntry = null
+  paginaBiancaEditMode = false
+  paginaBiancaClientiSearchTerm = ''
 
-  const modal = document.getElementById("modal-pagina-bianca");
-  if (modal && modal.classList.contains("open")) {
-    modal.classList.remove("open");
+  const modal = document.getElementById('modal-pagina-bianca')
+  if (modal && modal.classList.contains('open')) {
+    modal.classList.remove('open')
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
 // FUNZIONE STAMPA PER LA PAGINA BIANCA
 // ═══════════════════════════════════════════════════════════════
-function stampaPaginaBianca() {
+function stampaPaginaBianca () {
   // Ottieni gli appunti attualmente visualizzati
-  const container = document.getElementById("pagina-bianca-list");
-  if (!container) return;
+  const container = document.getElementById('pagina-bianca-list')
+  if (!container) return
 
-  const appuntiHTML = container.innerHTML;
+  const appuntiHTML = container.innerHTML
   const titoloPagina =
-    document.getElementById("page-title")?.textContent || "Note";
+    document.getElementById('page-title')?.textContent || 'Note'
   const tipoFiltro =
-    paginaBiancaFilter.tipo === "studio"
-      ? "🏢 Appunti Studio"
-      : "👤 Appunti Clienti";
+    paginaBiancaFilter.tipo === 'studio'
+      ? '🏢 Appunti Studio'
+      : '👤 Appunti Clienti'
   const clienteNome =
     paginaBiancaFilter.id_cliente && state.clienti
-      ? state.clienti.find((c) => c.id == paginaBiancaFilter.id_cliente)?.nome
-      : "";
+      ? state.clienti.find(c => c.id == paginaBiancaFilter.id_cliente)?.nome
+      : ''
   const filtroInfo =
-    paginaBiancaFilter.tipo === "cliente" && clienteNome
+    paginaBiancaFilter.tipo === 'cliente' && clienteNome
       ? ` - Cliente: ${clienteNome}`
-      : paginaBiancaFilter.tipo === "cliente"
-        ? " - Tutti i clienti"
-        : "";
+      : paginaBiancaFilter.tipo === 'cliente'
+      ? ' - Tutti i clienti'
+      : ''
   const searchTerm = paginaBiancaFilter.search
     ? ` - Cerca: "${paginaBiancaFilter.search}"`
-    : "";
+    : ''
 
   const html = `
     <!DOCTYPE html>
@@ -256,137 +256,137 @@ function stampaPaginaBianca() {
         <p>${tipoFiltro}${filtroInfo}${searchTerm}</p>
       </div>
       <div class="print-date">
-        Data stampa: ${new Date().toLocaleString("it-IT")}
+        Data stampa: ${new Date().toLocaleString('it-IT')}
       </div>
       ${appuntiHTML || '<div class="no-data">Nessun appunto da stampare</div>'}
     </body>
     </html>
-  `;
+  `
 
-  stampaHTMLInIframe(html);
+  stampaHTMLInIframe(html)
 }
 
 // ═══════════════════════════════════════════════════════════════
 // SETUP SOCKET LISTENERS
 // ═══════════════════════════════════════════════════════════════
-function setupPaginaBiancaSocketListeners() {
-  if (typeof socket === "undefined") return;
-  if (paginaBiancaListenersRegistered) return;
+function setupPaginaBiancaSocketListeners () {
+  if (typeof socket === 'undefined') return
+  if (paginaBiancaListenersRegistered) return
 
-  socket.on("res:pagina_bianca", ({ success, data }) => {
-    if (success && state.page === "pagina_bianca") {
-      renderPaginaBiancaList(data);
+  socket.on('res:pagina_bianca', ({ success, data }) => {
+    if (success && state.page === 'pagina_bianca') {
+      renderPaginaBiancaList(data)
     }
-  });
+  })
 
-  socket.on("res:create:pagina_bianca", ({ success }) => {
-    if (success && state.page === "pagina_bianca") {
-      filterPaginaBianca();
-      showNotif("Nota creata con successo", "success");
+  socket.on('res:create:pagina_bianca', ({ success }) => {
+    if (success && state.page === 'pagina_bianca') {
+      filterPaginaBianca()
+      showNotif('Nota creata con successo', 'success')
     } else if (success) {
-      showNotif("Nota creata con successo", "success");
+      showNotif('Nota creata con successo', 'success')
     }
-  });
+  })
 
-  socket.on("res:update:pagina_bianca", ({ success }) => {
-    if (success && state.page === "pagina_bianca") {
-      filterPaginaBianca();
-      showNotif("Nota aggiornata", "success");
+  socket.on('res:update:pagina_bianca', ({ success }) => {
+    if (success && state.page === 'pagina_bianca') {
+      filterPaginaBianca()
+      showNotif('Nota aggiornata', 'success')
     } else if (success) {
-      showNotif("Nota aggiornata", "success");
+      showNotif('Nota aggiornata', 'success')
     }
-  });
+  })
 
-  socket.on("res:delete:pagina_bianca", ({ success }) => {
-    if (success && state.page === "pagina_bianca") {
-      filterPaginaBianca();
-      showNotif("Nota eliminata", "success");
+  socket.on('res:delete:pagina_bianca', ({ success }) => {
+    if (success && state.page === 'pagina_bianca') {
+      filterPaginaBianca()
+      showNotif('Nota eliminata', 'success')
     } else if (success) {
-      showNotif("Nota eliminata", "success");
+      showNotif('Nota eliminata', 'success')
     }
-  });
+  })
 
-  socket.on("res:delete:pagina_bianca:bulk", ({ success }) => {
-    if (success && state.page === "pagina_bianca") {
-      filterPaginaBianca();
+  socket.on('res:delete:pagina_bianca:bulk', ({ success }) => {
+    if (success && state.page === 'pagina_bianca') {
+      filterPaginaBianca()
     }
-  });
+  })
 
-  socket.on("broadcast:pagina_bianca_updated", () => {
+  socket.on('broadcast:pagina_bianca_updated', () => {
     if (
-      state.page === "pagina_bianca" &&
-      typeof filterPaginaBianca === "function"
+      state.page === 'pagina_bianca' &&
+      typeof filterPaginaBianca === 'function'
     )
-      filterPaginaBianca();
-  });
+      filterPaginaBianca()
+  })
 
-  paginaBiancaListenersRegistered = true;
+  paginaBiancaListenersRegistered = true
 }
 
 // ═══════════════════════════════════════════════════════════════
 // FUNZIONI PER LA RICERCA CLIENTI NEL DROPDOWN (FILTRO PAGINA)
 // ═══════════════════════════════════════════════════════════════
-function filterClientiSelect(searchTerm) {
-  const select = document.getElementById("pb-filtro-cliente-select");
-  if (!select || !state.clienti) return;
+function filterClientiSelect (searchTerm) {
+  const select = document.getElementById('pb-filtro-cliente-select')
+  if (!select || !state.clienti) return
 
-  const searchLower = (searchTerm || "").toLowerCase().trim();
-  const options = select.querySelectorAll("option");
-  let visibleCount = 0;
+  const searchLower = (searchTerm || '').toLowerCase().trim()
+  const options = select.querySelectorAll('option')
+  let visibleCount = 0
 
-  options.forEach((opt) => {
-    if (opt.value === "") {
-      opt.style.display = "";
-      opt.style.backgroundColor = "";
-      return;
+  options.forEach(opt => {
+    if (opt.value === '') {
+      opt.style.display = ''
+      opt.style.backgroundColor = ''
+      return
     }
-    const text = (opt.textContent || "").toLowerCase();
-    if (searchLower === "" || text.includes(searchLower)) {
-      opt.style.display = "";
-      opt.style.backgroundColor = "";
-      visibleCount++;
+    const text = (opt.textContent || '').toLowerCase()
+    if (searchLower === '' || text.includes(searchLower)) {
+      opt.style.display = ''
+      opt.style.backgroundColor = ''
+      visibleCount++
     } else {
-      opt.style.display = "none";
-      opt.style.backgroundColor = "#ffcccc";
+      opt.style.display = 'none'
+      opt.style.backgroundColor = '#ffcccc'
     }
-  });
+  })
 
-  if (visibleCount === 1 && searchLower !== "" && select.value === "") {
+  if (visibleCount === 1 && searchLower !== '' && select.value === '') {
     for (let i = 0; i < options.length; i++) {
-      const opt = options[i];
-      if (opt.value !== "" && opt.style.display !== "none") {
-        select.value = opt.value;
-        onPaginaBiancaClienteSelectChange();
-        break;
+      const opt = options[i]
+      if (opt.value !== '' && opt.style.display !== 'none') {
+        select.value = opt.value
+        onPaginaBiancaClienteSelectChange()
+        break
       }
     }
   }
 
   // Riporta sempre lo scroll della lista in cima dopo il filtraggio
-  select.scrollTop = 0;
+  select.scrollTop = 0
 }
 
-function onPaginaBiancaClientiSearch() {
-  const searchInput = document.getElementById("pb-cliente-search-input");
+function onPaginaBiancaClientiSearch () {
+  const searchInput = document.getElementById('pb-cliente-search-input')
   if (searchInput) {
-    paginaBiancaClientiSearchTerm = searchInput.value;
-    filterClientiSelect(paginaBiancaClientiSearchTerm);
+    paginaBiancaClientiSearchTerm = searchInput.value
+    filterClientiSelect(paginaBiancaClientiSearchTerm)
   }
 }
 
-function onPaginaBiancaClienteSelectChange() {
-  const select = document.getElementById("pb-filtro-cliente-select");
+function onPaginaBiancaClienteSelectChange () {
+  const select = document.getElementById('pb-filtro-cliente-select')
   if (select) {
-    paginaBiancaFilter.id_cliente = select.value;
-    loadPaginaBiancaAppunti();
+    paginaBiancaFilter.id_cliente = select.value
+    loadPaginaBiancaAppunti()
   }
 }
 
-function renderClientiSelectWithSearch() {
-  const wrapper = document.getElementById("pb-cliente-select-wrapper");
-  if (!wrapper || !state.clienti) return;
+function renderClientiSelectWithSearch () {
+  const wrapper = document.getElementById('pb-cliente-select-wrapper')
+  if (!wrapper || !state.clienti) return
 
-  const currentValue = paginaBiancaFilter.id_cliente;
+  const currentValue = paginaBiancaFilter.id_cliente
 
   wrapper.innerHTML = `
     <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cliente</label>
@@ -402,91 +402,91 @@ function renderClientiSelectWithSearch() {
         <option value="">-- Tutti i clienti --</option>
         ${state.clienti
           .map(
-            (c) => `
-          <option value="${c.id}" ${currentValue == c.id ? "selected" : ""}>
-            ${escAttr(c.nome)} (${c.tipologia_codice || "-"})
+            c => `
+          <option value="${c.id}" ${currentValue == c.id ? 'selected' : ''}>
+            ${escAttr(c.nome)} (${c.tipologia_codice || '-'})
           </option>
-        `,
+        `
           )
-          .join("")}
+          .join('')}
       </select>
     </div>
-  `;
+  `
 
   if (paginaBiancaClientiSearchTerm) {
-    filterClientiSelect(paginaBiancaClientiSearchTerm);
+    filterClientiSelect(paginaBiancaClientiSearchTerm)
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
 // FUNZIONI PER LA RICERCA CLIENTI NEL DROPDOWN (MODALE)
 // ═══════════════════════════════════════════════════════════════
-function filterModalClientiSelect() {
-  const searchInput = document.getElementById("pb-modal-cliente-search");
-  const select = document.getElementById("pb-id-cliente");
-  if (!searchInput || !select) return;
+function filterModalClientiSelect () {
+  const searchInput = document.getElementById('pb-modal-cliente-search')
+  const select = document.getElementById('pb-id-cliente')
+  if (!searchInput || !select) return
 
-  const searchTerm = (searchInput.value || "").toLowerCase().trim();
-  const options = select.querySelectorAll("option");
-  let visibleCount = 0;
+  const searchTerm = (searchInput.value || '').toLowerCase().trim()
+  const options = select.querySelectorAll('option')
+  let visibleCount = 0
 
-  options.forEach((opt) => {
-    if (opt.value === "") {
-      opt.style.display = "";
-      return;
+  options.forEach(opt => {
+    if (opt.value === '') {
+      opt.style.display = ''
+      return
     }
-    const text = (opt.textContent || "").toLowerCase();
-    if (searchTerm === "" || text.includes(searchTerm)) {
-      opt.style.display = "";
-      visibleCount++;
+    const text = (opt.textContent || '').toLowerCase()
+    if (searchTerm === '' || text.includes(searchTerm)) {
+      opt.style.display = ''
+      visibleCount++
     } else {
-      opt.style.display = "none";
+      opt.style.display = 'none'
     }
-  });
+  })
 
-  if (visibleCount === 1 && searchTerm !== "" && select.value === "") {
+  if (visibleCount === 1 && searchTerm !== '' && select.value === '') {
     for (let i = 0; i < options.length; i++) {
-      const opt = options[i];
-      if (opt.value !== "" && opt.style.display !== "none") {
-        select.value = opt.value;
-        break;
+      const opt = options[i]
+      if (opt.value !== '' && opt.style.display !== 'none') {
+        select.value = opt.value
+        break
       }
     }
   }
 
   // Riporta sempre lo scroll della lista in cima dopo il filtraggio
-  select.scrollTop = 0;
+  select.scrollTop = 0
 }
 
-function onModalClientiSearchInput() {
-  filterModalClientiSelect();
+function onModalClientiSearchInput () {
+  filterModalClientiSelect()
 }
 
 // ═══════════════════════════════════════════════════════════════
 // RENDER PAGINA
 // ═══════════════════════════════════════════════════════════════
-function renderPaginaBiancaPage() {
-  setupPaginaBiancaSocketListeners();
+function renderPaginaBiancaPage () {
+  setupPaginaBiancaSocketListeners()
 
-  const content = document.getElementById("content");
-  if (!content) return;
+  const content = document.getElementById('content')
+  if (!content) return
 
   // Carica clienti se necessario
   if (!state.clienti || state.clienti.length === 0) {
-    socket.emit("get:clienti", { anno: state.anno });
-    socket.once("res:clienti", (data) => {
+    socket.emit('get:clienti', { anno: state.anno })
+    socket.once('res:clienti', data => {
       if (data.success) {
-        state.clienti = data.data;
-        renderPaginaBiancaPage();
+        state.clienti = data.data
+        renderPaginaBiancaPage()
       }
-    });
-    return;
+    })
+    return
   }
 
   // Costruisci l'HTML del filtro clienti con ricerca
   const clientiFilterHtml = `
     <div id="pb-cliente-select-wrapper" style="min-width: 260px; ${
-      paginaBiancaFilter.tipo !== "cliente" ? "display: none;" : ""
+      paginaBiancaFilter.tipo !== 'cliente' ? 'display: none;' : ''
     }">
       <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cliente</label>
       <div style="position: relative;">
@@ -501,19 +501,19 @@ function renderPaginaBiancaPage() {
           <option value="">-- Tutti i clienti --</option>
           ${state.clienti
             .map(
-              (c) => `
+              c => `
             <option value="${c.id}" ${
-              paginaBiancaFilter.id_cliente == c.id ? "selected" : ""
-            }>
-              ${escAttr(c.nome)} (${c.tipologia_codice || "-"})
+                paginaBiancaFilter.id_cliente == c.id ? 'selected' : ''
+              }>
+              ${escAttr(c.nome)} (${c.tipologia_codice || '-'})
             </option>
-          `,
+          `
             )
-            .join("")}
+            .join('')}
         </select>
       </div>
     </div>
-  `;
+  `
 
   content.innerHTML = `
     <div class="pagina-bianca-container" style="max-width: 1200px; margin: 0 auto;">
@@ -537,14 +537,14 @@ function renderPaginaBiancaPage() {
           <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Tipo</label>
           <div style="display: flex; gap: 8px; margin-top: 4px;">
             <button id="pb-filtro-studio" class="btn btn-sm ${
-              paginaBiancaFilter.tipo === "studio"
-                ? "btn-primary"
-                : "btn-secondary"
+              paginaBiancaFilter.tipo === 'studio'
+                ? 'btn-primary'
+                : 'btn-secondary'
             }" onclick="setPaginaBiancaTipo('studio')">🏢 Studio</button>
             <button id="pb-filtro-cliente" class="btn btn-sm ${
-              paginaBiancaFilter.tipo === "cliente"
-                ? "btn-primary"
-                : "btn-secondary"
+              paginaBiancaFilter.tipo === 'cliente'
+                ? 'btn-primary'
+                : 'btn-secondary'
             }" onclick="setPaginaBiancaTipo('cliente')">👤 Cliente</button>
           </div>
         </div>
@@ -552,7 +552,7 @@ function renderPaginaBiancaPage() {
         <div style="flex: 1; min-width: 200px;">
           <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cerca</label>
           <input type="text" id="pb-search-input" class="input" placeholder="Cerca negli appunti..." value="${escAttr(
-            paginaBiancaFilter.search,
+            paginaBiancaFilter.search
           )}" style="margin-top: 4px;" oninput="debounceFilterPaginaBianca()">
         </div>
         <button class="btn btn-sm btn-secondary" onclick="resetPaginaBiancaFiltri()" style="margin-bottom: 2px;">⟳ Reset</button>
@@ -565,63 +565,63 @@ function renderPaginaBiancaPage() {
         </div>
       </div>
     </div>
-  `;
+  `
 
-  if (paginaBiancaClientiSearchTerm && paginaBiancaFilter.tipo === "cliente") {
+  if (paginaBiancaClientiSearchTerm && paginaBiancaFilter.tipo === 'cliente') {
     setTimeout(() => {
-      filterClientiSelect(paginaBiancaClientiSearchTerm);
-    }, 50);
+      filterClientiSelect(paginaBiancaClientiSearchTerm)
+    }, 50)
   }
 
-  loadPaginaBiancaAppunti();
+  loadPaginaBiancaAppunti()
 }
 
-function setPaginaBiancaTipo(tipo) {
-  paginaBiancaFilter.tipo = tipo;
-  if (tipo === "studio") {
-    paginaBiancaFilter.id_cliente = "";
-    paginaBiancaClientiSearchTerm = "";
+function setPaginaBiancaTipo (tipo) {
+  paginaBiancaFilter.tipo = tipo
+  if (tipo === 'studio') {
+    paginaBiancaFilter.id_cliente = ''
+    paginaBiancaClientiSearchTerm = ''
   } else {
-    paginaBiancaClientiSearchTerm = "";
+    paginaBiancaClientiSearchTerm = ''
   }
-  renderPaginaBiancaPage();
+  renderPaginaBiancaPage()
 }
 
-function filterPaginaBianca() {
-  const clienteSelect = document.getElementById("pb-filtro-cliente-select");
+function filterPaginaBianca () {
+  const clienteSelect = document.getElementById('pb-filtro-cliente-select')
   if (clienteSelect) {
-    paginaBiancaFilter.id_cliente = clienteSelect.value;
+    paginaBiancaFilter.id_cliente = clienteSelect.value
   }
-  const searchInput = document.getElementById("pb-search-input");
+  const searchInput = document.getElementById('pb-search-input')
   if (searchInput) {
-    paginaBiancaFilter.search = searchInput.value;
+    paginaBiancaFilter.search = searchInput.value
   }
-  loadPaginaBiancaAppunti();
+  loadPaginaBiancaAppunti()
 }
 
 const debounceFilterPaginaBianca = debounce(() => {
-  filterPaginaBianca();
-}, 300);
+  filterPaginaBianca()
+}, 300)
 
-function resetPaginaBiancaFiltri() {
+function resetPaginaBiancaFiltri () {
   paginaBiancaFilter = {
-    tipo: "studio",
-    id_cliente: "",
-    search: "",
-  };
-  paginaBiancaClientiSearchTerm = "";
-  renderPaginaBiancaPage();
+    tipo: 'studio',
+    id_cliente: '',
+    search: ''
+  }
+  paginaBiancaClientiSearchTerm = ''
+  renderPaginaBiancaPage()
 }
 
-function loadPaginaBiancaAppunti() {
-  if (typeof socket !== "undefined") {
-    socket.emit("get:pagina_bianca", paginaBiancaFilter);
+function loadPaginaBiancaAppunti () {
+  if (typeof socket !== 'undefined') {
+    socket.emit('get:pagina_bianca', paginaBiancaFilter)
   }
 }
 
-function renderPaginaBiancaList(appunti) {
-  const container = document.getElementById("pagina-bianca-list");
-  if (!container) return;
+function renderPaginaBiancaList (appunti) {
+  const container = document.getElementById('pagina-bianca-list')
+  if (!container) return
 
   if (!appunti || appunti.length === 0) {
     container.innerHTML = `
@@ -630,8 +630,8 @@ function renderPaginaBiancaList(appunti) {
         <p>Nessuna nota trovata</p>
         <button class="btn btn-primary" onclick="openPaginaBiancaEditor()" style="margin-top: 12px;">+ Crea la tua prima nota</button>
       </div>
-    `;
-    return;
+    `
+    return
   }
 
   // Toolbar bulk sopra le card
@@ -646,14 +646,14 @@ function renderPaginaBiancaList(appunti) {
         <input type="checkbox" id="pb-select-all" onchange="toggleSelezionaTutteNote(this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red)">
         Seleziona tutte
       </label>
-    </div>`;
+    </div>`
 
   const html = `
     ${bulkBar}
     <div style="display: flex; flex-direction: column; gap: 16px;">
       ${appunti
         .map(
-          (a) => `
+          a => `
         <div class="pagina-bianca-card pb-bulk-card" data-id="${
           a.id
         }" style="background: var(--surface1); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
@@ -666,17 +666,17 @@ function renderPaginaBiancaList(appunti) {
                 a.id
               }" onchange="aggiornaPbBulkToolbar()" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red);flex-shrink:0" title="Seleziona">
               <span style="font-size: 24px;">${
-                a.tipo === "studio" ? "🏢" : "👤"
+                a.tipo === 'studio' ? '🏢' : '👤'
               }</span>
               <div>
                 <div style="font-weight: 700; font-size: 16px;">${
-                  a.titolo ? escAttr(a.titolo) : ""
+                  a.titolo ? escAttr(a.titolo) : ''
                 }</div>
                 <div style="font-size: 12px; color: var(--text3); margin-top: 2px;">
                   ${
-                    a.tipo === "studio"
-                      ? "Appunto Studio"
-                      : `Cliente: ${escAttr(a.cliente_nome || "—")}`
+                    a.tipo === 'studio'
+                      ? 'Appunto Studio'
+                      : `Cliente: ${escAttr(a.cliente_nome || '—')}`
                   }
                 </div>
               </div>
@@ -685,7 +685,7 @@ function renderPaginaBiancaList(appunti) {
               ${
                 a.id_cliente
                   ? `<button class="btn btn-xs" onclick="event.stopPropagation(); editCliente(${a.id_cliente})" title="Modifica cliente" style="border:1px solid var(--accent);color:var(--accent);background:transparent">👤 Modifica cliente</button>`
-                  : ""
+                  : ''
               }
               <button class="btn btn-xs btn-secondary" onclick="event.stopPropagation(); openPaginaBiancaEditor(${
                 a.id
@@ -698,87 +698,87 @@ function renderPaginaBiancaList(appunti) {
 
           <div style="padding: 20px;">
             <div style="color: var(--text1); line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto;">
-              ${escAttr(a.contenuto || "— Nessun contenuto —")}
+              ${escAttr(a.contenuto || '— Nessun contenuto —')}
             </div>
             ${
               a.allegati
                 ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text3);">
               📎 Allegati: ${escAttr(a.allegati)}
             </div>`
-                : ""
+                : ''
             }
           </div>
         </div>
-      `,
+      `
         )
-        .join("")}
+        .join('')}
     </div>
-  `;
+  `
 
-  container.innerHTML = html;
+  container.innerHTML = html
 }
 
 // ── BULK NOTE ────────────────────────────────────────────────
-function aggiornaPbBulkToolbar() {
-  const cbs = document.querySelectorAll(".pb-bulk-cb:checked");
-  const toolbar = document.getElementById("pb-bulk-toolbar");
-  const countEl = document.getElementById("pb-bulk-count");
-  const selAll = document.getElementById("pb-select-all");
-  const allCbs = document.querySelectorAll(".pb-bulk-cb");
-  if (!toolbar) return;
-  const n = cbs.length;
+function aggiornaPbBulkToolbar () {
+  const cbs = document.querySelectorAll('.pb-bulk-cb:checked')
+  const toolbar = document.getElementById('pb-bulk-toolbar')
+  const countEl = document.getElementById('pb-bulk-count')
+  const selAll = document.getElementById('pb-select-all')
+  const allCbs = document.querySelectorAll('.pb-bulk-cb')
+  if (!toolbar) return
+  const n = cbs.length
   if (n > 0) {
-    toolbar.style.display = "flex";
+    toolbar.style.display = 'flex'
     countEl.textContent =
-      n + (n === 1 ? " nota selezionata" : " note selezionate");
+      n + (n === 1 ? ' nota selezionata' : ' note selezionate')
   } else {
-    toolbar.style.display = "none";
+    toolbar.style.display = 'none'
   }
   if (selAll) {
-    selAll.checked = n > 0 && n === allCbs.length;
-    selAll.indeterminate = n > 0 && n < allCbs.length;
+    selAll.checked = n > 0 && n === allCbs.length
+    selAll.indeterminate = n > 0 && n < allCbs.length
   }
 }
 
-function toggleSelezionaTutteNote(cb) {
-  document.querySelectorAll(".pb-bulk-cb").forEach((el) => {
-    el.checked = cb.checked;
-  });
-  aggiornaPbBulkToolbar();
+function toggleSelezionaTutteNote (cb) {
+  document.querySelectorAll('.pb-bulk-cb').forEach(el => {
+    el.checked = cb.checked
+  })
+  aggiornaPbBulkToolbar()
 }
 
-function deselezionaTutteNote() {
-  document.querySelectorAll(".pb-bulk-cb").forEach((el) => {
-    el.checked = false;
-  });
-  const selAll = document.getElementById("pb-select-all");
+function deselezionaTutteNote () {
+  document.querySelectorAll('.pb-bulk-cb').forEach(el => {
+    el.checked = false
+  })
+  const selAll = document.getElementById('pb-select-all')
   if (selAll) {
-    selAll.checked = false;
-    selAll.indeterminate = false;
+    selAll.checked = false
+    selAll.indeterminate = false
   }
-  aggiornaPbBulkToolbar();
+  aggiornaPbBulkToolbar()
 }
 
-function eliminaNoteSelezionate() {
-  const cbs = document.querySelectorAll(".pb-bulk-cb:checked");
-  if (cbs.length === 0) return;
-  const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
+function eliminaNoteSelezionate () {
+  const cbs = document.querySelectorAll('.pb-bulk-cb:checked')
+  if (cbs.length === 0) return
+  const ids = Array.from(cbs).map(cb => parseInt(cb.dataset.id))
   if (
     !confirm(
-      `Eliminare ${ids.length} not${ids.length === 1 ? "a" : "e"} selezionat${
-        ids.length === 1 ? "a" : "e"
-      }?`,
+      `Eliminare ${ids.length} not${ids.length === 1 ? 'a' : 'e'} selezionat${
+        ids.length === 1 ? 'a' : 'e'
+      }?`
     )
   )
-    return;
-  if (typeof socket === "undefined") return;
-  socket.emit("delete:pagina_bianca:bulk", { ids });
-  socket.once("res:delete:pagina_bianca:bulk", () => {
-    deselezionaTutteNote();
-  });
+    return
+  if (typeof socket === 'undefined') return
+  socket.emit('delete:pagina_bianca:bulk', { ids })
+  socket.once('res:delete:pagina_bianca:bulk', () => {
+    deselezionaTutteNote()
+  })
 }
 
-window.aggiornaPbBulkToolbar = aggiornaPbBulkToolbar;
-window.toggleSelezionaTutteNote = toggleSelezionaTutteNote;
-window.deselezionaTutteNote = deselezionaTutteNote;
-window.eliminaNoteSelezionate = eliminaNoteSelezionate;
+window.aggiornaPbBulkToolbar = aggiornaPbBulkToolbar
+window.toggleSelezionaTutteNote = toggleSelezionaTutteNote
+window.deselezionaTutteNote = deselezionaTutteNote
+window.eliminaNoteSelezionate = eliminaNoteSelezionate

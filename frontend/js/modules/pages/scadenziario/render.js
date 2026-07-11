@@ -505,9 +505,21 @@ function renderScadenzarioTabella(data) {
     const pgColorG =
       pG === 100 ? "var(--green)" : pG > 50 ? "var(--yellow)" : "var(--red)";
 
-    // Ordine NATURALE dei periodi: T1 → T2 → T3 → T4 (mai il contrario),
-    // Gen → Dic, S1 → S2. Comparatore nel modulo condiviso /shared/periodi.js
-    const rowsOrdinati = [...g.rows].sort(confrontaPeriodi);
+    const rowsOrdinati = [...g.rows].sort((a, b) => {
+      if (a.data_scadenza && b.data_scadenza) {
+        const dateA = new Date(a.data_scadenza);
+        const dateB = new Date(b.data_scadenza);
+        if (dateA - dateB !== 0) return dateB - dateA;
+        return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
+          sensitivity: "base",
+        });
+      }
+      if (a.data_scadenza) return -1;
+      if (b.data_scadenza) return 1;
+      return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
+        sensitivity: "base",
+      });
+    });
 
     const periodiHtml = rowsOrdinati.map((r) => renderPeriodoPill(r)).join("");
     const isMensile = g.rows.length > 4;

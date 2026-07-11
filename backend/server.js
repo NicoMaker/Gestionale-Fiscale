@@ -29,9 +29,6 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Servi file statici dal frontend
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// Servi il codice CONDIVISO backend/frontend (es. shared/date-core.js)
-app.use("/shared", express.static(path.join(__dirname, "../shared")));
-
 // Route API
 app.use("/api", downloadDbRouter);
 
