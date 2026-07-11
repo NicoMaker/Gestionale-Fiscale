@@ -168,17 +168,13 @@
    CARD ANTEPRIMA CLIENTE
    ════════════════════════════════════════════════════════════════ */
 .cliente-preview-card {
-  background: var(--s0);
+  background: var(--bg);
   border: 1px solid var(--b0);
   border-left: 4px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 22px 24px;
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
   margin-bottom: 20px;
   box-shadow: var(--shadow-md);
-  transition: box-shadow 0.25s var(--ease-out);
-}
-.cliente-preview-card:hover {
-  box-shadow: var(--shadow-lg);
 }
 .cpc-inner {
   display: flex;
@@ -512,7 +508,22 @@
   line-height: 1.3;
 }
 
-/* ⚠️ TOOLTIP RIMOSSO — non c'è più il blocco :hover::after */
+.periodo-pill:hover::after {
+  content: "🖱️ Tasto DX = toggle";
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--t2);
+  pointer-events: none;
+  z-index: 10;
+}
 
 .pp-cont-labels {
   display: flex;

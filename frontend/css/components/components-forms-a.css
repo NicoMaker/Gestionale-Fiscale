@@ -8,12 +8,12 @@
 .form-group .input,
 .form-group .select,
 .form-group textarea.input {
-  background: var(--s0);
-  border: 1px solid var(--b1);
+  background: #ffffff;
+  border: 1.5px solid var(--b1);
   color: var(--t0);
   transition:
-    border-color 0.2s var(--ease-out),
-    box-shadow 0.2s var(--ease-out),
+    border-color 0.15s,
+    box-shadow 0.15s,
     color 0.2s;
 }
 .modal .input:focus,
@@ -22,8 +22,8 @@
 .form-group .input:focus,
 .form-group .select:focus {
   border-color: var(--accent);
-  background: var(--s0);
-  box-shadow: 0 0 0 3px var(--accent-d);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .modal .input::placeholder,
 .form-group .input::placeholder {

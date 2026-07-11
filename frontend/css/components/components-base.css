@@ -3,8 +3,8 @@
    ════════════════════════════════════════════════════════════════ */
 .input,
 .select {
-  background: var(--s0);
-  border: 1px solid var(--b1);
+  background: #fff !important;
+  border: 1.5px solid var(--b1);
   border-radius: var(--r-sm);
   padding: 10px 14px;
   color: var(--t0);
@@ -12,19 +12,16 @@
   font-size: 13.5px;
   width: 100%;
   outline: none;
-  box-shadow: var(--shadow-sm);
   transition:
-    border-color 0.2s var(--ease-out),
-    box-shadow 0.2s var(--ease-out),
+    border-color 0.15s,
+    box-shadow 0.15s,
     color 0.2s;
 }
 .input:focus,
 .select:focus {
   border-color: var(--accent);
-  background: var(--s0);
-  box-shadow:
-    0 0 0 3px var(--accent-d),
-    var(--shadow-sm);
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .input::placeholder {
   color: var(--t3);
@@ -94,8 +91,8 @@ textarea.input {
   gap: 4px;
 }
 .select-search-input {
-  background: var(--s0);
-  border: 1px solid var(--b1);
+  background: #fff;
+  border: 1.5px solid var(--b1);
   border-radius: var(--r-sm);
   padding: 6px 12px;
   color: var(--t0);
@@ -263,36 +260,18 @@ textarea.input {
   margin-bottom: 24px;
 }
 .stat-card {
-  background: var(--s0);
+  background: var(--bg);
   border: 1px solid var(--b0);
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 20px;
   box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
   transition:
-    box-shadow 0.25s var(--ease-out),
-    transform 0.25s var(--ease-out),
-    border-color 0.25s;
-}
-.stat-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent), #8b5cf6);
-  opacity: 0;
-  transition: opacity 0.25s;
+    box-shadow 0.2s,
+    transform 0.2s;
 }
 .stat-card:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-  border-color: var(--accent-b);
-}
-.stat-card:hover::before {
-  opacity: 1;
+  transform: translateY(-1px);
 }
 .stat-label {
   font-size: 11.5px;
@@ -351,7 +330,7 @@ textarea.input {
    TABLE
    ════════════════════════════════════════════════════════════════ */
 .table-wrap {
-  background: var(--s0);
+  background: var(--bg);
   border: 1px solid var(--b0);
   border-radius: var(--radius);
   overflow: hidden;
@@ -359,13 +338,13 @@ textarea.input {
   box-shadow: var(--shadow-sm);
 }
 .table-header {
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--b0);
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  background: var(--s1);
+  background: var(--s0);
 }
 .table-header h3 {
   font-size: 15px;
@@ -383,24 +362,21 @@ table {
 }
 th {
   text-align: left;
-  padding: 12px 18px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 11px 16px;
+  font-size: 11.5px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--t3);
-  background: var(--s1);
+  letter-spacing: 0.07em;
+  color: var(--t2);
+  background: var(--s0);
   border-bottom: 1px solid var(--b0);
   white-space: nowrap;
 }
 td {
-  padding: 13px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--b0);
   font-size: 13.5px;
   vertical-align: middle;
-}
-tbody tr:nth-child(even) td {
-  background: rgba(99, 102, 241, 0.02);
 }
 tr:last-child td {
   border-bottom: none;
@@ -446,24 +422,24 @@ tr.clickable:hover td {
   font-family: var(--mono);
 }
 .b-pf {
-  background: var(--accent-d);
-  color: var(--accent);
-  border: 1px solid var(--accent-b);
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 .b-sp {
-  background: var(--yellow-d);
-  color: var(--yellow);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(217, 119, 6, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(217, 119, 6, 0.2);
 }
 .b-sc {
-  background: var(--green-d);
-  color: var(--green);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(22, 163, 74, 0.2);
 }
 .b-ass {
-  background: var(--purple-d);
-  color: var(--purple);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+  border: 1px solid rgba(124, 58, 237, 0.2);
 }
 .b-da_fare {
   background: var(--red-d);

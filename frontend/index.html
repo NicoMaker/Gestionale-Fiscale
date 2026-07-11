@@ -8,8 +8,12 @@
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#f8fafc" />
+    <meta name="theme-color" content="#ffffff" />
     <title>Studio Fiscale — Gestionale</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="/socket.io/socket.io.js"></script>
     <!-- CSS — design tokens e variabili -->
     <link rel="stylesheet" href="css/tokens.css" />
@@ -28,93 +32,70 @@
     <!-- CSS — modal secondarie (avatar, print, filtri, tipologie) -->
     <link rel="stylesheet" href="css/components/components-modals-b.css" />
     <!-- CSS — form, checkbox, dark-mode fix, bottom-nav -->
-    <link rel="stylesheet" href="css/components/components-forms-a.css" />
+    <link rel="stylesheet" href="css/components-forms-a.css" />
     <!-- CSS — bottoni applica/elimina/seleziona modali -->
     <link rel="stylesheet" href="css/components/components-forms-b.css" />
     <!-- CSS — sintesi adempimenti (matrice) -->
     <link rel="stylesheet" href="css/sintesi.css" />
-    <!-- CSS — modern polish -->
-    <link rel="stylesheet" href="css/modern-polish.css" />
-    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
   </head>
   <body>
     <!-- ═══ SIDEBAR ═════════════════════════════════════════ -->
     <aside class="sidebar">
       <div class="logo">
-        <div class="logo-main">
-          <div class="logo-badge"><i data-lucide="calculator"></i></div>
-          <div class="logo-text">
-            <span class="logo-title">Studio Fiscale</span>
-            <span class="logo-sub">Gestionale</span>
-          </div>
-        </div>
+        <div class="logo-main">📁 Studio</div>
+        <div class="logo-sub">Gestionale Fiscale</div>
       </div>
       <nav class="nav">
-        <div class="nav-section-label nav-label">Panoramica</div>
         <div class="nav-item" data-page="dashboard">
-          <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
-          <span class="nav-label">Dashboard</span>
+          <span class="nav-icon">📊</span> Dashboard
         </div>
         <div class="nav-item" data-page="clienti">
-          <span class="nav-icon"><i data-lucide="users"></i></span>
-          <span class="nav-label">Clienti</span>
+          <span class="nav-icon">👥</span> Clienti
         </div>
         <div class="nav-item" data-page="scadenzario">
-          <span class="nav-icon"><i data-lucide="calendar-days"></i></span>
-          <span class="nav-label">Scadenzario</span>
+          <span class="nav-icon">📅</span> Scadenzario
         </div>
         <div class="nav-item" data-page="scadenzario_globale">
-          <span class="nav-icon"><i data-lucide="globe"></i></span>
-          <span class="nav-label">Vista Globale</span>
+          <span class="nav-icon">🌐</span> Vista Globale
         </div>
         <div class="nav-item" data-page="sintesi">
-          <span class="nav-icon"><i data-lucide="grid-3x3"></i></span>
-          <span class="nav-label">Sintesi Adempimenti</span>
+          <span class="nav-icon">🧮</span> Sintesi Adempimenti
         </div>
         <div class="nav-sep"></div>
-        <div class="nav-section-label nav-label">Configurazione</div>
         <div class="nav-item" data-page="adempimenti">
-          <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
-          <span class="nav-label">Adempimenti</span>
+          <span class="nav-icon">📋</span> Adempimenti
         </div>
         <div class="nav-item" data-page="tipologie">
-          <span class="nav-icon"><i data-lucide="tags"></i></span>
-          <span class="nav-label">Tipologie Clienti</span>
+          <span class="nav-icon">🏷️</span> Tipologie Clienti
         </div>
         <div class="nav-sep"></div>
-        <div class="nav-section-label nav-label">Studio</div>
         <div class="nav-item active" data-page="appunti">
-          <span class="nav-icon"><i data-lucide="calendar-clock"></i></span>
-          <span class="nav-label">Scadenze Studio</span>
+          <span class="nav-icon">📅</span> Scadenze Studio
         </div>
+        <div class="nav-sep"></div>
         <div class="nav-item" data-page="pagina_bianca">
-          <span class="nav-icon"><i data-lucide="sticky-note"></i></span>
-          <span class="nav-label">Note</span>
+          <span class="nav-icon">📝</span> Note
         </div>
+        <div class="nav-sep"></div>
         <div class="nav-item" data-page="cestino">
-          <span class="nav-icon"><i data-lucide="trash-2"></i></span>
-          <span class="nav-label">Cestino</span>
+          <span class="nav-icon">🗑️</span> Cestino
         </div>
         <div class="nav-sep"></div>
         <div class="nav-item" id="btn-scarica-db" style="cursor: pointer">
-          <span class="nav-icon"><i data-lucide="database-backup"></i></span>
-          <span class="nav-label">Scarica DB</span>
+          <span class="nav-icon">💾</span> Scarica DB
         </div>
+        <div class="nav-sep"></div>
         <button
           class="theme-toggle"
           onclick="toggleTheme()"
           title="Cambia tema chiaro/scuro"
-          type="button"
         >
-          <span class="theme-toggle-icon"><i data-lucide="moon"></i></span>
+          <span class="theme-toggle-icon">🌙</span>
           <span class="theme-toggle-label nav-label">Tema Scuro</span>
           <span class="theme-toggle-pill"></span>
         </button>
       </nav>
-      <div class="sidebar-footer" id="conn-status">
-        <span class="conn-dot"></span>
-        <span class="sidebar-footer-text">Connessione...</span>
-      </div>
+      <div class="sidebar-footer" id="conn-status">● Connessione...</div>
     </aside>
 
     <!-- ═══ MAIN ─────────────────────────────────────────── -->
@@ -1591,7 +1572,6 @@
     <script src="js/modules/core/date-utils.js"></script>
     <script src="js/modules/core/field-history.js"></script>
     <script src="js/modules/core/theme.js"></script>
-    <script src="js/modules/core/icons.js"></script>
     <script src="js/modules/components/renderers.js"></script>
     <!-- dashboard -->
     <script src="js/modules/pages/dashboard/render.js"></script>

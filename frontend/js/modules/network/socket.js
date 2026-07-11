@@ -5,26 +5,16 @@
 const socket = io();
 
 // ─── CONNESSIONE ──────────────────────────────────────────────
-function _setConnStatus(online) {
-  const el = document.getElementById("conn-status");
-  if (!el) return;
-  const dot = el.querySelector(".conn-dot");
-  const text = el.querySelector(".sidebar-footer-text");
-  if (dot) {
-    dot.classList.toggle("connected", online);
-    dot.classList.toggle("error", !online);
-  }
-  if (text) text.textContent = online ? "Online" : "Offline";
-}
-
 socket.on("connect", () => {
-  _setConnStatus(true);
+  document.getElementById("conn-status").textContent = "● Online";
+  document.getElementById("conn-status").style.color = "var(--green)";
   socket.emit("get:tipologie");
   renderPage("appunti");
 });
 
 socket.on("disconnect", () => {
-  _setConnStatus(false);
+  document.getElementById("conn-status").textContent = "● Offline";
+  document.getElementById("conn-status").style.color = "var(--red)";
 });
 
 // ─── NOTIFICHE ────────────────────────────────────────────────

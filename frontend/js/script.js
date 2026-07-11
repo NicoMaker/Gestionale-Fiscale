@@ -5,7 +5,6 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
-  if (typeof refreshIcons === "function") refreshIcons();
 });
 
 // Aggiungi la funzione toggleClienteSelect globalmente
@@ -58,14 +57,15 @@ function renderPage(page) {
     tipologie: "Tipologie Clienti",
     appunti: "Scadenze Studio",
     pagina_bianca: "Note",
-    cestino: "Cestino",
+    cestino: "🗑️ Cestino",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
 
-  document.querySelectorAll(".nav-item[data-page]").forEach((el) => {
-    const isActive = el.dataset.page === page;
-    el.classList.toggle("active", isActive);
-    el.setAttribute("aria-current", isActive ? "page" : "false");
+  document.querySelectorAll(".nav-item").forEach((el) => {
+    el.setAttribute(
+      "aria-current",
+      el.dataset.page === page ? "page" : "false",
+    );
   });
 
   if (page === "dashboard") {
@@ -129,11 +129,6 @@ function renderPage(page) {
       document.getElementById("content").innerHTML =
         `<div class="empty"><div class="empty-icon">❌</div><p>Errore: modulo cestino non caricato</p><button class="btn btn-primary" onclick="location.reload()">⟳ Ricarica</button></div>`;
     }
-  }
-
-  if (typeof refreshIcons === "function") {
-    refreshIcons(document.getElementById("topbar-actions"));
-    refreshIcons(document.getElementById("content"));
   }
 }
 
