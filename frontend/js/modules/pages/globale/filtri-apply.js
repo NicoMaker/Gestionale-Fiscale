@@ -10,7 +10,7 @@ function applyGlobaleFiltriLocali() {
 function resetGlobaleFiltri() {
   state.globalePreFiltroAdp = "";
   state.globalePreFiltroAdpMulti = null;
-  state.globaleSelectedCliente = "";
+  state.globaleSelectedClienti = [];
   setSharedClienteSearch("");
   var adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
@@ -19,7 +19,14 @@ function resetGlobaleFiltri() {
     });
     if (adpSel._ssRefresh) adpSel._ssRefresh();
   }
-  var ids = ["glob-filtro-stato", "glob-search-cliente", "glob-sel-cliente"];
+  var clienteSel = document.getElementById("glob-sel-cliente");
+  if (clienteSel) {
+    Array.from(clienteSel.options).forEach(function (o) {
+      o.selected = false;
+    });
+    if (clienteSel._ssRefresh) clienteSel._ssRefresh();
+  }
+  var ids = ["glob-filtro-stato", "glob-search-cliente"];
   for (var i = 0; i < ids.length; i++) {
     var el = document.getElementById(ids[i]);
     if (el) {
@@ -35,10 +42,12 @@ function resetGlobaleFiltri() {
 }
 
 function resetGlobaleClienteSel() {
-  state.globaleSelectedCliente = "";
+  state.globaleSelectedClienti = [];
   var el = document.getElementById("glob-sel-cliente");
   if (el) {
-    el.value = "";
+    Array.from(el.options).forEach(function (o) {
+      o.selected = false;
+    });
     if (el._ssRefresh) el._ssRefresh();
   }
 }

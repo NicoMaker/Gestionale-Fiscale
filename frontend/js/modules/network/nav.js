@@ -177,12 +177,18 @@ function initSearchableSelect(selectId) {
 // ─── SELECT MULTIPLO RICERCABILE (checkbox, non si chiude al click) ───
 // Usato ovunque si debba scegliere PIÙ DI UN adempimento da un elenco
 // (es. filtro adempimenti nello scadenzario cliente).
-function initSearchableMultiSelect(selectId) {
+// opts.showSearch = false → nasconde la barra "🔍 Cerca..." interna al
+// pannello (usato es. per il selettore multiplo di clienti).
+// opts.placeholder → testo mostrato nel trigger quando nulla è selezionato.
+function initSearchableMultiSelect(selectId, opts) {
+  opts = opts || {};
+  const showSearch = opts.showSearch !== false;
   const sel = document.getElementById(selectId);
   if (!sel || sel.dataset.ssinit) return;
   sel.dataset.ssinit = "1";
   sel.multiple = true;
   sel.style.display = "none";
+  if (opts.placeholder) sel.dataset.placeholder = opts.placeholder;
 
   const wrap = document.createElement("div");
   wrap.className = "ss-wrap";
@@ -211,11 +217,14 @@ function initSearchableMultiSelect(selectId) {
   panel.setAttribute("aria-multiselectable", "true");
   wrap.appendChild(panel);
 
-  const searchInput = document.createElement("input");
-  searchInput.placeholder = "🔍 Cerca...";
-  searchInput.setAttribute("type", "text");
-  searchInput.setAttribute("aria-label", "Cerca opzione");
-  panel.appendChild(searchInput);
+  let searchInput = null;
+  if (showSearch) {
+    searchInput = document.createElement("input");
+    searchInput.placeholder = "🔍 Cerca...";
+    searchInput.setAttribute("type", "text");
+    searchInput.setAttribute("aria-label", "Cerca opzione");
+    panel.appendChild(searchInput);
+  }
 
   const actionsRow = document.createElement("div");
   actionsRow.style.cssText =
@@ -318,7 +327,7 @@ function initSearchableMultiSelect(selectId) {
     trigger.setAttribute("aria-expanded", "true");
     trigger.querySelector(".ss-arrow").style.transform = "rotate(180deg)";
     trigger.style.borderColor = "var(--accent)";
-    searchInput.value = "";
+    if (searchInput) searchInput.value = "";
     renderList("");
     requestAnimationFrame(() => {
       const wrapRect = wrap.getBoundingClientRect();
@@ -331,7 +340,7 @@ function initSearchableMultiSelect(selectId) {
         panel.style.top = "calc(100% + 4px)";
         panel.style.bottom = "auto";
       }
-      searchInput.focus();
+      if (searchInput) searchInput.focus();
     });
   }
 
@@ -362,7 +371,7 @@ function initSearchableMultiSelect(selectId) {
     e.stopPropagation();
     Array.from(sel.options).forEach((o) => (o.selected = true));
     updateLabel();
-    renderList(searchInput.value);
+    renderList(searchInput ? searchInput.value : "");
     updateActionsState();
     sel.dispatchEvent(new Event("change", { bubbles: true }));
   });
@@ -370,7 +379,7 @@ function initSearchableMultiSelect(selectId) {
     e.stopPropagation();
     Array.from(sel.options).forEach((o) => (o.selected = false));
     updateLabel();
-    renderList(searchInput.value);
+    renderList(searchInput ? searchInput.value : "");
     updateActionsState();
     sel.dispatchEvent(new Event("change", { bubbles: true }));
   });
@@ -386,13 +395,15 @@ function initSearchableMultiSelect(selectId) {
     }
     if (e.key === "Escape") closePanel();
   });
-  searchInput.addEventListener("input", () => renderList(searchInput.value));
-  searchInput.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closePanel();
-      trigger.focus();
-    }
-  });
+  if (searchInput) {
+    searchInput.addEventListener("input", () => renderList(searchInput.value));
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closePanel();
+        trigger.focus();
+      }
+    });
+  }
   document.addEventListener("click", (e) => {
     if (!wrap.contains(e.target)) closePanel();
   });
@@ -400,7 +411,7 @@ function initSearchableMultiSelect(selectId) {
   sel._ssRefresh = function () {
     updateLabel();
     updateActionsState();
-    if (panel.dataset.open) renderList(searchInput.value);
+    if (panel.dataset.open) renderList(searchInput ? searchInput.value : "");
   };
   updateLabel();
   updateActionsState();

@@ -18,6 +18,7 @@ const state = {
   dashFiltroClienteStato: "",
   dashFiltroStatoAdp: "",
   globalePreFiltroAdp: "",
+  globaleSelectedClienti: [], // ⭐ Vista Globale: selezione multipla clienti
   globaleStats: null,
   _dashRendered: false,
   adpInseriti: [],

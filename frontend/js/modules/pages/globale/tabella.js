@@ -18,15 +18,21 @@ function renderGlobaleTabella(rawData) {
 
   var clienteSearch = document.getElementById("glob-search-cliente");
   var searchTerm = clienteSearch ? clienteSearch.value.toLowerCase() : "";
-  var selectedClienteId =
-    state.globaleSelectedCliente && state.globaleSelectedCliente !== ""
-      ? parseInt(state.globaleSelectedCliente)
-      : null;
+  var selectedClienteIds =
+    state.globaleSelectedClienti && state.globaleSelectedClienti.length
+      ? state.globaleSelectedClienti.map(function (id) {
+          return parseInt(id);
+        })
+      : [];
 
   var data = [];
   for (var i = 0; i < rawData.length; i++) {
     var r = rawData[i];
-    if (selectedClienteId && r.cliente_id !== selectedClienteId) continue;
+    if (
+      selectedClienteIds.length &&
+      selectedClienteIds.indexOf(r.cliente_id) === -1
+    )
+      continue;
     if (searchTerm) {
       var clienteNome = (r.cliente_nome || "").toLowerCase();
       var clienteCf = (r.cliente_cf || "").toLowerCase();
@@ -93,22 +99,31 @@ function renderGlobaleTabella(rawData) {
   }
 
   var clienteSelBadge = "";
-  if (selectedClienteId && state.clienti) {
-    var clienteTrovato = null;
-    for (var ci = 0; ci < state.clienti.length; ci++) {
-      if (parseInt(state.clienti[ci].id) === selectedClienteId) {
-        clienteTrovato = state.clienti[ci];
-        break;
-      }
-    }
-    if (clienteTrovato) {
+  if (selectedClienteIds.length && state.clienti) {
+    var clientiTrovati = state.clienti.filter(function (c) {
+      return selectedClienteIds.indexOf(parseInt(c.id)) !== -1;
+    });
+    if (clientiTrovati.length) {
+      var clienteSelLabel =
+        clientiTrovati.length === 1
+          ? escAttr(clientiTrovati[0].nome)
+          : clientiTrovati.length +
+            " clienti selezionati (" +
+            clientiTrovati
+              .map(function (c) {
+                return escAttr(c.nome);
+              })
+              .join(", ") +
+            ")";
       clienteSelBadge =
-        '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:10px;padding:5px 12px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">' +
-        "<span>👤 Cliente:</span>" +
-        "<strong>" +
-        escAttr(clienteTrovato.nome) +
+        '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:10px;padding:5px 12px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent);max-width:520px">' +
+        "<span>👤 Cliente" +
+        (clientiTrovati.length > 1 ? "i" : "") +
+        ":</span>" +
+        '<strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+        clienteSelLabel +
         "</strong>" +
-        '<button onclick="state.globaleSelectedCliente=\'\';resetGlobaleClienteSel();applyGlobaleFiltri()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi filtro cliente">✕</button>' +
+        '<button onclick="state.globaleSelectedClienti=[];resetGlobaleClienteSel();applyGlobaleFiltri()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi filtro cliente">✕</button>' +
         "</div>";
     }
   }

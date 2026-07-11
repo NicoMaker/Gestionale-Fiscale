@@ -135,6 +135,17 @@ function getScadenzarioGlobale(anno, filtri = {}) {
     sql += ` AND (c.nome LIKE ? OR c.codice_fiscale LIKE ? OR c.partita_iva LIKE ? OR a.nome LIKE ?)`;
     params.push(s, s, s, s);
   }
+  if (filtri.cliente_id) {
+    if (Array.isArray(filtri.cliente_id)) {
+      if (filtri.cliente_id.length) {
+        sql += ` AND c.id IN (${filtri.cliente_id.map(() => "?").join(",")})`;
+        params.push(...filtri.cliente_id);
+      }
+    } else {
+      sql += ` AND c.id = ?`;
+      params.push(filtri.cliente_id);
+    }
+  }
 
   sql += ` ORDER BY ac.data_scadenza DESC NULLS LAST, a.nome COLLATE NOCASE, c.nome COLLATE NOCASE, ac.mese, ac.trimestre, ac.semestre`;
   return queryAll(sql, params);
