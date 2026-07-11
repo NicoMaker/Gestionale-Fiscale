@@ -475,9 +475,7 @@ function renderGlobaleTabella(rawData) {
   if (!content) {
     var msgVuoto = tipFiltroIsNone
       ? "Nessun filtro tipologia selezionato — clicca <strong>✦ Tutti</strong> nel pannello Tipologie per vedere i clienti"
-      : filtroClienteStato ||
-          hasFiltroTipologie ||
-          selectedClienteIds.length
+      : filtroClienteStato || hasFiltroTipologie || selectedClienteIds.length
         ? "Nessun cliente corrisponde ai filtri attivi per " + state.anno
         : "Nessun adempimento trovato per " + state.anno;
 

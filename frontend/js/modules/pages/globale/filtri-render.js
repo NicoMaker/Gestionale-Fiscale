@@ -496,7 +496,7 @@ function renderGlobaleClientiSelect() {
   clienteSel.innerHTML = opts;
   if (!clienteSel.dataset.ssinit) {
     initSearchableMultiSelect("glob-sel-cliente", {
-      showSearch: true,   // 🔍 ricerca integrata nel dropdown
+      showSearch: true, // 🔍 ricerca integrata nel dropdown
       placeholder: "-- Seleziona Cliente --",
     });
   } else if (clienteSel._ssRefresh) {
