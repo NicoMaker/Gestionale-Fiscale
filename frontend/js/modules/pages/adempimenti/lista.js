@@ -42,18 +42,10 @@ function getVal(id) {
 }
 
 // ─── HELPERS PER TIPO ─────────────────────────────────────────
-function isContabilita(r) {
-  return parseInt(r.is_contabilita) === 1 || r.is_contabilita === true;
-}
-function hasRate(r) {
-  return parseInt(r.has_rate) === 1 || r.has_rate === true;
-}
-function isCheckbox(r) {
-  return parseInt(r.is_checkbox) === 1 || r.is_checkbox === true;
-}
-function isTextOnly(r) {
-  return parseInt(r.is_text_only) === 1 || r.is_text_only === true;
-}
+
+
+
+
 
 // ─── LISTA ADEMPIMENTI ────────────────────────────────────────
 const applyAdempimentiFiltriSearch = debounce(() => {

@@ -5,95 +5,27 @@
 // ═══════════════════════════════════════════════════════════════
 // ─── VISTA GLOBALE ────────────────────────────────────────────
 
-function goVistaGlobaleAdp(nomi) {
-  // Accetta sia una singola stringa (click su una card) sia un array
-  // (apertura da selezione multipla) per filtrare la Vista Globale.
-  var lista = Array.isArray(nomi) ? nomi : [nomi];
-  state.globalePreFiltroAdp = lista.length === 1 ? lista[0] : "";
-  state.globalePreFiltroAdpMulti = lista;
-  document.querySelectorAll(".nav-item").forEach(function (x) {
-    x.classList.remove("active");
-  });
-  var nav = document.querySelector('[data-page="scadenzario_globale"]');
-  if (nav) nav.classList.add("active");
-  state.dashSearch = "";
-  state.dashFiltroStatoAdp = "";
-  renderPage("scadenzario_globale");
-}
+
 
 // ─── SELEZIONE MULTIPLA CARD ADEMPIMENTO (DASHBOARD) ──────────
 
-function _getDashSelezionati() {
-  if (!state.dashAdpSelezionati) state.dashAdpSelezionati = new Set();
-  return state.dashAdpSelezionati;
-}
 
-function toggleDashAdpCard(nome, event) {
-  if (event) event.stopPropagation();
-  var sel = _getDashSelezionati();
-  if (sel.has(nome)) sel.delete(nome);
-  else sel.add(nome);
-  if (state.dashStats) updateDashboardContent(state.dashStats);
-}
 
-function clearDashAdpSelezione() {
-  _getDashSelezionati().clear();
-  if (state.dashStats) updateDashboardContent(state.dashStats);
-}
 
-function apriVistaGlobaleDaSelezione() {
-  var sel = Array.from(_getDashSelezionati());
-  if (sel.length === 0) return;
-  goVistaGlobaleAdp(sel);
-}
 
-function _renderDashMultiselBar() {
-  var bar = document.getElementById("dash-multisel-bar");
-  if (!bar) return;
-  var sel = _getDashSelezionati();
-  if (sel.size === 0) {
-    bar.classList.remove("is-visible");
-    bar.innerHTML = "";
-    return;
-  }
-  bar.classList.add("is-visible");
-  bar.innerHTML =
-    "<span><strong>" +
-    sel.size +
-    "</strong> adempiment" +
-    (sel.size === 1 ? "o selezionato" : "i selezionati") +
-    "</span>" +
-    '<button class="btn btn-sm btn-primary" onclick="apriVistaGlobaleDaSelezione()">🌐 Apri in Vista Globale</button>' +
-    '<button class="btn btn-sm btn-secondary" onclick="clearDashAdpSelezione()">✕ Deseleziona tutto</button>';
-}
+
+
+
+
+
 
 // ─── FILTRI STATO / SEARCH ────────────────────────────────────
 
-function onDashFiltroStatoAdp() {
-  var el = document.getElementById("dash-filtro-stato-adp");
-  state.dashFiltroStatoAdp = el ? el.value : "";
-  if (state.dashStats) updateDashboardContent(state.dashStats);
-}
 
-function onDashAdpSearch(val) {
-  state.dashSearch = val;
-  if (state.dashStats) updateDashboardContent(state.dashStats);
-}
 
-function resetDashFiltri() {
-  state.dashSearch = "";
-  state.dashFiltroStatoAdp = "";
-  if (state.dashAdpSelezionati) state.dashAdpSelezionati.clear();
-  var searchEl = document.getElementById("dash-adp-search");
-  if (searchEl) searchEl.value = "";
-  var statoEl = document.getElementById("dash-filtro-stato-adp");
-  if (statoEl) statoEl.value = "";
-  if (typeof initializeTipologieFilter === "function")
-    initializeTipologieFilter();
-  _refreshDashTipFiltroPanel();
-  _aggiornaDashTipFiltroCounter();
-  if (state.dashStats) updateDashboardContent(state.dashStats);
-}
+
+
+
 
 // ─── PANNELLO TIPOLOGIE DASHBOARD ─────────────────────────────
 // Riusa renderTipologieFiltroPanel() da clienti.js (zero duplicazione).
@@ -105,57 +37,104 @@ var _dashFiltroObserver = null; // MutationObserver attivo
 
 // ─── CONDIVISIONE STORAGE CON CLIENTI.JS ─────────────────────
 // Usa le stesse funzioni di storage definite in clienti.js
-function _getStorageKeys() {
-  return {
-    FILTRI: "gestionale_filtri_tipologie",
-    NESSUNO: "gestionale_filtri_nessuno",
-    PANNELLO_APERTO: "gestionale_filtri_pannello_aperto",
-  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ─── FILTRO TIPOLOGIE SU ADEMPIMENTI ─────────────────────────
+
+
+
+
+
+// ─── AGGIORNAMENTO CONTENUTO DASHBOARD ───────────────────────
+
+
+
+// ─── RENDER PRINCIPALE ────────────────────────────────────────
+
+
+
+// ─── SOCKET LISTENERS ─────────────────────────────────────────
+
+if (typeof socket !== "undefined") {
+  socket.on("res:clienti_senza_adempimenti", function (data) {
+    if (data.success) renderClientiSenzaAdempimenti(data.data);
+  });
+  socket.on("res:applica:adempimenti_a_clienti", function (data) {
+    if (data.success) {
+      var msg =
+        "✅ Applicati " +
+        data.inseriti +
+        " adempimenti a " +
+        data.clienti +
+        " clienti";
+      if (data.dettagli && data.dettagli.skipped > 0)
+        msg += " — " + data.dettagli.skipped + " già esistenti";
+      showNotif(msg, "success");
+      socket.emit("get:stats", { anno: state.anno });
+      caricaClientiSenzaAdempimenti();
+    } else {
+      showNotif("❌ Errore: " + (data.error || "Operazione fallita"), "error");
+    }
+  });
+
+  socket.on("res:elimina:adempimenti_a_clienti", function (data) {
+    if (data.success) {
+      var msg =
+        "🗑️ Eliminati " +
+        data.eliminati +
+        " record da " +
+        data.clienti +
+        " clienti";
+      if (data.nonTrovati > 0)
+        msg += " (" + data.nonTrovati + " già assenti, ignorati)";
+      showNotif(msg, "success");
+      socket.emit("get:stats", { anno: state.anno });
+      caricaClientiSenzaAdempimenti();
+    } else {
+      showNotif(
+        "❌ Errore eliminazione: " + (data.error || "Operazione fallita"),
+        "error",
+      );
+    }
+  });
 }
 
-function _salvaFiltriDashboardSuStorage() {
-  try {
-    const keys =
-      typeof window._activeFiltroKeys !== "undefined"
-        ? window._activeFiltroKeys
-        : new Set();
-    const nessuno =
-      typeof window._filtroManualeNessuno !== "undefined"
-        ? window._filtroManualeNessuno
-        : false;
+// ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
 
-    const filtriData = {
-      keys: Array.from(keys),
-      nessuno: nessuno,
-      pannelloAperto: _dashTipFiltroPanelOpen,
-    };
-    localStorage.setItem(_getStorageKeys().FILTRI, JSON.stringify(filtriData));
-  } catch (e) {
-    console.warn("[dashboard.js] Errore salvataggio filtri:", e);
-  }
-}
+// Le esposizioni globali delle funzioni di applica sono in applica.js
+// (che viene caricato dopo questo file)
+window.caricaClientiSenzaAdempimenti = caricaClientiSenzaAdempimenti;
+window.goVistaGlobaleAdp = goVistaGlobaleAdp;
+window.toggleDashAdpCard = toggleDashAdpCard;
+window.clearDashAdpSelezione = clearDashAdpSelezione;
+window.apriVistaGlobaleDaSelezione = apriVistaGlobaleDaSelezione;
+window.onDashFiltroStatoAdp = onDashFiltroStatoAdp;
+window.resetDashFiltri = resetDashFiltri;
+window.onDashAdpSearch = onDashAdpSearch;
+window.toggleDashTipFiltroPanel = toggleDashTipFiltroPanel;
+window.closeDashTipFiltroPanel = closeDashTipFiltroPanel;
+window._aggiornaDashPanelVisibility = _aggiornaDashPanelVisibility;
+window._aggiornaDashTipFiltroCounter = _aggiornaDashTipFiltroCounter;
+window._refreshDashTipFiltroPanel = _refreshDashTipFiltroPanel;
+window.setApplicaModalita = setApplicaModalita;
 
-function toggleDashTipFiltroPanel(event) {
-  if (event) {
-    event.stopPropagation();
-    event.preventDefault();
-  }
-  _dashTipFiltroPanelOpen = !_dashTipFiltroPanelOpen;
-  _salvaFiltriDashboardSuStorage(); // Salva stato pannello
-  _aggiornaDashPanelVisibility();
-  if (_dashTipFiltroPanelOpen) _refreshDashTipFiltroPanel();
-}
 
-function closeDashTipFiltroPanel(event) {
-  if (event) {
-    event.stopPropagation();
-    event.preventDefault();
-  }
-  _dashTipFiltroPanelOpen = false;
-  _salvaFiltriDashboardSuStorage(); // Salva stato pannello
-  _aggiornaDashPanelVisibility();
-}
-
+// ═══════════════════════════════════════════════════════════════
+// FUNZIONI DASHBOARD CONDIVISE (usate anche dalla pagina Cestino)
+// Consolidate qui per evitare duplicazioni tra i file.
+// ═══════════════════════════════════════════════════════════════
 function _aggiornaDashPanelVisibility() {
   var container = document.getElementById("dash-tip-filtro-container");
   if (!container) return;
@@ -167,7 +146,6 @@ function _aggiornaDashPanelVisibility() {
       : '<button class="btn btn-xs btn-secondary" onclick="toggleDashTipFiltroPanel(event)">▼ Espandi</button>';
   }
 }
-
 function _aggiornaDashTipFiltroCounter() {
   var badge = document.getElementById("dash-tip-filtro-count");
   var warning = document.getElementById("dash-tip-filtro-warning");
@@ -198,46 +176,76 @@ function _aggiornaDashTipFiltroCounter() {
     if (warning) warning.style.display = "none";
   }
 }
-
+function _getDashSelezionati() {
+  if (!state.dashAdpSelezionati) state.dashAdpSelezionati = new Set();
+  return state.dashAdpSelezionati;
+}
+function _getStorageKeys() {
+  return {
+    FILTRI: "gestionale_filtri_tipologie",
+    NESSUNO: "gestionale_filtri_nessuno",
+    PANNELLO_APERTO: "gestionale_filtri_pannello_aperto",
+  };
+}
 function _refreshDashTipFiltroPanel() {
   var container = document.getElementById("dash-tip-filtro-container");
   if (!container) return;
   if (typeof renderTipologieFiltroPanel !== "function") return;
 
-  // Smonta il vecchio observer prima di ricostruire il DOM
   if (_dashFiltroObserver) {
     _dashFiltroObserver.disconnect();
     _dashFiltroObserver = null;
   }
 
-  // Renderizza il pannello identico a clienti.js
   var tmp = document.createElement("div");
   tmp.innerHTML = renderTipologieFiltroPanel();
   container.innerHTML = "";
   container.appendChild(tmp.firstChild);
 
-  // MutationObserver: ogni volta che clienti.js ri-renderizza i chip
-  // (cambio classe "tip-active") aggiorna contatori + card dashboard.
-  // DISABILITATO TEMPORANEAMENTE PER DEBUG
-  /*
-  _dashFiltroObserver = new MutationObserver(function () {
-    _aggiornaDashTipFiltroCounter();
-    if (state.dashStats) updateDashboardContent(state.dashStats);
-  });
-  _dashFiltroObserver.observe(container, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["class", "style"],
-  });
-  */
-
   container.style.display = _dashTipFiltroPanelOpen ? "block" : "none";
   _aggiornaDashTipFiltroCounter();
 }
+function _renderDashMultiselBar() {
+  var bar = document.getElementById("dash-multisel-bar");
+  if (!bar) return;
+  var sel = _getDashSelezionati();
+  if (sel.size === 0) {
+    bar.classList.remove("is-visible");
+    bar.innerHTML = "";
+    return;
+  }
+  bar.classList.add("is-visible");
+  bar.innerHTML =
+    "<span><strong>" +
+    sel.size +
+    "</strong> adempiment" +
+    (sel.size === 1 ? "o selezionato" : "i selezionati") +
+    "</span>" +
+    '<button class="btn btn-sm btn-primary" onclick="selezionaTuttiDashAdpVisibili()">✅ Seleziona tutti</button>' +
+    '<button class="btn btn-sm btn-primary" onclick="apriVistaGlobaleDaSelezione()">🌐 Apri in Vista Globale</button>' +
+    '<button class="btn btn-sm btn-secondary" onclick="clearDashAdpSelezione()">✕ Deseleziona tutto</button>';
+}
+function _salvaFiltriDashboardSuStorage() {
+  try {
+    const keys =
+      typeof window._activeFiltroKeys !== "undefined"
+        ? window._activeFiltroKeys
+        : new Set();
+    const nessuno =
+      typeof window._filtroManualeNessuno !== "undefined"
+        ? window._filtroManualeNessuno
+        : false;
 
-// ─── FILTRO TIPOLOGIE SU ADEMPIMENTI ─────────────────────────
-
+    const filtriData = {
+      keys: Array.from(keys),
+      nessuno: nessuno,
+      pannelloAperto: _dashTipFiltroPanelOpen,
+    };
+    localStorage.setItem(_getStorageKeys().FILTRI, JSON.stringify(filtriData));
+  } catch (e) {
+    console.warn("[dashboard.js] Errore salvataggio filtri:", e);
+  }
+}
 function adempimentoPassaFiltroStato(a, ss) {
   if (!ss) return true;
   var inCorso = a.totale - a.completati - a.da_fare - (a.na || 0);
@@ -247,7 +255,15 @@ function adempimentoPassaFiltroStato(a, ss) {
   if (ss === "n_a") return (a.na || 0) > 0;
   return true;
 }
-
+function apriVistaGlobaleDaSelezione() {
+  var sel = Array.from(_getDashSelezionati());
+  if (sel.length === 0) return;
+  goVistaGlobaleAdp(sel);
+}
+function clearDashAdpSelezione() {
+  _getDashSelezionati().clear();
+  if (state.dashStats) updateDashboardContent(state.dashStats);
+}
 function clientePassaFiltroTipologieDashboard(adempimento) {
   var keys =
     typeof _getActiveFiltroKeys === "function"
@@ -258,13 +274,9 @@ function clientePassaFiltroTipologieDashboard(adempimento) {
   var isNone = window._filtroManualeNessuno;
   var isAll = !isNone && keys.size === allKeys.length;
 
-  // Se non ci sono filtri o tutti sono selezionati, mostra tutto
   if (keys.size === 0 || isAll) return true;
-
-  // Se è stato selezionato "Nessuno" manualmente, nascondi tutto
   if (isNone) return false;
 
-  // Se l'adempimento porta il codice tipologia del cliente, filtriamo su quello
   if (adempimento.cliente_tipologia_codice) {
     var tipCod = adempimento.cliente_tipologia_codice;
     return Array.from(keys).some(function (key) {
@@ -273,9 +285,77 @@ function clientePassaFiltroTipologieDashboard(adempimento) {
   }
   return true;
 }
-
-// ─── AGGIORNAMENTO CONTENUTO DASHBOARD ───────────────────────
-
+function closeDashTipFiltroPanel(event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  _dashTipFiltroPanelOpen = false;
+  _salvaFiltriDashboardSuStorage();
+  _aggiornaDashPanelVisibility();
+}
+function goVistaGlobaleAdp(nomi) {
+  var lista = Array.isArray(nomi) ? nomi : [nomi];
+  state.globalePreFiltroAdp = lista.length === 1 ? lista[0] : "";
+  state.globalePreFiltroAdpMulti = lista;
+  document.querySelectorAll(".nav-item").forEach(function (x) {
+    x.classList.remove("active");
+  });
+  var nav = document.querySelector('[data-page="scadenzario_globale"]');
+  if (nav) nav.classList.add("active");
+  state.dashSearch = "";
+  state.dashFiltroStatoAdp = "";
+  renderPage("scadenzario_globale");
+}
+function onDashAdpSearch(val) {
+  state.dashSearch = val;
+  if (state.dashStats) updateDashboardContent(state.dashStats);
+}
+function onDashFiltroStatoAdp() {
+  var el = document.getElementById("dash-filtro-stato-adp");
+  state.dashFiltroStatoAdp = el ? el.value : "";
+  if (state.dashStats) updateDashboardContent(state.dashStats);
+}
+function renderDashboard(stats) {
+  if (!state._dashRendered) buildDashboardShell(stats);
+  state.dashStats = stats;
+  updateDashboardContent(stats);
+  if (typeof initializeTipologieFilter === "function")
+    initializeTipologieFilter();
+  _refreshDashTipFiltroPanel();
+  _aggiornaDashTipFiltroCounter();
+}
+function resetDashFiltri() {
+  state.dashSearch = "";
+  state.dashFiltroStatoAdp = "";
+  if (state.dashAdpSelezionati) state.dashAdpSelezionati.clear();
+  var searchEl = document.getElementById("dash-adp-search");
+  if (searchEl) searchEl.value = "";
+  var statoEl = document.getElementById("dash-filtro-stato-adp");
+  if (statoEl) statoEl.value = "";
+  if (typeof initializeTipologieFilter === "function")
+    initializeTipologieFilter();
+  _refreshDashTipFiltroPanel();
+  _aggiornaDashTipFiltroCounter();
+  if (state.dashStats) updateDashboardContent(state.dashStats);
+}
+function toggleDashAdpCard(nome, event) {
+  if (event) event.stopPropagation();
+  var sel = _getDashSelezionati();
+  if (sel.has(nome)) sel.delete(nome);
+  else sel.add(nome);
+  if (state.dashStats) updateDashboardContent(state.dashStats);
+}
+function toggleDashTipFiltroPanel(event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  _dashTipFiltroPanelOpen = !_dashTipFiltroPanelOpen;
+  _salvaFiltriDashboardSuStorage();
+  _aggiornaDashPanelVisibility();
+  if (_dashTipFiltroPanelOpen) _refreshDashTipFiltroPanel();
+}
 function updateDashboardContent(stats) {
   var allAdp = stats.adempimentiStats || [];
   var sq = (state.dashSearch || "").toLowerCase();
@@ -283,7 +363,6 @@ function updateDashboardContent(stats) {
   var _annoDash = state.anno || new Date().getFullYear();
 
   var adpVis = allAdp.filter(function (a) {
-    // Escludi adempimenti validi solo per un anno diverso da quello corrente
     if (a.anno_validita != null && Number(a.anno_validita) !== _annoDash)
       return false;
     if (
@@ -413,80 +492,3 @@ function updateDashboardContent(stats) {
   grid.innerHTML = html;
   _renderDashMultiselBar();
 }
-
-// ─── RENDER PRINCIPALE ────────────────────────────────────────
-
-function renderDashboard(stats) {
-  if (!state._dashRendered) buildDashboardShell(stats);
-  state.dashStats = stats;
-  updateDashboardContent(stats);
-  if (typeof initializeTipologieFilter === "function")
-    initializeTipologieFilter();
-  _refreshDashTipFiltroPanel();
-  _aggiornaDashTipFiltroCounter();
-}
-
-// ─── SOCKET LISTENERS ─────────────────────────────────────────
-
-if (typeof socket !== "undefined") {
-  socket.on("res:clienti_senza_adempimenti", function (data) {
-    if (data.success) renderClientiSenzaAdempimenti(data.data);
-  });
-  socket.on("res:applica:adempimenti_a_clienti", function (data) {
-    if (data.success) {
-      var msg =
-        "✅ Applicati " +
-        data.inseriti +
-        " adempimenti a " +
-        data.clienti +
-        " clienti";
-      if (data.dettagli && data.dettagli.skipped > 0)
-        msg += " — " + data.dettagli.skipped + " già esistenti";
-      showNotif(msg, "success");
-      socket.emit("get:stats", { anno: state.anno });
-      caricaClientiSenzaAdempimenti();
-    } else {
-      showNotif("❌ Errore: " + (data.error || "Operazione fallita"), "error");
-    }
-  });
-
-  socket.on("res:elimina:adempimenti_a_clienti", function (data) {
-    if (data.success) {
-      var msg =
-        "🗑️ Eliminati " +
-        data.eliminati +
-        " record da " +
-        data.clienti +
-        " clienti";
-      if (data.nonTrovati > 0)
-        msg += " (" + data.nonTrovati + " già assenti, ignorati)";
-      showNotif(msg, "success");
-      socket.emit("get:stats", { anno: state.anno });
-      caricaClientiSenzaAdempimenti();
-    } else {
-      showNotif(
-        "❌ Errore eliminazione: " + (data.error || "Operazione fallita"),
-        "error",
-      );
-    }
-  });
-}
-
-// ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
-
-// Le esposizioni globali delle funzioni di applica sono in applica.js
-// (che viene caricato dopo questo file)
-window.caricaClientiSenzaAdempimenti = caricaClientiSenzaAdempimenti;
-window.goVistaGlobaleAdp = goVistaGlobaleAdp;
-window.toggleDashAdpCard = toggleDashAdpCard;
-window.clearDashAdpSelezione = clearDashAdpSelezione;
-window.apriVistaGlobaleDaSelezione = apriVistaGlobaleDaSelezione;
-window.onDashFiltroStatoAdp = onDashFiltroStatoAdp;
-window.resetDashFiltri = resetDashFiltri;
-window.onDashAdpSearch = onDashAdpSearch;
-window.toggleDashTipFiltroPanel = toggleDashTipFiltroPanel;
-window.closeDashTipFiltroPanel = closeDashTipFiltroPanel;
-window._aggiornaDashPanelVisibility = _aggiornaDashPanelVisibility;
-window._aggiornaDashTipFiltroCounter = _aggiornaDashTipFiltroCounter;
-window._refreshDashTipFiltroPanel = _refreshDashTipFiltroPanel;
-window.setApplicaModalita = setApplicaModalita;

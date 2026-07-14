@@ -132,39 +132,11 @@ function renderPage(page) {
   }
 }
 
-function refreshPage() {
-  renderPage(state.page);
-}
 
-function changeAnno(d) {
-  state.anno += d;
-  document
-    .querySelectorAll(".year-num")
-    .forEach((el) => (el.textContent = state.anno));
-  if (state.page === "dashboard") {
-    state._dashRendered = false;
-    socket.emit("get:stats", { anno: state.anno });
-  }
-}
 
-function setupDecimalInputs() {
-  document.querySelectorAll('input[type="number"]').forEach(setupDecimalInput);
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          if (node.tagName === "INPUT" && node.type === "number")
-            setupDecimalInput(node);
-          if (node.querySelectorAll)
-            node
-              .querySelectorAll('input[type="number"]')
-              .forEach(setupDecimalInput);
-        }
-      });
-    });
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-}
+
+
+
 
 // Esposizioni globali
 window.initNav = initNav;
