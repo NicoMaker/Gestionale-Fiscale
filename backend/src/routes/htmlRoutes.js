@@ -12,7 +12,7 @@ const router = express.Router();
 router.use((req, res, next) => {
   // Escludi le route che iniziano con /api
   if (!req.path.startsWith("/api")) {
-    res.sendFile(path.join(__dirname, "../../frontend", "index.html"));
+    res.sendFile(path.join(__dirname, "../../../frontend", "index.html"));
   } else {
     next();
   }

@@ -7,7 +7,7 @@ const {
   runQueryAndGetId,
   queryAll,
   queryOne,
-} = require("../database");
+} = require("../config/database");
 
 const GIORNI_RETENTION = 15;
 

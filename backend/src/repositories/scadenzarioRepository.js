@@ -1,9 +1,9 @@
-const { runQuery, queryAll, queryOne } = require("../database");
+const { runQuery, queryAll, queryOne } = require("../config/database");
 const {
   inserisciAdempimentoSeAssente,
   inserisciAdempimentoSeAssenteConDettagli,
-} = require("./adempimenti");
-const { spostaInCestino } = require("./cestino");
+} = require("./adempimentiRepository");
+const { spostaInCestino } = require("./cestinoRepository");
 
 function _annoFromRow(anno) {
   return anno || new Date().getFullYear();

@@ -3,8 +3,8 @@ const {
   runQueryAndGetId,
   queryAll,
   queryOne,
-} = require("../database");
-const { spostaInCestino } = require("./cestino");
+} = require("../config/database");
+const { spostaInCestino } = require("./cestinoRepository");
 
 function getPaginaBianca(filtri = {}) {
   let sql = `

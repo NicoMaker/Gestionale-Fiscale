@@ -1,7 +1,7 @@
 const initSqlJs = require("sql.js");
 const path = require("path");
 const fs = require("fs");
-const { createSchema, seedData } = require("./seedData");
+const { createSchema, seedData } = require("./seed");
 
 const DB_PATH = path.join(__dirname, "../../db", "gestionale.db");
 let db;

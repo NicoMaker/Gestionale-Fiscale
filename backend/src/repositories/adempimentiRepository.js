@@ -1,5 +1,5 @@
-const { runQuery, queryAll, queryOne } = require("../database");
-const { spostaInCestino } = require("./cestino");
+const { runQuery, queryAll, queryOne } = require("../config/database");
+const { spostaInCestino } = require("./cestinoRepository");
 
 function getAdempimenti() {
   return queryAll(`SELECT * FROM adempimenti WHERE attivo = 1 ORDER BY nome`);

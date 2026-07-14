@@ -1,18 +1,14 @@
-const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require("path");
-const cors = require("cors");
 const cron = require("node-cron");
-const { initDB } = require("./modules/database");
-const { getLocalIP, getPublicIP } = require("./modules/utils/network");
-const setupSocketHandlers = require("./modules/sockets");
-const downloadDbRouter = require("./modules/routes/downloadDb");
-const avvioHtmlRouter = require("./modules/routes/avviohtml");
-const cestinoModel = require("./modules/models/cestino");
-const { runQuery, queryOne } = require("./modules/database");
 
-const app = express();
+const createApp = require("./src/app");
+const { initDB, runQuery, queryOne } = require("./src/config/database");
+const { getLocalIP, getPublicIP } = require("./src/utils/network");
+const setupSocketHandlers = require("./src/realtime/socket");
+const cestinoRepository = require("./src/repositories/cestinoRepository");
+
+const app = createApp();
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -21,40 +17,20 @@ const io = new Server(server, {
   pingTimeout: 60000,
 });
 
+// Rende l'istanza io disponibile alle route (es. /api/health)
 app.set("io", io);
-app.use(cors());
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Servi file statici dal frontend
-app.use(express.static(path.join(__dirname, "../frontend")));
-
-// Route API
-app.use("/api", downloadDbRouter);
-
-// Health check
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    uptime: Math.floor(process.uptime()),
-    socketConnections: io.engine.clientsCount,
-  });
-});
-
-// Il router HTML va DOPO le route API e i file statici
-app.use(avvioHtmlRouter);
-
+// Configura gli handler Socket.IO (controller di dominio)
 setupSocketHandlers(io);
 
-// ── CRON: eliminazione automatica cestino ogni notte a mezzanotte ──────────
+// -- CRON: eliminazione automatica cestino ogni notte a mezzanotte ----------
 // Scatta alle 00:00:05 (5 secondi dopo mezzanotte) ogni giorno
 cron.schedule("5 0 * * *", () => {
   try {
-    const eliminati = cestinoModel.eliminaScadutiCestino();
+    const eliminati = cestinoRepository.eliminaScadutiCestino();
     if (eliminati > 0) {
       console.log(
-        `🗑️ Cron cestino: eliminati ${eliminati} elementi scaduti (>${cestinoModel.GIORNI_RETENTION} giorni)`,
+        `🗑️ Cron cestino: eliminati ${eliminati} elementi scaduti (>${cestinoRepository.GIORNI_RETENTION} giorni)`,
       );
       io.emit("broadcast:cestino_updated");
     }
@@ -69,11 +45,11 @@ initDB().then(async () => {
   const localIP = getLocalIP();
   const publicIP = await getPublicIP();
 
-  // ── PULIZIA IMMEDIATA all'avvio ──────────────────────────────────────────
+  // -- PULIZIA IMMEDIATA all'avvio --------------------------------------------
   // Elimina i record scaduti confrontando con ENTRAMBI i formati di soglia
   // (UTC e localtime) per coprire i record inseriti prima del fix timezone.
   try {
-    const giorni = cestinoModel.GIORNI_RETENTION;
+    const giorni = cestinoRepository.GIORNI_RETENTION;
     const result = queryOne(`SELECT COUNT(*) as cnt FROM cestino WHERE
       data_eliminazione <= datetime('now', '-${giorni} days')
       OR data_eliminazione <= datetime('now', 'localtime', '-${giorni} days')`);
