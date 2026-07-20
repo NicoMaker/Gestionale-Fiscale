@@ -2,7 +2,6 @@
 // FORMAT.JS — Formattazione numeri in formato italiano e input decimali
 // ═══════════════════════════════════════════════════════════════
 
-
 // ═══════════════════════════════════════════════════════════════
 // GESTIONE INPUT NUMERICI - FUNZIONE UNIFICATA (CORRETTA)
 // ═══════════════════════════════════════════════════════════════
@@ -27,7 +26,6 @@ function parseNumeroItaliano(valore) {
   return isNaN(num) ? 0 : num;
 }
 
-
 /**
  * Converte numero al formato italiano con simbolo € (per visualizzazione)
  * @param {number|string} num
@@ -48,7 +46,6 @@ function formattaNumeroItaliano(num) {
   return (negativo ? "-" : "") + interoFormattato + "," + parts[1] + "€";
 }
 
-
 /**
  * Formatta un numero per la visualizzazione nelle tabelle (senza €)
  * @param {number|string} num
@@ -68,7 +65,6 @@ function formattaNumeroVisualizzazione(num) {
 
   return (negativo ? "-" : "") + interoFormattato + "," + parts[1];
 }
-
 
 /**
  * Setup completo per input numerici con formato italiano
@@ -203,7 +199,6 @@ function setupDecimalInput(input) {
     }
   });
 }
-
 
 // ─── COLORAZIONE INPUT IN BASE AL SEGNO ──────────────────────
 function coloraInputImporto(input) {

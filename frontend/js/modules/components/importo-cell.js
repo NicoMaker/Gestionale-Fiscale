@@ -2,7 +2,6 @@
 // IMPORTO-CELL.JS — Rendering cella importo compatta
 // ═══════════════════════════════════════════════════════════════
 
-
 // ─── IMPORTO CELL ─────────────────────────────────────────────
 function renderImportoCellCompact(r) {
   if (isCheckbox(r) || isTextOnly(r)) {
@@ -67,7 +66,6 @@ function renderImportoCellCompact(r) {
   }
   return `<span class="imp-empty">-</span>`;
 }
-
 
 // ─── HELPER: adempimento "solo scadenza" con data già scaduta ─
 // Usa OGGI globale (aggiornato a mezzanotte) invece di new Date().

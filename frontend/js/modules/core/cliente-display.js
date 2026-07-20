@@ -2,7 +2,6 @@
 // CLIENTE-DISPLAY.JS — Avatar, colori tipologia, classificazione sottotipo e periodo
 // ═══════════════════════════════════════════════════════════════
 
-
 // ─── AVATAR ADATTIVO ──────────────────────────────────────────
 function getAvatar(nome) {
   if (!nome || nome.trim() === "") return "??";
@@ -19,7 +18,6 @@ function getAvatar(nome) {
   return result.toUpperCase();
 }
 
-
 // ─── FONT SIZE AVATAR ─────────────────────────────────────────
 function avatarFontSize(avatar, base) {
   const b = base || 13;
@@ -29,12 +27,10 @@ function avatarFontSize(avatar, base) {
   return Math.round(b * 0.62) + "px";
 }
 
-
 // ─── TIPOLOGIA COLOR ──────────────────────────────────────────
 function getTipologiaColor(tipCodice) {
   return (TIPOLOGIE_INFO[tipCodice] || {}).color || "var(--accent)";
 }
-
 
 // ─── SOTTOTIPO HELPERS ────────────────────────────────────────
 function getCol3Options(tipCodice, col2Value) {
@@ -61,7 +57,6 @@ function getCol3Options(tipCodice, col2Value) {
   }
   return null;
 }
-
 
 // Helper function to generate col3 options from JSON
 function _getCol3OptionsFromJson(tipCodice, col2Value) {
@@ -90,12 +85,10 @@ function _getCol3OptionsFromJson(tipCodice, col2Value) {
   }));
 }
 
-
 function getSottotipoCode(tipCodice, col2, col3) {
   const key = `${tipCodice}|${col2 || ""}|${col3 || ""}`;
   return SOTTOTIPO_MAP[key] || null;
 }
-
 
 function getLabelSottotipologia(cliente) {
   if (
@@ -105,7 +98,6 @@ function getLabelSottotipologia(cliente) {
     return SOTTOTIPO_LABEL_MAP[cliente.sottotipologia_codice];
   return cliente.sottotipologia_nome || null;
 }
-
 
 function getClassificazioneCompleta(c) {
   const parts = [];
@@ -140,7 +132,6 @@ function getClassificazioneCompleta(c) {
   return parts.join(" · ");
 }
 
-
 // ─── PERIODO HELPERS ──────────────────────────────────────────
 function getPeriodoLabel(r) {
   if (r.scadenza_tipo === "trimestrale") {
@@ -152,7 +143,6 @@ function getPeriodoLabel(r) {
   if (r.scadenza_tipo === "mensile") return MESI[(r.mese || 1) - 1] || "-";
   return "Annuale";
 }
-
 
 function getPeriodoShort(r) {
   if (r.scadenza_tipo === "trimestrale") return `T${r.trimestre}`;

@@ -2,7 +2,6 @@
 // PILL.JS — Rendering delle pill adempimento (colore, testo, checkbox, periodo)
 // ═══════════════════════════════════════════════════════════════
 
-
 // ─── COLORE PILLOLA ───────────────────────────────────────────
 function getPillColor(r, stato) {
   if (isTextOnly(r)) return "var(--purple)";
@@ -49,7 +48,6 @@ function getPillColor(r, stato) {
   return "var(--red)";
 }
 
-
 // ─── SOLO TESTO PILL ────────────────────────────────────────────
 function renderTextOnlyPill(r) {
   const ps = getPeriodoShort(r);
@@ -65,7 +63,6 @@ function renderTextOnlyPill(r) {
     ${r.note ? `<div class="pp-note" style="margin-top:4px">📝 ${r.note}</div>` : ""}
   </div>`;
 }
-
 
 // ─── CHECKBOX PILL ────────────────────────────────────────────
 function renderCheckboxPill(r) {
@@ -95,7 +92,6 @@ function renderCheckboxPill(r) {
     ${r.note ? `<div class="pp-note" title="${escAttr(r.note)}">📝 ${r.note}</div>` : ""}
   </div>`;
 }
-
 
 // ─── PERIODO PILL ─────────────────────────────────────────────
 function renderPeriodoPill(r) {
@@ -202,7 +198,6 @@ function renderPeriodoPill(r) {
   </div>`;
 }
 
-
 // ─── HELPER: label con checkbox per contabilità ───────────────
 function _buildContabilitaLabel(r, pillColor) {
   const ivaNum =
@@ -227,7 +222,6 @@ function _buildContabilitaLabel(r, pillColor) {
     <div class="pp-cont-row"><span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span><span class="pp-cont-lbl" style="color:${cCont}">📊 Adempimento Comp.</span><span class="pp-cont-val" style="color:${cCont}">${contDone ? "fatto" : "—"}</span></div>
   </div>`;
 }
-
 
 // ─── HELPER: label con checkbox per rate ───────────────────────
 function _buildRateLabel(r, pillColor) {

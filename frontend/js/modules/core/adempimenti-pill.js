@@ -4,12 +4,10 @@
 
 const _rowStore = {};
 
-
 function storeRow(r) {
   _rowStore[r.id] = r;
   return r.id;
 }
-
 
 function openAdpById(id) {
   const r = _rowStore[id];
@@ -19,7 +17,6 @@ function openAdpById(id) {
   }
   openAdpModal(r);
 }
-
 
 // ─── TOGGLE RAPIDO COMPLETATO (click destro sulla pill) ───────
 function toggleAdpCompletato(event, id) {
@@ -57,7 +54,6 @@ function toggleAdpCompletato(event, id) {
   );
 }
 
-
 // ─── IMPOSTA STATO CHECKBOX (tre bottoni nella pill) ──────────
 function setCbxStato(event, id, nuovoStato) {
   event.preventDefault();
@@ -93,7 +89,6 @@ function setCbxStato(event, id, nuovoStato) {
   };
   showNotif(icons[nuovoStato] || "Aggiornato", "success");
 }
-
 
 // ─── TOGGLE CHECKBOX ADEMPIMENTO (click sulla checkbox pill) ──
 function toggleCheckboxAdp(event, id) {

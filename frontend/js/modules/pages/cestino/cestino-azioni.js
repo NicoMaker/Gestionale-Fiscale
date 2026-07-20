@@ -180,13 +180,7 @@ window.deselezionaTutti = deselezionaTutti;
 // ═══════════════════════════════════════════════════════════════
 // ─── VISTA GLOBALE ────────────────────────────────────────────
 
-
-
 // ─── SELEZIONE MULTIPLA CARD ADEMPIMENTO (DASHBOARD) ──────────
-
-
-
-
 
 function selezionaTuttiDashAdpVisibili() {
   // Seleziona tutte le card attualmente visibili (dopo filtri stato/search)
@@ -207,52 +201,18 @@ function selezionaTuttiDashAdpVisibili() {
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
 
-
-
-
-
-
-
 // ─── FILTRI STATO / SEARCH ────────────────────────────────────
-
-
-
-
-
-
 
 // ─── PANNELLO TIPOLOGIE DASHBOARD ─────────────────────────────
 
 var _dashTipFiltroPanelOpen = false;
 var _dashFiltroObserver = null;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ─── FILTRO TIPOLOGIE SU ADEMPIMENTI ─────────────────────────
-
-
-
-
 
 // ─── AGGIORNAMENTO CONTENUTO DASHBOARD ───────────────────────
 
-
-
 // ─── RENDER PRINCIPALE ────────────────────────────────────────
-
-
 
 // ─── SOCKET LISTENERS ─────────────────────────────────────────
 

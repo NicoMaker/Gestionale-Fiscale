@@ -177,7 +177,6 @@ function initSearchableSelect(selectId) {
   };
 }
 
-
 // ─── SELECT MULTIPLO RICERCABILE (checkbox, non si chiude al click) ───
 // Usato ovunque si debba scegliere PIÙ DI UN adempimento da un elenco
 // (es. filtro adempimenti nello scadenzario cliente).

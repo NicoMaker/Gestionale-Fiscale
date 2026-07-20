@@ -2,13 +2,11 @@
 // OGGI.JS — Data 'oggi' globale, aggiornata automaticamente a mezzanotte
 // ═══════════════════════════════════════════════════════════════
 
-
 function _calcolaOggi() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   return d;
 }
-
 
 /**
  * Schedula un aggiornamento automatico a mezzanotte.
@@ -51,7 +49,6 @@ function schedulaMezzanotte() {
     schedulaMezzanotte();
   }, msAllaMezzanotte);
 }
-
 
 /**
  * Fallback leggero: riscrive solo i badge .pp-scaduto-badge

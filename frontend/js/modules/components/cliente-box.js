@@ -2,7 +2,6 @@
 // CLIENTE-BOX.JS — Box informazioni cliente e dati di riferimento
 // ═══════════════════════════════════════════════════════════════
 
-
 // ─── CLIENTE INFO BOX ─────────────────────────────────────────
 function renderClienteInfoBox(cliente) {
   if (!cliente) return "";
@@ -66,7 +65,6 @@ function renderClienteInfoBox(cliente) {
     </div>
     ${metaChips.length ? `<div class="cliente-info-meta">${metaChips.join("")}</div>` : ""}`;
 }
-
 
 // ─── CLIENTE DATI RIFERIMENTO ─────────────────────────────────
 function renderClienteDatiRiferimento(cliente) {

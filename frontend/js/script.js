@@ -132,12 +132,6 @@ function renderPage(page) {
   }
 }
 
-
-
-
-
-
-
 // Esposizioni globali
 window.initNav = initNav;
 window.renderPage = renderPage;

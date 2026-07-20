@@ -2,7 +2,6 @@
 // UI.JS — Helper UI generici: debounce, escape, modali, notifiche, scroll
 // ═══════════════════════════════════════════════════════════════
 
-
 // ─── DEBOUNCE ─────────────────────────────────────────────────
 function debounce(fn, ms) {
   let t;
@@ -11,7 +10,6 @@ function debounce(fn, ms) {
     t = setTimeout(() => fn(...a), ms);
   };
 }
-
 
 // ─── HTML ESCAPE ──────────────────────────────────────────────
 function escAttr(s) {
@@ -22,7 +20,6 @@ function escAttr(s) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
-
 
 // ─── MODAL HELPERS ────────────────────────────────────────────
 function openModal(id) {
@@ -38,11 +35,9 @@ function openModal(id) {
   }
 }
 
-
 function closeModal(id) {
   document.getElementById(id)?.classList.remove("open");
 }
-
 
 // ─── NOTIFICATIONS ────────────────────────────────────────────
 function showNotif(msg, type = "info") {
@@ -53,7 +48,6 @@ function showNotif(msg, type = "info") {
   container.appendChild(div);
   setTimeout(() => div.remove(), 4000);
 }
-
 
 // ─── SCROLL TO TOP ────────────────────────────────────────────
 function scrollToTop() {

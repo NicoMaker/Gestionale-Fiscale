@@ -2,7 +2,6 @@
 // FORMAT-DISPLAY.JS — Formattazione numeri per display e predicati di tipo
 // ═══════════════════════════════════════════════════════════════
 
-
 // ─── UTILITY ───────────────────────────────────────────────
 
 // ─── FORMATTAZIONE NUMERO IN FORMATO ITALIANO ────────────────
@@ -20,7 +19,6 @@ function formattaNumeroItaliano(valore) {
   const risultato = interoFormattato + "," + dec;
   return negativo ? "-" + risultato : risultato;
 }
-
 
 // ─── FORMATTA NUMERO CON COLORE PER DISPLAY ──────────────────
 function formattaNumeroConColore(valore, elemento) {
@@ -49,7 +47,6 @@ function formattaNumeroConColore(valore, elemento) {
   }
   return formattato;
 }
-
 
 // ─── TYPE HELPERS ─────────────────────────────────────────────
 function isContabilita(r) {

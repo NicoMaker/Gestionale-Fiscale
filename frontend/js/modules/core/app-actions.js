@@ -5,7 +5,6 @@
 const _ANNO_KEY = "gestionale_last_anno";
 const SHARED_SEARCH_KEY = "gestionale_search_cliente";
 
-
 // ─── DOWNLOAD DATABASE ────────────────────────────────────────
 function scaricaDatabase() {
   showNotif("⏳ Download in corso...", "info");
@@ -41,7 +40,6 @@ function checkNuovoAnno(anno) {
   }
 }
 
-
 function aprireDialogoNuovoAnno(annoNuovo, annoPrecedente) {
   let overlay = document.getElementById("modal-nuovo-anno");
   if (!overlay) {
@@ -69,7 +67,6 @@ function aprireDialogoNuovoAnno(annoNuovo, annoPrecedente) {
   openModal("modal-nuovo-anno");
 }
 
-
 function getSharedClienteSearch() {
   try {
     return localStorage.getItem(SHARED_SEARCH_KEY) || "";
@@ -77,7 +74,6 @@ function getSharedClienteSearch() {
     return "";
   }
 }
-
 
 function setSharedClienteSearch(value) {
   try {

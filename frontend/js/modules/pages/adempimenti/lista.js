@@ -43,10 +43,6 @@ function getVal(id) {
 
 // ─── HELPERS PER TIPO ─────────────────────────────────────────
 
-
-
-
-
 // ─── LISTA ADEMPIMENTI ────────────────────────────────────────
 const applyAdempimentiFiltriSearch = debounce(() => {
   const q =

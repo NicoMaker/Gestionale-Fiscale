@@ -2,7 +2,6 @@
 // NAV.JS — Navigazione, routing pagine e cambio anno
 // ═══════════════════════════════════════════════════════════════
 
-
 // ─── INIT NAV ─────────────────────────────────────────────────
 function initNav() {
   document.querySelectorAll(".nav-item").forEach((el) => {
@@ -32,7 +31,6 @@ function initNav() {
 
   setupDecimalInputs();
 }
-
 
 // ─── RENDER PAGE ──────────────────────────────────────────────
 function renderPage(page) {
@@ -112,11 +110,9 @@ function renderPage(page) {
   }
 }
 
-
 function refreshPage() {
   renderPage(state.page);
 }
-
 
 function changeAnno(d) {
   state.anno += d;
@@ -128,7 +124,6 @@ function changeAnno(d) {
     socket.emit("get:stats", { anno: state.anno });
   }
 }
-
 
 function setupDecimalInputs() {
   document.querySelectorAll('input[type="number"]').forEach(setupDecimalInput);

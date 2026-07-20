@@ -5,27 +5,9 @@
 // ═══════════════════════════════════════════════════════════════
 // ─── VISTA GLOBALE ────────────────────────────────────────────
 
-
-
 // ─── SELEZIONE MULTIPLA CARD ADEMPIMENTO (DASHBOARD) ──────────
 
-
-
-
-
-
-
-
-
-
-
 // ─── FILTRI STATO / SEARCH ────────────────────────────────────
-
-
-
-
-
-
 
 // ─── PANNELLO TIPOLOGIE DASHBOARD ─────────────────────────────
 // Riusa renderTipologieFiltroPanel() da clienti.js (zero duplicazione).
@@ -38,32 +20,11 @@ var _dashFiltroObserver = null; // MutationObserver attivo
 // ─── CONDIVISIONE STORAGE CON CLIENTI.JS ─────────────────────
 // Usa le stesse funzioni di storage definite in clienti.js
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ─── FILTRO TIPOLOGIE SU ADEMPIMENTI ─────────────────────────
-
-
-
-
 
 // ─── AGGIORNAMENTO CONTENUTO DASHBOARD ───────────────────────
 
-
-
 // ─── RENDER PRINCIPALE ────────────────────────────────────────
-
-
 
 // ─── SOCKET LISTENERS ─────────────────────────────────────────
 
@@ -129,7 +90,6 @@ window._aggiornaDashPanelVisibility = _aggiornaDashPanelVisibility;
 window._aggiornaDashTipFiltroCounter = _aggiornaDashTipFiltroCounter;
 window._refreshDashTipFiltroPanel = _refreshDashTipFiltroPanel;
 window.setApplicaModalita = setApplicaModalita;
-
 
 // ═══════════════════════════════════════════════════════════════
 // FUNZIONI DASHBOARD CONDIVISE (usate anche dalla pagina Cestino)

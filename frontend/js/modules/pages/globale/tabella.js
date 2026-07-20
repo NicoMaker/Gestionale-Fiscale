@@ -449,8 +449,7 @@ function renderGlobaleTabella(rawData) {
       "</div>";
   }
 
-  var visPerc =
-    visTotale > 0 ? Math.round((visComp / visTotale) * 100) : 0;
+  var visPerc = visTotale > 0 ? Math.round((visComp / visTotale) * 100) : 0;
 
   var headerCard =
     '<div class="globale-preview-card">' +
