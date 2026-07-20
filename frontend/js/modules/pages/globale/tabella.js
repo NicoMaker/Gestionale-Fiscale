@@ -8,7 +8,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 function renderGlobaleTabella(rawData) {
-  var st = state.globaleStats;
   var filtroClienteStatoEl = document.getElementById(
     "glob-filtro-cliente-stato",
   );
@@ -35,8 +34,6 @@ function renderGlobaleTabella(rawData) {
     // ⬇️ RIMOSSO il filtro per searchTerm
     data.push(r);
   }
-
-  var perc = st.totale > 0 ? Math.round((st.comp / st.totale) * 100) : 0;
 
   var activeFiltroKeys = _getActiveFiltroKeys();
   var allKeysArr =
@@ -167,54 +164,10 @@ function renderGlobaleTabella(rawData) {
       "</div>";
   }
 
-  var headerCard =
-    '<div class="globale-preview-card">' +
-    '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">' +
-    '<div class="gpc-left">' +
-    '<div class="gpc-globe">🌐</div>' +
-    "<div>" +
-    '<div class="gpc-title">Vista Globale ' +
-    state.anno +
-    "</div>" +
-    '<div class="gpc-sub">' +
-    st.clienti +
-    " clienti · " +
-    st.adempimenti.length +
-    " tipi adempimenti</div>" +
-    '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px">' +
-    filtroClienteStatoBadge +
-    clienteSelBadge +
-    // ⬇️ RIMOSSO searchBadge
-    "</div>" +
-    "</div>" +
-    "</div>" +
-    '<div class="gpc-stats">' +
-    '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--accent)">' +
-    st.totale +
-    '</div><div class="cpc-stat-lbl">Totale</div></div>' +
-    '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--green)">' +
-    st.comp +
-    '</div><div class="cpc-stat-lbl">Comp.</div></div>' +
-    '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--red)">' +
-    st.daF +
-    '</div><div class="cpc-stat-lbl">Da fare</div></div>' +
-    '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--yellow)">' +
-    st.inC +
-    '</div><div class="cpc-stat-lbl">In corso</div></div>' +
-    '<div class="cpc-stat-item">' +
-    '<div class="cpc-stat-num" style="color:var(--green)">' +
-    perc +
-    "%</div>" +
-    '<div class="cpc-stat-lbl">Progresso</div>' +
-    '<div class="mini-bar" style="margin-top:4px;width:70px"><div class="mini-fill" style="width:' +
-    perc +
-    '%"></div></div>' +
-    "</div>" +
-    "</div>" +
-    "</div>" +
-    navAdpHtml +
-    "</div>" +
-    tipFiltroHtml;
+  // NOTA: headerCard viene costruito più avanti (dopo il ciclo di raggruppamento
+  // e filtro), così i numeri Totale/Comp./Da fare/In corso/Progresso riflettono
+  // esattamente ciò che è filtrato/visibile in tabella, non i totali grezzi
+  // restituiti dal server prima dei filtri locali (tipologia, stato cliente).
 
   // RAGGRUPPA PER ADEMPIMENTO E CLIENTE
   var grouped = {};
@@ -257,6 +210,17 @@ function renderGlobaleTabella(rawData) {
     return a.nome.localeCompare(b.nome, "it", { sensitivity: "base" });
   });
 
+  // ── Totali "visibili": calcolati SOLO sui clienti/periodi che superano
+  // tutti i filtri (cliente selezionato, stato cliente, tipologia) — così
+  // il riquadro Totale/Comp./Da fare/In corso/Progresso in alto rispecchia
+  // esattamente quello che si vede in tabella, invece dei totali grezzi.
+  var visTotale = 0,
+    visComp = 0,
+    visDaF = 0,
+    visInC = 0;
+  var visClientiSet = {},
+    visAdpSet = {};
+
   var content = "";
   for (var gIdx = 0; gIdx < gruppi.length; gIdx++) {
     var g = gruppi[gIdx];
@@ -271,6 +235,19 @@ function renderGlobaleTabella(rawData) {
       if (!clientePassaFiltroStato(c.periodi, filtroClienteStato)) continue;
       if (!clientePassaFiltroTipologie(c)) continue;
       clientiFiltrati.push(c);
+    }
+
+    if (clientiFiltrati.length > 0) visAdpSet[g.nome] = true;
+    for (var vIdx = 0; vIdx < clientiFiltrati.length; vIdx++) {
+      var vc = clientiFiltrati[vIdx];
+      visClientiSet[vc.id] = true;
+      for (var vp = 0; vp < vc.periodi.length; vp++) {
+        var vStato = vc.periodi[vp].stato;
+        visTotale++;
+        if (vStato === "completato") visComp++;
+        else if (vStato === "da_fare") visDaF++;
+        else if (vStato === "in_corso") visInC++;
+      }
     }
 
     clientiFiltrati.sort(function (a, b) {
@@ -471,6 +448,58 @@ function renderGlobaleTabella(rawData) {
       "</div>" +
       "</div>";
   }
+
+  var visPerc =
+    visTotale > 0 ? Math.round((visComp / visTotale) * 100) : 0;
+
+  var headerCard =
+    '<div class="globale-preview-card">' +
+    '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">' +
+    '<div class="gpc-left">' +
+    '<div class="gpc-globe">🌐</div>' +
+    "<div>" +
+    '<div class="gpc-title">Vista Globale ' +
+    state.anno +
+    "</div>" +
+    '<div class="gpc-sub">' +
+    Object.keys(visClientiSet).length +
+    " clienti · " +
+    Object.keys(visAdpSet).length +
+    " tipi adempimenti</div>" +
+    '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px">' +
+    filtroClienteStatoBadge +
+    clienteSelBadge +
+    // ⬇️ RIMOSSO searchBadge
+    "</div>" +
+    "</div>" +
+    "</div>" +
+    '<div class="gpc-stats">' +
+    '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--accent)">' +
+    visTotale +
+    '</div><div class="cpc-stat-lbl">Totale</div></div>' +
+    '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--green)">' +
+    visComp +
+    '</div><div class="cpc-stat-lbl">Comp.</div></div>' +
+    '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--red)">' +
+    visDaF +
+    '</div><div class="cpc-stat-lbl">Da fare</div></div>' +
+    '<div class="cpc-stat-item"><div class="cpc-stat-num" style="color:var(--yellow)">' +
+    visInC +
+    '</div><div class="cpc-stat-lbl">In corso</div></div>' +
+    '<div class="cpc-stat-item">' +
+    '<div class="cpc-stat-num" style="color:var(--green)">' +
+    visPerc +
+    "%</div>" +
+    '<div class="cpc-stat-lbl">Progresso</div>' +
+    '<div class="mini-bar" style="margin-top:4px;width:70px"><div class="mini-fill" style="width:' +
+    visPerc +
+    '%"></div></div>' +
+    "</div>" +
+    "</div>" +
+    "</div>" +
+    navAdpHtml +
+    "</div>" +
+    tipFiltroHtml;
 
   if (!content) {
     var msgVuoto = tipFiltroIsNone
