@@ -430,6 +430,10 @@ function toggleFiltroPercorso(event, tipCod, col2, col3, per) {
   // Aggiorna solo il chip cliccato e il contatore, non tutto il pannello
   _updateSingleChip(key, tipCod, col2, col3, per);
   _aggiornaTipFiltroCounter();
+
+  // Applica subito il filtro alla lista clienti (era mancante: la selezione
+  // sembrava "in ritardo" perché il chip si aggiornava ma la lista no)
+  applyClientiFiltriDB();
 }
 
 function toggleTipologiaGruppo(event, tipCod) {
@@ -483,6 +487,7 @@ function selezionaTuttiTipFiltro(event) {
   _syncGlobalFiltroKeys();
   salvaFiltriSuStorage(); // Salva le modifiche
   _refreshTipFiltroPanel();
+  applyClientiFiltriDB();
 }
 
 // ── "✕ Nessuno": deseleziona tutto, rimane nessuno finché
@@ -497,6 +502,7 @@ function deselezionaTuttiTipFiltro(event) {
   _syncGlobalFiltroKeys();
   salvaFiltriSuStorage(); // Salva le modifiche
   _refreshTipFiltroPanel();
+  applyClientiFiltriDB();
 }
 
 function _refreshTipFiltroPanel() {
