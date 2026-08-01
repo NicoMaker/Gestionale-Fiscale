@@ -88,7 +88,9 @@
 .cliente-info-avatar {
   border-radius: var(--r-sm);
   box-shadow: var(--shadow-xs);
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  transition:
+    transform var(--duration-fast),
+    box-shadow var(--duration-fast);
 }
 .cliente-avatar-sm:hover,
 .det-avatar:hover {
@@ -167,8 +169,12 @@
   border-radius: var(--r-xs);
 }
 @keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ─── TABLE ROW HOVER ────────────────────────────────────────── */
