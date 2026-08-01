@@ -57,7 +57,7 @@ function renderPage(page) {
     tipologie: "Tipologie Clienti",
     appunti: "Scadenze Studio",
     pagina_bianca: "Note",
-    cestino: "🗑️ Cestino",
+    cestino: "Cestino",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
 
