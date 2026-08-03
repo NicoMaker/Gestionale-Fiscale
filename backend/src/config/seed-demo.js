@@ -263,6 +263,20 @@ async function main() {
   // Mappa sottotipologie → dettagli (tipologia, colonne) dal file del frontend
   const percorsi =
     require("../../../frontend/json/tipologie-data.json").percorsi;
+
+  // NOTA: il form reale dell'app salva col2_value/col3_value con valori
+  // minuscoli normalizzati ("ditta", "ordinario", ...), non con l'etichetta
+  // originale ("Ditta Individuale", "Ordinario"). Se il seed demo generasse
+  // l'etichetta grezza, i clienti demo non verrebbero MAI trovati dal filtro
+  // per tipologia (mismatch di formato) e sarebbero sempre esclusi non
+  // appena si applicava un qualsiasi filtro parziale. Normalizziamo qui
+  // allo stesso modo del form, per coerenza.
+  const col2ToDb = (label) => {
+    if (!label) return null;
+    return label === "Ditta Individuale" ? "ditta" : label.toLowerCase();
+  };
+  const col3ToDb = (label) => (label ? label.toLowerCase() : null);
+
   const sottoMap = {};
   Object.entries(percorsi).forEach(([tipCod, arr]) => {
     arr.forEach((p) => {
@@ -275,8 +289,8 @@ async function main() {
       sottoMap[p.codice] = {
         id_tipologia: tip ? tip.id : null,
         id_sottotipologia: sot ? sot.id : null,
-        col2: p.col2Label,
-        col3: p.col3Label,
+        col2: col2ToDb(p.col2Label),
+        col3: col3ToDb(p.col3Label),
       };
     });
   });

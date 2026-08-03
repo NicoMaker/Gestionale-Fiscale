@@ -194,6 +194,59 @@ function migrateDB() {
     `ALTER TABLE adempimenti_cliente_new RENAME TO adempimenti_cliente`,
     `CREATE INDEX IF NOT EXISTS idx_adempimenti_cliente_cliente ON adempimenti_cliente(id_cliente)`,
     `CREATE INDEX IF NOT EXISTS idx_adempimenti_cliente_anno ON adempimenti_cliente(anno)`,
+
+    // ── NORMALIZZAZIONE col2_value / col3_value ─────────────────────────
+    // BUG STORICO: il form salva sempre valori minuscoli normalizzati
+    // (es. "ditta", "ordinario"), ma alcuni dati (seed demo, importazioni
+    // vecchie) erano stati inseriti con l'etichetta originale così com'è
+    // (es. "Ditta Individuale", "Ordinario"). Il filtro per tipologia
+    // confronta sempre col i valori minuscoli normalizzati: se il dato nel
+    // DB era rimasto con la maiuscola/etichetta estesa, quel cliente non
+    // veniva MAI trovato da nessun filtro parziale (appariva "sparito").
+    // Questa normalizzazione riallinea tutti i valori esistenti al formato
+    // corretto. È idempotente: se eseguita più volte non cambia nulla.
+    `UPDATE clienti_config_annuale SET col2_value = CASE col2_value
+       WHEN 'Privato' THEN 'privato'
+       WHEN 'Socio' THEN 'socio'
+       WHEN 'Ditta Individuale' THEN 'ditta'
+       WHEN 'Professionista' THEN 'professionista'
+       ELSE col2_value END
+     WHERE col2_value IN ('Privato','Socio','Ditta Individuale','Professionista')`,
+    `UPDATE clienti_config_annuale SET col3_value = CASE col3_value
+       WHEN 'Ordinario' THEN 'ordinario'
+       WHEN 'Semplificato' THEN 'semplificato'
+       WHEN 'Forfettario' THEN 'forfettario'
+       WHEN 'Ordinaria' THEN 'ordinaria'
+       WHEN 'Semplificata' THEN 'semplificata'
+       ELSE col3_value END
+     WHERE col3_value IN ('Ordinario','Semplificato','Forfettario','Ordinaria','Semplificata')`,
+    // Stessa normalizzazione sulla tabella clienti (colonne legacy, tenute
+    // allineate per sicurezza anche se il percorso principale è la config annuale)
+    `UPDATE clienti SET col2_value = CASE col2_value
+       WHEN 'Privato' THEN 'privato'
+       WHEN 'Socio' THEN 'socio'
+       WHEN 'Ditta Individuale' THEN 'ditta'
+       WHEN 'Professionista' THEN 'professionista'
+       ELSE col2_value END
+     WHERE col2_value IN ('Privato','Socio','Ditta Individuale','Professionista')`,
+    `UPDATE clienti SET col3_value = CASE col3_value
+       WHEN 'Ordinario' THEN 'ordinario'
+       WHEN 'Semplificato' THEN 'semplificato'
+       WHEN 'Forfettario' THEN 'forfettario'
+       WHEN 'Ordinaria' THEN 'ordinaria'
+       WHEN 'Semplificata' THEN 'semplificata'
+       ELSE col3_value END
+     WHERE col3_value IN ('Ordinario','Semplificato','Forfettario','Ordinaria','Semplificata')`,
+
+    // Correzione dato demo non valido: ASS_SEMP (Associazione · Semplificata)
+    // non è un regime forfettario, quindi non può avere periodicita='annuale'
+    // (solo mensile/trimestrale sono ammessi per questa sottotipologia).
+    // Con periodicita='annuale' questo cliente non corrispondeva a NESSUNA
+    // combinazione valida del filtro tipologie e spariva sempre appena si
+    // applicava un filtro parziale.
+    `UPDATE clienti_config_annuale SET periodicita = 'trimestrale'
+     WHERE periodicita = 'annuale'
+       AND id_sottotipologia IN (SELECT id FROM sottotipologie WHERE codice = 'ASS_SEMP')`,
   ];
 
   migrations.forEach((sql) => {

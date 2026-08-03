@@ -325,7 +325,7 @@ const CLIENTI = [
     key: "ass_sem",
     nome: "Associazione Culturale Lux",
     sotto: "ASS_SEMP",
-    per: "annuale",
+    per: "trimestrale",
     contabilita: 0,
     piva: true,
     citta: "Cagliari",

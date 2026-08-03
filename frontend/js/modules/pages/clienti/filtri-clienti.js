@@ -14,16 +14,32 @@ function getFiltriPerRequest() {
   const col3Values = new Set();
   const periodicitaValues = new Set();
   const chiavi = [];
+  // NOTA: "combinazioni" contiene le tuple ESATTE (tipologia, col2, col3, periodicita)
+  // di ogni percorso attivo, già mappate ai valori DB. Il backend le usa per costruire
+  // un OR di combinazioni precise, invece di intersecare 4 liste indipendenti in AND
+  // (quell'approccio faceva sparire clienti di ALTRI tipi non appena si deselezionava
+  // anche un solo chip: una lista come col3_values perdeva un valore che serviva ad
+  // altre tipologie, oppure — nel caso di Privato/Socio, che hanno col3 = NULL — bastava
+  // avere QUALSIASI filtro col3 attivo per escluderli sempre, a prescindere dal chip).
+  const combinazioni = [];
   const col2L2Db = _col2LabelToDb();
   const col3L2Db = _col3LabelToDb();
 
   _activeFiltroKeys.forEach((key) => {
     const [tip, col2, col3, per] = key.split("|");
+    const col2Db = col2 ? col2L2Db[col2] || col2.toLowerCase() : null;
+    const col3Db = col3 ? col3L2Db[col3] || col3.toLowerCase() : null;
     if (tip) tipologie.add(tip);
-    if (col2) col2Values.add(col2L2Db[col2] || col2.toLowerCase());
-    if (col3) col3Values.add(col3L2Db[col3] || col3.toLowerCase());
+    if (col2Db) col2Values.add(col2Db);
+    if (col3Db) col3Values.add(col3Db);
     if (per) periodicitaValues.add(per);
     chiavi.push(key);
+    combinazioni.push({
+      tipologia: tip || null,
+      col2: col2Db,
+      col3: col3Db,
+      periodicita: per || null,
+    });
   });
 
   return {
@@ -32,6 +48,7 @@ function getFiltriPerRequest() {
     col3_values: Array.from(col3Values),
     periodicita_values: Array.from(periodicitaValues),
     chiavi_attive: chiavi,
+    combinazioni,
   };
 }
 

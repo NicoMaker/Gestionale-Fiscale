@@ -86,7 +86,55 @@ function getClientiConDettagli(filtri = {}, anno = new Date().getFullYear()) {
   // ── FIX: usa filtri_tipologie se presenti (nuova struttura) ──
   const ft = filtri.filtri_tipologie;
 
-  if (ft && !ft.nessuno) {
+  if (ft && !ft.nessuno && ft.combinazioni && ft.combinazioni.length > 0) {
+    // ── FIX BUG "deseleziono un chip e sparisce tutto" ──────────────
+    // Prima si costruivano 4 liste indipendenti (tipologie, col2_values,
+    // col3_values, periodicita_values) messe in AND tra loro. Questo NON
+    // rappresenta correttamente "quali percorsi specifici sono selezionati":
+    // se anche un solo tipo/combinazione veniva tolto, capitava che una
+    // delle liste perdesse un valore ancora necessario ad ALTRI tipi
+    // (es. deselezionando un chip di un tipo, spariva un valore di col3
+    // che serviva anche a clienti di un tipo completamente diverso), oppure,
+    // nel caso di Privato/Socio (che non hanno col3, quindi col3_value è
+    // NULL nel DB), bastava che fosse attivo un QUALSIASI filtro su col3
+    // per escluderli sempre, anche se i loro chip erano ancora selezionati.
+    //
+    // Ora si costruisce un OR di combinazioni ESATTE: una clausola per ogni
+    // percorso/chip effettivamente attivo. Deselezionare un chip toglie
+    // *solo* quella combinazione precisa; tutti gli altri tipi/clienti
+    // restano intatti perché ognuno ha la propria clausola indipendente.
+    const orClauses = [];
+    ft.combinazioni.forEach((c) => {
+      const conds = [];
+      if (c.tipologia) {
+        conds.push("t.codice = ?");
+        params.push(c.tipologia);
+      }
+      if (c.col2) {
+        conds.push("cfg.col2_value = ?");
+        params.push(c.col2);
+      } else {
+        conds.push("cfg.col2_value IS NULL");
+      }
+      if (c.col3) {
+        conds.push("cfg.col3_value = ?");
+        params.push(c.col3);
+      } else {
+        conds.push("cfg.col3_value IS NULL");
+      }
+      if (c.periodicita) {
+        conds.push("cfg.periodicita = ?");
+        params.push(c.periodicita);
+      } else {
+        conds.push("cfg.periodicita IS NULL");
+      }
+      orClauses.push(`(${conds.join(" AND ")})`);
+    });
+    if (orClauses.length > 0) {
+      sql += ` AND (${orClauses.join(" OR ")})`;
+    }
+  } else if (ft && !ft.nessuno) {
+    // ── FALLBACK legacy (compatibilità con client vecchi senza "combinazioni") ──
     // ── FIX: applica IN (...) invece di = ? per valori multipli ──
     if (ft.tipologie && ft.tipologie.length > 0) {
       const placeholders = ft.tipologie.map(() => "?").join(",");
