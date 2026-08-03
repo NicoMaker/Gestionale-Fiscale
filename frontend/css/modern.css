@@ -99,7 +99,6 @@
 
 /* ─── FLAG CHIPS ─────────────────────────────────────────────── */
 .flag-chip {
-  border-radius: var(--r-full);
   transition: all var(--duration-fast);
 }
 .flag-chip:hover {
