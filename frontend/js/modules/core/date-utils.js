@@ -232,7 +232,7 @@ function creaDatePicker(inputElement) {
   pickerContainer.className = "date-picker-container";
   pickerContainer.style.cssText = `
     position: fixed;
-    background: var(--surface1);
+    background: var(--s0);
     border:1px solid var(--border);
     border-radius:8px;
     box-shadow:0 8px 24px rgba(0,0,0,0.25);
@@ -241,7 +241,7 @@ function creaDatePicker(inputElement) {
     min-width:280px;
     max-width:320px;
     display: none;
-    font-family: var(--font-family);
+    font-family: var(--sans);
   `;
 
   // Crea l'header con mese e anno
@@ -381,7 +381,7 @@ function creaDatePicker(inputElement) {
         month === selectedDate.getMonth() &&
         day === selectedDate.getDate()
       ) {
-        dayDiv.style.background = "var(--primary)";
+        dayDiv.style.background = "var(--accent-hov)";
         dayDiv.style.color = "white";
       }
 

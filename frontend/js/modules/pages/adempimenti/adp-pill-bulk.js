@@ -122,11 +122,11 @@ function _renderBarraBulkPill() {
     "gap:10px",
     "flex-wrap:wrap",
     "padding:10px 14px",
-    "background:var(--bg-card,#fff)",
-    "border:1.5px solid var(--red,#dc2626)",
+    "background:var(--s0)",
+    "border:1.5px solid var(--red)",
     "border-radius:8px",
     "margin-bottom:14px",
-    "box-shadow:0 2px 8px rgba(220,38,38,.12)",
+    "box-shadow:0 2px 8px var(--red-b)",
   ].join(";");
 
   barra.innerHTML = [

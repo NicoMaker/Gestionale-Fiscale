@@ -12,6 +12,17 @@ let paginaBiancaFilter = {
   search: "",
 };
 
+// Rimuove spazi/tabulazioni accidentali a inizio riga (es. testo incollato
+// da Word/Excel) così le righe di un elenco risultano sempre allineate,
+// mantenendo comunque gli "a capo" originali.
+function formatNoteContenuto(testo) {
+  if (!testo) return testo;
+  return testo
+    .split("\n")
+    .map((riga) => riga.replace(/^[ \t]+/, ""))
+    .join("\n");
+}
+
 let paginaBiancaCurrentEntry = null;
 let paginaBiancaEditMode = false;
 let paginaBiancaListenersRegistered = false;
@@ -590,7 +601,7 @@ function renderPaginaBiancaList(appunti) {
       ${appunti
         .map(
           (a) => `
-        <div class="pagina-bianca-card pb-bulk-card" data-id="${a.id}" style="background: var(--surface1); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+        <div class="pagina-bianca-card pb-bulk-card" data-id="${a.id}" style="background: var(--s0); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
              onmouseenter="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'; this.style.transform='translateY(-2px)'"
              onmouseleave="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'; this.style.transform='translateY(0)'">
 
@@ -614,7 +625,7 @@ function renderPaginaBiancaList(appunti) {
 
           <div style="padding: 20px;">
             <div style="color: var(--text1); line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto;">
-              ${escAttr(a.contenuto || "— Nessun contenuto —")}
+              ${escAttr(formatNoteContenuto(a.contenuto) || "— Nessun contenuto —")}
             </div>
             ${
               a.allegati
