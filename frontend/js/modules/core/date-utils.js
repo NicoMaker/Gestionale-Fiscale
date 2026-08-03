@@ -209,7 +209,8 @@ function gestisciInputData(inputElement) {
     const valore = e.target.value.trim();
     if (valore && !validaDataItaliana(valore)) {
       e.target.style.borderColor = "var(--red)";
-      e.target.style.backgroundColor = "color-mix(in srgb, var(--red) 3%, transparent)";
+      e.target.style.backgroundColor =
+        "color-mix(in srgb, var(--red) 3%, transparent)";
       showNotif(
         "Data non valida. Inserire una data nel formato gg/mm/aaaa",
         "error",

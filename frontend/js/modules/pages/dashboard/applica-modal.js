@@ -272,8 +272,10 @@ function setApplicaModalita(m) {
     } else if (m === "elimina") {
       infoBox.innerHTML =
         "🗑️ Seleziona adempimenti e clienti: verranno eliminati solo quelli già presenti. Se un cliente non ha quell'adempimento viene ignorato.";
-      infoBox.style.background = "color-mix(in srgb, var(--red) 3%, transparent)";
-      infoBox.style.borderColor = "color-mix(in srgb, var(--red) 27%, transparent)";
+      infoBox.style.background =
+        "color-mix(in srgb, var(--red) 3%, transparent)";
+      infoBox.style.borderColor =
+        "color-mix(in srgb, var(--red) 27%, transparent)";
       infoBox.style.color = "var(--red)";
     } else {
       infoBox.innerHTML =
@@ -328,7 +330,8 @@ function apriModalConPreselezione(clientiVuotiIds) {
             "✅ <strong>" +
             clientiVuotiIds.length +
             '</strong> clienti senza adempimenti preselezionati.<br>📌 Scegli gli adempimenti da assegnare e premi "Applica".';
-          infoBox.style.background = "color-mix(in srgb, var(--orange) 9%, transparent)";
+          infoBox.style.background =
+            "color-mix(in srgb, var(--orange) 9%, transparent)";
           infoBox.style.borderColor = "var(--orange)";
           infoBox.style.color = "var(--orange)";
         }
