@@ -572,7 +572,7 @@ function renderPaginaBiancaList(appunti) {
 
   // Toolbar bulk sopra le card
   const bulkBar = `
-    <div id="pb-bulk-toolbar" style="display:none;margin-bottom:14px;padding:10px 14px;background:var(--red)12;border:1px solid var(--red)33;border-radius:var(--r-sm);align-items:center;gap:10px;flex-wrap:wrap">
+    <div id="pb-bulk-toolbar" style="display:none;margin-bottom:14px;padding:10px 14px;background:color-mix(in srgb, var(--red) 7%, transparent);border:1px solid color-mix(in srgb, var(--red) 20%, transparent);border-radius:var(--r-sm);align-items:center;gap:10px;flex-wrap:wrap">
       <span id="pb-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
       <button class="btn btn-sm btn-danger" onclick="eliminaNoteSelezionate()">🗑️ Elimina selezionate</button>
       <button class="btn btn-sm btn-secondary" onclick="deselezionaTutteNote()">✕ Deseleziona</button>

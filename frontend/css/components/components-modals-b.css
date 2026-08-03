@@ -65,8 +65,8 @@
   transform: scale(1.08);
 }
 .cbx-btn.cbx-green {
-  background: rgba(22, 163, 74, 0.12);
-  border-color: rgba(22, 163, 74, 0.4);
+  background: var(--green-d);
+  border-color: color-mix(in srgb, var(--green) 40%, transparent);
   color: var(--green);
 }
 .cbx-btn.cbx-gray {
@@ -75,8 +75,8 @@
   color: var(--t2);
 }
 .cbx-btn.cbx-red {
-  background: rgba(220, 38, 38, 0.12);
-  border-color: rgba(220, 38, 38, 0.4);
+  background: var(--red-d);
+  border-color: color-mix(in srgb, var(--red) 40%, transparent);
   color: var(--red);
 }
 
@@ -224,7 +224,7 @@ select {
   background: var(--accent) !important;
   border-color: var(--accent) !important;
   color: white !important;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 3px 10px var(--accent-glow);
 }
 @keyframes fadeInDown {
   from {
@@ -347,7 +347,7 @@ select {
   border-color: var(--accent);
   color: var(--accent);
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 2px 8px var(--accent-glow);
 }
 .tip-percorso-chip.tip-active::before {
   content: "✓";

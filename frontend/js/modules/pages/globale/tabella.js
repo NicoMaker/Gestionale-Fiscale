@@ -74,7 +74,7 @@ function renderGlobaleTabella(rawData) {
   var filtroClienteStatoBadge = "";
   if (filtroClienteStato) {
     filtroClienteStatoBadge =
-      '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;background:var(--yellow)18;border:1px solid var(--yellow)44;border-radius:20px;font-size:12px;color:var(--yellow)">' +
+      '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;background:color-mix(in srgb, var(--yellow) 9%, transparent);border:1px solid color-mix(in srgb, var(--yellow) 27%, transparent);border-radius:20px;font-size:12px;color:var(--yellow)">' +
       "<span>Filtro clienti:</span>" +
       "<strong>" +
       (filtroClienteStatoLabels[filtroClienteStato] || filtroClienteStato) +
@@ -101,7 +101,7 @@ function renderGlobaleTabella(rawData) {
               .join(", ") +
             ")";
       clienteSelBadge =
-        '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:10px;padding:5px 12px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent);max-width:520px">' +
+        '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:10px;padding:5px 12px;background:color-mix(in srgb, var(--accent) 9%, transparent);border:1px solid color-mix(in srgb, var(--accent) 27%, transparent);border-radius:20px;font-size:12px;color:var(--accent);max-width:520px">' +
         "<span>👤 Cliente" +
         (clientiTrovati.length > 1 ? "i" : "") +
         ":</span>" +
@@ -321,17 +321,17 @@ function renderGlobaleTabella(rawData) {
       var situazioneBadges = "";
       if (compC > 0)
         situazioneBadges +=
-          '<span style="font-size:10px;color:var(--green);background:var(--green)12;border:1px solid var(--green)33;border-radius:10px;padding:1px 6px">✅ ' +
+          '<span style="font-size:10px;color:var(--green);background:color-mix(in srgb, var(--green) 7%, transparent);border:1px solid color-mix(in srgb, var(--green) 20%, transparent);border-radius:10px;padding:1px 6px">✅ ' +
           compC +
           "</span>";
       if (inCC > 0)
         situazioneBadges +=
-          '<span style="font-size:10px;color:var(--yellow);background:var(--yellow)12;border:1px solid var(--yellow)33;border-radius:10px;padding:1px 6px">🔄 ' +
+          '<span style="font-size:10px;color:var(--yellow);background:color-mix(in srgb, var(--yellow) 7%, transparent);border:1px solid color-mix(in srgb, var(--yellow) 20%, transparent);border-radius:10px;padding:1px 6px">🔄 ' +
           inCC +
           "</span>";
       if (daFC > 0)
         situazioneBadges +=
-          '<span style="font-size:10px;color:var(--red);background:var(--red)12;border:1px solid var(--red)33;border-radius:10px;padding:1px 6px">⭕ ' +
+          '<span style="font-size:10px;color:var(--red);background:color-mix(in srgb, var(--red) 7%, transparent);border:1px solid color-mix(in srgb, var(--red) 20%, transparent);border-radius:10px;padding:1px 6px">⭕ ' +
           daFC +
           "</span>";
       if (naC > 0)
@@ -460,9 +460,9 @@ function renderGlobaleTabella(rawData) {
     '<div class="gpc-title">Vista Globale ' +
     state.anno +
     "</div>" +
-    '<div class="gpc-sub">' +
+    '<div class="gpc-sub"><span class="count-num">' +
     Object.keys(visClientiSet).length +
-    " clienti · " +
+    "</span> clienti · " +
     Object.keys(visAdpSet).length +
     " tipi adempimenti</div>" +
     '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px">' +

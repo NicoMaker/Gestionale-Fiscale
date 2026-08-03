@@ -1,73 +1,80 @@
 /* ═══════════════════════════════════════════════════════════════
-   GESTIONALE FISCALE — Design Tokens (Modern Edition)
+   GESTIONALE FISCALE — Design Tokens
+   Identità "Ledger": inchiostro su carta.
+   Giorno → blu ink profondo su carta calda. Notte → oro/ottone su
+   inchiostro blu notte. Stessa metafora, due momenti della giornata
+   di uno studio commercialista.
    ═══════════════════════════════════════════════════════════════ */
 
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 
 /* ─── DESIGN TOKENS ──────────────────────────────────────────── */
 :root {
-  /* Backgrounds */
-  --bg: #f8fafc;
+  /* Backgrounds — carta calda, non slate freddo */
+  --bg: #f7f5f1;
   --s0: #ffffff;
-  --s1: #f1f5f9;
-  --s2: #e8edf4;
-  --s3: #dde4ee;
+  --s1: #f1eee7;
+  --s2: #e8e3d8;
+  --s3: #ddd6c6;
 
   /* Borders */
-  --b0: #e2e8f0;
-  --b1: #cbd5e1;
-  --b2: #94a3b8;
+  --b0: #e6e1d5;
+  --b1: #d1c9b6;
+  --b2: #a89f88;
 
-  /* Accent — indigo */
-  --accent: #4f46e5;
-  --accent-d: rgba(79, 70, 229, 0.08);
-  --accent-b: rgba(79, 70, 229, 0.18);
-  --accent-hov: #4338ca;
-  --accent-glow: rgba(79, 70, 229, 0.25);
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  /* Accent — ink navy (diurno) */
+  --accent: #1e3a5f;
+  --accent-d: rgba(30, 58, 95, 0.08);
+  --accent-b: rgba(30, 58, 95, 0.18);
+  --accent-hov: #16293f;
+  --accent-glow: rgba(30, 58, 95, 0.25);
+  --accent-gradient: linear-gradient(135deg, #2c567f 0%, #1e3a5f 100%);
 
-  /* Semantic colours */
-  --green: #059669;
-  --green-d: rgba(5, 150, 105, 0.1);
-  --red: #dc2626;
-  --red-d: rgba(220, 38, 38, 0.08);
-  --yellow: #d97706;
-  --yellow-d: rgba(217, 119, 6, 0.08);
-  --purple: #7c3aed;
-  --purple-d: rgba(124, 58, 237, 0.08);
-  --cyan: #0891b2;
-  --cyan-d: rgba(8, 145, 178, 0.08);
-  --orange: #ea580c;
-  --orange-d: rgba(234, 88, 12, 0.08);
+  /* Semantic colours — inchiostri (verde ramarro, rosso vermiglio,
+     ottone, prugna, petrolio, terracotta) */
+  --green: #1f7a4d;
+  --green-d: rgba(31, 122, 77, 0.1);
+  --red: #b3261e;
+  --red-d: rgba(179, 38, 30, 0.08);
+  --yellow: #b3811b;
+  --yellow-d: rgba(179, 129, 27, 0.09);
+  --purple: #6b4c9a;
+  --purple-d: rgba(107, 76, 154, 0.08);
+  --cyan: #0e7c86;
+  --cyan-d: rgba(14, 124, 134, 0.08);
+  --orange: #b3591b;
+  --orange-d: rgba(179, 89, 27, 0.08);
 
-  /* Text scale */
-  --t0: #0f172a;
-  --t1: #1e293b;
-  --t2: #64748b;
-  --t3: #94a3b8;
+  /* Text scale — inchiostro caldo, non blu-grigio */
+  --t0: #1c1b18;
+  --t1: #34322c;
+  --t2: #6b675c;
+  --t3: #99947f;
 
   /* Typography */
   --sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --serif: "Fraunces", "Source Serif 4", Georgia, serif;
   --mono: "JetBrains Mono", "Fira Code", monospace;
 
-  /* Radii */
-  --radius: 14px;
-  --r-sm: 10px;
+  /* Radii — leggermente più squadrati: strumento di precisione, non
+     app consumer */
+  --radius: 12px;
+  --r-sm: 9px;
   --r-xs: 6px;
-  --r-lg: 18px;
-  --r-xl: 24px;
+  --r-lg: 16px;
+  --r-xl: 20px;
   --r-full: 9999px;
 
-  /* Shadows */
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  /* Shadows — tinta calda (non slate) */
+  --shadow-xs: 0 1px 2px rgba(28, 25, 19, 0.05);
   --shadow-sm:
-    0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    0 1px 3px rgba(28, 25, 19, 0.08), 0 1px 2px rgba(28, 25, 19, 0.05);
   --shadow-md:
-    0 4px 16px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+    0 4px 16px rgba(28, 25, 19, 0.09), 0 2px 4px rgba(28, 25, 19, 0.05);
   --shadow-lg:
-    0 12px 32px rgba(15, 23, 42, 0.1), 0 4px 8px rgba(15, 23, 42, 0.04);
+    0 12px 32px rgba(28, 25, 19, 0.12), 0 4px 8px rgba(28, 25, 19, 0.05);
   --shadow-xl:
-    0 24px 48px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.06);
+    0 24px 48px rgba(28, 25, 19, 0.14), 0 8px 16px rgba(28, 25, 19, 0.07);
   --shadow-glow: 0 0 0 3px var(--accent-glow);
 
   /* Layout */
@@ -76,7 +83,7 @@
   --topbar-h: 64px;
 
   /* Glass */
-  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg: rgba(247, 245, 241, 0.78);
   --glass-border: rgba(255, 255, 255, 0.5);
   --glass-blur: blur(16px);
 
@@ -87,16 +94,40 @@
   --duration-normal: 0.25s;
   --duration-slow: 0.4s;
 
-  /* Legacy aliases */
+  /* Ledger rule — texture sottilissima a righe orizzontali, come
+     carta millimetrata/contabile. Usata su sfondi ampi. */
+  --ledger-rule: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 27px,
+    var(--b0) 27px,
+    var(--b0) 28px
+  );
+
+  /* Legacy aliases (compatibilità con selettori esistenti) */
   --surface: var(--s1);
   --surface2: var(--s2);
   --surface3: var(--s3);
   --border: var(--b0);
   --border2: var(--b1);
   --text: var(--t0);
+  --text1: var(--t1);
   --text2: var(--t2);
   --text3: var(--t3);
   --accent-dim: var(--accent-d);
+  --accent-dark: var(--accent-hov);
+  --accent-hover: var(--accent-hov);
+  --green-dark: color-mix(in srgb, var(--green) 80%, black);
+  --red-dark: color-mix(in srgb, var(--red) 80%, black);
+
+  /* Varianti "bordo" (~20% di opacità) per badge/chip, coerenti con
+     --accent-b */
+  --green-b: color-mix(in srgb, var(--green) 22%, transparent);
+  --red-b: color-mix(in srgb, var(--red) 22%, transparent);
+  --yellow-b: color-mix(in srgb, var(--yellow) 22%, transparent);
+  --purple-b: color-mix(in srgb, var(--purple) 22%, transparent);
+  --cyan-b: color-mix(in srgb, var(--cyan) 22%, transparent);
+  --orange-b: color-mix(in srgb, var(--orange) 22%, transparent);
 
   --theme-transition:
     background var(--duration-normal) ease, color var(--duration-normal) ease,
@@ -106,40 +137,42 @@
 
 /* ─── DARK MODE TOKENS ───────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg: #0b0f19;
-  --s0: #111827;
-  --s1: #1a2234;
-  --s2: #1f2a3f;
-  --s3: #263349;
+  /* Backgrounds — inchiostro notturno */
+  --bg: #10131a;
+  --s0: #1a1f29;
+  --s1: #212734;
+  --s2: #272e3d;
+  --s3: #313a4d;
 
-  --b0: #2a3548;
-  --b1: #374862;
-  --b2: #4a5f7a;
+  --b0: #2a3140;
+  --b1: #3a4356;
+  --b2: #4e5a70;
 
-  --accent: #818cf8;
-  --accent-d: rgba(129, 140, 248, 0.12);
-  --accent-b: rgba(129, 140, 248, 0.24);
-  --accent-hov: #a5b4fc;
-  --accent-glow: rgba(129, 140, 248, 0.3);
-  --accent-gradient: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  /* Accent — oro/ottone (notturno) */
+  --accent: #d4a24c;
+  --accent-d: rgba(212, 162, 76, 0.12);
+  --accent-b: rgba(212, 162, 76, 0.24);
+  --accent-hov: #e3b563;
+  --accent-glow: rgba(212, 162, 76, 0.3);
+  --accent-gradient: linear-gradient(135deg, #e3b563 0%, #d4a24c 100%);
 
-  --green: #34d399;
-  --green-d: rgba(52, 211, 153, 0.12);
-  --red: #f87171;
-  --red-d: rgba(248, 113, 113, 0.12);
-  --yellow: #fbbf24;
-  --yellow-d: rgba(251, 191, 36, 0.12);
-  --purple: #a78bfa;
-  --purple-d: rgba(167, 139, 250, 0.12);
-  --cyan: #22d3ee;
-  --cyan-d: rgba(34, 211, 238, 0.12);
-  --orange: #fb923c;
-  --orange-d: rgba(251, 146, 60, 0.12);
+  --green: #4cae7f;
+  --green-d: rgba(76, 174, 127, 0.14);
+  --red: #e2665d;
+  --red-d: rgba(226, 102, 93, 0.14);
+  --yellow: #e0aa4e;
+  --yellow-d: rgba(224, 170, 78, 0.14);
+  --purple: #a98fd1;
+  --purple-d: rgba(169, 143, 209, 0.14);
+  --cyan: #4fc1c9;
+  --cyan-d: rgba(79, 193, 201, 0.14);
+  --orange: #e08a4c;
+  --orange-d: rgba(224, 138, 76, 0.14);
 
-  --t0: #f1f5f9;
-  --t1: #e2e8f0;
-  --t2: #94a3b8;
-  --t3: #64748b;
+  --t0: #f0ede4;
+  --t1: #d8d4c8;
+  --t2: #9b9689;
+  --t3: #6e6a5f;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -147,7 +180,7 @@
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
   --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.25);
 
-  --glass-bg: rgba(17, 24, 39, 0.82);
+  --glass-bg: rgba(26, 31, 41, 0.82);
   --glass-border: rgba(255, 255, 255, 0.06);
 
   --surface: var(--s1);
@@ -156,9 +189,21 @@
   --border: var(--b0);
   --border2: var(--b1);
   --text: var(--t0);
+  --text1: var(--t1);
   --text2: var(--t2);
   --text3: var(--t3);
   --accent-dim: var(--accent-d);
+  --accent-dark: var(--accent-hov);
+  --accent-hover: var(--accent-hov);
+  --green-dark: color-mix(in srgb, var(--green) 78%, black);
+  --red-dark: color-mix(in srgb, var(--red) 78%, black);
+
+  --green-b: color-mix(in srgb, var(--green) 26%, transparent);
+  --red-b: color-mix(in srgb, var(--red) 26%, transparent);
+  --yellow-b: color-mix(in srgb, var(--yellow) 26%, transparent);
+  --purple-b: color-mix(in srgb, var(--purple) 26%, transparent);
+  --cyan-b: color-mix(in srgb, var(--cyan) 26%, transparent);
+  --orange-b: color-mix(in srgb, var(--orange) 26%, transparent);
 }
 
 /* ─── THEME TOGGLE BUTTON ────────────────────────────────────── */
@@ -331,8 +376,8 @@ body,
 }
 @keyframes fh-flash-dark-kf {
   0% {
-    background-color: rgba(52, 211, 153, 0.2);
-    border-color: #34d399;
+    background-color: var(--green-d);
+    border-color: var(--green);
   }
   100% {
     background-color: var(--s1);
@@ -341,8 +386,8 @@ body,
 }
 @keyframes fh-flash-empty-dark-kf {
   0% {
-    background-color: rgba(248, 113, 113, 0.2);
-    border-color: #f87171;
+    background-color: var(--red-d);
+    border-color: var(--red);
   }
   100% {
     background-color: var(--s1);

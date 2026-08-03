@@ -175,7 +175,7 @@ function _aggiornCol4BasedOnCol3(tipCodice, col3Val) {
       badge = document.createElement("div");
       badge.id = "col4-forfettario-badge";
       badge.style.cssText =
-        "font-size:12px;color:var(--yellow);background:var(--yellow)18;border:1px solid var(--yellow)33;border-radius:var(--r-sm);padding:7px 12px;margin-top:8px;grid-column:1/-1";
+        "font-size:12px;color:var(--yellow);background:color-mix(in srgb, var(--yellow) 9%, transparent);border:1px solid color-mix(in srgb, var(--yellow) 20%, transparent);border-radius:var(--r-sm);padding:7px 12px;margin-top:8px;grid-column:1/-1";
       badge.innerHTML = `<span style="font-size:14px">📅</span> Regime <strong>Forfettario</strong> — periodicità automatica: <strong>Annuale</strong>`;
       document.querySelector(".quattro-colonne-grid")?.appendChild(badge);
     }

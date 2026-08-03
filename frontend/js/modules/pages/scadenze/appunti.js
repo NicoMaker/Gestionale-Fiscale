@@ -132,7 +132,7 @@ function renderAppuntiTabella(appunti) {
   content.innerHTML = `
     <div class="table-wrap">
       <div class="table-header no-print" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <h3>Scadenze Studio <span style="font-size:13px;color:var(--text3);margin-left:8px">(${appunti.length})</span></h3>
+        <h3>Scadenze Studio <span class="count-chip">${appunti.length}</span></h3>
         <div id="appunti-bulk-toolbar" style="display:none;margin-left:auto;align-items:center;gap:8px;flex-wrap:wrap">
           <span id="appunti-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
           <button class="btn btn-sm btn-danger" onclick="eliminaAppuntiSelezionati()">🗑️ Elimina selezionati</button>

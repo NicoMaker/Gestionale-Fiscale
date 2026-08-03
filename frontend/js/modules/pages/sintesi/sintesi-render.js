@@ -148,9 +148,9 @@ function renderSintesiTabella() {
     '<div class="gpc-title">Sintesi Adempimenti ' +
     state.anno +
     "</div>" +
-    '<div class="gpc-sub">' +
+    '<div class="gpc-sub"><span class="count-num">' +
     clientiCountLabel +
-    " client" +
+    "</span> client" +
     clientiCountUnit +
     " · " +
     columns.length +

@@ -446,39 +446,39 @@ tr.clickable:hover td {
   font-family: var(--mono);
 }
 .b-pf {
-  background: rgba(37, 99, 235, 0.1);
-  color: #2563eb;
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: var(--accent-d);
+  color: var(--accent);
+  border: 1px solid var(--accent-b);
 }
 .b-sp {
-  background: rgba(217, 119, 6, 0.1);
-  color: #d97706;
-  border: 1px solid rgba(217, 119, 6, 0.2);
+  background: var(--yellow-d);
+  color: var(--yellow);
+  border: 1px solid var(--yellow-b);
 }
 .b-sc {
-  background: rgba(22, 163, 74, 0.1);
-  color: #16a34a;
-  border: 1px solid rgba(22, 163, 74, 0.2);
+  background: var(--green-d);
+  color: var(--green);
+  border: 1px solid var(--green-b);
 }
 .b-ass {
-  background: rgba(124, 58, 237, 0.1);
-  color: #7c3aed;
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: var(--purple-d);
+  color: var(--purple);
+  border: 1px solid var(--purple-b);
 }
 .b-da_fare {
   background: var(--red-d);
   color: var(--red);
-  border: 1px solid rgba(220, 38, 38, 0.18);
+  border: 1px solid var(--red-b);
 }
 .b-in_corso {
   background: var(--yellow-d);
   color: var(--yellow);
-  border: 1px solid rgba(217, 119, 6, 0.18);
+  border: 1px solid var(--yellow-b);
 }
 .b-completato {
   background: var(--green-d);
   color: var(--green);
-  border: 1px solid rgba(22, 163, 74, 0.18);
+  border: 1px solid var(--green-b);
 }
 .b-n_a {
   background: var(--s2);
@@ -547,7 +547,7 @@ tr.clickable:hover td {
   align-items: center;
   padding: 6px 14px;
   background: var(--green-d);
-  border: 1px solid rgba(22, 163, 74, 0.25);
+  border: 1px solid var(--green-b);
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;

@@ -244,7 +244,7 @@ function renderClientiTabella(clienti) {
   const html = `${filterBar}
     <div class="table-wrap">
       <div class="table-header no-print" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <h3>Clienti <span style="font-size:13px;color:var(--t3);margin-left:8px">(${clienti ? clienti.length : 0})</span></h3>
+        <h3>Clienti <span class="count-chip">${clienti ? clienti.length : 0}</span></h3>
         <div id="clienti-bulk-toolbar" style="display:none;margin-left:auto;display:none;align-items:center;gap:8px">
           <span id="clienti-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
           <button class="btn btn-sm btn-danger" onclick="eliminaClientiSelezionati()">🗑️ Elimina selezionati</button>

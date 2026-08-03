@@ -139,7 +139,7 @@ function renderClientiSenzaAdempimenti(clienti) {
 
   if (!clienti || clienti.length === 0) {
     container.innerHTML =
-      '<div style="text-align:center;padding:20px;color:var(--green);background:var(--green)08;border-radius:8px">' +
+      '<div style="text-align:center;padding:20px;color:var(--green);background:color-mix(in srgb, var(--green) 3%, transparent);border-radius:8px">' +
       "✅ Tutti i clienti hanno almeno un adempimento per l'anno " +
       state.anno +
       "!" +
@@ -149,9 +149,11 @@ function renderClientiSenzaAdempimenti(clienti) {
 
   var html =
     '<div style="display:flex;flex-direction:column;gap:12px">' +
-    '<div style="font-size:13px;color:var(--orange);padding:8px 12px;background:var(--orange)08;border-radius:6px">' +
+    '<div style="font-size:13px;color:var(--orange);padding:8px 12px;background:color-mix(in srgb, var(--orange) 3%, transparent);border-radius:6px">' +
     "⚠️ " +
+    '<strong style="font-family:var(--mono)">' +
     clienti.length +
+    "</strong>" +
     " clienti senza alcun adempimento</div>" +
     '<div style="display:flex;flex-direction:column;gap:8px">';
 
@@ -270,8 +272,8 @@ function setApplicaModalita(m) {
     } else if (m === "elimina") {
       infoBox.innerHTML =
         "🗑️ Seleziona adempimenti e clienti: verranno eliminati solo quelli già presenti. Se un cliente non ha quell'adempimento viene ignorato.";
-      infoBox.style.background = "var(--red)08";
-      infoBox.style.borderColor = "var(--red)44";
+      infoBox.style.background = "color-mix(in srgb, var(--red) 3%, transparent)";
+      infoBox.style.borderColor = "color-mix(in srgb, var(--red) 27%, transparent)";
       infoBox.style.color = "var(--red)";
     } else {
       infoBox.innerHTML =
@@ -326,7 +328,7 @@ function apriModalConPreselezione(clientiVuotiIds) {
             "✅ <strong>" +
             clientiVuotiIds.length +
             '</strong> clienti senza adempimenti preselezionati.<br>📌 Scegli gli adempimenti da assegnare e premi "Applica".';
-          infoBox.style.background = "var(--orange)18";
+          infoBox.style.background = "color-mix(in srgb, var(--orange) 9%, transparent)";
           infoBox.style.borderColor = "var(--orange)";
           infoBox.style.color = "var(--orange)";
         }

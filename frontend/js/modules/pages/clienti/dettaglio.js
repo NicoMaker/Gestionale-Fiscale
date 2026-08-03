@@ -51,7 +51,7 @@ function renderClienteDettaglio(c, anno) {
         </select>
         ${
           c.config_anno && c.config_anno !== anno
-            ? `<span class="badge-info" style="background:var(--yellow)18;color:var(--yellow)">⚠️ Ereditata dal ${c.config_anno}</span>`
+            ? `<span class="badge-info" style="background:color-mix(in srgb, var(--yellow) 9%, transparent);color:var(--yellow)">⚠️ Ereditata dal ${c.config_anno}</span>`
             : ""
         }
       </div>
@@ -59,7 +59,7 @@ function renderClienteDettaglio(c, anno) {
     </div>`;
 
   const noConfigWarning = !c.id_tipologia
-    ? `<div class="infobox" style="margin-bottom:16px;background:var(--yellow)18;border-color:var(--yellow);color:var(--yellow)">
+    ? `<div class="infobox" style="margin-bottom:16px;background:color-mix(in srgb, var(--yellow) 9%, transparent);border-color:var(--yellow);color:var(--yellow)">
         ⚠️ Nessuna configurazione registrata per il ${anno}. Clicca <strong>Modifica ${anno}</strong> per crearne una.
        </div>`
     : "";

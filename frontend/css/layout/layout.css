@@ -91,9 +91,10 @@ body {
   overflow: hidden;
 }
 .logo-main {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--t0);
   line-height: 1.2;
 }
@@ -197,7 +198,7 @@ body {
 }
 .conn-dot.connected {
   background: var(--green);
-  box-shadow: 0 0 8px rgba(5, 150, 105, 0.5);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--green) 55%, transparent);
   animation: pulse-dot 2s ease-in-out infinite;
 }
 .conn-dot.disconnected {
@@ -251,7 +252,7 @@ body {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(20, 18, 14, 0.45);
   z-index: 190;
   opacity: 0;
   transition: opacity var(--duration-normal) ease;
@@ -288,12 +289,13 @@ body {
   z-index: 10;
 }
 .topbar-title {
-  font-size: 18px;
-  font-weight: 800;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
   flex: 1;
   min-width: 80px;
   color: var(--t0);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.01em;
 }
 .topbar-actions {
   display: flex;

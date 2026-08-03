@@ -5,7 +5,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(20, 18, 14, 0.5);
   z-index: 1000;
   align-items: center;
   justify-content: center;
@@ -68,13 +68,14 @@
 }
 
 .modal-title {
-  font-size: 18px;
-  font-weight: 800;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
   margin-bottom: 22px;
   display: flex;
   align-items: center;
   gap: 10px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   color: var(--t0);
 }
 .modal-actions {
@@ -515,7 +516,7 @@
   display: inline-block;
 }
 .ss-trigger {
-  background: #fff;
+  background: var(--s0);
   border: 1.5px solid var(--b1);
   border-radius: var(--r-sm);
   display: flex;

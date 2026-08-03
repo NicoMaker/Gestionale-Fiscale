@@ -115,7 +115,7 @@ function renderAdempimentiTabella(adempimenti) {
       <button class="btn btn-sm btn-secondary" onclick="toggleSelezionaTuttiAdp()" title="Seleziona/Deseleziona tutti" style="font-size:12px">☑️ Seleziona tutti</button>
     </div>
   </div>
-  <div id="adp-bulk-toolbar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--red)12;border:1px solid var(--red)33;border-radius:var(--r-sm);align-items:center;gap:10px;flex-wrap:wrap">
+  <div id="adp-bulk-toolbar" style="display:none;margin-bottom:12px;padding:10px 14px;background:color-mix(in srgb, var(--red) 7%, transparent);border:1px solid color-mix(in srgb, var(--red) 20%, transparent);border-radius:var(--r-sm);align-items:center;gap:10px;flex-wrap:wrap">
     <span id="adp-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
     <button class="btn btn-sm btn-danger" onclick="eliminaAdpSelezionati()">🗑️ Elimina selezionati</button>
     <button class="btn btn-sm btn-secondary" onclick="deselezionaTuttiAdp()">✕ Deseleziona</button>

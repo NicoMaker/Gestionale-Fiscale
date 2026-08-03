@@ -360,7 +360,7 @@ function renderScadenzarioTabella(data) {
         .map(
           (
             f,
-          ) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent)18;border:1px solid var(--accent)44;border-radius:20px;font-size:12px;color:var(--accent)">
+          ) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:color-mix(in srgb, var(--accent) 9%, transparent);border:1px solid color-mix(in srgb, var(--accent) 27%, transparent);border-radius:20px;font-size:12px;color:var(--accent)">
         🔍 ${escAttr(f.nome)}
         <button onclick="filtraScadPerAdp(${f.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi questo filtro">✕</button>
       </span>`,
@@ -374,7 +374,7 @@ function renderScadenzarioTabella(data) {
 
   const configAnnoInfo =
     c.config_anno && c.config_anno !== state.anno
-      ? `<div class="infobox" style="margin-bottom:12px;font-size:12px;background:var(--yellow)18;color:var(--yellow)">
+      ? `<div class="infobox" style="margin-bottom:12px;font-size:12px;background:color-mix(in srgb, var(--yellow) 9%, transparent);color:var(--yellow)">
         ⚠️ Configurazione ereditata dall'anno ${c.config_anno} (nessuna configurazione specifica per il ${state.anno})
        </div>`
       : "";

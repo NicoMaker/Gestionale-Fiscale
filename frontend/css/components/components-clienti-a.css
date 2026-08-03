@@ -453,11 +453,11 @@
 }
 .periodo-pill.s-completato {
   border-left: 4px solid var(--green);
-  background: rgba(22, 163, 74, 0.04);
+  background: color-mix(in srgb, var(--green) 4%, var(--s0));
 }
 .periodo-pill.s-in_corso {
   border-left: 4px solid var(--yellow);
-  background: rgba(217, 119, 6, 0.04);
+  background: color-mix(in srgb, var(--yellow) 4%, var(--s0));
 }
 .periodo-pill.s-da_fare {
   border-left: 4px solid var(--red);
