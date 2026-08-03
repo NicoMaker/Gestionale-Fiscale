@@ -502,11 +502,11 @@ function _generaFinestraStampa() {
 
   // ---- 8. Stampa diretta tramite iframe nascosto ----
   // Crea un iframe nascosto
-  var iframe = document.createElement('iframe');
-  iframe.style.position = 'absolute';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = 'none';
+  var iframe = document.createElement("iframe");
+  iframe.style.position = "absolute";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "none";
   document.body.appendChild(iframe);
 
   // Scrivi l'HTML nell'iframe
@@ -520,7 +520,7 @@ function _generaFinestraStampa() {
   iframe.contentWindow.print();
 
   // Rimuovi l'iframe dopo qualche secondo (pulizia)
-  setTimeout(function() {
+  setTimeout(function () {
     if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
   }, 10000);
 }
