@@ -106,7 +106,8 @@ function renderAppuntiTabella(appunti) {
       </td>
       <td style="padding:12px 16px">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:18px">${a.completato ? "✅" : "📝"}</span>
+          <!-- ⬇️ MODIFICA QUI: da fare → ⭕, completato → ✅ -->
+          <span style="font-size:18px">${a.completato ? "✅" : "⭕"}</span>
           <div>
             <div style="font-weight:700">${escAttr(a.titolo)}</div>
             <div style="font-size:12px;color:var(--text3);margin-top:2px">${a.contenuto ? (a.contenuto.length > 60 ? a.contenuto.substring(0, 60) + "..." : a.contenuto) : ""}</div>
