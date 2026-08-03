@@ -86,8 +86,25 @@ function stampaPaginaBianca() {
     ? ` - Cerca: "${paginaBiancaFilter.search}"`
     : "";
 
-  const printWindow = window.open("", "_blank");
-  printWindow.document.write(`
+  // Stampa tramite iframe nascosto: evita l'apertura di una nuova scheda/finestra
+  // (che mostrava per un istante una pagina vuota/di sistema prima della stampa)
+  // e porta l'utente direttamente alla finestra di stampa del browser.
+  const oldFrame = document.getElementById("print-frame-pagina-bianca");
+  if (oldFrame) oldFrame.remove();
+
+  const printFrame = document.createElement("iframe");
+  printFrame.id = "print-frame-pagina-bianca";
+  printFrame.style.position = "fixed";
+  printFrame.style.right = "0";
+  printFrame.style.bottom = "0";
+  printFrame.style.width = "0";
+  printFrame.style.height = "0";
+  printFrame.style.border = "0";
+  document.body.appendChild(printFrame);
+
+  const printDoc = printFrame.contentWindow.document;
+  printDoc.open();
+  printDoc.write(`
     <!DOCTYPE html>
     <html>
     <head>
@@ -223,8 +240,27 @@ function stampaPaginaBianca() {
     </body>
     </html>
   `);
-  printWindow.document.close();
-  printWindow.print();
+  printDoc.close();
+
+  // Attende il caricamento del frame poi apre subito la finestra di stampa nativa
+  printFrame.onload = () => {
+    printFrame.contentWindow.focus();
+    printFrame.contentWindow.print();
+  };
+  // Fallback nel caso onload non scatti (contenuto già pronto)
+  setTimeout(() => {
+    printFrame.contentWindow.focus();
+    printFrame.contentWindow.print();
+  }, 150);
+
+  // Rimuove il frame dopo la stampa (o dopo un timeout di sicurezza)
+  const cleanupFrame = () => {
+    if (printFrame && printFrame.parentNode) printFrame.remove();
+  };
+  if (printFrame.contentWindow) {
+    printFrame.contentWindow.onafterprint = cleanupFrame;
+  }
+  setTimeout(cleanupFrame, 5000);
 }
 
 // ═══════════════════════════════════════════════════════════════

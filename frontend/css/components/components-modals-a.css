@@ -181,7 +181,7 @@
 }
 .flag-chip {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 7px;
   padding: 9px 14px;
   border-radius: var(--r-sm);
@@ -198,6 +198,8 @@
 }
 .flag-chip input {
   margin: 0;
+  margin-top: 2px;
+  flex-shrink: 0;
 }
 .flag-chip span {
   color: var(--t0);
