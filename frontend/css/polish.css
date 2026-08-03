@@ -80,6 +80,34 @@ input[type="radio"] {
 .nav-item.active .nav-label {
   font-weight: 650;
 }
+.nav-item {
+  transform: translateX(0);
+}
+.nav-item:hover {
+  transform: translateX(2px);
+}
+
+/* ─── BOTTONI — micro-interazione più "viva" ─────────────────── */
+.btn {
+  transition:
+    transform var(--duration-fast),
+    box-shadow var(--duration-fast),
+    background var(--duration-fast),
+    filter var(--duration-fast);
+}
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+/* ─── CARD / MODAL — angoli e ombre più morbide ──────────────── */
+.modal {
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
 
 /* ─── SIDEBAR FOOTER — allineamento fine ─────────────────────── */
 .sidebar-footer-text {

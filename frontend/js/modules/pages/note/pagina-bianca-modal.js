@@ -149,7 +149,9 @@ function showPaginaBiancaModal() {
       if (success && data) {
         document.getElementById("pb-id").value = data.id;
         document.getElementById("pb-titolo").value = data.titolo || "";
-        document.getElementById("pb-contenuto").value = data.contenuto || "";
+        document.getElementById("pb-contenuto").value = formatNoteContenuto(
+          data.contenuto || "",
+        );
         document.getElementById("pb-allegati").value = data.allegati || "";
         document.getElementById("pb-modal-title").textContent =
           "✏️ Modifica Nota";
@@ -191,7 +193,11 @@ function savePaginaBiancaAppunto() {
   const id = document.getElementById("pb-id").value;
   const tipo = document.querySelector('input[name="pb-tipo"]:checked')?.value;
   const titolo = document.getElementById("pb-titolo").value.trim() || null;
-  const contenuto = document.getElementById("pb-contenuto").value;
+  // Allinea il contenuto fin dal primo salvataggio: rimuove eventuali spazi/tab
+  // ad inizio riga (es. testo incollato da Word/Excel) mantenendo gli "a capo".
+  const contenuto = formatNoteContenuto(
+    document.getElementById("pb-contenuto").value,
+  );
   const allegati = document.getElementById("pb-allegati").value;
   let id_cliente = null;
 

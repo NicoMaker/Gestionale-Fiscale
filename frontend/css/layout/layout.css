@@ -171,6 +171,29 @@ body {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+/* ─── ICONE EMOJI — set colorato stile "app" ──────────────────── */
+.nav-icon-emoji {
+  font-size: 17px;
+  line-height: 1;
+  font-family:
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  filter: grayscale(45%) opacity(0.75);
+  transform: translateY(0.5px);
+  transition:
+    filter var(--duration-fast),
+    transform var(--duration-fast);
+}
+.nav-item:hover .nav-icon-emoji,
+.nav-item.active .nav-icon-emoji {
+  filter: grayscale(0%) opacity(1);
+  transform: translateY(0.5px) scale(1.05);
+}
+.logo-icon-emoji {
+  font-size: 19px;
+  background: var(--accent-gradient);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
 .nav-sep {
   height: 1px;
   background: var(--b0);
