@@ -97,10 +97,11 @@ function renderPage(page) {
   } else if (page === "adempimenti") {
     state._pending = "adempimenti";
     document.getElementById("topbar-actions").innerHTML =
-      `<div class="search-wrap" style="width:260px"><span class="search-icon">🔍</span><input class="input" id="global-search-adempimenti" placeholder="Cerca codice o nome…" oninput="applyAdempimentiFiltriSearch()" style="font-size:13px"></div><button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:13px">⟳</button><button class="btn btn-primary no-print" onclick="openNuovoAdpDef()" style="font-size:13px">+ Nuovo</button>`;
+      `<div class="search-wrap" style="width:260px"><span class="search-icon">🔍</span><input class="input" id="global-search-adempimenti" placeholder="Cerca codice o nome…" oninput="applyAdempimentiFiltriSearch()" style="font-size:13px"></div><button class="btn btn-sm btn-primary" onclick="resetAdempimentiFiltri()" style="font-size:13px">⟳</button><button class="btn btn-print btn-sm no-print" onclick="window.print()" title="Stampa pagina" style="font-size:13px">🖨️</button><button class="btn btn-primary no-print" onclick="openNuovoAdpDef()" style="font-size:13px">+ Nuovo</button>`;
     socket.emit("get:adempimenti");
   } else if (page === "tipologie") {
-    document.getElementById("topbar-actions").innerHTML = "";
+    document.getElementById("topbar-actions").innerHTML =
+      `<button class="btn btn-print btn-sm no-print" onclick="window.print()" title="Stampa pagina" style="font-size:13px">🖨️</button>`;
     renderTipologiePage();
   } else if (page === "appunti") {
     document.getElementById("topbar-actions").innerHTML = "";

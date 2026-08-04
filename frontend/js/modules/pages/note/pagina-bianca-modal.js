@@ -76,11 +76,6 @@ function showPaginaBiancaModal() {
           <textarea id="pb-contenuto" class="input" rows="12" placeholder="Scrivi qui il tuo appunto...&#10;&#10;Puoi usare testo libero, note, promemoria, checklist, ecc." style="font-family: inherit; resize: vertical;"></textarea>
         </div>
 
-        <div class="form-group">
-          <label>Allegati / Riferimenti</label>
-          <input type="text" id="pb-allegati" class="input" placeholder="Es: Documenti allegati, link, riferimenti, ecc.">
-        </div>
-
         <div class="modal-actions">
           <button class="btn btn-secondary" onclick="closeModal('modal-pagina-bianca')">Annulla</button>
           <button class="btn btn-primary" onclick="savePaginaBiancaAppunto()">💾 Salva Appunto</button>
@@ -97,7 +92,6 @@ function showPaginaBiancaModal() {
   document.getElementById("pb-id").value = "";
   document.getElementById("pb-titolo").value = "";
   document.getElementById("pb-contenuto").value = "";
-  document.getElementById("pb-allegati").value = "";
 
   const modalSearch = document.getElementById("pb-modal-cliente-search");
   if (modalSearch) modalSearch.value = "";
@@ -152,7 +146,6 @@ function showPaginaBiancaModal() {
         document.getElementById("pb-contenuto").value = formatNoteContenuto(
           data.contenuto || "",
         );
-        document.getElementById("pb-allegati").value = data.allegati || "";
         document.getElementById("pb-modal-title").textContent =
           "✏️ Modifica Nota";
 
@@ -198,7 +191,6 @@ function savePaginaBiancaAppunto() {
   const contenuto = formatNoteContenuto(
     document.getElementById("pb-contenuto").value,
   );
-  const allegati = document.getElementById("pb-allegati").value;
   let id_cliente = null;
 
   if (tipo === "cliente") {
@@ -214,7 +206,6 @@ function savePaginaBiancaAppunto() {
     tipo,
     titolo,
     contenuto: contenuto || null,
-    allegati: allegati || null,
     id_cliente: id_cliente || null,
   };
 

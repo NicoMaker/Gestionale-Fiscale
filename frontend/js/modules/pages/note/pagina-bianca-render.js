@@ -201,13 +201,6 @@ function stampaPaginaBianca() {
           white-space: pre-wrap;
           word-break: break-word;
         }
-        .appunto-allegati {
-          padding: 12px 20px;
-          background: #fef3c7;
-          border-top: 1px solid #fde68a;
-          font-size: 12px;
-          color: #92400e;
-        }
         .no-data {
           text-align: center;
           padding: 60px;
@@ -660,16 +653,7 @@ function renderPaginaBiancaList(appunti) {
           </div>
 
           <div style="padding: 20px;">
-            <div style="color: var(--text1); line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto;">
-              ${escAttr(formatNoteContenuto(a.contenuto) || "— Nessun contenuto —")}
-            </div>
-            ${
-              a.allegati
-                ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text3);">
-              📎 Allegati: ${escAttr(a.allegati)}
-            </div>`
-                : ""
-            }
+            <div style="color: var(--text1); line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto;">${escAttr(formatNoteContenuto(a.contenuto) || "— Nessun contenuto —")}</div>
           </div>
         </div>
       `,
