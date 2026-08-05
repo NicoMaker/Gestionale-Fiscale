@@ -270,6 +270,6 @@ function _buildRateLabel(r, pillColor) {
       return `<div class="pp-cont-row"><span class="pp-cont-check" style="color:${cRate}">${done ? "✓" : "✗"}</span><span class="pp-cont-lbl" style="color:${cRate}">${item.icon} ${item.label}</span><span class="pp-cont-val" style="color:${cRate}">${display}</span></div>`;
     })
     .join("");
-  const contRow = `<div class="pp-cont-row"><span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span><span class="pp-cont-lbl" style="color:${cCont}">📊 Adempimento Comp.</span><span class="pp-cont-val" style="color:${cCont}">${contDone ? "fatto" : "—"}</span></div>`;
+  const contRow = `<div class="pp-cont-row"><span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span><span class="pp-cont-lbl" style="color:${cCont}">📊 PRIMA NOTA</span><span class="pp-cont-val" style="color:${cCont}">${contDone ? "fatto" : "—"}</span></div>`;
   return `<div class="pp-cont-labels">${rows}${contRow}</div>`;
 }

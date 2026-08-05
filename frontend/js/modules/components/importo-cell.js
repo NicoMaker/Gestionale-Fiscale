@@ -26,7 +26,7 @@ function renderImportoCellCompact(r) {
         ? `<span style="color:${acc2Num < 0 ? "var(--red)" : "var(--green)"}">${formattaNumeroItaliano(acc2Num)}&euro;</span>`
         : null;
     if (!iva && !acc2 && !contDone) return `<span class="imp-empty">-</span>`;
-    return `<div class="importi-cell">${iva ? `<div class="imp-row"><span class="imp-lbl">IVA</span><span class="imp-val">${iva}</span></div>` : ""}${acc2 ? `<div class="imp-row"><span class="imp-lbl">2&deg;Acc.</span><span class="imp-val">${acc2}</span></div>` : ""}${contDone ? `<div class="imp-row"><span class="imp-lbl">Adempimento Comp.</span><span class="imp-val"></span></div>` : ""}</div>`;
+    return `<div class="importi-cell">${iva ? `<div class="imp-row"><span class="imp-lbl">IVA</span><span class="imp-val">${iva}</span></div>` : ""}${acc2 ? `<div class="imp-row"><span class="imp-lbl">2&deg;Acc.</span><span class="imp-val">${acc2}</span></div>` : ""}${contDone ? `<div class="imp-row"><span class="imp-lbl">Prima Nota</span><span class="imp-val"></span></div>` : ""}</div>`;
   }
   if (hasRate(r)) {
     let lb = ["Saldo", "1&deg;Acc.", "2&deg;Acc."];
