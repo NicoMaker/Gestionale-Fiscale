@@ -209,6 +209,7 @@ function importiPer(tipo, stato) {
         Math.floor(Math.random() * 5)
       ],
       cont_completata: stato === "completato" ? 1 : 0,
+      iva_completata: stato === "completato" ? 1 : 0,
     };
   if (tipo === "rate") {
     const s = Math.round((800 + Math.random() * 6000) * 100) / 100;
@@ -439,8 +440,8 @@ async function main() {
     run(
       `INSERT INTO adempimenti_cliente
         (id_cliente, id_adempimento, anno, mese, trimestre, semestre, stato, data_scadenza, data_completamento, note,
-         importo, importo_saldo, importo_acconto1, importo_acconto2, importo_iva, importo_contabilita, cont_completata)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+         importo, importo_saldo, importo_acconto1, importo_acconto2, importo_iva, importo_contabilita, cont_completata, iva_completata)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         id_cliente,
         a.id,
@@ -459,6 +460,7 @@ async function main() {
         importi.importo_iva || null,
         importi.importo_contabilita || null,
         importi.cont_completata || 0,
+        importi.iva_completata || 0,
       ],
     );
     righeAdp++;

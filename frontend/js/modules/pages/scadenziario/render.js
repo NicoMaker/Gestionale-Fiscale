@@ -152,11 +152,7 @@ function renderScadenzarioSelect(clienti) {
       <option value="in_corso">🔄 In corso</option>
       <option value="completato">✅ Completato</option>
       <option value="n_a">➖ N/A</option>
-    </select>
-    <div class="search-wrap" style="width:180px">
-      <span class="search-icon">🔍</span>
-      <input class="input" id="scad-search" placeholder="Cerca adempimento..." oninput="applyScadSearch()" title="Cerca per nome o codice adempimento">
-    </div>`;
+    </select>`;
 
   initSearchableSelect("sel-cliente");
 
@@ -218,7 +214,6 @@ function changeAnnoScad(d) {
 }
 
 function loadScadenzario() {
-  const sv = document.getElementById("scad-search")?.value || "";
   const st = document.getElementById("scad-filtro-stato")?.value || "";
   if (typeof socket !== "undefined") {
     if (!state.adempimenti || state.adempimenti.length === 0) {
@@ -227,7 +222,7 @@ function loadScadenzario() {
     socket.emit("get:scadenzario", {
       id_cliente: state.selectedCliente.id,
       anno: state.anno,
-      filtri: { search: sv, stato: st },
+      filtri: { stato: st },
     });
     socket.emit("get:adempimenti_cliente", {
       id_cliente: state.selectedCliente.id,
@@ -240,10 +235,6 @@ function applyScadFiltriAdp() {
   if (!state.scadenzario) return;
   renderScadenzarioTabella(state.scadenzario);
 }
-
-const applyScadSearch = debounce(() => {
-  if (state.selectedCliente) loadScadenzario();
-}, 300);
 
 function applyScadFiltri() {
   if (state.selectedCliente) loadScadenzario();
@@ -272,7 +263,6 @@ function filterAdpButtons() {
 function resetScadFiltri() {
   const statoSelect = document.getElementById("scad-filtro-stato");
   const adpSelect = document.getElementById("scad-filtro-adp");
-  const searchInput = document.getElementById("scad-search");
   const adpFilterSearch = document.getElementById("adp-filter-search");
 
   if (statoSelect) statoSelect.value = "";
@@ -280,7 +270,6 @@ function resetScadFiltri() {
     Array.from(adpSelect.options).forEach((o) => (o.selected = false));
     if (adpSelect._ssRefresh) adpSelect._ssRefresh();
   }
-  if (searchInput) searchInput.value = "";
   if (adpFilterSearch) adpFilterSearch.value = "";
 
   document.querySelectorAll(".adempimento-filter-btn").forEach((btn) => {

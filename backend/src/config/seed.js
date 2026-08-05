@@ -102,6 +102,7 @@ function createSchema(db) {
     importo_iva REAL,
     importo_contabilita REAL,
     cont_completata INTEGER DEFAULT 0,
+    iva_completata INTEGER DEFAULT 0,
     FOREIGN KEY (id_cliente) REFERENCES clienti(id),
     FOREIGN KEY (id_adempimento) REFERENCES adempimenti(id)
   )`);

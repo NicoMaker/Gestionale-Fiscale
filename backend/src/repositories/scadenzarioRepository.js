@@ -271,8 +271,8 @@ function copiaScadenzarioCliente(id_cliente, anno_da, anno_a) {
     if (!ex) {
       try {
         runQuery(
-          `INSERT INTO adempimenti_cliente (id_cliente, id_adempimento, anno, mese, trimestre, semestre, stato, data_scadenza, data_completamento, note, importo, importo_saldo, importo_acconto1, importo_acconto2, importo_iva, importo_contabilita, cont_completata)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+          `INSERT INTO adempimenti_cliente (id_cliente, id_adempimento, anno, mese, trimestre, semestre, stato, data_scadenza, data_completamento, note, importo, importo_saldo, importo_acconto1, importo_acconto2, importo_iva, importo_contabilita, cont_completata, iva_completata)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
           [
             r.id_cliente,
             r.id_adempimento,
@@ -291,6 +291,7 @@ function copiaScadenzarioCliente(id_cliente, anno_da, anno_a) {
             r.importo_iva,
             r.importo_contabilita,
             r.cont_completata,
+            r.iva_completata,
           ],
         );
         tot++;
@@ -313,7 +314,7 @@ function updateAdempimentoStato(data) {
     `UPDATE adempimenti_cliente SET
       stato = ?, data_scadenza = ?, data_completamento = ?, note = ?,
       importo = ?, importo_saldo = ?, importo_acconto1 = ?, importo_acconto2 = ?,
-      importo_iva = ?, importo_contabilita = ?, cont_completata = ?
+      importo_iva = ?, importo_contabilita = ?, cont_completata = ?, iva_completata = ?
     WHERE id = ?`,
     [
       data.stato,
@@ -327,6 +328,7 @@ function updateAdempimentoStato(data) {
       data.importo_iva || null,
       data.importo_contabilita || null,
       data.cont_completata ? 1 : 0,
+      data.iva_completata ? 1 : 0,
       data.id,
     ],
   );

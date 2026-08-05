@@ -100,8 +100,8 @@ function restoreItem(io, item) {
          (id, id_cliente, id_adempimento, anno, mese, trimestre, semestre,
           stato, data_scadenza, data_completamento, note, importo,
           importo_saldo, importo_acconto1, importo_acconto2, importo_iva,
-          importo_contabilita, cont_completata)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+          importo_contabilita, cont_completata, iva_completata)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         dati.id,
         dati.id_cliente,
@@ -121,6 +121,7 @@ function restoreItem(io, item) {
         dati.importo_iva || null,
         dati.importo_contabilita || null,
         dati.cont_completata || 0,
+        dati.iva_completata || 0,
       ],
     );
     io.emit("broadcast:scadenzario_updated", {

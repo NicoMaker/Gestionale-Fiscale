@@ -73,6 +73,7 @@ function migrateDB() {
     `ALTER TABLE adempimenti_cliente ADD COLUMN importo_iva REAL`,
     `ALTER TABLE adempimenti_cliente ADD COLUMN importo_contabilita REAL`,
     `ALTER TABLE adempimenti_cliente ADD COLUMN cont_completata INTEGER DEFAULT 0`,
+    `ALTER TABLE adempimenti_cliente ADD COLUMN iva_completata INTEGER DEFAULT 0`,
     `ALTER TABLE clienti ADD COLUMN periodicita TEXT`,
     `ALTER TABLE clienti ADD COLUMN col2_value TEXT`,
     `ALTER TABLE clienti ADD COLUMN col3_value TEXT`,
@@ -175,6 +176,7 @@ function migrateDB() {
       importo_iva REAL,
       importo_contabilita REAL,
       cont_completata INTEGER DEFAULT 0,
+      iva_completata INTEGER DEFAULT 0,
       FOREIGN KEY (id_cliente) REFERENCES clienti(id),
       FOREIGN KEY (id_adempimento) REFERENCES adempimenti(id)
     )`,
@@ -188,7 +190,8 @@ function migrateDB() {
          data_scadenza, data_completamento, note,
          importo, importo_saldo, importo_acconto1, importo_acconto2,
          importo_iva, importo_contabilita,
-         COALESCE(cont_completata, 0)
+         COALESCE(cont_completata, 0),
+         COALESCE(iva_completata, 0)
        FROM adempimenti_cliente`,
     `DROP TABLE adempimenti_cliente`,
     `ALTER TABLE adempimenti_cliente_new RENAME TO adempimenti_cliente`,
