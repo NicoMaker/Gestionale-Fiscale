@@ -13,7 +13,7 @@ function getPillColor(r, stato) {
     return "var(--red)";
   }
   if (isContabilita(r)) {
-    const hasIva = !!r.importo_iva && parseFloat(r.importo_iva) !== 0;
+    const hasIva = _getIvaFlag(r.id);
     const contDone = parseInt(r.cont_completata) === 1;
     if (hasIva && contDone) return "var(--green)";
     if (hasIva || contDone) return "var(--accent)";
@@ -182,7 +182,7 @@ function renderPeriodoPill(r) {
 
   const tooltipText = `${getPeriodoLabel(r)} — ${statoLabel}${r.data_scadenza ? ` | Scad: ${formattaDataItaliana(r.data_scadenza)}` : ""}${r.data_completamento ? ` | Compl: ${formattaDataItaliana(r.data_completamento)}` : ""}\nClick sinistro: modifica | Click destro: toggle completato`;
   const tagColor =
-    isContabilita(r) && r.importo_iva ? "var(--green)" : pillColor;
+    isContabilita(r) && _getIvaFlag(r.id) ? "var(--green)" : pillColor;
 
   return `<div class="periodo-pill s-${stato}" data-id="${r.id}" onclick="openAdpById(${r.id})" oncontextmenu="toggleAdpCompletato(event,${r.id})" title="${escAttr(tooltipText)}" style="border-color:${pillColor};color:${pillColor};position:relative">
     <div class="pp-top">
@@ -204,7 +204,7 @@ function _buildContabilitaLabel(r, pillColor) {
     r.importo_iva != null && r.importo_iva !== ""
       ? parseFloat(r.importo_iva)
       : null;
-  const hasIva = ivaNum !== null && ivaNum !== 0;
+  const hasIva = _getIvaFlag(r.id);
   const contDone = parseInt(r.cont_completata) === 1;
   let cIva, cCont;
   if (hasIva && contDone) {
@@ -214,12 +214,13 @@ function _buildContabilitaLabel(r, pillColor) {
   } else {
     cIva = cCont = "var(--red)";
   }
-  const ivaVal = hasIva
-    ? `<span style="color:${ivaNum < 0 ? "var(--red)" : "var(--green)"}">${formattaNumeroItaliano(ivaNum)}&euro;</span>`
-    : "&mdash;";
+  const ivaVal =
+    ivaNum !== null
+      ? `<span style="color:${ivaNum < 0 ? "var(--red)" : "var(--green)"}">${formattaNumeroItaliano(ivaNum)}&euro;</span>`
+      : "&mdash;";
   return `<div class="pp-cont-labels">
     <div class="pp-cont-row"><span class="pp-cont-check" style="color:${cIva}">${hasIva ? "✓" : "✗"}</span><span class="pp-cont-lbl" style="color:${cIva}">💰 IVA</span><span class="pp-cont-val" style="color:${cIva}">${ivaVal}</span></div>
-    <div class="pp-cont-row"><span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span><span class="pp-cont-lbl" style="color:${cCont}">📊 Adempimento Comp.</span><span class="pp-cont-val" style="color:${cCont}">${contDone ? "fatto" : "—"}</span></div>
+    <div class="pp-cont-row"><span class="pp-cont-check" style="color:${cCont}">${contDone ? "✓" : "✗"}</span><span class="pp-cont-lbl" style="color:${cCont}">📊 PRIMA NOTA</span><span class="pp-cont-val" style="color:${cCont}">${contDone ? "fatto" : "—"}</span></div>
   </div>`;
 }
 
