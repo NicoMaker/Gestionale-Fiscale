@@ -449,9 +449,9 @@
         <!-- ── IMPORTO CONTABILITÀ ── -->
         <div id="sect-importo-cont" style="display: none">
           <div class="infobox" style="margin-bottom: 12px; font-size: 12px">
-            💡 <strong style="color: var(--accent)">IVA</strong> compilata →
-            pill <span style="color: var(--accent)">blu</span> · IVA +
-            <strong style="color: var(--green)">Cont. ✓</strong> → pill
+            💡 <strong style="color: var(--accent)">IVA ✓</strong> →
+            pill <span style="color: var(--accent)">blu</span> · IVA ✓ +
+            <strong style="color: var(--green)">Prima Nota ✓</strong> → pill
             <span style="color: var(--green)">verde</span>
           </div>
           <div class="form-row">
@@ -475,6 +475,20 @@
                 "
                 style="transition: color 0.2s"
               />
+              <label
+                class="flag-chip"
+                style="margin-top: 6px; padding: 11px 15px"
+                id="iva-checkbox-wrapper"
+              >
+                <input
+                  type="checkbox"
+                  id="adp-iva-flag"
+                  onchange="onIvaFlagChange()"
+                />
+                <span id="label-iva-flag" style="transition: color 0.2s"
+                  >✓ IVA</span
+                >
+              </label>
             </div>
             <div
               class="form-group"
@@ -485,7 +499,7 @@
               "
             >
               <label id="label-cont-completata" style="transition: color 0.2s"
-                >📊 Adempimento Completati</label
+                >📊 PRIMA NOTA</label
               >
               <label
                 class="flag-chip"
@@ -498,7 +512,7 @@
                   onchange="onContabilitaImportoChange()"
                 />
                 <span id="label-imp-cont" style="transition: color 0.2s"
-                  >✓ Adempimento Completati</span
+                  >✓ PRIMA NOTA</span
                 >
               </label>
             </div>

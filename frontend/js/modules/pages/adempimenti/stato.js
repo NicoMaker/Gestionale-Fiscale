@@ -79,6 +79,8 @@ function openAdpModal(r) {
     setVal("adp-imp-cont", formattaNumeroItaliano(r.importo_contabilita));
     const contCheck = document.getElementById("adp-cont-completata");
     if (contCheck) contCheck.checked = parseInt(r.cont_completata) === 1;
+    const ivaFlagCheck = document.getElementById("adp-iva-flag");
+    if (ivaFlagCheck) ivaFlagCheck.checked = _getIvaFlag(r.id);
     _aggiornaColoriContabilita(r);
   } else if (isRate) {
     if (sectRate) sectRate.style.display = "block";
@@ -143,22 +145,65 @@ function setCbxModalStato(nuovoStato) {
   _aggiornaPulsantiCheckbox(nuovoStato);
 }
 
+// ─── FLAG IVA (solo frontend, persistito in localStorage) ─────
+// Checkbox indipendente dall'importo: segna manualmente l'IVA
+// come "fatta" e determina, insieme a Prima Nota, il colore pill.
+const IVA_FLAG_STORAGE_KEY = "adp_iva_flag_v1";
+
+function _readIvaFlagStore() {
+  try {
+    return JSON.parse(localStorage.getItem(IVA_FLAG_STORAGE_KEY) || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+function _writeIvaFlagStore(store) {
+  try {
+    localStorage.setItem(IVA_FLAG_STORAGE_KEY, JSON.stringify(store));
+  } catch (e) {}
+}
+
+function _getIvaFlag(id) {
+  if (id == null) return false;
+  return !!_readIvaFlagStore()[id];
+}
+
+function _setIvaFlag(id, value) {
+  if (id == null) return;
+  const store = _readIvaFlagStore();
+  if (value) store[id] = true;
+  else delete store[id];
+  _writeIvaFlagStore(store);
+}
+
+function onIvaFlagChange() {
+  const id = getVal("adp-id");
+  const check = document.getElementById("adp-iva-flag");
+  _setIvaFlag(id, !!check?.checked);
+  _aggiornaColoriContabilita(null);
+}
+
 // ─── COLORI CONTABILITÀ PURA ──────────────────────────────────
 function _aggiornaColoriContabilita(r) {
-  const ivaVal = document.getElementById("adp-imp-iva")?.value;
-  const hasIva = ivaVal != null && ivaVal !== "";
+  const ivaCheck = document.getElementById("adp-iva-flag");
+  const ivaDone = ivaCheck
+    ? ivaCheck.checked
+    : _getIvaFlag(r?.id ?? getVal("adp-id"));
   const contCheck = document.getElementById("adp-cont-completata");
   const contDone = contCheck
     ? contCheck.checked
     : parseInt(r?.cont_completata) === 1;
   let colorIva = "",
     colorCont = "";
-  if (hasIva && contDone) colorIva = colorCont = "var(--green)";
-  else if (hasIva || contDone) colorIva = colorCont = "var(--accent)";
+  if (ivaDone && contDone) colorIva = colorCont = "var(--green)";
+  else if (ivaDone || contDone) colorIva = colorCont = "var(--accent)";
   const ivaLabel = document.getElementById("label-imp-iva");
+  const ivaFlagLabel = document.getElementById("label-iva-flag");
   const contLabel = document.getElementById("label-cont-completata");
   const contSpan = document.getElementById("label-imp-cont");
   if (ivaLabel) ivaLabel.style.color = colorIva;
+  if (ivaFlagLabel) ivaFlagLabel.style.color = colorIva;
   if (contLabel) contLabel.style.color = colorCont;
   if (contSpan) contSpan.style.color = colorCont;
 }
@@ -354,6 +399,7 @@ function saveAdpStato() {
 function deleteAdpCliente() {
   if (!confirm("Rimuovere questo adempimento dallo scadenzario?")) return;
   const id = parseInt(getVal("adp-id"));
+  _setIvaFlag(id, false);
   socket.emit("delete:adempimento_cliente", { id });
 }
 
