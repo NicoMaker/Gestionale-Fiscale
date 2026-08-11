@@ -226,6 +226,19 @@ function renderClientiTabella(clienti) {
             ? `<div style="font-size:9px;color:var(--yellow);margin-top:3px" title="Configurazione ereditata dal ${c.config_anno}">📌 eredita ${c.config_anno}</div>`
             : "";
 
+        // ─── MODIFICA QUI: mostra CF e P.IVA su due righe ──────────
+        const cfLine = c.codice_fiscale
+          ? `<div style="font-size:11px;color:var(--t2);margin-top:2px">CF: ${escAttr(c.codice_fiscale)}</div>`
+          : "";
+        const pivaLine = c.partita_iva
+          ? `<div style="font-size:11px;color:var(--t2);margin-top:0px">P.IVA: ${escAttr(c.partita_iva)}</div>`
+          : "";
+        const emptyLine =
+          !c.codice_fiscale && !c.partita_iva
+            ? `<div style="font-size:11px;color:var(--t2);margin-top:2px">—</div>`
+            : "";
+        // ─────────────────────────────────────────────────────────────
+
         return `<tr class="clickable clienti-bulk-row" data-id="${c.id}" onclick="showClienteDettaglio(${c.id})" style="cursor:pointer">
         <td class="no-print" style="padding:12px 10px 12px 16px;width:36px" onclick="event.stopPropagation()">
           <input type="checkbox" class="clienti-bulk-cb" data-id="${c.id}" onchange="aggiornaClientiBulkToolbar()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)">
@@ -235,7 +248,9 @@ function renderClientiTabella(clienti) {
             <div class="cliente-avatar-sm" style="background:${tipColor}22;border-color:${tipColor};color:${tipColor};width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-weight:800;font-size:${avatarFontSize(avatar, 13)}">${avatar}</div>
             <div>
               <div style="font-weight:700;font-size:15px">${escAttr(c.nome)}</div>
-              <div style="font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:2px">${c.codice_fiscale || c.partita_iva || "—"}</div>
+              ${cfLine}
+              ${pivaLine}
+              ${emptyLine}
               ${configInfo}
             </div>
           </div>

@@ -2,6 +2,7 @@
 // CLIENTI-DETTAGLIO.JS — Dettaglio cliente, storico, modal modifica/nuovo
 // Dipende da: clienti-filtri.js (per _cfg, _col2DbToLabel, ecc.)
 // ═══════════════════════════════════════════════════════════════
+
 // ─── DETTAGLIO CLIENTE ────────────────────────────────────────
 function showClienteDettaglio(id) {
   currentClienteId = id;
@@ -98,13 +99,28 @@ function renderClienteDettaglio(c, anno) {
     </div>`
     : "";
 
+  // ─── MODIFICA QUI: mostra CF e P.IVA su due righe ──────────
+  const cfLine = c.codice_fiscale
+    ? `<div style="font-size:13px;color:var(--t2);margin-top:4px">CF: ${escAttr(c.codice_fiscale)}</div>`
+    : "";
+  const pivaLine = c.partita_iva
+    ? `<div style="font-size:13px;color:var(--t2);margin-top:2px">P.IVA: ${escAttr(c.partita_iva)}</div>`
+    : "";
+  const emptyLine =
+    !c.codice_fiscale && !c.partita_iva
+      ? `<div style="font-size:13px;color:var(--t2);margin-top:4px">—</div>`
+      : "";
+  // ─────────────────────────────────────────────────────────────
+
   document.getElementById("modal-cliente-det-title").textContent = c.nome;
   document.getElementById("cliente-dettaglio-content").innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--s2);border-radius:var(--r-sm);margin-bottom:20px;border-left:4px solid ${tipColor}">
       <div class="det-avatar" style="width:48px;height:48px;background:${tipColor}22;border:2px solid ${tipColor};color:${tipColor};display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:18px;font-weight:800">${avatar}</div>
       <div>
         <div style="font-size:20px;font-weight:800">${escAttr(c.nome)}</div>
-        <div style="font-size:13px;color:var(--t2);margin-top:4px">${c.codice_fiscale || c.partita_iva || ""}</div>
+        ${cfLine}
+        ${pivaLine}
+        ${emptyLine}
       </div>
     </div>
     <div style="margin-bottom:12px;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase">📊 Classificazione per ${anno}</div>
