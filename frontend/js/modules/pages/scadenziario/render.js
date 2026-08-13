@@ -222,7 +222,7 @@ function loadScadenzario() {
     socket.emit("get:scadenzario", {
       id_cliente: state.selectedCliente.id,
       anno: state.anno,
-      filtri: { stato: '' } // non inviamo filtro stato, lo applichiamo lato client
+      filtri: { stato: "" }, // non inviamo filtro stato, lo applichiamo lato client
     });
     socket.emit("get:adempimenti_cliente", {
       id_cliente: state.selectedCliente.id,
@@ -300,9 +300,13 @@ function renderScadenzarioTabella(data) {
 
   // ── Filtro per stato (multiselect) ──
   const statoSelect = document.getElementById("scad-filtro-stato");
-  const statiSelezionati = statoSelect ? Array.from(statoSelect.selectedOptions || []).map(o => o.value) : [];
+  const statiSelezionati = statoSelect
+    ? Array.from(statoSelect.selectedOptions || []).map((o) => o.value)
+    : [];
   if (statiSelezionati.length > 0) {
-    dataFiltrata = dataFiltrata.filter(r => statiSelezionati.includes(r.stato));
+    dataFiltrata = dataFiltrata.filter((r) =>
+      statiSelezionati.includes(r.stato),
+    );
   }
 
   // ── Calcoli statistiche ──
@@ -361,7 +365,9 @@ function renderScadenzarioTabella(data) {
     ? `<div style="display:flex;flex-wrap:wrap;gap:6px">` +
       adpFiltroNomi
         .map(
-          (f) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:color-mix(in srgb, var(--accent) 9%, transparent);border:1px solid color-mix(in srgb, var(--accent) 27%, transparent);border-radius:20px;font-size:12px;color:var(--accent)">
+          (
+            f,
+          ) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:color-mix(in srgb, var(--accent) 9%, transparent);border:1px solid color-mix(in srgb, var(--accent) 27%, transparent);border-radius:20px;font-size:12px;color:var(--accent)">
         🔍 ${escAttr(f.nome)}
         <button onclick="filtraScadPerAdp(${f.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Rimuovi questo filtro">✕</button>
       </span>`,

@@ -557,11 +557,15 @@ function applyGlobaleFiltri() {
   }
 
   const statoSelect = document.getElementById("glob-filtro-stato");
-  const statiSelezionati = statoSelect ? Array.from(statoSelect.selectedOptions || []).map(o => o.value) : [];
+  const statiSelezionati = statoSelect
+    ? Array.from(statoSelect.selectedOptions || []).map((o) => o.value)
+    : [];
 
   let dataFiltrata = state.scadGlobale;
   if (statiSelezionati.length > 0) {
-    dataFiltrata = state.scadGlobale.filter(row => statiSelezionati.includes(row.stato));
+    dataFiltrata = state.scadGlobale.filter((row) =>
+      statiSelezionati.includes(row.stato),
+    );
   }
 
   if (typeof renderGlobaleTabella === "function") {
@@ -575,19 +579,19 @@ function resetGlobaleFiltri() {
   // Reset stato
   const statoSelect = document.getElementById("glob-filtro-stato");
   if (statoSelect) {
-    Array.from(statoSelect.options).forEach(o => o.selected = false);
+    Array.from(statoSelect.options).forEach((o) => (o.selected = false));
     if (statoSelect._ssRefresh) statoSelect._ssRefresh();
   }
   // Reset adp
   const adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
-    Array.from(adpSel.options).forEach(o => o.selected = false);
+    Array.from(adpSel.options).forEach((o) => (o.selected = false));
     if (adpSel._ssRefresh) adpSel._ssRefresh();
   }
   // Reset clienti
   const clienteSel = document.getElementById("glob-sel-cliente");
   if (clienteSel) {
-    Array.from(clienteSel.options).forEach(o => o.selected = false);
+    Array.from(clienteSel.options).forEach((o) => (o.selected = false));
     if (clienteSel._ssRefresh) clienteSel._ssRefresh();
   }
   state.globaleSelectedClienti = [];
@@ -595,7 +599,7 @@ function resetGlobaleFiltri() {
   loadGlobale();
 }
 
-var applyGlobaleFiltriDebounced = debounce(function() {
+var applyGlobaleFiltriDebounced = debounce(function () {
   state.globalePreFiltroAdp = "";
   applyGlobaleFiltri();
 }, 300);
