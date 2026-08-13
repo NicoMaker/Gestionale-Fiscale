@@ -74,8 +74,9 @@ function renderPage(page) {
     socket.emit("get:stats", { anno: state.anno });
   } else if (page === "clienti") {
     state._pending = "clienti";
+    // ⭐ RIMOSSA PERSISTENZA: campo di ricerca sempre vuoto
     document.getElementById("topbar-actions").innerHTML =
-      `<div class="search-wrap" style="width:240px"><span class="search-icon">🔍</span><input class="input" id="global-search-clienti" placeholder="Cerca nome, CF, P.IVA…" value="${escAttr(getSharedClienteSearch())}" oninput="setSharedClienteSearch(this.value);applyClientiFiltri()" style="font-size:13px"></div><button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="font-size:13px">⟳</button><button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️</button><button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Cliente</button>`;
+      `<div class="search-wrap" style="width:240px"><span class="search-icon">🔍</span><input class="input" id="global-search-clienti" placeholder="Cerca nome, CF, P.IVA…" value="" oninput="applyClientiFiltri()" style="font-size:13px"></div><button class="btn btn-sm btn-primary" onclick="resetClientiFiltri()" style="font-size:13px">⟳</button><button class="btn btn-print btn-sm no-print" onclick="window.print()" style="font-size:13px">🖨️</button><button class="btn btn-primary no-print" onclick="openNuovoCliente()" style="font-size:13px">+ Cliente</button>`;
     setTimeout(() => {
       if (typeof applyClientiFiltriImmediate === "function")
         applyClientiFiltriImmediate();

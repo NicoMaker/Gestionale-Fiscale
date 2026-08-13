@@ -1,3 +1,8 @@
+// ═══════════════════════════════════════════════════════════════
+// CLIENTI-FILTRI.JS — Gestione filtri e lista clienti
+// ═══════════════════════════════════════════════════════════════
+
+// ─── GET FILTRI PER RICHIESTA ────────────────────────────────
 function getFiltriPerRequest() {
   // Nessuno selezionato manualmente → filtro vuoto (0 clienti)
   if (_filtroManualeNessuno || _activeFiltroKeys.size === 0) {
@@ -14,13 +19,6 @@ function getFiltriPerRequest() {
   const col3Values = new Set();
   const periodicitaValues = new Set();
   const chiavi = [];
-  // NOTA: "combinazioni" contiene le tuple ESATTE (tipologia, col2, col3, periodicita)
-  // di ogni percorso attivo, già mappate ai valori DB. Il backend le usa per costruire
-  // un OR di combinazioni precise, invece di intersecare 4 liste indipendenti in AND
-  // (quell'approccio faceva sparire clienti di ALTRI tipi non appena si deselezionava
-  // anche un solo chip: una lista come col3_values perdeva un valore che serviva ad
-  // altre tipologie, oppure — nel caso di Privato/Socio, che hanno col3 = NULL — bastava
-  // avere QUALSIASI filtro col3 attivo per escluderli sempre, a prescindere dal chip).
   const combinazioni = [];
   const col2L2Db = _col2LabelToDb();
   const col3L2Db = _col3LabelToDb();
@@ -69,6 +67,7 @@ function buildAnniOptions(selectedAnno) {
 // ─── FILTRI DB ────────────────────────────────────────────────
 function applyClientiFiltriImmediate() {
   const search = document.getElementById("global-search-clienti")?.value || "";
+  // ⭐ NON SALVIAMO PIÙ LA RICERCA
   const anno =
     parseInt(document.getElementById("filter-anno")?.value) ||
     new Date().getFullYear();
@@ -98,8 +97,10 @@ function applyClientiFiltri() {
 
 function resetClientiFiltri() {
   const s = document.getElementById("global-search-clienti");
-  if (s) s.value = "";
-  setSharedClienteSearch("");
+  if (s) {
+    s.value = "";
+    // ⭐ Non salviamo più nulla
+  }
   const annoSelect = document.getElementById("filter-anno");
   if (annoSelect) annoSelect.value = new Date().getFullYear();
   initializeTipologieFilter();
@@ -111,21 +112,18 @@ function resetClientiFiltri() {
 
 // ─── RENDER LISTA ─────────────────────────────────────────────
 function renderClientiPage() {
-  // Ensure filters are properly initialized before rendering
   if (
     _activeFiltroKeys.size === 0 &&
     !_filtroManualeNessuno &&
     _getAllKeys().length > 0
   ) {
     initializeTipologieFilter();
-    // Force a filter refresh to ensure all clients are loaded
     setTimeout(() => {
       applyClientiFiltriImmediate();
     }, 100);
-    return; // Exit early, will be called again after filters are ready
+    return;
   }
 
-  // Double-check that we have valid filter state
   if (_activeFiltroKeys.size === 0 && !_filtroManualeNessuno && _cfg()) {
     initializeTipologieFilter();
     setTimeout(() => {
@@ -166,6 +164,8 @@ function renderClientiTabella(clienti) {
   const isNone = _filtroManualeNessuno || _activeFiltroKeys.size === 0;
   const activeCount = isNone ? 0 : _activeFiltroKeys.size;
   const totalKeys = allKeys.length;
+
+  // ⭐ NON RIPRISTINIAMO PIÙ LA RICERCA: il campo viene gestito dalla topbar
 
   const filterBar = `
     <div class="filtri-avanzati no-print" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:var(--surface2);border-radius:var(--r-sm);">
@@ -226,7 +226,6 @@ function renderClientiTabella(clienti) {
             ? `<div style="font-size:9px;color:var(--yellow);margin-top:3px" title="Configurazione ereditata dal ${c.config_anno}">📌 eredita ${c.config_anno}</div>`
             : "";
 
-        // ─── MODIFICA QUI: mostra CF e P.IVA su due righe ──────────
         const cfLine = c.codice_fiscale
           ? `<div style="font-size:11px;color:var(--t2);margin-top:2px">CF: ${escAttr(c.codice_fiscale)}</div>`
           : "";
@@ -237,7 +236,6 @@ function renderClientiTabella(clienti) {
           !c.codice_fiscale && !c.partita_iva
             ? `<div style="font-size:11px;color:var(--t2);margin-top:2px">—</div>`
             : "";
-        // ─────────────────────────────────────────────────────────────
 
         return `<tr class="clickable clienti-bulk-row" data-id="${c.id}" onclick="showClienteDettaglio(${c.id})" style="cursor:pointer">
         <td class="no-print" style="padding:12px 10px 12px 16px;width:36px" onclick="event.stopPropagation()">
@@ -347,7 +345,6 @@ function eliminaClientiSelezionati() {
   if (cbs.length === 0) return;
   const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
 
-  // Prima controlla quali si possono eliminare
   if (typeof socket === "undefined") return;
   socket.emit("check:clienti:bulk", { ids });
   socket.once("res:check:clienti:bulk", ({ success, results }) => {
