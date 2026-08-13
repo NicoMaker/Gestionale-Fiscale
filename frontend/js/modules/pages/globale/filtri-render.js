@@ -435,6 +435,12 @@ function renderGlobalePage() {
     initSearchableMultiSelect("glob-filtro-stato");
     populateGlobaleClienti();
 
+    // === AGGIUNTO LISTENER MANUALE PER STATO (in caso di eventi persi) ===
+    var statoSelect = document.getElementById("glob-filtro-stato");
+    if (statoSelect) {
+      statoSelect.addEventListener("change", applyGlobaleFiltri);
+    }
+
     var preFiltroMulti =
       state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length
         ? state.globalePreFiltroAdpMulti
@@ -549,23 +555,44 @@ function loadGlobale() {
   socket.emit("get:scadenzario_globale", { anno: state.anno, filtri: filtri });
 }
 
-// ─── GESTIONE FILTRO STATO (MULTISELECT) ─────────────────────────
+// ─── GESTIONE FILTRO STATO (MULTISELECT) – VERSIONE CORRETTA ──
 function applyGlobaleFiltri() {
+  // Se i dati non sono ancora caricati, carica e poi il filtro verrà riapplicato automaticamente
   if (!state.scadGlobale) {
     loadGlobale();
     return;
   }
 
-  const statoSelect = document.getElementById("glob-filtro-stato");
-  const statiSelezionati = statoSelect
-    ? Array.from(statoSelect.selectedOptions || []).map((o) => o.value)
-    : [];
+  // Leggi i valori selezionati dal select stato
+  var statoSelect = document.getElementById("glob-filtro-stato");
+  var statiSelezionati = [];
+  if (statoSelect) {
+    // Forza il refresh se la libreria lo supporta
+    if (statoSelect._ssRefresh) statoSelect._ssRefresh();
+    // Leggi selectedOptions (nativo) o fallback sulle option
+    if (statoSelect.selectedOptions && statoSelect.selectedOptions.length > 0) {
+      statiSelezionati = Array.from(statoSelect.selectedOptions).map(
+        function (o) {
+          return o.value;
+        },
+      );
+    } else {
+      // Fallback: controlla attributo selected su tutte le option
+      statiSelezionati = Array.from(statoSelect.options)
+        .filter(function (o) {
+          return o.selected;
+        })
+        .map(function (o) {
+          return o.value;
+        });
+    }
+  }
 
-  let dataFiltrata = state.scadGlobale;
+  var dataFiltrata = state.scadGlobale;
   if (statiSelezionati.length > 0) {
-    dataFiltrata = state.scadGlobale.filter((row) =>
-      statiSelezionati.includes(row.stato),
-    );
+    dataFiltrata = state.scadGlobale.filter(function (row) {
+      return statiSelezionati.indexOf(row.stato) !== -1;
+    });
   }
 
   if (typeof renderGlobaleTabella === "function") {
@@ -575,27 +602,39 @@ function applyGlobaleFiltri() {
   }
 }
 
+// ─── RESET COMPLETO (UNIFICATO) ──────────────────────────────
 function resetGlobaleFiltri() {
   // Reset stato
-  const statoSelect = document.getElementById("glob-filtro-stato");
+  var statoSelect = document.getElementById("glob-filtro-stato");
   if (statoSelect) {
-    Array.from(statoSelect.options).forEach((o) => (o.selected = false));
+    Array.from(statoSelect.options).forEach(function (o) {
+      o.selected = false;
+    });
     if (statoSelect._ssRefresh) statoSelect._ssRefresh();
   }
   // Reset adp
-  const adpSel = document.getElementById("glob-filtro-adp");
+  var adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
-    Array.from(adpSel.options).forEach((o) => (o.selected = false));
+    Array.from(adpSel.options).forEach(function (o) {
+      o.selected = false;
+    });
     if (adpSel._ssRefresh) adpSel._ssRefresh();
   }
   // Reset clienti
-  const clienteSel = document.getElementById("glob-sel-cliente");
+  var clienteSel = document.getElementById("glob-sel-cliente");
   if (clienteSel) {
-    Array.from(clienteSel.options).forEach((o) => (o.selected = false));
+    Array.from(clienteSel.options).forEach(function (o) {
+      o.selected = false;
+    });
     if (clienteSel._ssRefresh) clienteSel._ssRefresh();
   }
   state.globaleSelectedClienti = [];
 
+  // Resetta anche eventuali pre-filtri adp
+  state.globalePreFiltroAdp = "";
+  state.globalePreFiltroAdpMulti = null;
+
+  // Ricarica i dati
   loadGlobale();
 }
 

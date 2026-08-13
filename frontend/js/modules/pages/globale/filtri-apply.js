@@ -1,45 +1,5 @@
-function applyGlobaleFiltri() {
-  state.globalePreFiltroAdp = "";
-  loadGlobale();
-}
-
 function applyGlobaleFiltriLocali() {
   if (state.scadGlobale) renderGlobaleTabella(state.scadGlobale);
-}
-
-function resetGlobaleFiltri() {
-  state.globalePreFiltroAdp = "";
-  state.globalePreFiltroAdpMulti = null;
-  state.globaleSelectedClienti = [];
-  // ⬇️ RIMOSSO setSharedClienteSearch("") perché non serve più
-  var adpSel = document.getElementById("glob-filtro-adp");
-  if (adpSel) {
-    Array.from(adpSel.options).forEach(function (o) {
-      o.selected = false;
-    });
-    if (adpSel._ssRefresh) adpSel._ssRefresh();
-  }
-  var clienteSel = document.getElementById("glob-sel-cliente");
-  if (clienteSel) {
-    Array.from(clienteSel.options).forEach(function (o) {
-      o.selected = false;
-    });
-    if (clienteSel._ssRefresh) clienteSel._ssRefresh();
-  }
-  // ⬇️ RIMOSSO il reset di glob-search-cliente
-  var ids = ["glob-filtro-stato"];
-  for (var i = 0; i < ids.length; i++) {
-    var el = document.getElementById(ids[i]);
-    if (el) {
-      el.value = "";
-      if (el._ssRefresh) el._ssRefresh();
-    }
-  }
-  if (typeof initializeTipologieFilter === "function")
-    initializeTipologieFilter();
-  _refreshGlobTipFiltroPanel();
-  _aggiornaGlobTipFiltroCounter();
-  loadGlobale();
 }
 
 function resetGlobaleClienteSel() {
