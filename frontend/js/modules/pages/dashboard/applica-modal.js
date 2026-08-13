@@ -71,15 +71,13 @@ function buildDashboardShell(stats) {
         <h3 id="dash-adp-count-title">Adempimenti ${stats.anno}</h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:1">
           <div class="dash-filtri-bar" style="display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap">
-            <!-- ⭐ SOSTITUITO SELECT CON CHECKBOX MULTIPLE PER STATO -->
-            <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12px;background:var(--surface2);padding:4px 8px;border-radius:6px;border:1px solid var(--border);">
-              <span style="font-weight:600;color:var(--text3);margin-right:4px;">Stato:</span>
-              <label><input type="checkbox" class="dash-stato-checkbox" value="da_fare" onchange="onDashFiltroStatoAdp()"> ⭕ Da fare</label>
-              <label><input type="checkbox" class="dash-stato-checkbox" value="in_corso" onchange="onDashFiltroStatoAdp()"> 🔄 In corso</label>
-              <label><input type="checkbox" class="dash-stato-checkbox" value="completato" onchange="onDashFiltroStatoAdp()"> ✅ Completato</label>
-              <label><input type="checkbox" class="dash-stato-checkbox" value="n_a" onchange="onDashFiltroStatoAdp()"> ➖ N/A</label>
-              <button class="btn btn-xs btn-ghost" onclick="deselezionaTuttiStatiDash()" style="font-size:11px;padding:0 6px;">✕</button>
-            </div>
+            <select class="select" id="dash-filtro-stato-adp" style="width:170px;font-size:13px" onchange="onDashFiltroStatoAdp()">
+              <option value="">🔵 Tutti gli stati</option>
+              <option value="da_fare">⭕ Da fare</option>
+              <option value="in_corso">🔄 In corso</option>
+              <option value="completato">✅ Completato</option>
+              <option value="n_a">➖ N/A</option>
+            </select>
             <div class="search-wrap" style="width:220px">
               <span class="search-icon">🔍</span>
               <input class="input" id="dash-adp-search" placeholder="Cerca nome, codice..." oninput="onDashAdpSearch(this.value)" style="font-size:13px">
@@ -100,6 +98,7 @@ function buildDashboardShell(stats) {
     if (typeof initializeTipologieFilter === "function")
       initializeTipologieFilter();
 
+    // Carica stato pannello da storage
     try {
       const saved = localStorage.getItem(_getStorageKeys().FILTRI);
       if (saved) {
@@ -110,8 +109,12 @@ function buildDashboardShell(stats) {
       console.warn("[dashboard.js] Errore caricamento stato pannello:", e);
     }
 
+    // Event listener per sincronizzazione filtri solo se siamo nella dashboard
     window.addEventListener("filtriTipologieAggiornati", function (e) {
+      // Verifica che siamo effettivamente nella dashboard prima di aggiornare
       if (document.getElementById("dash-adp-grid")) {
+        // NON sovrascrivere _dashTipFiltroPanelOpen con pannelloAperto di clienti.js:
+        // i due pannelli sono indipendenti e hanno stati separati.
         _refreshDashTipFiltroPanel();
         _aggiornaDashTipFiltroCounter();
         if (state.dashStats) updateDashboardContent(state.dashStats);
@@ -120,105 +123,7 @@ function buildDashboardShell(stats) {
 
     _refreshDashTipFiltroPanel();
     _aggiornaDashTipFiltroCounter();
-
-    // ⭐ Popola la griglia degli adempimenti all'avvio (senza filtro stato)
-    renderAdempimentiGrid();
   }, 100);
-}
-
-// ─── FUNZIONE PER POPOLARE LA GRIGLIA DEGLI ADEMPIMENTI (con filtro stato) ───
-function renderAdempimentiGrid(statiFiltro) {
-  const container = document.getElementById("dash-adp-grid");
-  if (!container) return;
-
-  // Se non ci sono adempimenti, mostra messaggio
-  if (!state.adempimenti || state.adempimenti.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);">Nessun adempimento disponibile</div>`;
-    return;
-  }
-
-  // Determina gli stati selezionati (se non passati, li leggo dai checkbox)
-  if (!statiFiltro) {
-    statiFiltro = [];
-    document.querySelectorAll(".dash-stato-checkbox:checked").forEach(cb => {
-      statiFiltro.push(cb.value);
-    });
-  }
-
-  // Filtra gli adempimenti per stato (se sono stati selezionati)
-  let adpDaMostrare = state.adempimenti;
-  if (statiFiltro.length > 0) {
-    // Nota: ogni adempimento ha uno stato? In realtà la dashboard mostra gli adempimenti, non i singoli periodi.
-    // Qui ipotizziamo che lo stato sia memorizzato in state.adempimentiStati o simile.
-    // Per semplicità, se non abbiamo lo stato per singolo adempimento, filtriamo in base a qualcos'altro.
-    // Ma la richiesta originale filtrava gli adempimenti in base allo stato (forse aggregato).
-    // Poiché non abbiamo i dati, per ora filtro solo se l'adempimento ha un campo 'stato' (ipotetico).
-    // Se non esiste, mostro un messaggio.
-    // In alternativa, potremmo filtrare in base alle statistiche, ma non è presente.
-    // Per rendere funzionante il filtro, assumiamo che ogni adempimento abbia un campo 'stato' (es. da 'stato_aggregato').
-    // Se non c'è, mostriamo tutti.
-    adpDaMostrare = state.adempimenti.filter(a => {
-      // Se l'adempimento ha una proprietà 'stato', la usiamo
-      if (a.stato) {
-        return statiFiltro.includes(a.stato);
-      }
-      // Altrimenti lo mostriamo (per non perdere dati)
-      return true;
-    });
-  }
-
-  // Se dopo il filtro non c'è nulla
-  if (adpDaMostrare.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);">Nessun adempimento corrisponde ai filtri selezionati</div>`;
-    return;
-  }
-
-  // Genera HTML per ogni adempimento (esempio di card)
-  let html = '';
-  adpDaMostrare.forEach(adp => {
-    // Usa dati fittizi per la demo, adatta al tuo modello
-    const statoLabel = adp.stato ? adp.stato.replace('_', ' ').toUpperCase() : 'N/D';
-    const coloreStato = adp.stato === 'completato' ? 'var(--green)' :
-                        adp.stato === 'in_corso' ? 'var(--yellow)' :
-                        adp.stato === 'da_fare' ? 'var(--red)' : 'var(--text3)';
-    html += `
-      <div class="adp-card" style="border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--surface2);">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-weight:bold;">${escAttr(adp.codice || '')}</span>
-          <span style="font-size:11px;color:${coloreStato};background:${coloreStato}22;padding:2px 8px;border-radius:12px;">${statoLabel}</span>
-        </div>
-        <div style="font-size:13px;margin-top:4px;">${escAttr(adp.nome || '')}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;">Anno validità: ${adp.anno_validita || 'Tutti'}</div>
-      </div>
-    `;
-  });
-  container.innerHTML = html;
-}
-
-// ─── GESTIONE FILTRO STATO (CHECKBOX) ─────────────────────────
-function onDashFiltroStatoAdp() {
-  // Leggi i checkbox selezionati
-  const selezionati = [];
-  document.querySelectorAll(".dash-stato-checkbox:checked").forEach(cb => {
-    selezionati.push(cb.value);
-  });
-  renderAdempimentiGrid(selezionati);
-}
-
-function deselezionaTuttiStatiDash() {
-  document.querySelectorAll(".dash-stato-checkbox").forEach(cb => cb.checked = false);
-  onDashFiltroStatoAdp();
-}
-
-function resetDashFiltri() {
-  // Reset checkbox stati
-  document.querySelectorAll(".dash-stato-checkbox").forEach(cb => cb.checked = false);
-  // Reset search
-  const search = document.getElementById("dash-adp-search");
-  if (search) search.value = "";
-  // Richiama filtro (mostra tutti)
-  onDashFiltroStatoAdp();
-  // Eventuale reset altri filtri
 }
 
 // ─── CLIENTI SENZA ADEMPIMENTI ────────────────────────────────
@@ -325,12 +230,17 @@ function setApplicaModalita(m) {
   var btnIns = document.getElementById("applica-mode-inserisci");
   var btnEl = document.getElementById("applica-mode-elimina");
 
+  // ⭐ Usa la classe "attivo" (già definita in CSS con stili !important)
+  // invece di stili inline, che venivano sovrascritti dalla regola di base
+  // #applica-mode-inserisci/#applica-mode-elimina { ... !important } e quindi
+  // non si vedeva mai il cambio di colore al click.
   if (btnIns) btnIns.classList.toggle("attivo", m === "inserisci");
   if (btnEl) btnEl.classList.toggle("attivo", m === "elimina");
 
   var btnApplica = document.getElementById("btn-esegui-applica");
   if (btnApplica) {
     if (!m) {
+      // Nessuna modalità scelta: bottone disabilitato e neutro
       btnApplica.textContent = "⬆ Scegli modalità sopra";
       btnApplica.style.background = "var(--surface3)";
       btnApplica.style.borderColor = "var(--border)";
@@ -384,6 +294,7 @@ function apriApplicaAdempimentiPerVuoti() {
       var clientiVuotiIds = data.data.map(function (c) {
         return c.id;
       });
+      // Ricarica sempre i dati freschi dal server (vedi openApplicaAdempimenti)
       socket.emit("get:adempimenti");
       socket.once("res:adempimenti", function (adpData) {
         if (adpData.success) {
@@ -432,8 +343,11 @@ function apriModalConPreselezione(clientiVuotiIds) {
 }
 
 function openApplicaAdempimenti() {
-  _applicaTipFiltro = new Set();
-  _applicaModalita = null;
+  _applicaTipFiltro = new Set(); // reset filtro tipologia all'apertura
+  _applicaModalita = null; // ⭐ reset modalità: obbligatorio scegliere ogni volta
+  // Ricarica sempre i dati freschi dal server: usare la cache di state.adempimenti
+  // può mostrare adempimenti con anno_validita ormai superato (es. modificati
+  // in un'altra pagina/tab nella stessa sessione).
   socket.emit("get:adempimenti");
   socket.once("res:adempimenti", function (data) {
     if (data.success) {
@@ -457,6 +371,7 @@ function openApplicaAdempimenti() {
     infoBox.style.color = "";
   }
   document.getElementById("applica-adempimenti-anno").value = state.anno;
+  // ⭐ Aggiorna visivamente i bottoni in base alla modalità corrente (persistente)
   setTimeout(function () {
     setApplicaModalita(_applicaModalita);
   }, 0);
@@ -471,6 +386,7 @@ function renderApplicaAdempimentiModal() {
       '<div style="text-align:center;padding:20px">📋 Nessun adempimento</div>';
     return;
   }
+  // Mantieni selezioni precedenti durante il re-render (es. dopo ricerca)
   var prevSelezionati = new Set(
     Array.from(document.querySelectorAll(".applica-adp-checkbox:checked")).map(
       function (cb) {
@@ -490,6 +406,7 @@ function renderApplicaAdempimentiModal() {
   );
   var adpOrdinati = state.adempimenti
     .filter(function (a) {
+      // Mostra solo adempimenti senza vincolo d'anno, o validi per l'anno scelto
       return (
         a.anno_validita == null || Number(a.anno_validita) === annoCorrente
       );
@@ -540,7 +457,7 @@ function filtraAdpApplica() {
 }
 
 // ─── STATO FILTRO TIPOLOGIA APPLICA ──────────────────────────
-var _applicaTipFiltro = new Set();
+var _applicaTipFiltro = new Set(); // vuoto = tutti
 
 function _getApplicaClientiFiltrati() {
   var attiviCheck = document.getElementById("applica-clienti-solo-attivi");
@@ -648,6 +565,7 @@ function _applicaSelezionaTipologia(tc) {
         return c.tipologia_codice === tc;
       })
     : clientiFiltrati;
+  // Controlla se tutti sono già selezionati → deseleziona, altrimenti seleziona
   var ids = daGestire.map(function (c) {
     return c.id;
   });
@@ -665,10 +583,12 @@ function _applicaSelezionaTipologia(tc) {
     cb.checked = !tuttiChecked;
   });
   _aggiornaApplicaSelezionaTuttiCounter();
+  // Aggiorna il testo del bottone del gruppo
   _aggiornaBottoniGruppo();
 }
 
 function _aggiornaBottoniGruppo() {
+  // Aggiorna ogni bottone di gruppo in base allo stato attuale delle checkbox
   document.querySelectorAll("[data-gruppo-tc]").forEach(function (btn) {
     var tc = btn.dataset.gruppoTc;
     var checkboxes = Array.from(

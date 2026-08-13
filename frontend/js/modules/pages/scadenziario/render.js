@@ -62,8 +62,6 @@ function filtraScadPerAdp(idAdp) {
   if (opt) opt.selected = !opt.selected;
   if (sel._ssRefresh) sel._ssRefresh();
 
-  // Applica il filtro adp, ma non ricarica i dati dal server
-  // Usa i dati già presenti in state.scadenzario
   if (state.scadenzario) {
     renderScadenzarioTabella(state.scadenzario);
   }
@@ -142,19 +140,22 @@ function renderScadenzarioSelect(clienti) {
     </div>
     <select class="select topbar-select" id="scad-filtro-adp" multiple onchange="applyScadFiltriAdp()" title="Filtra per uno o più adempimenti" style="min-width:160px;max-width:220px" data-placeholder="📋 Tutti adempimenti">
     </select>
-    <!-- ⭐ SOSTITUITO SELECT STATO CON CHECKBOX MULTIPLE -->
-    <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12px;background:var(--surface2);padding:4px 8px;border-radius:6px;border:1px solid var(--border);">
-      <span style="font-weight:600;color:var(--text3);margin-right:4px;">Stato:</span>
-      <label><input type="checkbox" class="scad-stato-checkbox" value="da_fare" onchange="applyScadFiltri()"> ⭕ Da fare</label>
-      <label><input type="checkbox" class="scad-stato-checkbox" value="in_corso" onchange="applyScadFiltri()"> 🔄 In corso</label>
-      <label><input type="checkbox" class="scad-stato-checkbox" value="completato" onchange="applyScadFiltri()"> ✅ Completato</label>
-      <label><input type="checkbox" class="scad-stato-checkbox" value="n_a" onchange="applyScadFiltri()"> ➖ N/A</label>
-      <button class="btn btn-xs btn-ghost" onclick="deselezionaTuttiStatiScad()" style="font-size:11px;padding:0 6px;">✕</button>
-    </div>
-    <!-- Fine sostituzione -->
+    <!-- ⭐ FILTRO STATO CON SEARCHABLE MULTISELECT -->
+    <select class="select topbar-select" id="scad-filtro-stato" multiple onchange="applyScadFiltri()" style="min-width:160px;max-width:200px" data-placeholder="📋 Tutti gli stati">
+      <option value="da_fare">⭕ Da fare</option>
+      <option value="in_corso">🔄 In corso</option>
+      <option value="completato">✅ Completato</option>
+      <option value="n_a">➖ N/A</option>
+    </select>
     `;
 
   initSearchableSelect("sel-cliente");
+
+  // Inizializza i multiselect
+  var statoSelect = document.getElementById("scad-filtro-stato");
+  if (statoSelect && !statoSelect.dataset.ssinit) {
+    initSearchableMultiSelect("scad-filtro-stato");
+  }
 
   if (state.selectedCliente) loadScadenzario();
   else
@@ -214,7 +215,6 @@ function changeAnnoScad(d) {
 }
 
 function loadScadenzario() {
-  // Non usiamo più il filtro stato singolo dal select, lo gestiamo lato client
   if (typeof socket !== "undefined") {
     if (!state.adempimenti || state.adempimenti.length === 0) {
       socket.emit("get:adempimenti");
@@ -222,7 +222,7 @@ function loadScadenzario() {
     socket.emit("get:scadenzario", {
       id_cliente: state.selectedCliente.id,
       anno: state.anno,
-      filtri: { stato: '' } // non inviamo filtro stato, lo facciamo dopo
+      filtri: { stato: '' } // non inviamo filtro stato, lo applichiamo lato client
     });
     socket.emit("get:adempimenti_cliente", {
       id_cliente: state.selectedCliente.id,
@@ -231,14 +231,11 @@ function loadScadenzario() {
   }
 }
 
-// ⭐ MODIFICATA per gestire il filtro stato multiplo lato client
 function applyScadFiltriAdp() {
   if (!state.scadenzario) return;
-  // Applica filtro adp e stato
   renderScadenzarioTabella(state.scadenzario);
 }
 
-// ⭐ MODIFICATA per non ricaricare da server, ma filtrare i dati esistenti
 function applyScadFiltri() {
   if (!state.scadenzario) return;
   renderScadenzarioTabella(state.scadenzario);
@@ -265,9 +262,13 @@ function filterAdpButtons() {
 }
 
 function resetScadFiltri() {
-  // Reset checkbox stato
-  document.querySelectorAll(".scad-stato-checkbox").forEach(cb => cb.checked = false);
-  // Reset filtro adp
+  // Reset stato
+  const statoSelect = document.getElementById("scad-filtro-stato");
+  if (statoSelect) {
+    Array.from(statoSelect.options).forEach((o) => (o.selected = false));
+    if (statoSelect._ssRefresh) statoSelect._ssRefresh();
+  }
+  // Reset adp
   const adpSelect = document.getElementById("scad-filtro-adp");
   if (adpSelect) {
     Array.from(adpSelect.options).forEach((o) => (o.selected = false));
@@ -284,18 +285,11 @@ function resetScadFiltri() {
   if (state.scadenzario) renderScadenzarioTabella(state.scadenzario);
 }
 
-function deselezionaTuttiStatiScad() {
-  document.querySelectorAll(".scad-stato-checkbox").forEach(cb => cb.checked = false);
-  applyScadFiltri();
-}
-
 // ─── RENDER TABELLA ───────────────────────────────────────────
-// ⭐ MODIFICATA per applicare filtro stato multiplo (checkbox)
 function renderScadenzarioTabella(data) {
   const c = state.selectedCliente;
   if (!c) return;
 
-  // Aggiorna il filtro adp (select multiplo)
   aggiornaFiltroAdpScad(data);
 
   // ── Filtro per adempimenti ──
@@ -304,11 +298,9 @@ function renderScadenzarioTabella(data) {
     ? data.filter((r) => adpFiltroIds.includes(String(r.id_adempimento)))
     : data;
 
-  // ── Filtro per stato (checkbox) ──
-  const statiSelezionati = [];
-  document.querySelectorAll(".scad-stato-checkbox:checked").forEach(cb => {
-    statiSelezionati.push(cb.value);
-  });
+  // ── Filtro per stato (multiselect) ──
+  const statoSelect = document.getElementById("scad-filtro-stato");
+  const statiSelezionati = statoSelect ? Array.from(statoSelect.selectedOptions || []).map(o => o.value) : [];
   if (statiSelezionati.length > 0) {
     dataFiltrata = dataFiltrata.filter(r => statiSelezionati.includes(r.stato));
   }

@@ -407,7 +407,7 @@ function renderGlobalePage() {
         : [];
   }
 
-  // ⬇️ SOSTITUITO IL SELECT STATO CON CHECKBOX MULTIPLE
+  // ⬇️ INSERITO IL MULTISELECT PER STATO
   document.getElementById("topbar-actions").innerHTML =
     '<div class="year-sel">' +
     '<button onclick="changeAnnoGlobale(-1)" title="Anno precedente">&#9664;</button>' +
@@ -420,20 +420,19 @@ function renderGlobalePage() {
     "</select>" +
     '<select class="select" id="glob-filtro-adp" multiple style="width:210px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per uno o più tipi di adempimento" data-placeholder="📋 Tutti adempimenti">' +
     "</select>" +
-    // ⭐ NUOVO GRUPPO DI CHECKBOX PER STATO
-    '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12px;background:var(--surface2);padding:4px 8px;border-radius:6px;border:1px solid var(--border);">' +
-    '<span style="font-weight:600;color:var(--text3);margin-right:4px;">Stato:</span>' +
-    '<label><input type="checkbox" class="glob-stato-checkbox" value="da_fare" onchange="applyGlobaleFiltri()"> ⭕ Da fare</label>' +
-    '<label><input type="checkbox" class="glob-stato-checkbox" value="in_corso" onchange="applyGlobaleFiltri()"> 🔄 In corso</label>' +
-    '<label><input type="checkbox" class="glob-stato-checkbox" value="completato" onchange="applyGlobaleFiltri()"> ✅ Completato</label>' +
-    '<label><input type="checkbox" class="glob-stato-checkbox" value="n_a" onchange="applyGlobaleFiltri()"> ➖ N/A</label>' +
-    '<button class="btn btn-xs btn-ghost" onclick="deselezionaTuttiStatiGlob()" style="font-size:11px;padding:0 6px;">✕</button>' +
-    "</div>" +
+    '<select class="select" id="glob-filtro-stato" multiple style="width:200px;font-size:13px" onchange="applyGlobaleFiltri()" data-placeholder="🔵 Tutti gli stati">' +
+    '<option value="da_fare">⭕ Da fare</option>' +
+    '<option value="in_corso">🔄 In corso</option>' +
+    '<option value="completato">✅ Completato</option>' +
+    '<option value="n_a">➖ N/A</option>' +
+    "</select>" +
     '<button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>' +
     '<button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>';
 
   setTimeout(function () {
+    // Inizializza multiselect per adp, clienti e stato
     initSearchableMultiSelect("glob-filtro-adp");
+    initSearchableMultiSelect("glob-filtro-stato");
     populateGlobaleClienti();
 
     var preFiltroMulti =
@@ -544,56 +543,27 @@ function loadGlobale() {
     filtri.adempimento = [state.globalePreFiltroAdp];
   }
 
-  // ⭐ NON inviamo più il filtro stato al server
-  // if (statoSel && statoSel.value) filtri.stato = statoSel.value;
-
   if (state.globaleSelectedClienti && state.globaleSelectedClienti.length)
     filtri.cliente_id = state.globaleSelectedClienti.slice();
 
   socket.emit("get:scadenzario_globale", { anno: state.anno, filtri: filtri });
 }
 
-// ─── GESTIONE FILTRO STATO (CHECKBOX) ─────────────────────────
-function getGlobStatiSelezionati() {
-  var selezionati = [];
-  document.querySelectorAll(".glob-stato-checkbox:checked").forEach(function(cb) {
-    selezionati.push(cb.value);
-  });
-  return selezionati;
-}
-
-function deselezionaTuttiStatiGlob() {
-  document.querySelectorAll(".glob-stato-checkbox").forEach(function(cb) {
-    cb.checked = false;
-  });
-  applyGlobaleFiltri();
-}
-
-// ⭐ MODIFICATA: ora filtra i dati già presenti in state.scadGlobale
+// ─── GESTIONE FILTRO STATO (MULTISELECT) ─────────────────────────
 function applyGlobaleFiltri() {
   if (!state.scadGlobale) {
-    // Se non ci sono ancora dati, caricali
     loadGlobale();
     return;
   }
 
-  // Ottieni gli stati selezionati
-  var statiSelezionati = getGlobStatiSelezionati();
+  const statoSelect = document.getElementById("glob-filtro-stato");
+  const statiSelezionati = statoSelect ? Array.from(statoSelect.selectedOptions || []).map(o => o.value) : [];
 
-  // Filtra i dati (se non ci sono stati selezionati, mostra tutto)
-  var dataFiltrata = state.scadGlobale;
+  let dataFiltrata = state.scadGlobale;
   if (statiSelezionati.length > 0) {
-    dataFiltrata = state.scadGlobale.filter(function(row) {
-      return statiSelezionati.indexOf(row.stato) !== -1;
-    });
+    dataFiltrata = state.scadGlobale.filter(row => statiSelezionati.includes(row.stato));
   }
 
-  // Applica anche il filtro cliente e adp? I filtri cliente e adp sono già applicati
-  // dal server, ma se vogliamo riapplicarli lato client, possiamo farlo qui.
-  // Per semplicità, supponiamo che i filtri cliente e adp siano già in dataFiltrata.
-  // Se invece vuoi filtrare anche quelli, puoi aggiungere logica aggiuntiva.
-
-  // Chiama la funzione di render (deve esistere)
   if (typeof renderGlobaleTabella === "function") {
     renderGlobaleTabella(dataFiltrata);
   } else {
@@ -601,33 +571,30 @@ function applyGlobaleFiltri() {
   }
 }
 
-// ⭐ RISCRITTA per resettare anche i checkbox stato
 function resetGlobaleFiltri() {
-  // Resetta checkbox stato
-  document.querySelectorAll(".glob-stato-checkbox").forEach(function(cb) {
-    cb.checked = false;
-  });
-
-  // Resetta select adp
-  var adpSel = document.getElementById("glob-filtro-adp");
+  // Reset stato
+  const statoSelect = document.getElementById("glob-filtro-stato");
+  if (statoSelect) {
+    Array.from(statoSelect.options).forEach(o => o.selected = false);
+    if (statoSelect._ssRefresh) statoSelect._ssRefresh();
+  }
+  // Reset adp
+  const adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
-    Array.from(adpSel.options).forEach(function(o) { o.selected = false; });
+    Array.from(adpSel.options).forEach(o => o.selected = false);
     if (adpSel._ssRefresh) adpSel._ssRefresh();
   }
-
-  // Resetta clienti selezionati
-  var clienteSel = document.getElementById("glob-sel-cliente");
+  // Reset clienti
+  const clienteSel = document.getElementById("glob-sel-cliente");
   if (clienteSel) {
-    Array.from(clienteSel.options).forEach(function(o) { o.selected = false; });
+    Array.from(clienteSel.options).forEach(o => o.selected = false);
     if (clienteSel._ssRefresh) clienteSel._ssRefresh();
   }
   state.globaleSelectedClienti = [];
 
-  // Ricarica i dati senza filtri
   loadGlobale();
 }
 
-// ⭐ Debounce per evitare troppe chiamate
 var applyGlobaleFiltriDebounced = debounce(function() {
   state.globalePreFiltroAdp = "";
   applyGlobaleFiltri();
