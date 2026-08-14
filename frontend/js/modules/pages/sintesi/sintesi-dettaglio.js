@@ -295,69 +295,76 @@ function _generaFinestraStampa() {
     }
   });
 
-  // ---- 7. Genera HTML per la stampa ----
+  // ---- 7. Genera HTML per la stampa — VERO FOGLIO DI CALCOLO:
+  //         righe = clienti, colonne = adempimenti, celle colorate.
+  //         L'intestazione (<thead>) si ripete automaticamente su ogni
+  //         pagina stampata, come le "righe da ripetere" di Excel.
   var htmlParts = [];
   htmlParts.push(
     '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sintesi Adempimenti ' +
       state.anno +
       "</title><style>",
   );
+  htmlParts.push("@page{size:landscape;margin:10mm}");
   htmlParts.push(
-    "body{font-family:Arial,sans-serif;padding:20px;max-width:1200px;margin:0 auto}",
+    "*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;padding:0;margin:0;color:#1a2233}",
   );
   htmlParts.push(
-    ".header{text-align:center;margin-bottom:30px;border-bottom:2px solid #333;padding-bottom:15px}",
+    ".header{text-align:center;margin-bottom:14px;border-bottom:2px solid #1F3B57;padding-bottom:10px}",
   );
-  htmlParts.push(".header h1{font-size:24px;margin:0;color:#333}");
-  htmlParts.push(".header p{font-size:14px;color:#666;margin:5px 0 0}");
-  htmlParts.push(".header .date{font-size:12px;color:#999;margin:2px 0 0}");
+  htmlParts.push(".header h1{font-size:20px;margin:0;color:#1F3B57}");
+  htmlParts.push(".header p{font-size:12px;color:#667085;margin:4px 0 0}");
+  htmlParts.push(".header .date{font-size:10.5px;color:#98a2b3;margin:2px 0 0}");
   htmlParts.push(
-    ".cliente-card{margin-bottom:25px;border:1px solid #ddd;border-radius:8px;padding:15px;page-break-inside:avoid;background:#f9f9f9}",
+    "table.xlv{border-collapse:collapse;width:100%;table-layout:fixed;font-size:10.5px}",
   );
+  htmlParts.push("table.xlv thead{display:table-header-group}");
+  htmlParts.push("table.xlv tr{page-break-inside:avoid}");
   htmlParts.push(
-    ".cliente-header{display:flex;align-items:center;gap:15px;margin-bottom:12px;border-bottom:2px solid #888;padding-bottom:10px;flex-wrap:wrap}",
-  );
-  htmlParts.push(".cliente-nome{font-size:20px;font-weight:700;color:#333}");
-  htmlParts.push(
-    ".cliente-tip{font-size:12px;color:#666;background:#eee;padding:2px 10px;border-radius:12px}",
-  );
-  htmlParts.push(".cliente-cf{font-size:11px;color:#888}");
-  htmlParts.push(
-    ".adp-row{display:grid;grid-template-columns:180px 1fr;gap:10px;padding:6px 10px;border-radius:4px;background:#fff;border:1px solid #eee;align-items:center;margin-bottom:4px}",
-  );
-  htmlParts.push(".adp-nome{font-weight:600;font-size:13px;color:#333}");
-  htmlParts.push(
-    ".adp-codice{font-size:10px;color:#999;font-weight:400;display:block}",
-  );
-  htmlParts.push(".adp-stato{font-size:13px;font-weight:700;min-width:80px}");
-  htmlParts.push(
-    ".adp-periodi{display:flex;flex-wrap:wrap;align-items:center;gap:4px}",
+    "table.xlv th{background:#1F3B57;color:#fff;font-size:9.5px;font-weight:700;padding:6px 4px;border:1px solid #ccd3da;text-align:center;letter-spacing:.02em}",
   );
   htmlParts.push(
-    ".periodo-chip{display:inline-block;margin:1px 2px;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600}",
-  );
-  htmlParts.push(".adp-scadenze{font-size:10px;color:#999;margin-left:4px}");
-  htmlParts.push(
-    ".no-data{padding:10px;text-align:center;color:#999;font-size:13px;background:#fff;border-radius:4px;border:1px dashed #ddd}",
+    "table.xlv th.corner{text-align:left;width:150px;font-size:10.5px}",
   );
   htmlParts.push(
-    ".footer{text-align:center;margin-top:30px;padding-top:15px;border-top:1px solid #ddd;font-size:11px;color:#999}",
+    "table.xlv td{border:1px solid #d8dee5;padding:4px 3px;text-align:center;vertical-align:middle;font-weight:700}",
   );
-  htmlParts.push(".stato-done{color:#2e7d32}");
-  htmlParts.push(".stato-partial{color:#f9a825}");
-  htmlParts.push(".stato-todo{color:#c62828}");
-  htmlParts.push(".stato-na{color:#888}");
-  htmlParts.push(".bg-done{background:#e8f5e9;border-color:#a5d6a7}");
-  htmlParts.push(".bg-partial{background:#fff8e1;border-color:#ffcc02}");
-  htmlParts.push(".bg-todo{background:#ffebee;border-color:#ef9a9a}");
-  htmlParts.push(".bg-na{background:#f5f5f5;border-color:#e0e0e0}");
+  htmlParts.push(
+    "table.xlv td.nome-cell{text-align:left;font-weight:700;background:#f4f6f8;padding:5px 6px}",
+  );
+  htmlParts.push(
+    "table.xlv td.nome-cell .cf{display:block;font-weight:400;font-size:9px;color:#667085}",
+  );
+  htmlParts.push("table.xlv tbody tr:nth-child(even) td.nome-cell{background:#eceef1}");
+  htmlParts.push(".bg-done{background:#dcf5e6;color:#1e8e5a}");
+  htmlParts.push(".bg-partial{background:#fcf1d8;color:#b8860b}");
+  htmlParts.push(".bg-todo{background:#fbe0de;color:#c0392b}");
+  htmlParts.push(".bg-na{background:#ecedef;color:#6b7280}");
+  htmlParts.push(
+    ".legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:10px;color:#475467}",
+  );
+  htmlParts.push(
+    ".legend span.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}",
+  );
+  htmlParts.push(
+    ".adp-legend{margin-top:14px;font-size:9.5px;color:#475467;columns:3;column-gap:24px}",
+  );
+  htmlParts.push(
+    ".adp-legend div{break-inside:avoid;padding:2px 0;border-bottom:1px dotted #e3e6ea}",
+  );
+  htmlParts.push(
+    ".no-data{padding:30px;text-align:center;color:#98a2b3;font-size:13px}",
+  );
+  htmlParts.push(
+    ".footer{text-align:center;margin-top:14px;padding-top:8px;border-top:1px solid #e3e6ea;font-size:9.5px;color:#98a2b3}",
+  );
   htmlParts.push("</style></head><body>");
 
   htmlParts.push(
-    '<div class="header"><h1>🧮 Sintesi Adempimenti ' + state.anno + "</h1>",
+    '<div class="header"><h1>📊 Sintesi Adempimenti ' + state.anno + "</h1>",
   );
   htmlParts.push(
-    "<p>Lista degli adempimenti visibili con i filtri attuali</p>",
+    "<p>Matrice Clienti × Adempimenti — vista foglio di calcolo, con i filtri attuali</p>",
   );
   htmlParts.push(
     '<div class="date">Stampato il ' +
@@ -367,136 +374,92 @@ function _generaFinestraStampa() {
       "</div></div>",
   );
 
-  clientiDaStampare.forEach(function (item) {
-    var cliente = item.cliente;
-    var tipColor =
-      cliente.tipologia_colore ||
-      (typeof getTipologiaColor === "function"
-        ? getTipologiaColor(cliente.tipologia_codice)
-        : "#888");
+  if (clientiDaStampare.length === 0 || columns.length === 0) {
+    htmlParts.push(
+      '<div class="no-data">Nessun adempimento da stampare con i filtri correnti.</div>',
+    );
+  } else {
+    // Header: Cliente + una colonna per ogni adempimento (codice, compatto)
+    htmlParts.push('<table class="xlv"><thead><tr>');
+    htmlParts.push('<th class="corner">Cliente</th>');
+    columns.forEach(function (adp) {
+      htmlParts.push("<th>" + escAttr(adp.codice || adp.nome) + "</th>");
+    });
+    htmlParts.push("</tr></thead><tbody>");
 
-    htmlParts.push('<div class="cliente-card">');
-    htmlParts.push(
-      '<div class="cliente-header" style="border-bottom-color:' +
-        tipColor +
-        '">',
-    );
-    htmlParts.push(
-      '<div class="cliente-nome">' + escAttr(cliente.nome) + "</div>",
-    );
-    htmlParts.push(
-      '<div class="cliente-tip">' +
-        (cliente.tipologia_codice || "-") +
-        "</div>",
-    );
-    if (cliente.codice_fiscale) {
+    clientiDaStampare.forEach(function (item) {
+      var cliente = item.cliente;
+      htmlParts.push("<tr>");
       htmlParts.push(
-        '<div class="cliente-cf">CF: ' + cliente.codice_fiscale + "</div>",
+        '<td class="nome-cell">' +
+          escAttr(cliente.nome) +
+          (cliente.codice_fiscale || cliente.partita_iva
+            ? '<span class="cf">' +
+              (cliente.codice_fiscale || cliente.partita_iva) +
+              "</span>"
+            : "") +
+          "</td>",
       );
-    }
-    htmlParts.push("</div>");
-
-    item.adempimenti.forEach(function (adpItem) {
-      var adp = adpItem.adp;
-      var periodi = adpItem.periodi;
-      var st = adpItem.stato;
-
-      var statoIcon =
-        st.kind === "done"
-          ? "✅"
-          : st.kind === "partial"
-            ? "🔄"
-            : st.kind === "todo"
-              ? "⭕"
-              : "➖";
-      var statoClass = "stato-" + st.kind;
-      var bgClass = "bg-" + st.kind;
-
-      var sortedP = periodi.slice().sort(function (a, b) {
-        if (a.mese != null && b.mese != null) return a.mese - b.mese;
-        if (a.trimestre != null && b.trimestre != null)
-          return a.trimestre - b.trimestre;
-        if (a.semestre != null && b.semestre != null)
-          return a.semestre - b.semestre;
-        return 0;
+      // una cella per OGNI colonna definita globalmente (non solo quelle
+      // filtrate per questo cliente), così le righe restano allineate
+      var byAdpId = {};
+      item.adempimenti.forEach(function (ai) {
+        byAdpId[ai.adp.id] = ai;
       });
-
-      var periodiDetails = sortedP
-        .map(function (p) {
-          var pStato = p.stato || "da_fare";
-          var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
-          var pLabel =
-            typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
-          return (
-            '<span class="periodo-chip" style="background:' +
-            pInfo.color +
-            "22;border:1px solid " +
-            pInfo.color +
-            "55;color:" +
-            pInfo.color +
-            ';">' +
-            pInfo.icon +
-            " " +
-            pLabel +
-            "</span>"
-          );
-        })
-        .join("");
-
-      var scadenzaDates = sortedP
-        .map(function (p) {
-          return p.data_scadenza ? formattaDataItaliana(p.data_scadenza) : null;
-        })
-        .filter(function (d) {
-          return d;
-        });
-
-      htmlParts.push('<div class="adp-row ' + bgClass + '">');
-      htmlParts.push(
-        '<div class="adp-nome">' +
-          escAttr(adp.nome) +
-          '<span class="adp-codice">' +
-          escAttr(adp.codice || "") +
-          "</span></div>",
-      );
-      htmlParts.push('<div><div class="adp-periodi">');
-      htmlParts.push(
-        '<span class="adp-stato ' +
-          statoClass +
-          '">' +
-          statoIcon +
-          " " +
-          st.label +
-          "</span>",
-      );
-      if (periodi.length > 0) {
+      columns.forEach(function (adp) {
+        var ai = byAdpId[adp.id];
+        if (!ai) {
+          htmlParts.push('<td class="bg-na">—</td>');
+          return;
+        }
+        var st = ai.stato;
+        var icon =
+          st.kind === "done"
+            ? "✔"
+            : st.kind === "partial"
+              ? "◐"
+              : st.kind === "todo"
+                ? "○"
+                : "—";
         htmlParts.push(
-          '<span style="font-size:11px;color:#888;">' +
-            periodi.length +
-            " periodi</span>",
+          '<td class="bg-' +
+            st.kind +
+            '" title="' +
+            escAttr(adp.nome) +
+            " — " +
+            escAttr(st.label) +
+            '">' +
+            icon +
+            (ai.periodi.length > 1 ? " " + st.label : "") +
+            "</td>",
         );
-      }
-      htmlParts.push(periodiDetails);
-      if (scadenzaDates.length > 0) {
-        htmlParts.push(
-          '<span class="adp-scadenze">📅 ' +
-            scadenzaDates.join(", ") +
-            "</span>",
-        );
-      }
-      htmlParts.push("</div></div></div>");
+      });
+      htmlParts.push("</tr>");
     });
 
-    htmlParts.push("</div>");
-  });
+    htmlParts.push("</tbody></table>");
 
-  if (clientiDaStampare.length === 0) {
     htmlParts.push(
-      '<div class="no-data" style="text-align:center;padding:30px;">Nessun adempimento da stampare con i filtri correnti.</div>',
+      '<div class="legend">' +
+        '<span><span class="sw" style="background:#1e8e5a"></span>✔ Completato</span>' +
+        '<span><span class="sw" style="background:#b8860b"></span>◐ In corso</span>' +
+        '<span><span class="sw" style="background:#c0392b"></span>○ Da fare</span>' +
+        '<span><span class="sw" style="background:#6b7280"></span>— N/A</span>' +
+        "</div>",
     );
-  }
 
-  htmlParts.push("</body></html>");
+    htmlParts.push('<div class="adp-legend">');
+    columns.forEach(function (adp) {
+      htmlParts.push(
+        "<div><strong>" +
+          escAttr(adp.codice || "") +
+          "</strong> — " +
+          escAttr(adp.nome) +
+          "</div>",
+      );
+    });
+    htmlParts.push("</div>");
+  }
 
   var html = htmlParts.join("");
 

@@ -1,0 +1,112 @@
+/* ════════════════════════════════════════════════════════════════
+   GLOBALE-EXCEL.CSS — Vista Globale come "foglio di calcolo"
+   ───────────────────────────────────────────────────────────────
+   Ogni scheda-adempimento diventa una vera tabella: clienti in riga,
+   periodi in colonna, intestazione e prima colonna "congelate" come
+   in Excel, griglia sottile, righe alternate. La sidebar/topbar
+   dell'app non viene toccata: cambia solo l'area dati.
+   ════════════════════════════════════════════════════════════════ */
+
+.gxlv-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  border-top: 1px solid var(--b0);
+  -webkit-overflow-scrolling: touch;
+}
+
+.gxlv-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  table-layout: auto;
+}
+
+.gxlv-th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--s2);
+  color: var(--t2);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 9px 10px;
+  border-bottom: 2px solid var(--b1);
+  border-right: 1px solid var(--b0);
+  white-space: nowrap;
+}
+
+.gxlv-th-corner {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  text-align: left;
+  min-width: 230px;
+  border-right: 2px solid var(--b1);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.gxlv-td-cliente {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--bg);
+  min-width: 230px;
+  max-width: 260px;
+  padding: 10px 12px;
+  border-right: 2px solid var(--b1);
+  border-bottom: 1px solid var(--b0);
+  vertical-align: top;
+  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.02);
+}
+
+.gxlv-tr.gxlv-band .gxlv-td-cliente,
+.gxlv-tr.gxlv-band .gxlv-td {
+  background: var(--s0);
+}
+
+.gxlv-td {
+  padding: 6px;
+  border-right: 1px solid var(--b0);
+  border-bottom: 1px solid var(--b0);
+  vertical-align: top;
+  min-width: 155px;
+}
+
+.gxlv-tr:hover .gxlv-td-cliente,
+.gxlv-tr:hover .gxlv-td {
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+}
+.gxlv-tr:hover .gxlv-td-cliente {
+  border-right-color: var(--accent);
+}
+
+.gxlv-td .periodo-pill,
+.gxlv-td .checkbox-pill,
+.gxlv-td .text-only-pill {
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+}
+
+.gxlv-td:empty::after {
+  content: "—";
+  display: block;
+  text-align: center;
+  color: var(--t3);
+  opacity: 0.4;
+  padding: 10px 0;
+}
+
+@media print {
+  .gxlv-scroll {
+    overflow: visible;
+  }
+  .gxlv-th,
+  .gxlv-th-corner,
+  .gxlv-td-cliente {
+    position: static;
+  }
+}

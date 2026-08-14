@@ -61,6 +61,19 @@ function renderGlobaleTabella(rawData) {
     adpFiltroAttivi = [state.globalePreFiltroAdp];
   }
 
+  // ⭐ FIX: applica davvero il filtro "adempimenti" selezionato nel select
+  // sopra la tabella (prima veniva letto solo per mostrare i badge, senza
+  // filtrare i dati).
+  if (adpFiltroAttivi.length > 0) {
+    var adpFiltroSet = {};
+    for (var afIdx = 0; afIdx < adpFiltroAttivi.length; afIdx++) {
+      adpFiltroSet[adpFiltroAttivi[afIdx]] = true;
+    }
+    data = data.filter(function (r) {
+      return adpFiltroSet[r.adempimento_nome];
+    });
+  }
+
   var filtroClienteStatoLabels = {
     con_in_corso: "🔄 Con almeno 1 in corso",
     senza_in_corso: "✅ Senza in corso",
@@ -296,6 +309,35 @@ function renderGlobaleTabella(rawData) {
     var totG = allRows.length;
     var pG = totG > 0 ? Math.round((compG / totG) * 100) : 0;
 
+    // ── Colonne del gruppo (unione ordinata dei periodi di TUTTI i clienti:
+    //    Gen..Dic / T1..T4 / S1,S2 / Ann.) — così ogni adempimento ha la sua
+    //    scheda "foglio di calcolo": clienti in riga, periodi in colonna. ──
+    var COL_ORDER = [
+      "Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic",
+      "T1","T2","T3","T4","S1","S2","Ann.",
+    ];
+    var colSetGrp = {};
+    for (var colScanIdx = 0; colScanIdx < clientiFiltrati.length; colScanIdx++) {
+      var colScanPeriodi = clientiFiltrati[colScanIdx].periodi;
+      for (var colScanP = 0; colScanP < colScanPeriodi.length; colScanP++) {
+        colSetGrp[getPeriodoShort(colScanPeriodi[colScanP])] = true;
+      }
+    }
+    var colsGrp = COL_ORDER.filter(function (k) {
+      return colSetGrp[k];
+    });
+    // fallback: eventuali chiavi periodo non previste nell'ordine standard
+    for (var k2 in colSetGrp) {
+      if (colSetGrp.hasOwnProperty(k2) && colsGrp.indexOf(k2) === -1)
+        colsGrp.push(k2);
+    }
+
+    var theadColsHtml = "";
+    for (var thc = 0; thc < colsGrp.length; thc++) {
+      theadColsHtml +=
+        '<th class="gxlv-th">' + escAttr(colsGrp[thc]) + "</th>";
+    }
+
     var clientiHtml = "";
     for (var cFilIdx = 0; cFilIdx < clientiFiltrati.length; cFilIdx++) {
       var client = clientiFiltrati[cFilIdx];
@@ -343,12 +385,29 @@ function renderGlobaleTabella(rawData) {
       var classBadgesHtml = _renderGlobaleClienteClassBadges(client);
       var sottotipoLabel = client.sottotipologia_nome || "";
 
-      var periodiHtml = _buildPeriodiOrdinatiHtml(client.periodi);
-      var isMensile = client.periodi.length > 4;
+      // Mappa periodo-chiave → pill HTML, per posizionare ogni pillola
+      // nella colonna corretta della riga di questo cliente.
+      var pillByCol = {};
+      for (var mpIdx = 0; mpIdx < client.periodi.length; mpIdx++) {
+        var mpR = client.periodi[mpIdx];
+        pillByCol[getPeriodoShort(mpR)] = renderPeriodoPill(mpR);
+      }
+
+      var rigaCelleHtml = "";
+      for (var cc = 0; cc < colsGrp.length; cc++) {
+        var pillCell = pillByCol[colsGrp[cc]];
+        rigaCelleHtml +=
+          '<td class="gxlv-td">' + (pillCell || "") + "</td>";
+      }
+
+      var bandFillGrp = cFilIdx % 2 === 1 ? " gxlv-band" : "";
 
       clientiHtml +=
-        '<div class="glob-cliente-card">' +
-        '<div class="glob-cliente-header">' +
+        '<tr class="gxlv-tr' +
+        bandFillGrp +
+        '">' +
+        '<td class="gxlv-td-cliente">' +
+        '<div class="glob-cliente-header" style="border:none;padding:0;background:none">' +
         '<div class="gcr-avatar" style="border-color:' +
         tipColor +
         ";color:" +
@@ -378,8 +437,7 @@ function renderGlobaleTabella(rawData) {
             situazioneBadges +
             "</div>"
           : "") +
-        "</div>" +
-        '<div style="display:flex;align-items:center;gap:8px;margin-left:10px">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-top:6px">' +
         '<div class="mini-bar" style="width:56px"><div class="mini-fill" style="width:' +
         pC +
         "%;background:" +
@@ -392,22 +450,18 @@ function renderGlobaleTabella(rawData) {
         "/" +
         totC +
         "</span>" +
-        "</div>" +
-        '<div style="display:flex;flex-direction:column;gap:5px;margin-left:8px">' +
         '<button class="btn btn-xs" onclick="event.stopPropagation();editCliente(' +
         client.id +
-        ')" title="Modifica dati cliente" style="font-size:11px;padding:3px 7px;border:1px solid var(--accent,#2563eb);color:var(--accent,#2563eb);background:transparent;border-radius:5px;cursor:pointer;white-space:nowrap">✏️ Modifica</button>' +
+        ')" title="Modifica dati cliente" style="font-size:11px;padding:2px 6px;border:1px solid var(--accent,#2563eb);color:var(--accent,#2563eb);background:transparent;border-radius:5px;cursor:pointer;white-space:nowrap;margin-left:auto">✏️</button>' +
         '<button class="btn btn-xs" onclick="event.stopPropagation();attivaModalitaSelezioneGlobale(' +
         client.id +
-        ')" title="Seleziona periodi di questo cliente per eliminarli" style="font-size:11px;padding:3px 7px;border:1px solid var(--red,#dc2626);color:var(--red,#dc2626);background:transparent;border-radius:5px;cursor:pointer;white-space:nowrap">☑ Seleziona</button>' +
+        ')" title="Seleziona periodi di questo cliente per eliminarli" style="font-size:11px;padding:2px 6px;border:1px solid var(--red,#dc2626);color:var(--red,#dc2626);background:transparent;border-radius:5px;cursor:pointer;white-space:nowrap">☑</button>' +
         "</div>" +
         "</div>" +
-        '<div class="glob-cliente-periodi' +
-        (isMensile ? " periodi-mensili" : "") +
-        '">' +
-        periodiHtml +
         "</div>" +
-        "</div>";
+        "</td>" +
+        rigaCelleHtml +
+        "</tr>";
     }
 
     content +=
@@ -443,8 +497,16 @@ function renderGlobaleTabella(rawData) {
       "%)</span>" +
       "</div>" +
       "</div>" +
-      '<div style="padding:12px;display:flex;flex-direction:column;gap:8px">' +
+      '<div class="gxlv-scroll">' +
+      '<table class="gxlv-table">' +
+      "<thead><tr>" +
+      '<th class="gxlv-th gxlv-th-corner">Cliente</th>' +
+      theadColsHtml +
+      "</tr></thead>" +
+      "<tbody>" +
       clientiHtml +
+      "</tbody>" +
+      "</table>" +
       "</div>" +
       "</div>";
   }
