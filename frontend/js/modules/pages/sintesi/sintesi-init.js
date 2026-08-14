@@ -13,8 +13,8 @@ var _SINT_STATO_INFO = {
 // Stato per il filtro clienti
 var _sintesiClienteFiltro = null;
 
-// Stato per il filtro tipo utente (PF / SP / SC / ASS / null = tutti)
-var _sintesiTipoUtenteFiltro = null;
+// Stato per il filtro tipo utente (PF / SP / SC / ASS) → ora array per multi‑select
+var _sintesiTipiUtenteFiltro = [];
 
 // Stato per i filtri di stato (done, partial, todo, na)
 var _sintesiStatoFiltri = {
@@ -104,6 +104,23 @@ function _renderSintesiTopbar() {
     });
   }
 
+  // Prepara le opzioni per il multi‑select dei tipi utente
+  var tipoOptions = [
+    { value: "PF", label: "👤 PF – Persona Fisica" },
+    { value: "SP", label: "🤝 SP – Soc. Persone" },
+    { value: "SC", label: "🏢 SC – Soc. Capitali" },
+    { value: "ASS", label: "🏛️ ASS – Associazione" },
+  ];
+  var tipoOptsHtml = tipoOptions
+    .map(function (t) {
+      var sel =
+        _sintesiTipiUtenteFiltro.indexOf(t.value) !== -1 ? " selected" : "";
+      return (
+        '<option value="' + t.value + '"' + sel + ">" + t.label + "</option>"
+      );
+    })
+    .join("");
+
   topbar.innerHTML =
     '<div class="year-sel">' +
     '<button onclick="changeAnnoSintesi(-1)" title="Anno precedente">&#9664;</button>' +
@@ -117,20 +134,9 @@ function _renderSintesiTopbar() {
     "</select>" +
     '<select class="select" id="sint-filtro-adp" multiple style="width:210px;font-size:13px" onchange="applySintesiFiltriAdp()" title="Filtra per uno o più adempimenti" data-placeholder="📋 Tutti adempimenti">' +
     "</select>" +
-    '<select class="select topbar-select" id="sint-filtro-tipo-utente" onchange="onSintesiTipoUtenteChange()" title="Filtra per tipo utente" style="min-width:155px">' +
-    '<option value="">-- Tutti i tipi --</option>' +
-    '<option value="PF"' +
-    (_sintesiTipoUtenteFiltro === "PF" ? " selected" : "") +
-    ">👤 PF – Persona Fisica</option>" +
-    '<option value="SP"' +
-    (_sintesiTipoUtenteFiltro === "SP" ? " selected" : "") +
-    ">🤝 SP – Soc. Persone</option>" +
-    '<option value="SC"' +
-    (_sintesiTipoUtenteFiltro === "SC" ? " selected" : "") +
-    ">🏢 SC – Soc. Capitali</option>" +
-    '<option value="ASS"' +
-    (_sintesiTipoUtenteFiltro === "ASS" ? " selected" : "") +
-    ">🏛️ ASS – Associazione</option>" +
+    // SOSTITUITO il singolo select con MULTI‑SELECT per i tipi utente
+    '<select class="select topbar-select" id="sint-filtro-tipo-utente" multiple style="min-width:155px;font-size:13px" onchange="onSintesiTipoUtenteChange()" title="Filtra per uno o più tipi utente" data-placeholder="-- Tutti i tipi --">' +
+    tipoOptsHtml +
     "</select>" +
     '<button class="btn btn-sm btn-primary" onclick="resetSintesiFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>' +
     '<button class="btn btn-sm btn-stampa-completa" onclick="stampaSintesiCompleta()" title="Stampa lista completa con TUTTI gli adempimenti per TUTTI i clienti" style="font-size:13px;background:var(--accent);color:#fff;border-color:var(--accent)">🖨️ Stampa</button>';
@@ -144,6 +150,8 @@ function _renderSintesiTopbar() {
   setTimeout(function () {
     initSearchableMultiSelect("sint-filtro-adp");
     _popolaSintesiAdpSelect();
+    // Inizializza anche il multi‑select per i tipi utente
+    initSearchableMultiSelect("sint-filtro-tipo-utente");
   }, 50);
 }
 
@@ -158,7 +166,16 @@ window.onSintesiClienteChange = onSintesiClienteChange;
 
 function onSintesiTipoUtenteChange() {
   var sel = document.getElementById("sint-filtro-tipo-utente");
-  _sintesiTipoUtenteFiltro = sel ? sel.value || null : null;
+  if (!sel) {
+    _sintesiTipiUtenteFiltro = [];
+    renderSintesiTabella();
+    return;
+  }
+  // Leggi i valori selezionati (multi‑select)
+  var selected = Array.from(sel.selectedOptions || []).map(function (o) {
+    return o.value;
+  });
+  _sintesiTipiUtenteFiltro = selected;
   renderSintesiTabella();
 }
 window.onSintesiTipoUtenteChange = onSintesiTipoUtenteChange;
@@ -303,9 +320,15 @@ function resetSintesiFiltri() {
     if (clienteSel._ssRefresh) clienteSel._ssRefresh();
   }
   _sintesiClienteFiltro = null;
-  _sintesiTipoUtenteFiltro = null;
+  // RESET del multi‑select tipo utente
   var tipoSel = document.getElementById("sint-filtro-tipo-utente");
-  if (tipoSel) tipoSel.value = "";
+  if (tipoSel) {
+    Array.from(tipoSel.options).forEach(function (o) {
+      o.selected = false;
+    });
+    if (tipoSel._ssRefresh) tipoSel._ssRefresh();
+  }
+  _sintesiTipiUtenteFiltro = [];
   _sintesiStatoFiltri = {
     done: false,
     partial: false,

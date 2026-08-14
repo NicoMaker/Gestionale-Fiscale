@@ -45,9 +45,10 @@ function renderSintesiTabella() {
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
     if (_sintesiClienteFiltro && c.id !== _sintesiClienteFiltro) return false;
+    // FILTRO MULTI‑TIPO: se l'array non è vuoto, il cliente deve avere un codice incluso
     if (
-      _sintesiTipoUtenteFiltro &&
-      c.tipologia_codice !== _sintesiTipoUtenteFiltro
+      _sintesiTipiUtenteFiltro.length > 0 &&
+      !_sintesiTipiUtenteFiltro.includes(c.tipologia_codice)
     )
       return false;
     if (searchTerm) {

@@ -172,7 +172,7 @@ function _sintesiDettScrollTo(idx) {
 window._sintesiDettScrollTo = _sintesiDettScrollTo;
 
 // ═══════════════════════════════════════════════════════════════
-// STAMPA LISTA COMPLETA - RISPETTA TUTTI I FILTRI
+// STAMPA LISTA COMPLETA - RISPETTA TUTTI I FILTRI (incluso multi‑tipo)
 // ═══════════════════════════════════════════════════════════════
 
 function stampaSintesiCompleta() {
@@ -207,16 +207,25 @@ function _generaFinestraStampa() {
   var filtroClienteId =
     clienteSel && clienteSel.value ? parseInt(clienteSel.value) : null;
 
-  var tipoUtenteSel = document.getElementById("sint-filtro-tipo-utente");
-  var filtroTipoUtente = tipoUtenteSel ? tipoUtenteSel.value || null : null;
+  // FILTRO TIPO UTENTE (multi‑select)
+  var tipoSel = document.getElementById("sint-filtro-tipo-utente");
+  var filtroTipiUtente = tipoSel
+    ? Array.from(tipoSel.selectedOptions || []).map(function (o) {
+        return o.value;
+      })
+    : [];
 
   var searchTerm = (getSharedClienteSearch() || "").toLowerCase();
 
-  // ---- 2. Filtra clienti (attivi, search, cliente specifico, tipo utente) ----
+  // ---- 2. Filtra clienti (attivi, search, cliente specifico, tipi utente) ----
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
     if (filtroClienteId && c.id !== filtroClienteId) return false;
-    if (filtroTipoUtente && c.tipologia_codice !== filtroTipoUtente)
+    // Filtro multi‑tipo: se l'array non è vuoto, il codice deve essere incluso
+    if (
+      filtroTipiUtente.length > 0 &&
+      !filtroTipiUtente.includes(c.tipologia_codice)
+    )
       return false;
     if (searchTerm) {
       var nome = (c.nome || "").toLowerCase();
@@ -280,7 +289,6 @@ function _generaFinestraStampa() {
       ) {
         return; // cella nascosta
       }
-      // Se il cliente non ha periodi per questo adempimento e lo stato è "na", lo mostriamo comunque come N/A
       adempimentiCliente.push({
         adp: adp,
         periodi: periodi,
@@ -295,10 +303,7 @@ function _generaFinestraStampa() {
     }
   });
 
-  // ---- 7. Genera HTML per la stampa — VERO FOGLIO DI CALCOLO:
-  //         righe = clienti, colonne = adempimenti, celle colorate.
-  //         L'intestazione (<thead>) si ripete automaticamente su ogni
-  //         pagina stampata, come le "righe da ripetere" di Excel.
+  // ---- 7. Genera HTML per la stampa — VERO FOGLIO DI CALCOLO ----
   var htmlParts = [];
   htmlParts.push(
     '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sintesi Adempimenti ' +
@@ -394,7 +399,6 @@ function _generaFinestraStampa() {
       '<div class="no-data">Nessun adempimento da stampare con i filtri correnti.</div>',
     );
   } else {
-    // Header: Cliente + una colonna per ogni adempimento (codice, compatto)
     htmlParts.push('<table class="xlv"><thead><tr>');
     htmlParts.push('<th class="corner">Cliente</th>');
     columns.forEach(function (adp) {
@@ -415,8 +419,6 @@ function _generaFinestraStampa() {
             : "") +
           "</td>",
       );
-      // una cella per OGNI colonna definita globalmente (non solo quelle
-      // filtrate per questo cliente), così le righe restano allineate
       var byAdpId = {};
       item.adempimenti.forEach(function (ai) {
         byAdpId[ai.adp.id] = ai;
@@ -429,8 +431,6 @@ function _generaFinestraStampa() {
         }
         var st = ai.stato;
         if (ai.periodi.length > 1) {
-          // ⭐ Mostra TUTTI i singoli periodi (Gen, Feb, T1, ecc.), non
-          // solo il totale aggregato — così si vede subito mese per mese.
           var sortedPer = ai.periodi.slice().sort(function (a, b) {
             if (a.mese != null && b.mese != null) return a.mese - b.mese;
             if (a.trimestre != null && b.trimestre != null)
@@ -518,8 +518,6 @@ function _generaFinestraStampa() {
 
   var html = htmlParts.join("");
 
-  // ---- 8. Stampa diretta tramite iframe nascosto ----
-  // Crea un iframe nascosto
   var iframe = document.createElement("iframe");
   iframe.style.position = "absolute";
   iframe.style.width = "0";
@@ -527,17 +525,14 @@ function _generaFinestraStampa() {
   iframe.style.border = "none";
   document.body.appendChild(iframe);
 
-  // Scrivi l'HTML nell'iframe
   var doc = iframe.contentDocument || iframe.contentWindow.document;
   doc.open();
   doc.write(html);
   doc.close();
 
-  // Forza il focus sull'iframe e avvia la stampa
   iframe.contentWindow.focus();
   iframe.contentWindow.print();
 
-  // Rimuovi l'iframe dopo qualche secondo (pulizia)
   setTimeout(function () {
     if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
   }, 10000);
