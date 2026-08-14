@@ -101,12 +101,56 @@
 }
 
 @media print {
+  @page {
+    size: landscape;
+    margin: 8mm;
+  }
   .gxlv-scroll {
-    overflow: visible;
+    overflow: visible !important;
+    border-top: none;
   }
   .gxlv-th,
   .gxlv-th-corner,
   .gxlv-td-cliente {
-    position: static;
+    position: static !important;
+    box-shadow: none !important;
+  }
+  .gxlv-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    font-size: 9px !important;
+  }
+  .gxlv-th-corner {
+    min-width: 0;
+    width: 150px;
+  }
+  .gxlv-td-cliente {
+    min-width: 0;
+    max-width: none;
+    padding: 4px 5px !important;
+  }
+  .gxlv-td {
+    min-width: 0;
+    padding: 2px !important;
+  }
+  /* Riduce le pillole a schermo per far stare TUTTI i mesi/periodi in
+     larghezza pagina, senza tagliarne nessuno fuori dal foglio. */
+  .gxlv-td .periodo-pill,
+  .gxlv-td .checkbox-pill,
+  .gxlv-td .text-only-pill {
+    padding: 3px 4px !important;
+    font-size: 8px !important;
+    min-width: 0 !important;
+    box-shadow: none !important;
+  }
+  .gxlv-td .pp-nome {
+    font-size: 7.5px !important;
+  }
+  .glob-cliente-header .btn-xs {
+    display: none !important; /* i pulsanti azione non hanno senso su carta */
+  }
+  .table-wrap {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }

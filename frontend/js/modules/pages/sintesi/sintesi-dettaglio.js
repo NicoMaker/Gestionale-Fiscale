@@ -340,6 +340,17 @@ function _generaFinestraStampa() {
   htmlParts.push(".bg-partial{background:#fcf1d8;color:#b8860b}");
   htmlParts.push(".bg-todo{background:#fbe0de;color:#c0392b}");
   htmlParts.push(".bg-na{background:#ecedef;color:#6b7280}");
+  htmlParts.push("table.xlv td.cell-multi{background:#fbfbfc}");
+  htmlParts.push(
+    ".pchip-wrap{display:flex;flex-wrap:wrap;gap:1.5px;justify-content:center}",
+  );
+  htmlParts.push(
+    ".pchip{display:inline-block;padding:1px 3px;border-radius:2px;font-size:7px;font-weight:700;line-height:1.5;min-width:14px}",
+  );
+  htmlParts.push(".pchip.bg-done{background:#dcf5e6;color:#1e8e5a}");
+  htmlParts.push(".pchip.bg-partial{background:#fcf1d8;color:#b8860b}");
+  htmlParts.push(".pchip.bg-todo{background:#fbe0de;color:#c0392b}");
+  htmlParts.push(".pchip.bg-na{background:#ecedef;color:#98a2b3}");
   htmlParts.push(
     ".legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:10px;color:#475467}",
   );
@@ -413,26 +424,66 @@ function _generaFinestraStampa() {
           return;
         }
         var st = ai.stato;
-        var icon =
-          st.kind === "done"
-            ? "✔"
-            : st.kind === "partial"
-              ? "◐"
-              : st.kind === "todo"
-                ? "○"
-                : "—";
-        htmlParts.push(
-          '<td class="bg-' +
-            st.kind +
-            '" title="' +
-            escAttr(adp.nome) +
-            " — " +
-            escAttr(st.label) +
-            '">' +
-            icon +
-            (ai.periodi.length > 1 ? " " + st.label : "") +
-            "</td>",
-        );
+        if (ai.periodi.length > 1) {
+          // ⭐ Mostra TUTTI i singoli periodi (Gen, Feb, T1, ecc.), non
+          // solo il totale aggregato — così si vede subito mese per mese.
+          var sortedPer = ai.periodi.slice().sort(function (a, b) {
+            if (a.mese != null && b.mese != null) return a.mese - b.mese;
+            if (a.trimestre != null && b.trimestre != null)
+              return a.trimestre - b.trimestre;
+            if (a.semestre != null && b.semestre != null)
+              return a.semestre - b.semestre;
+            return 0;
+          });
+          var chips = sortedPer
+            .map(function (p) {
+              var pKind =
+                p.stato === "completato"
+                  ? "done"
+                  : p.stato === "in_corso"
+                    ? "partial"
+                    : p.stato === "n_a"
+                      ? "na"
+                      : "todo";
+              var pShort =
+                typeof getPeriodoShort === "function"
+                  ? getPeriodoShort(p)
+                  : "-";
+              return (
+                '<span class="pchip bg-' + pKind + '">' + pShort + "</span>"
+              );
+            })
+            .join("");
+          htmlParts.push(
+            '<td class="cell-multi" title="' +
+              escAttr(adp.nome) +
+              " — " +
+              escAttr(st.label) +
+              '"><div class="pchip-wrap">' +
+              chips +
+              "</div></td>",
+          );
+        } else {
+          var icon =
+            st.kind === "done"
+              ? "✔"
+              : st.kind === "partial"
+                ? "◐"
+                : st.kind === "todo"
+                  ? "○"
+                  : "—";
+          htmlParts.push(
+            '<td class="bg-' +
+              st.kind +
+              '" title="' +
+              escAttr(adp.nome) +
+              " — " +
+              escAttr(st.label) +
+              '">' +
+              icon +
+              "</td>",
+          );
+        }
       });
       htmlParts.push("</tr>");
     });
