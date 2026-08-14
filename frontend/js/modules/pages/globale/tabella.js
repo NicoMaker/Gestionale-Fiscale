@@ -313,11 +313,32 @@ function renderGlobaleTabella(rawData) {
     //    Gen..Dic / T1..T4 / S1,S2 / Ann.) — così ogni adempimento ha la sua
     //    scheda "foglio di calcolo": clienti in riga, periodi in colonna. ──
     var COL_ORDER = [
-      "Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic",
-      "T1","T2","T3","T4","S1","S2","Ann.",
+      "Gen",
+      "Feb",
+      "Mar",
+      "Apr",
+      "Mag",
+      "Giu",
+      "Lug",
+      "Ago",
+      "Set",
+      "Ott",
+      "Nov",
+      "Dic",
+      "T1",
+      "T2",
+      "T3",
+      "T4",
+      "S1",
+      "S2",
+      "Ann.",
     ];
     var colSetGrp = {};
-    for (var colScanIdx = 0; colScanIdx < clientiFiltrati.length; colScanIdx++) {
+    for (
+      var colScanIdx = 0;
+      colScanIdx < clientiFiltrati.length;
+      colScanIdx++
+    ) {
       var colScanPeriodi = clientiFiltrati[colScanIdx].periodi;
       for (var colScanP = 0; colScanP < colScanPeriodi.length; colScanP++) {
         colSetGrp[getPeriodoShort(colScanPeriodi[colScanP])] = true;
@@ -334,8 +355,7 @@ function renderGlobaleTabella(rawData) {
 
     var theadColsHtml = "";
     for (var thc = 0; thc < colsGrp.length; thc++) {
-      theadColsHtml +=
-        '<th class="gxlv-th">' + escAttr(colsGrp[thc]) + "</th>";
+      theadColsHtml += '<th class="gxlv-th">' + escAttr(colsGrp[thc]) + "</th>";
     }
 
     var clientiHtml = "";
@@ -396,8 +416,7 @@ function renderGlobaleTabella(rawData) {
       var rigaCelleHtml = "";
       for (var cc = 0; cc < colsGrp.length; cc++) {
         var pillCell = pillByCol[colsGrp[cc]];
-        rigaCelleHtml +=
-          '<td class="gxlv-td">' + (pillCell || "") + "</td>";
+        rigaCelleHtml += '<td class="gxlv-td">' + (pillCell || "") + "</td>";
       }
 
       var bandFillGrp = cFilIdx % 2 === 1 ? " gxlv-band" : "";

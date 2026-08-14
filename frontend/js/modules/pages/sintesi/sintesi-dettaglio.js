@@ -314,7 +314,9 @@ function _generaFinestraStampa() {
   );
   htmlParts.push(".header h1{font-size:20px;margin:0;color:#1F3B57}");
   htmlParts.push(".header p{font-size:12px;color:#667085;margin:4px 0 0}");
-  htmlParts.push(".header .date{font-size:10.5px;color:#98a2b3;margin:2px 0 0}");
+  htmlParts.push(
+    ".header .date{font-size:10.5px;color:#98a2b3;margin:2px 0 0}",
+  );
   htmlParts.push(
     "table.xlv{border-collapse:collapse;width:100%;table-layout:fixed;font-size:10.5px}",
   );
@@ -335,7 +337,9 @@ function _generaFinestraStampa() {
   htmlParts.push(
     "table.xlv td.nome-cell .cf{display:block;font-weight:400;font-size:9px;color:#667085}",
   );
-  htmlParts.push("table.xlv tbody tr:nth-child(even) td.nome-cell{background:#eceef1}");
+  htmlParts.push(
+    "table.xlv tbody tr:nth-child(even) td.nome-cell{background:#eceef1}",
+  );
   htmlParts.push(".bg-done{background:#dcf5e6;color:#1e8e5a}");
   htmlParts.push(".bg-partial{background:#fcf1d8;color:#b8860b}");
   htmlParts.push(".bg-todo{background:#fbe0de;color:#c0392b}");
