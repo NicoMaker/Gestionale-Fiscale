@@ -2,6 +2,27 @@
 // NAV.JS — Navigazione, routing pagine e cambio anno
 // ═══════════════════════════════════════════════════════════════
 
+// ─── ICONE PAGINA (barra della formula) ────────────────────────
+// Stessa icona usata nella voce di navbar corrispondente (data-page),
+// mostrata al posto della "ƒx" fissa nel titolo della topbar.
+const PAGE_ICONS = {
+  dashboard: "📊",
+  clienti: "👥",
+  scadenzario: "📅",
+  scadenzario_globale: "🌐",
+  sintesi: "🗓️",
+  adempimenti: "📋",
+  tipologie: "🏷️",
+  appunti: "📆",
+  pagina_bianca: "📝",
+  cestino: "🗑️",
+};
+
+function setPageTitleIcon(page) {
+  const iconEl = document.getElementById("page-title-icon");
+  if (iconEl) iconEl.textContent = PAGE_ICONS[page] || "📄";
+}
+
 // ─── INIT NAV ─────────────────────────────────────────────────
 function initNav() {
   document.querySelectorAll(".nav-item").forEach((el) => {
@@ -57,6 +78,7 @@ function renderPage(page) {
     appunti: "Scadenze Studio",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
+  setPageTitleIcon(page);
 
   document.querySelectorAll(".nav-item").forEach((el) => {
     el.setAttribute(

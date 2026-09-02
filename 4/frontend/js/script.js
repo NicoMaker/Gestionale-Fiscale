@@ -60,6 +60,7 @@ function renderPage(page) {
     cestino: "Cestino",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
+  if (typeof setPageTitleIcon === "function") setPageTitleIcon(page);
 
   document.querySelectorAll(".nav-item").forEach((el) => {
     el.setAttribute(

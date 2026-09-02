@@ -240,7 +240,8 @@ function openPaginaBiancaPerCliente(clienteId, clienteNome) {
   if (nav) nav.classList.add("active");
 
   state.page = "pagina_bianca";
-  document.getElementById("page-title").textContent = `📝 Note`;
+  document.getElementById("page-title").textContent = `Note`;
+  if (typeof setPageTitleIcon === "function") setPageTitleIcon("pagina_bianca");
 
   setupPaginaBiancaSocketListeners();
   renderPaginaBiancaPage();
