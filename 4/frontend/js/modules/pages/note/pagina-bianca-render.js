@@ -1,0 +1,729 @@
+// ═══════════════════════════════════════════════════════════════
+// PAGINA-BIANCA-RENDER.JS — Stato, cleanup, stampa, socket listeners,
+//                            ricerca clienti, render pagina e lista
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// PAGINA-BIANCA.JS — Gestione Note (ex Pagina Bianca)
+// ═══════════════════════════════════════════════════════════════
+
+let paginaBiancaFilter = {
+  tipo: "studio",
+  id_cliente: "",
+  search: "",
+};
+
+// Rimuove spazi/tabulazioni accidentali a inizio riga (es. testo incollato
+// da Word/Excel) così le righe di un elenco risultano sempre allineate,
+// mantenendo comunque gli "a capo" originali.
+function formatNoteContenuto(testo) {
+  if (!testo) return testo;
+  return testo
+    .split("\n")
+    .map((riga) => riga.replace(/^[ \t]+/, ""))
+    .join("\n");
+}
+
+let paginaBiancaCurrentEntry = null;
+let paginaBiancaEditMode = false;
+let paginaBiancaListenersRegistered = false;
+let paginaBiancaClientiSearchTerm = "";
+
+// ═══════════════════════════════════════════════════════════════
+// CLEANUP — Rimuove i listener quando si esce dalla pagina
+// ═══════════════════════════════════════════════════════════════
+function cleanupPaginaBianca() {
+  if (typeof socket !== "undefined" && paginaBiancaListenersRegistered) {
+    socket.off("res:pagina_bianca");
+    socket.off("res:create:pagina_bianca");
+    socket.off("res:update:pagina_bianca");
+    socket.off("res:delete:pagina_bianca");
+    socket.off("res:delete:pagina_bianca:bulk");
+    socket.off("broadcast:pagina_bianca_updated");
+    paginaBiancaListenersRegistered = false;
+  }
+
+  paginaBiancaFilter = {
+    tipo: "studio",
+    id_cliente: "",
+    search: "",
+  };
+  paginaBiancaCurrentEntry = null;
+  paginaBiancaEditMode = false;
+  paginaBiancaClientiSearchTerm = "";
+
+  const modal = document.getElementById("modal-pagina-bianca");
+  if (modal && modal.classList.contains("open")) {
+    modal.classList.remove("open");
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FUNZIONE STAMPA PER LA PAGINA BIANCA
+// ═══════════════════════════════════════════════════════════════
+function stampaPaginaBianca() {
+  // Ottieni gli appunti attualmente visualizzati
+  const container = document.getElementById("pagina-bianca-list");
+  if (!container) return;
+
+  const appuntiHTML = container.innerHTML;
+  const titoloPagina =
+    document.getElementById("page-title")?.textContent || "Note";
+  const tipoFiltro =
+    paginaBiancaFilter.tipo === "studio"
+      ? "🏢 Appunti Studio"
+      : "👤 Appunti Clienti";
+  const clienteNome =
+    paginaBiancaFilter.id_cliente && state.clienti
+      ? state.clienti.find((c) => c.id == paginaBiancaFilter.id_cliente)?.nome
+      : "";
+  const filtroInfo =
+    paginaBiancaFilter.tipo === "cliente" && clienteNome
+      ? ` - Cliente: ${clienteNome}`
+      : paginaBiancaFilter.tipo === "cliente"
+        ? " - Tutti i clienti"
+        : "";
+  const searchTerm = paginaBiancaFilter.search
+    ? ` - Cerca: "${paginaBiancaFilter.search}"`
+    : "";
+
+  // Stampa tramite iframe nascosto: evita l'apertura di una nuova scheda/finestra
+  // (che mostrava per un istante una pagina vuota/di sistema prima della stampa)
+  // e porta l'utente direttamente alla finestra di stampa del browser.
+  const oldFrame = document.getElementById("print-frame-pagina-bianca");
+  if (oldFrame) oldFrame.remove();
+
+  const printFrame = document.createElement("iframe");
+  printFrame.id = "print-frame-pagina-bianca";
+  printFrame.style.position = "fixed";
+  printFrame.style.right = "0";
+  printFrame.style.bottom = "0";
+  printFrame.style.width = "0";
+  printFrame.style.height = "0";
+  printFrame.style.border = "0";
+  document.body.appendChild(printFrame);
+
+  const printDoc = printFrame.contentWindow.document;
+  printDoc.open();
+  printDoc.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Stampa - ${titoloPagina}</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        body {
+          font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+          background: white;
+          color: #1a1f2e;
+          padding: 20px;
+          line-height: 1.5;
+        }
+        .print-header {
+          text-align: center;
+          margin-bottom: 30px;
+          padding-bottom: 20px;
+          border-bottom: 2px solid #e2e8f0;
+        }
+        .print-header h1 {
+          font-size: 24px;
+          color: #1967d2;
+          margin-bottom: 8px;
+        }
+        .print-header p {
+          color: #64748b;
+          font-size: 14px;
+        }
+        .print-filters {
+          background: #f8fafc;
+          padding: 12px 16px;
+          border-radius: 8px;
+          margin-bottom: 24px;
+          font-size: 13px;
+          color: #475569;
+          border: 1px solid #e2e8f0;
+        }
+        .print-filters span {
+          font-weight: 600;
+          color: #1e293b;
+        }
+        .print-date {
+          text-align: right;
+          font-size: 12px;
+          color: #94a3b8;
+          margin-bottom: 20px;
+        }
+        .appunto-card {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          margin-bottom: 20px;
+          page-break-inside: avoid;
+          break-inside: avoid;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .appunto-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 20px;
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .appunto-tipo {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        .appunto-tipo.studio { color: #1967d2; }
+        .appunto-tipo.cliente { color: #059669; }
+        .appunto-titolo {
+          font-size: 16px;
+          font-weight: 700;
+          color: #1e293b;
+        }
+        .appunto-meta {
+          font-size: 12px;
+          color: #64748b;
+          margin-top: 4px;
+        }
+        .appunto-contenuto {
+          padding: 20px;
+          font-size: 14px;
+          color: #334155;
+          line-height: 1.6;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+        .no-data {
+          text-align: center;
+          padding: 60px;
+          color: #94a3b8;
+        }
+        @media print {
+          body {
+            padding: 0;
+            margin: 0;
+          }
+          .appunto-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          .no-print {
+            display: none;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="print-header">
+        <h1>📝 ${titoloPagina}</h1>
+        <p>${tipoFiltro}${filtroInfo}${searchTerm}</p>
+      </div>
+      <div class="print-date">
+        Data stampa: ${new Date().toLocaleString("it-IT")}
+      </div>
+      ${appuntiHTML || '<div class="no-data">Nessun appunto da stampare</div>'}
+    </body>
+    </html>
+  `);
+  printDoc.close();
+
+  // Attende il caricamento del frame poi apre subito la finestra di stampa nativa
+  printFrame.onload = () => {
+    printFrame.contentWindow.focus();
+    printFrame.contentWindow.print();
+  };
+  // Fallback nel caso onload non scatti (contenuto già pronto)
+  setTimeout(() => {
+    printFrame.contentWindow.focus();
+    printFrame.contentWindow.print();
+  }, 150);
+
+  // Rimuove il frame dopo la stampa (o dopo un timeout di sicurezza)
+  const cleanupFrame = () => {
+    if (printFrame && printFrame.parentNode) printFrame.remove();
+  };
+  if (printFrame.contentWindow) {
+    printFrame.contentWindow.onafterprint = cleanupFrame;
+  }
+  setTimeout(cleanupFrame, 5000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETUP SOCKET LISTENERS
+// ═══════════════════════════════════════════════════════════════
+function setupPaginaBiancaSocketListeners() {
+  if (typeof socket === "undefined") return;
+  if (paginaBiancaListenersRegistered) return;
+
+  socket.on("res:pagina_bianca", ({ success, data }) => {
+    if (success && state.page === "pagina_bianca") {
+      renderPaginaBiancaList(data);
+    }
+  });
+
+  socket.on("res:create:pagina_bianca", ({ success }) => {
+    if (success && state.page === "pagina_bianca") {
+      filterPaginaBianca();
+      showNotif("Nota creata con successo", "success");
+    } else if (success) {
+      showNotif("Nota creata con successo", "success");
+    }
+  });
+
+  socket.on("res:update:pagina_bianca", ({ success }) => {
+    if (success && state.page === "pagina_bianca") {
+      filterPaginaBianca();
+      showNotif("Nota aggiornata", "success");
+    } else if (success) {
+      showNotif("Nota aggiornata", "success");
+    }
+  });
+
+  socket.on("res:delete:pagina_bianca", ({ success }) => {
+    if (success && state.page === "pagina_bianca") {
+      filterPaginaBianca();
+      showNotif("Nota eliminata", "success");
+    } else if (success) {
+      showNotif("Nota eliminata", "success");
+    }
+  });
+
+  socket.on("res:delete:pagina_bianca:bulk", ({ success }) => {
+    if (success && state.page === "pagina_bianca") {
+      filterPaginaBianca();
+    }
+  });
+
+  socket.on("broadcast:pagina_bianca_updated", () => {
+    if (
+      state.page === "pagina_bianca" &&
+      typeof filterPaginaBianca === "function"
+    )
+      filterPaginaBianca();
+  });
+
+  paginaBiancaListenersRegistered = true;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FUNZIONI PER LA RICERCA CLIENTI NEL DROPDOWN (FILTRO PAGINA)
+// ═══════════════════════════════════════════════════════════════
+function filterClientiSelect(searchTerm) {
+  const select = document.getElementById("pb-filtro-cliente-select");
+  if (!select || !state.clienti) return;
+
+  const searchLower = (searchTerm || "").toLowerCase().trim();
+  const options = select.querySelectorAll("option");
+  let visibleCount = 0;
+
+  options.forEach((opt) => {
+    if (opt.value === "") {
+      opt.style.display = "";
+      opt.style.backgroundColor = "";
+      return;
+    }
+    const text = (opt.textContent || "").toLowerCase();
+    if (searchLower === "" || text.includes(searchLower)) {
+      opt.style.display = "";
+      opt.style.backgroundColor = "";
+      visibleCount++;
+    } else {
+      opt.style.display = "none";
+      opt.style.backgroundColor = "#ffcccc";
+    }
+  });
+
+  if (visibleCount === 1 && searchLower !== "" && select.value === "") {
+    for (let i = 0; i < options.length; i++) {
+      const opt = options[i];
+      if (opt.value !== "" && opt.style.display !== "none") {
+        select.value = opt.value;
+        onPaginaBiancaClienteSelectChange();
+        break;
+      }
+    }
+  }
+
+  // Riporta sempre lo scroll della lista in cima dopo il filtraggio
+  select.scrollTop = 0;
+}
+
+function onPaginaBiancaClientiSearch() {
+  const searchInput = document.getElementById("pb-cliente-search-input");
+  if (searchInput) {
+    paginaBiancaClientiSearchTerm = searchInput.value;
+    filterClientiSelect(paginaBiancaClientiSearchTerm);
+  }
+}
+
+function onPaginaBiancaClienteSelectChange() {
+  const select = document.getElementById("pb-filtro-cliente-select");
+  if (select) {
+    paginaBiancaFilter.id_cliente = select.value;
+    loadPaginaBiancaAppunti();
+  }
+}
+
+function renderClientiSelectWithSearch() {
+  const wrapper = document.getElementById("pb-cliente-select-wrapper");
+  if (!wrapper || !state.clienti) return;
+
+  const currentValue = paginaBiancaFilter.id_cliente;
+
+  wrapper.innerHTML = `
+    <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cliente</label>
+    <div style="position: relative;">
+      <input type="text" 
+        id="pb-cliente-search-input" 
+        class="input" 
+        placeholder="🔍 Cerca cliente..." 
+        style="margin-bottom: 4px; padding: 8px 12px; font-size: 13px;"
+        oninput="onPaginaBiancaClientiSearch()"
+        value="${escAttr(paginaBiancaClientiSearchTerm)}">
+      <select id="pb-filtro-cliente-select" class="select" style="margin-top: 0px;" onchange="onPaginaBiancaClienteSelectChange()">
+        <option value="">-- Tutti i clienti --</option>
+        ${state.clienti
+          .map(
+            (c) => `
+          <option value="${c.id}" ${currentValue == c.id ? "selected" : ""}>
+            ${escAttr(c.nome)} (${c.tipologia_codice || "-"})
+          </option>
+        `,
+          )
+          .join("")}
+      </select>
+    </div>
+  `;
+
+  if (paginaBiancaClientiSearchTerm) {
+    filterClientiSelect(paginaBiancaClientiSearchTerm);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FUNZIONI PER LA RICERCA CLIENTI NEL DROPDOWN (MODALE)
+// ═══════════════════════════════════════════════════════════════
+function filterModalClientiSelect() {
+  const searchInput = document.getElementById("pb-modal-cliente-search");
+  const select = document.getElementById("pb-id-cliente");
+  if (!searchInput || !select) return;
+
+  const searchTerm = (searchInput.value || "").toLowerCase().trim();
+  const options = select.querySelectorAll("option");
+  let visibleCount = 0;
+
+  options.forEach((opt) => {
+    if (opt.value === "") {
+      opt.style.display = "";
+      return;
+    }
+    const text = (opt.textContent || "").toLowerCase();
+    if (searchTerm === "" || text.includes(searchTerm)) {
+      opt.style.display = "";
+      visibleCount++;
+    } else {
+      opt.style.display = "none";
+    }
+  });
+
+  if (visibleCount === 1 && searchTerm !== "" && select.value === "") {
+    for (let i = 0; i < options.length; i++) {
+      const opt = options[i];
+      if (opt.value !== "" && opt.style.display !== "none") {
+        select.value = opt.value;
+        break;
+      }
+    }
+  }
+
+  // Riporta sempre lo scroll della lista in cima dopo il filtraggio
+  select.scrollTop = 0;
+}
+
+function onModalClientiSearchInput() {
+  filterModalClientiSelect();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER PAGINA
+// ═══════════════════════════════════════════════════════════════
+function renderPaginaBiancaPage() {
+  setupPaginaBiancaSocketListeners();
+
+  const content = document.getElementById("content");
+  if (!content) return;
+
+  // Carica clienti se necessario
+  if (!state.clienti || state.clienti.length === 0) {
+    socket.emit("get:clienti", { anno: state.anno });
+    socket.once("res:clienti", (data) => {
+      if (data.success) {
+        state.clienti = data.data;
+        renderPaginaBiancaPage();
+      }
+    });
+    return;
+  }
+
+  // Costruisci l'HTML del filtro clienti con ricerca
+  const clientiFilterHtml = `
+    <div id="pb-cliente-select-wrapper" style="min-width: 260px; ${paginaBiancaFilter.tipo !== "cliente" ? "display: none;" : ""}">
+      <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cliente</label>
+      <div style="position: relative;">
+        <input type="text" 
+          id="pb-cliente-search-input" 
+          class="input" 
+          placeholder="🔍 Cerca cliente..." 
+          style="margin-bottom: 4px; padding: 8px 12px; font-size: 13px;"
+          oninput="onPaginaBiancaClientiSearch()"
+          value="${escAttr(paginaBiancaClientiSearchTerm)}">
+        <select id="pb-filtro-cliente-select" class="select" style="margin-top: 0px;" onchange="onPaginaBiancaClienteSelectChange()">
+          <option value="">-- Tutti i clienti --</option>
+          ${state.clienti
+            .map(
+              (c) => `
+            <option value="${c.id}" ${paginaBiancaFilter.id_cliente == c.id ? "selected" : ""}>
+              ${escAttr(c.nome)} (${c.tipologia_codice || "-"})
+            </option>
+          `,
+            )
+            .join("")}
+        </select>
+      </div>
+    </div>
+  `;
+
+  content.innerHTML = `
+    <div class="pagina-bianca-container" style="max-width: 1200px; margin: 0 auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">📝 Note</h1>
+          <p style="color: var(--text2); font-size: 14px; margin-top: 4px;">Note libere, promemoria e appunti personali</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-print btn-sm" onclick="stampaPaginaBianca()" title="Stampa pagina" style="display: flex; align-items: center; gap: 6px;">
+            🖨️ Stampa
+          </button>
+          <button class="btn btn-primary" onclick="openPaginaBiancaEditor()" style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">✏️</span> Nuova Nota
+          </button>
+        </div>
+      </div>
+
+      <div class="filtri-avanzati" style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+        <div style="min-width: 160px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Tipo</label>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button id="pb-filtro-studio" class="btn btn-sm ${paginaBiancaFilter.tipo === "studio" ? "btn-primary" : "btn-secondary"}" onclick="setPaginaBiancaTipo('studio')">🏢 Studio</button>
+            <button id="pb-filtro-cliente" class="btn btn-sm ${paginaBiancaFilter.tipo === "cliente" ? "btn-primary" : "btn-secondary"}" onclick="setPaginaBiancaTipo('cliente')">👤 Cliente</button>
+          </div>
+        </div>
+        ${clientiFilterHtml}
+        <div style="flex: 1; min-width: 200px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cerca</label>
+          <input type="text" id="pb-search-input" class="input" placeholder="Cerca negli appunti..." value="${escAttr(paginaBiancaFilter.search)}" style="margin-top: 4px;" oninput="debounceFilterPaginaBianca()">
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="resetPaginaBiancaFiltri()" style="margin-bottom: 2px;">⟳ Reset</button>
+      </div>
+
+      <div id="pagina-bianca-list">
+        <div style="text-align: center; padding: 60px; color: var(--text3);">
+          <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+          <p>Caricamento appunti...</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (paginaBiancaClientiSearchTerm && paginaBiancaFilter.tipo === "cliente") {
+    setTimeout(() => {
+      filterClientiSelect(paginaBiancaClientiSearchTerm);
+    }, 50);
+  }
+
+  loadPaginaBiancaAppunti();
+}
+
+function setPaginaBiancaTipo(tipo) {
+  paginaBiancaFilter.tipo = tipo;
+  if (tipo === "studio") {
+    paginaBiancaFilter.id_cliente = "";
+    paginaBiancaClientiSearchTerm = "";
+  } else {
+    paginaBiancaClientiSearchTerm = "";
+  }
+  renderPaginaBiancaPage();
+}
+
+function filterPaginaBianca() {
+  const clienteSelect = document.getElementById("pb-filtro-cliente-select");
+  if (clienteSelect) {
+    paginaBiancaFilter.id_cliente = clienteSelect.value;
+  }
+  const searchInput = document.getElementById("pb-search-input");
+  if (searchInput) {
+    paginaBiancaFilter.search = searchInput.value;
+  }
+  loadPaginaBiancaAppunti();
+}
+
+const debounceFilterPaginaBianca = debounce(() => {
+  filterPaginaBianca();
+}, 300);
+
+function resetPaginaBiancaFiltri() {
+  paginaBiancaFilter = {
+    tipo: "studio",
+    id_cliente: "",
+    search: "",
+  };
+  paginaBiancaClientiSearchTerm = "";
+  renderPaginaBiancaPage();
+}
+
+function loadPaginaBiancaAppunti() {
+  if (typeof socket !== "undefined") {
+    socket.emit("get:pagina_bianca", paginaBiancaFilter);
+  }
+}
+
+function renderPaginaBiancaList(appunti) {
+  const container = document.getElementById("pagina-bianca-list");
+  if (!container) return;
+
+  if (!appunti || appunti.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📝</div>
+        <p>Nessuna nota trovata</p>
+        <button class="btn btn-primary" onclick="openPaginaBiancaEditor()" style="margin-top: 12px;">+ Crea la tua prima nota</button>
+      </div>
+    `;
+    return;
+  }
+
+  // Toolbar bulk sopra le card
+  const bulkBar = `
+    <div id="pb-bulk-toolbar" style="display:none;margin-bottom:14px;padding:10px 14px;background:color-mix(in srgb, var(--red) 7%, transparent);border:1px solid color-mix(in srgb, var(--red) 20%, transparent);border-radius:var(--r-sm);align-items:center;gap:10px;flex-wrap:wrap">
+      <span id="pb-bulk-count" style="font-size:13px;color:var(--t2);font-weight:600"></span>
+      <button class="btn btn-sm btn-danger" onclick="eliminaNoteSelezionate()">🗑️ Elimina selezionate</button>
+      <button class="btn btn-sm btn-secondary" onclick="deselezionaTutteNote()">✕ Deseleziona</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--t2);cursor:pointer;user-select:none">
+        <input type="checkbox" id="pb-select-all" onchange="toggleSelezionaTutteNote(this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red)">
+        Seleziona tutte
+      </label>
+    </div>`;
+
+  const html = `
+    ${bulkBar}
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      ${appunti
+        .map(
+          (a) => `
+        <div class="pagina-bianca-card pb-bulk-card" data-id="${a.id}" style="background: var(--s0); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+             onmouseenter="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'; this.style.transform='translateY(-2px)'"
+             onmouseleave="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'; this.style.transform='translateY(0)'">
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--surface2); border-bottom: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <input type="checkbox" class="pb-bulk-cb" data-id="${a.id}" onchange="aggiornaPbBulkToolbar()" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red);flex-shrink:0" title="Seleziona">
+              <span style="font-size: 24px;">${a.tipo === "studio" ? "🏢" : "👤"}</span>
+              <div>
+                <div style="font-weight: 700; font-size: 16px;">${a.titolo ? escAttr(a.titolo) : ""}</div>
+                <div style="font-size: 12px; color: var(--text3); margin-top: 2px;">
+                  ${a.tipo === "studio" ? "Appunto Studio" : `Cliente: ${escAttr(a.cliente_nome || "—")}`}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              ${a.id_cliente ? `<button class="btn btn-xs" onclick="event.stopPropagation(); editCliente(${a.id_cliente})" title="Modifica cliente" style="border:1px solid var(--accent);color:var(--accent);background:transparent">👤 Modifica cliente</button>` : ""}
+              <button class="btn btn-xs btn-secondary" onclick="event.stopPropagation(); openPaginaBiancaEditor(${a.id})" title="Modifica">✏️</button>
+              <button class="btn btn-xs btn-danger" onclick="event.stopPropagation(); deletePaginaBiancaAppunto(${a.id})" title="Elimina">🗑️</button>
+            </div>
+          </div>
+
+          <div style="padding: 20px;">
+            <div style="color: var(--text1); line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto;">${escAttr(formatNoteContenuto(a.contenuto) || "— Nessun contenuto —")}</div>
+          </div>
+        </div>
+      `,
+        )
+        .join("")}
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+// ── BULK NOTE ────────────────────────────────────────────────
+function aggiornaPbBulkToolbar() {
+  const cbs = document.querySelectorAll(".pb-bulk-cb:checked");
+  const toolbar = document.getElementById("pb-bulk-toolbar");
+  const countEl = document.getElementById("pb-bulk-count");
+  const selAll = document.getElementById("pb-select-all");
+  const allCbs = document.querySelectorAll(".pb-bulk-cb");
+  if (!toolbar) return;
+  const n = cbs.length;
+  if (n > 0) {
+    toolbar.style.display = "flex";
+    countEl.textContent =
+      n + (n === 1 ? " nota selezionata" : " note selezionate");
+  } else {
+    toolbar.style.display = "none";
+  }
+  if (selAll) {
+    selAll.checked = n > 0 && n === allCbs.length;
+    selAll.indeterminate = n > 0 && n < allCbs.length;
+  }
+}
+
+function toggleSelezionaTutteNote(cb) {
+  document.querySelectorAll(".pb-bulk-cb").forEach((el) => {
+    el.checked = cb.checked;
+  });
+  aggiornaPbBulkToolbar();
+}
+
+function deselezionaTutteNote() {
+  document.querySelectorAll(".pb-bulk-cb").forEach((el) => {
+    el.checked = false;
+  });
+  const selAll = document.getElementById("pb-select-all");
+  if (selAll) {
+    selAll.checked = false;
+    selAll.indeterminate = false;
+  }
+  aggiornaPbBulkToolbar();
+}
+
+function eliminaNoteSelezionate() {
+  const cbs = document.querySelectorAll(".pb-bulk-cb:checked");
+  if (cbs.length === 0) return;
+  const ids = Array.from(cbs).map((cb) => parseInt(cb.dataset.id));
+  if (
+    !confirm(
+      `Eliminare ${ids.length} not${ids.length === 1 ? "a" : "e"} selezionat${ids.length === 1 ? "a" : "e"}?`,
+    )
+  )
+    return;
+  if (typeof socket === "undefined") return;
+  socket.emit("delete:pagina_bianca:bulk", { ids });
+  socket.once("res:delete:pagina_bianca:bulk", () => {
+    deselezionaTutteNote();
+  });
+}
+
+window.aggiornaPbBulkToolbar = aggiornaPbBulkToolbar;
+window.toggleSelezionaTutteNote = toggleSelezionaTutteNote;
+window.deselezionaTutteNote = deselezionaTutteNote;
+window.eliminaNoteSelezionate = eliminaNoteSelezionate;

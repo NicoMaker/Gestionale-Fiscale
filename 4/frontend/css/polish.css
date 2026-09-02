@@ -1,0 +1,199 @@
+/* ═══════════════════════════════════════════════════════════════
+   POLISH — Identità "Ledger": rifiniture editoriali e di profondità
+   Caricato per ultimo: raffina senza duplicare le regole esistenti.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── TIPOGRAFIA EDITORIALE PER I TITOLI ─────────────────────── */
+.content h1,
+.content h2,
+.content h3,
+.modal-title,
+.topbar-title,
+.logo-main,
+.empty-state-title,
+.det-header .det-name,
+.cliente-card-name {
+  font-family: var(--serif);
+  letter-spacing: -0.01em;
+}
+.content h1 {
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--t0);
+  margin-bottom: 4px;
+}
+.content h2 {
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--t0);
+}
+
+/* ─── TEXTURE "LEDGER" — carta a righe sottilissime ──────────── */
+.content {
+  background-image: var(--ledger-rule);
+  background-position: 0 4px;
+}
+[data-theme="dark"] .content {
+  background-image: var(--ledger-rule);
+}
+
+/* ─── CHECKBOX / RADIO NATIVE ─────────────────────────────────── */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+/* ─── BOTTONE PRIMARIO — leggera profondità in più ───────────── */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.16),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* ─── LOGO ICON — rifinitura bordo sottile ───────────────────── */
+.logo-icon {
+  position: relative;
+}
+.logo-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+/* ─── NAV ITEM ATTIVO — indicatore più preciso ───────────────── */
+.nav-item.active {
+  box-shadow: inset 0 0 0 1px var(--accent-b);
+}
+.nav-item.active .nav-label {
+  font-weight: 650;
+}
+.nav-item {
+  transform: translateX(0);
+}
+.nav-item:hover {
+  transform: translateX(2px);
+}
+
+/* ─── BOTTONI — micro-interazione più "viva" ─────────────────── */
+.btn {
+  transition:
+    transform var(--duration-fast),
+    box-shadow var(--duration-fast),
+    background var(--duration-fast),
+    filter var(--duration-fast);
+}
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+/* ─── CARD / MODAL — angoli e ombre più morbide ──────────────── */
+.modal {
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ─── SIDEBAR FOOTER — allineamento fine ─────────────────────── */
+.sidebar-footer-text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── SCROLLBAR — leggermente più sottile e coerente col tema ── */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+/* ─── TABELLE — riga attiva più leggibile ────────────────────── */
+tbody tr.clickable:hover td {
+  background: var(--accent-d);
+}
+
+/* ─── STAT CARD — valore con leggera enfasi ──────────────────── */
+.stat-value {
+  letter-spacing: -0.01em;
+}
+
+/* ─── BADGE — coerenza pesi/spaziatura ───────────────────────── */
+.badge,
+.badge-info,
+.badge-per {
+  letter-spacing: 0.01em;
+}
+
+/* ─── FOCUS VISIBILE SU ELEMENTI INTERATTIVI CUSTOM ──────────── */
+.checkbox-pill:focus-visible,
+.cbx-btn:focus-visible,
+.flag-chip:focus-visible,
+.tip-percorso-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── CONTEGGI (clienti, scadenze, ecc.) — coerenti ovunque ──── */
+/* Pillola accanto a un titolo: "Clienti [12]" */
+.count-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  margin-left: 8px;
+  border-radius: var(--r-full);
+  background: var(--accent-d);
+  border: 1px solid var(--accent-b);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+/* Enfasi di un numero dentro una frase: "12 clienti · 5 tipi" */
+.count-num {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.cliente-avatar-sm,
+.det-avatar,
+.cliente-info-avatar,
+.cpc-avatar,
+.gcr-avatar {
+  font-family: var(--sans);
+  font-weight: 700;
+}
+
+/* ─── RIDUZIONE MOTION — rispetta preferenza utente ──────────── */
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary::after,
+  .logo-icon::after {
+    display: none;
+  }
+}
+
+/* ─── PRINT — nessuna texture, nessuna ombra ──────────────────── */
+@media print {
+  .content {
+    background-image: none !important;
+  }
+}
