@@ -368,6 +368,17 @@ socket.on("res:rigenera:tutti", ({ success }) => {
 socket.on("res:copia:scadenzario", ({ success, error, copiati }) => {
   closeModal("modal-copia"); // ⭐ chiudi sempre, non solo in caso di successo
   if (success) {
+    if (copiati > 0) {
+      showNotif(
+        `✅ Copia completata: ${copiati} adempiment${copiati === 1 ? "o" : "i"} copiat${copiati === 1 ? "o" : "i"}`,
+        "success",
+      );
+    } else {
+      showNotif(
+        "ℹ️ Nessun adempimento copiato: erano già tutti presenti nell'anno di destinazione",
+        "info",
+      );
+    }
     loadScadenzario();
     // 🔄 Ricarica la sintesi
     if (state.page === "sintesi") loadSintesi();
@@ -379,6 +390,17 @@ socket.on("res:copia:scadenzario", ({ success, error, copiati }) => {
 socket.on("res:copia:tutti", ({ success, error, copiati }) => {
   closeModal("modal-copia"); // ⭐ chiudi sempre, non solo in caso di successo
   if (success) {
+    if (copiati > 0) {
+      showNotif(
+        `✅ Copia completata: ${copiati} adempiment${copiati === 1 ? "o" : "i"} copiat${copiati === 1 ? "o" : "i"} per tutti i clienti`,
+        "success",
+      );
+    } else {
+      showNotif(
+        "ℹ️ Nessun adempimento copiato: erano già tutti presenti nell'anno di destinazione",
+        "info",
+      );
+    }
     // 🔄 Ricarica la sintesi
     if (state.page === "sintesi") loadSintesi();
   } else {
