@@ -365,19 +365,25 @@ socket.on("res:rigenera:tutti", ({ success }) => {
   }
 });
 
-socket.on("res:copia:scadenzario", ({ success }) => {
+socket.on("res:copia:scadenzario", ({ success, error, copiati }) => {
+  closeModal("modal-copia"); // ⭐ chiudi sempre, non solo in caso di successo
   if (success) {
-    closeModal("modal-copia");
     loadScadenzario();
     // 🔄 Ricarica la sintesi
     if (state.page === "sintesi") loadSintesi();
+  } else {
+    showNotif(`❌ Copia non riuscita${error ? ": " + error : ""}`, "error");
   }
 });
 
-socket.on("res:copia:tutti", ({ success }) => {
-  if (success) closeModal("modal-copia");
-  // 🔄 Ricarica la sintesi
-  if (state.page === "sintesi") loadSintesi();
+socket.on("res:copia:tutti", ({ success, error, copiati }) => {
+  closeModal("modal-copia"); // ⭐ chiudi sempre, non solo in caso di successo
+  if (success) {
+    // 🔄 Ricarica la sintesi
+    if (state.page === "sintesi") loadSintesi();
+  } else {
+    showNotif(`❌ Copia non riuscita${error ? ": " + error : ""}`, "error");
+  }
 });
 
 socket.on("res:update:adempimento_stato", ({ success, error }) => {

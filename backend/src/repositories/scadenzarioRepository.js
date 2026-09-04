@@ -280,18 +280,18 @@ function copiaScadenzarioCliente(id_cliente, anno_da, anno_a) {
             r.mese,
             r.trimestre,
             r.semestre,
-            "da_fare",
-            r.data_scadenza,
-            null, // data_completamento azzerata
+            "da_fare", // ⭐ stato sempre "da fare"
+            r.data_scadenza, // ⭐ data di scadenza mantenuta
+            r.data_completamento, // ⭐ data di completamento mantenuta
             null, // ⭐ note NON copiate
-            r.importo,
-            r.importo_saldo,
-            r.importo_acconto1,
-            r.importo_acconto2,
-            r.importo_iva,
-            r.importo_contabilita,
-            r.cont_completata,
-            r.iva_completata,
+            null, // ⭐ importo NON copiato
+            null, // ⭐ importo_saldo NON copiato
+            null, // ⭐ importo_acconto1 NON copiato
+            null, // ⭐ importo_acconto2 NON copiato
+            null, // ⭐ importo_iva NON copiato
+            null, // ⭐ importo_contabilita NON copiato
+            0, // ⭐ cont_completata NON copiata
+            0, // ⭐ iva_completata NON copiata
           ],
         );
         tot++;

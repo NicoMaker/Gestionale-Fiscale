@@ -74,9 +74,9 @@ if (typeof socket !== "undefined") {
 
 // ─── ESPOSIZIONE GLOBALE ──────────────────────────────────────
 
-// Le esposizioni globali delle funzioni di applica sono in applica.js
-// (che viene caricato dopo questo file)
-window.caricaClientiSenzaAdempimenti = caricaClientiSenzaAdempimenti;
+// Le esposizioni globali delle funzioni di applica sono in applica-modal.js
+// (che viene caricato dopo questo file — caricaClientiSenzaAdempimenti è
+// esportata lì, dove è effettivamente definita)
 window.goVistaGlobaleAdp = goVistaGlobaleAdp;
 window.toggleDashAdpCard = toggleDashAdpCard;
 window.clearDashAdpSelezione = clearDashAdpSelezione;
@@ -89,7 +89,8 @@ window.closeDashTipFiltroPanel = closeDashTipFiltroPanel;
 window._aggiornaDashPanelVisibility = _aggiornaDashPanelVisibility;
 window._aggiornaDashTipFiltroCounter = _aggiornaDashTipFiltroCounter;
 window._refreshDashTipFiltroPanel = _refreshDashTipFiltroPanel;
-window.setApplicaModalita = setApplicaModalita;
+// setApplicaModalita è definita in applica-modal.js (caricato dopo questo
+// file) ed è già globale di suo: nessuna esportazione necessaria qui.
 
 // ═══════════════════════════════════════════════════════════════
 // FUNZIONI DASHBOARD CONDIVISE (usate anche dalla pagina Cestino)

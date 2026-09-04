@@ -39,6 +39,24 @@ function closeModal(id) {
   document.getElementById(id)?.classList.remove("open");
 }
 
+// ─── CHIUSURA MODAL: click fuori o tasto ESC ──────────────────
+// Rete di sicurezza: se un modal resta "bloccato" aperto (es. per un
+// errore non gestito), l'utente può sempre uscirne e riprendere
+// a usare/scrollare il programma.
+document.addEventListener("click", (e) => {
+  if (e.target.classList && e.target.classList.contains("modal-overlay")) {
+    e.target.classList.remove("open");
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    document
+      .querySelectorAll(".modal-overlay.open")
+      .forEach((m) => m.classList.remove("open"));
+  }
+});
+
 // ─── NOTIFICATIONS ────────────────────────────────────────────
 const NOTIF_ICONS = {
   success:

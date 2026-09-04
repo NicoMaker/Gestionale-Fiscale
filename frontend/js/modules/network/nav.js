@@ -50,7 +50,18 @@ function initNav() {
         .forEach((m) => m.classList.remove("open"));
   });
 
-  setupDecimalInputs();
+  // ⭐ NON chiamare setupDecimalInputs(): applicava una formattazione
+  // valuta italiana a TUTTI gli input type="number" della pagina, ma in
+  // questa app quei campi sono sempre campi "Anno" (mai importi — gli
+  // importi sono input type="text" con una gestione separata). Il
+  // risultato era che, uscendo dal campo, il valore veniva riscritto in
+  // un formato non valido per un input numerico (es. "2.025,00€"), che
+  // il browser rifiuta e svuota — impedendo di fatto di cambiare l'anno.
+  // La funzione clonava anche il nodo <input> ad ogni utilizzo, rompendo
+  // i riferimenti di altre funzionalità agganciate a quel campo (es. i
+  // pulsanti di field-history.js). Rimasta disattivata finché non verrà
+  // riscritta per applicarsi solo ai reali campi importo.
+  // setupDecimalInputs();
 }
 
 // ─── RENDER PAGE ──────────────────────────────────────────────
