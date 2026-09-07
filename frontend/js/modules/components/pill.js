@@ -48,10 +48,29 @@ function getPillColor(r, stato) {
   return "var(--red)";
 }
 
+// ─── BADGE SCADUTO / NON SCADUTO ────────────────────────────────
+// Generalizzato per TUTTI i tipi di adempimento (solo scadenza, checkbox,
+// contabilità, rate, testo libero): si basa unicamente su data_scadenza
+// confrontata con OGGI (variabile globale aggiornata a mezzanotte, vedi oggi.js).
+// Non viene mostrato solo se manca la data di scadenza oppure lo stato è "n_a".
+function buildScadutoBadge(r) {
+  if (!r || !r.data_scadenza) return "";
+  const stato = r.stato || "da_fare";
+  if (stato === "n_a") return "";
+  const _dataScad = new Date(r.data_scadenza);
+  if (isNaN(_dataScad.getTime())) return "";
+  _dataScad.setHours(0, 0, 0, 0);
+  if (_dataScad < OGGI) {
+    return `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--orange);color:#fff">⚠️ SCADUTO</div>`;
+  }
+  return `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--green);color:#fff;opacity:0.85">✓ Non scaduto</div>`;
+}
+
 // ─── SOLO TESTO PILL ────────────────────────────────────────────
 function renderTextOnlyPill(r) {
   const ps = getPeriodoShort(r);
   const pillColor = "var(--purple)";
+  const scadutoBadge = buildScadutoBadge(r);
   return `<div class="periodo-pill text-only-pill" data-id="${r.id}"
     onclick="openAdpById(${r.id})"
     title="${escAttr(getPeriodoLabel(r))} — Click: modifica"
@@ -60,6 +79,7 @@ function renderTextOnlyPill(r) {
       <span class="pp-tag" style="border-color:${pillColor};color:${pillColor}">📝 ${ps}</span>
     </div>
     <div class="pp-nome" style="color:${pillColor};font-weight:600">${r.adempimento_nome || ""}</div>
+    ${scadutoBadge}
     ${r.note ? `<div class="pp-note" style="margin-top:4px">📝 ${r.note}</div>` : ""}
   </div>`;
 }
@@ -82,12 +102,18 @@ function renderCheckboxPill(r) {
   const nomeHtml = r.adempimento_nome
     ? `<div class="pp-nome" style="color:${color};font-size:11px;line-height:1.3;margin-bottom:2px">${r.adempimento_nome}</div>`
     : "";
+  const dateLine = r.data_scadenza
+    ? `<div class="pp-dates"><span class="pp-date" title="Data scadenza">📅 ${formattaDataItaliana(r.data_scadenza)}</span></div>`
+    : "";
+  const scadutoBadge = buildScadutoBadge(r);
   return `<div class="periodo-pill checkbox-pill s-${stato}" data-id="${r.id}" onclick="openAdpById(${r.id})" oncontextmenu="toggleAdpCompletato(event,${r.id})" title="${escAttr(getPeriodoLabel(r))} — Click: modifica | Tasto DX: toggle completato" style="border-color:${color};min-width:120px;flex:0 1 120px;position:relative">
     <div class="pp-top" style="justify-content:space-between;gap:4px">
       <span class="pp-tag" style="border-color:${color};color:${color}">${ps}</span>
       <span style="font-size:18px;line-height:1">${icon}</span>
     </div>
     ${nomeHtml}
+    ${dateLine}
+    ${scadutoBadge}
     <div class="cbx-btn-row" onclick="event.stopPropagation()">${btnReset}${btnNA}${btnDone}</div>
     ${r.note ? `<div class="pp-note" title="${escAttr(r.note)}">📝 ${r.note}</div>` : ""}
   </div>`;
@@ -151,20 +177,11 @@ function renderPeriodoPill(r) {
   if (isContabilita(r)) importiInline = _buildContabilitaLabel(r, pillColor);
   else if (hasRate(r)) importiInline = _buildRateLabel(r, pillColor);
 
-  // Badge SCADUTO / Non scaduto — usa OGGI globale aggiornato a mezzanotte
-  let scadutoBadge = "";
+  // Badge SCADUTO / Non scaduto — generalizzato per TUTTI i tipi di adempimento
+  // (solo scadenza, contabilità, rate): usa OGGI globale aggiornato a mezzanotte.
+  const scadutoBadge = buildScadutoBadge(r);
   const _isSoloScad =
     !isContabilita(r) && !hasRate(r) && !isCheckbox(r) && !isTextOnly(r);
-  if (_isSoloScad && r.data_scadenza && stato !== "n_a") {
-    const _dataScad = new Date(r.data_scadenza);
-    _dataScad.setHours(0, 0, 0, 0);
-    if (_dataScad < OGGI) {
-      // ← usa OGGI globale
-      scadutoBadge = `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--orange);color:#fff">⚠️ SCADUTO</div>`;
-    } else {
-      scadutoBadge = `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--green);color:#fff;opacity:0.85">✓ Non scaduto</div>`;
-    }
-  }
 
   // Per "solo scadenza": mostra solo la data di scadenza, mai quella di completamento
   let dateLine = "";

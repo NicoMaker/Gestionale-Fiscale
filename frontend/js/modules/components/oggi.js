@@ -65,23 +65,18 @@ function _aggiornaBadgeScadutoNelDOM() {
     const r = typeof getAdpById === "function" ? getAdpById(id) : null;
     if (!r) return;
 
-    const _isSoloScad =
-      !isContabilita(r) && !hasRate(r) && !isCheckbox(r) && !isTextOnly(r);
-    if (!_isSoloScad || !r.data_scadenza) return;
+    if (!r.data_scadenza) return;
 
-    const stato = r.stato || "da_fare";
-    if (stato === "n_a") return;
-
-    // Costruisce il nuovo badge
-    const _dataScad = new Date(r.data_scadenza);
-    _dataScad.setHours(0, 0, 0, 0);
+    // Badge generalizzato per TUTTI i tipi di adempimento (vedi buildScadutoBadge in pill.js)
     const nuovoBadge =
-      _dataScad < OGGI
-        ? `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--orange);color:#fff">⚠️ SCADUTO</div>`
-        : `<div class="pp-scaduto-badge" style="margin-top:4px;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;background:var(--green);color:#fff;opacity:0.85">✓ Non scaduto</div>`;
+      typeof buildScadutoBadge === "function" ? buildScadutoBadge(r) : "";
 
-    // Sostituisce il badge esistente oppure lo inserisce
+    // Sostituisce il badge esistente oppure lo inserisce (o lo rimuove se stato n_a)
     const vecchioBadge = pill.querySelector(".pp-scaduto-badge");
+    if (!nuovoBadge) {
+      if (vecchioBadge) vecchioBadge.remove();
+      return;
+    }
     if (vecchioBadge) {
       vecchioBadge.outerHTML = nuovoBadge;
     } else {
