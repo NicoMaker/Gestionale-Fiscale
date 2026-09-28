@@ -175,7 +175,7 @@ function renderSintesiTabella() {
     "</div>" +
     "</div>" +
     '<div style="font-size:11.5px;color:var(--accent);margin-top:10px;padding:8px 12px;background:var(--accent-d);border-radius:var(--r-sm);border-left:3px solid var(--accent)">' +
-    "🖱️ <strong>Clicca su una cella</strong> per aprire la <strong>Vista Globale</strong> filtrata su quel cliente e quell'adempimento — da lì potrai modificare o creare i singoli periodi (Gen, Feb, T1, ecc.)." +
+    "🖱️ <strong>Clicca su una cella</strong> per aprire la <strong>Vista Globale</strong> filtrata su quel cliente e quell'adempimento — da lì potrai modificare i singoli periodi (Gen, Feb, T1, ecc.)." +
     "</div>" +
     "</div>";
 
