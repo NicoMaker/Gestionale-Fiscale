@@ -1,3 +1,7 @@
+// ═══════════════════════════════════════════════════════════════
+// SINTESI-DETTAGLIO.JS — Pannello di dettaglio periodi + stampa
+// ═══════════════════════════════════════════════════════════════
+
 function sintesiToggleDettaglio(key, clienteId, adempimentoId) {
   state.sintesiActiveCellKey = state.sintesiActiveCellKey === key ? null : key;
   renderSintesiTabella();
@@ -37,6 +41,14 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
     return r.cliente_id === clienteId && r.id_adempimento === adempimentoId;
   });
   periodi = _sintesiOrdinaPeriodi(periodi);
+
+  // Popola lo store globale _rowStore (definito in adempimenti-pill.js)
+  // così openAdpById(id) può recuperare il record completo.
+  if (typeof storeRow === "function") {
+    periodi.forEach(function (p) {
+      storeRow(p);
+    });
+  }
 
   var gridHtml = "";
   var doneN = 0,
@@ -97,7 +109,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
   var rowsHtml = "";
   if (!periodi.length) {
     rowsHtml =
-      '<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:16px">➖ Adempimento non applicato / non generato per questo cliente nell\'anno ' +
+      '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:16px">➖ Adempimento non applicato / non generato per questo cliente nell\'anno ' +
       state.anno +
       "</td></tr>";
   } else {
@@ -123,6 +135,13 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
         (p.data_completamento
           ? formattaDataItaliana(p.data_completamento)
           : "—") +
+        '</td><td style="text-align:center;white-space:nowrap">' +
+        '<button class="btn btn-xs btn-secondary sint-dett-edit-btn" ' +
+        'onclick="event.stopPropagation(); openAdpById(' +
+        p.id +
+        ')" ' +
+        'title="Modifica questo periodo" ' +
+        'style="padding:2px 8px;font-size:12px">✏️</button>' +
         "</td></tr>";
     });
   }
@@ -144,7 +163,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
     "</div>" +
     gridHtml +
     '<div style="overflow-x:auto"><table class="sint-dett-table">' +
-    "<thead><tr><th>Periodo</th><th>Stato</th><th>Scadenza</th><th>Completato il</th></tr></thead>" +
+    "<thead><tr><th>Periodo</th><th>Stato</th><th>Scadenza</th><th>Completato il</th><th style='text-align:center'>Azioni</th></tr></thead>" +
     "<tbody>" +
     rowsHtml +
     "</tbody></table></div>";
@@ -221,7 +240,6 @@ function _generaFinestraStampa() {
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
     if (filtroClienteId && c.id !== filtroClienteId) return false;
-    // Filtro multi‑tipo: se l'array non è vuoto, il codice deve essere incluso
     if (
       filtroTipiUtente.length > 0 &&
       !filtroTipiUtente.includes(c.tipologia_codice)
@@ -282,12 +300,11 @@ function _generaFinestraStampa() {
       var key = cliente.id + "|" + adp.id;
       var periodi = lookup[key] || [];
       var st = _sintesiStatoCella(periodi);
-      // Se ci sono filtri stato attivi, salta le celle che non corrispondono
       if (
         statoFiltriAttivi.length > 0 &&
         statoFiltriAttivi.indexOf(st.kind) === -1
       ) {
-        return; // cella nascosta
+        return;
       }
       adempimentiCliente.push({
         adp: adp,
