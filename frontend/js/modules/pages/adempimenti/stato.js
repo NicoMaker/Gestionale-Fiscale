@@ -23,7 +23,10 @@ function openAdpModal(r) {
   setVal("adp-semestre-new", r.semestre || "");
 
   // Intestazione
-  setTxt("adp-nome-label", `${r.adempimento_nome || ""} — ${getPeriodoLabel(r)}`);
+  setTxt(
+    "adp-nome-label",
+    `${r.adempimento_nome || ""} — ${getPeriodoLabel(r)}`,
+  );
 
   // Info cliente
   const clienteInfo = document.getElementById("adp-cliente-info");
@@ -342,7 +345,9 @@ function bloccaPuntoInput(e) {
 // ─── COLORI CONTABILITÀ ───────────────────────────────────────
 function _aggiornaColoriContabilita(r) {
   const ivaCheck = document.getElementById("adp-iva-flag");
-  const ivaDone = ivaCheck ? ivaCheck.checked : parseInt(r?.iva_completata) === 1;
+  const ivaDone = ivaCheck
+    ? ivaCheck.checked
+    : parseInt(r?.iva_completata) === 1;
   const contCheck = document.getElementById("adp-cont-completata");
   const contDone = contCheck
     ? contCheck.checked

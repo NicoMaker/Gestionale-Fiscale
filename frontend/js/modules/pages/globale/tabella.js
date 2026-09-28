@@ -403,16 +403,15 @@ function renderGlobaleTabella(rawData) {
           state._sintesi_highlight.adempimentoId === g.id;
 
         var cellClass = "gxlv-td";
-        var cellExtraStyle = isHighlight ? ' style="animation:gxlvHighlight 2.2s ease-out"' : "";
+        var cellExtraStyle = isHighlight
+          ? ' style="animation:gxlvHighlight 2.2s ease-out"'
+          : "";
 
         if (pillCell) {
           // ⭐ Pillola già cliccabile di suo (renderPeriodoPill la rende tale)
           //    Non serve wrapper, ma se vogliamo un click che va dritto al modale
           //    possiamo forzare l'onclick sulla pillola stessa.
-          cellHtml =
-            '<div class="gxlv-periodo-wrapper">' +
-            pillCell +
-            "</div>";
+          cellHtml = '<div class="gxlv-periodo-wrapper">' + pillCell + "</div>";
         } else {
           // Cella vuota → bottone "+" per creare
           cellClass += " gxlv-td-empty";
@@ -427,7 +426,7 @@ function renderGlobaleTabella(rawData) {
             state.anno +
             ')" title="Crea ' +
             colKey +
-            ' per ' +
+            " per " +
             escAttr(client.nome) +
             '">+ ' +
             colKey +

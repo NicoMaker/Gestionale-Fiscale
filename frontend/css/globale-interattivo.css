@@ -18,7 +18,9 @@
 /* Pillola cliccabile: cursore pointer + microinterazione */
 .gxlv-td .periodo-pill {
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .gxlv-td .periodo-pill:hover {

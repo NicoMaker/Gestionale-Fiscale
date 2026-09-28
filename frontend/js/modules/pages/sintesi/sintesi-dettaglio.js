@@ -98,8 +98,18 @@ function openAddAdpForPeriod(clienteId, adempimentoId, periodoShort, anno) {
 
   if (scadenzaTipo === "mensile") {
     var mesiShort = [
-      "Gen", "Feb", "Mar", "Apr", "Mag", "Giu",
-      "Lug", "Ago", "Set", "Ott", "Nov", "Dic",
+      "Gen",
+      "Feb",
+      "Mar",
+      "Apr",
+      "Mag",
+      "Giu",
+      "Lug",
+      "Ago",
+      "Set",
+      "Ott",
+      "Nov",
+      "Dic",
     ];
     var idx = mesiShort.indexOf(periodoShort);
     if (idx !== -1) mese = idx + 1;
@@ -297,7 +307,9 @@ function _generaFinestraStampa() {
   );
   htmlParts.push(".header h1{font-size:20px;margin:0;color:#1F3B57}");
   htmlParts.push(".header p{font-size:12px;color:#667085;margin:4px 0 0}");
-  htmlParts.push(".header .date{font-size:10.5px;color:#98a2b3;margin:2px 0 0}");
+  htmlParts.push(
+    ".header .date{font-size:10.5px;color:#98a2b3;margin:2px 0 0}",
+  );
   htmlParts.push(
     "table.xlv{border-collapse:collapse;width:100%;table-layout:fixed;font-size:10.5px}",
   );
@@ -426,8 +438,12 @@ function _generaFinestraStampa() {
                       ? "na"
                       : "todo";
               var pShort =
-                typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
-              return '<span class="pchip bg-' + pKind + '">' + pShort + "</span>";
+                typeof getPeriodoShort === "function"
+                  ? getPeriodoShort(p)
+                  : "-";
+              return (
+                '<span class="pchip bg-' + pKind + '">' + pShort + "</span>"
+              );
             })
             .join("");
           htmlParts.push(
