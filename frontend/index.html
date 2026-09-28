@@ -45,8 +45,6 @@
     <link rel="stylesheet" href="css/excel-theme.css" />
     <!-- CSS — v3: "Ledger Pro", vetro, profondità, micro-interazioni -->
     <link rel="stylesheet" href="css/v3-premium.css" />
-    <!-- CSS — NUOVO: stili per bottoni interattivi vista globale -->
-    <link rel="stylesheet" href="css/globale-interattivo.css" />
   </head>
   <body>
     <!-- ═══ SIDEBAR ═════════════════════════════════════════ -->
@@ -386,7 +384,7 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- MODAL ADEMPIMENTO STATO (modifica + crea da Sintesi/Vista Globale) -->
+    <!-- MODAL ADEMPIMENTO STATO                                 -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modal-adempimento">
       <div class="modal modal-sm">
@@ -403,15 +401,6 @@
         <input type="hidden" id="adp-is-checkbox" />
         <input type="hidden" id="adp-is-text-only" />
         <input type="hidden" id="adp-rate-labels-json" />
-        <!-- ⭐ NUOVI: campi nascosti per creazione nuovo periodo -->
-        <input type="hidden" id="adp-is-new" value="0" />
-        <input type="hidden" id="adp-id-cliente-new" />
-        <input type="hidden" id="adp-id-adempimento-new" />
-        <input type="hidden" id="adp-anno-new" />
-        <input type="hidden" id="adp-scadenza-tipo-new" />
-        <input type="hidden" id="adp-mese-new" />
-        <input type="hidden" id="adp-trimestre-new" />
-        <input type="hidden" id="adp-semestre-new" />
 
         <div class="adp-cliente-info-box" id="adp-cliente-info"></div>
 
@@ -644,11 +633,7 @@
           <input class="input" id="adp-note" placeholder="Note..." />
         </div>
         <div class="modal-actions">
-          <button
-            class="btn btn-danger btn-sm"
-            id="adp-btn-delete"
-            onclick="deleteAdpCliente()"
-          >
+          <button class="btn btn-danger btn-sm" onclick="deleteAdpCliente()">
             🗑️ Rimuovi
           </button>
           <div style="flex: 1"></div>
@@ -658,11 +643,7 @@
           >
             Annulla
           </button>
-          <button
-            class="btn btn-primary"
-            id="adp-btn-save"
-            onclick="saveAdpStato()"
-          >
+          <button class="btn btn-primary" onclick="saveAdpStato()">
             💾 Salva
           </button>
         </div>
@@ -1399,7 +1380,7 @@
           </div>
         </div>
 
-        <!-- PANEL ELIMINA -->
+        <!-- PANEL ELIMINA (MIGLIORATO CON PULSANTI SELEZIONE TUTTI) -->
         <div id="tab-panel-elimina" style="display: none">
           <div class="form-group">
             <label>SELEZIONA ADEMPIMENTI DA ELIMINARE</label>
@@ -1430,6 +1411,7 @@
               "
             ></div>
 
+            <!-- 🔧 MIGLIORAMENTO: pulsanti per selezione rapida -->
             <div
               style="
                 margin-top: 8px;
@@ -1628,6 +1610,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <script src="js/modules/core/constants.js"></script>
     <script src="js/modules/core/state.js"></script>
+    <!-- ex utils.js: diviso in file dedicati per responsabilità -->
     <script src="js/modules/core/format.js"></script>
     <script src="js/modules/core/adempimenti-pill.js"></script>
     <script src="js/modules/core/cliente-display.js"></script>
@@ -1636,32 +1619,40 @@
     <script src="js/modules/core/date-utils.js"></script>
     <script src="js/modules/core/field-history.js"></script>
     <script src="js/modules/core/theme.js"></script>
+    <!-- ex renderers.js: un file per funzionalità -->
     <script src="js/modules/components/oggi.js"></script>
     <script src="js/modules/components/format-display.js"></script>
     <script src="js/modules/components/importo-cell.js"></script>
     <script src="js/modules/components/pill.js"></script>
     <script src="js/modules/components/cliente-box.js"></script>
+    <!-- dashboard -->
     <script src="js/modules/pages/dashboard/render.js"></script>
     <script src="js/modules/pages/dashboard/applica-modal.js"></script>
     <script src="js/modules/pages/dashboard/applica-azioni.js"></script>
+    <!-- clienti -->
     <script src="js/modules/pages/clienti/dettaglio.js"></script>
     <script src="js/modules/pages/clienti/filtri-tipologie.js"></script>
     <script src="js/modules/pages/clienti/filtri-clienti.js"></script>
     <script src="js/modules/pages/clienti/form.js"></script>
+    <!-- scadenzario -->
     <script src="js/modules/pages/scadenziario/render.js"></script>
     <script src="js/modules/pages/scadenziario/azioni.js"></script>
     <script src="js/modules/pages/scadenziario/bulk.js"></script>
     <script src="js/modules/pages/adempimenti/adp-pill-bulk.js"></script>
+    <!-- globale -->
     <script src="js/modules/pages/globale/filtri-render.js"></script>
     <script src="js/modules/pages/globale/filtri-apply.js"></script>
     <script src="js/modules/pages/globale/tabella.js"></script>
     <script src="js/modules/pages/sintesi/sintesi-init.js"></script>
     <script src="js/modules/pages/sintesi/sintesi-render.js"></script>
     <script src="js/modules/pages/sintesi/sintesi-dettaglio.js"></script>
+    <!-- adempimenti -->
     <script src="js/modules/pages/adempimenti/lista.js"></script>
     <script src="js/modules/pages/adempimenti/stato.js"></script>
+    <!-- pagine singole -->
     <script src="js/modules/pages/tipologie/tipologie.js"></script>
     <script src="js/modules/pages/scadenze/appunti.js"></script>
+    <!-- pagina bianca -->
     <script src="js/modules/pages/note/pagina-bianca-render.js"></script>
     <script src="js/modules/pages/note/pagina-bianca-modal.js"></script>
     <script src="js/modules/network/socket.js"></script>

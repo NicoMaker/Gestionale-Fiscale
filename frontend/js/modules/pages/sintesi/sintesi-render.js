@@ -1,8 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-// SINTESI-RENDER.JS — Matrice clienti × adempimenti
-//   Click cella → apre Vista Globale filtrata su cliente+adempimento
-// ═══════════════════════════════════════════════════════════════
-
 function renderSintesiTabella() {
   if (state.page !== "sintesi") return;
   var container = document.getElementById("content");
@@ -37,13 +32,12 @@ function renderSintesiTabella() {
     });
   });
 
-  // ─── Lookup periodi + rowStore ────────────────────────────────
+  // ─── Build lookup ─────────────────────────────────────────────
   var lookup = {};
   (state.sintesiData || []).forEach(function (r) {
     var k = r.cliente_id + "|" + r.id_adempimento;
     if (!lookup[k]) lookup[k] = [];
     lookup[k].push(r);
-    if (typeof storeRow === "function") storeRow(r);
   });
 
   // ─── Righe (clienti) ──────────────────────────────────────────
@@ -51,6 +45,7 @@ function renderSintesiTabella() {
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
     if (_sintesiClienteFiltro && c.id !== _sintesiClienteFiltro) return false;
+    // FILTRO MULTI‑TIPO: se l'array non è vuoto, il cliente deve avere un codice incluso
     if (
       _sintesiTipiUtenteFiltro.length > 0 &&
       !_sintesiTipiUtenteFiltro.includes(c.tipologia_codice)
@@ -75,7 +70,7 @@ function renderSintesiTabella() {
     });
   });
 
-  // ─── Stato per ogni cliente+adempimento ──────────────────────
+  // ─── Calcola stato per ogni cliente+adempimento ──────────────
   var statiClienti = {};
   var stats = { done: 0, partial: 0, todo: 0, na: 0 };
 
@@ -89,7 +84,7 @@ function renderSintesiTabella() {
     });
   });
 
-  // ─── Filtro stato ────────────────────────────────────────────
+  // ─── FILTRO STATO: mostra clienti con ALMENO una cella corrispondente ──
   var statoFiltriAttivi = _sintesiStatoFiltriAttivi();
   var clientiVisibili = clienti;
 
@@ -106,7 +101,7 @@ function renderSintesiTabella() {
     });
   }
 
-  // ─── Statistiche header ──────────────────────────────────────
+  // ─── Calcola statistiche ──────────────────────────────────────
   var doneCells = stats.done || 0;
   var naCells = stats.na || 0;
   var partialCells = stats.partial || 0;
@@ -122,7 +117,7 @@ function renderSintesiTabella() {
       : String(clienti.length);
   var clientiCountUnit = clienti.length === 1 ? "e" : "i";
 
-  // ─── Header ───────────────────────────────────────────────────
+  // ─── Header ────────────────────────────────────────────────────
   function _sintStatBoxHtml(kind, count, color, iconaLabel) {
     var active = _sintesiStatoFiltri[kind] || false;
     return (
@@ -174,12 +169,10 @@ function renderSintesiTabella() {
     _sintStatBoxHtml("na", naCells, "var(--t3)", "➖ N/A") +
     "</div>" +
     "</div>" +
-    '<div style="font-size:11.5px;color:var(--accent);margin-top:10px;padding:8px 12px;background:var(--accent-d);border-radius:var(--r-sm);border-left:3px solid var(--accent)">' +
-    "🖱️ <strong>Clicca su una cella</strong> per aprire la <strong>Vista Globale</strong> filtrata su quel cliente e quell'adempimento — da lì potrai modificare i singoli periodi (Gen, Feb, T1, ecc.)." +
-    "</div>" +
+    '<div style="font-size:11px;color:var(--t3);margin-top:8px">📖 Filtri stato: mostrano le celle che corrispondono allo stato selezionato. Le altre celle sono nascoste.</div>' +
     "</div>";
 
-  // ─── Legenda ──────────────────────────────────────────────────
+  // ─── Legenda ───────────────────────────────────────────────────
   function _sintLegendItemHtml(kind, label) {
     var active = _sintesiStatoFiltri[kind] || false;
     return (
@@ -264,6 +257,7 @@ function renderSintesiTabella() {
         var st = statiClienti[c.id][a.id] || { kind: "na", label: "N/A" };
         var isActive = state.sintesiActiveCellKey === key;
 
+        // Se ci sono filtri attivi, nascondi le celle che NON corrispondono
         var isHidden =
           statoFiltriAttivi.length > 0 &&
           statoFiltriAttivi.indexOf(st.kind) === -1;
@@ -332,26 +326,20 @@ function renderSintesiTabella() {
         if (isActive) cellClass += " active";
         if (isHidden) cellClass += " sint-cell-hidden";
 
-        // ⭐ CLICK → apre Vista Globale filtrata su cliente + adempimento
         cellsHtml +=
           '<td class="sint-td"><button type="button" class="' +
           cellClass +
           '" data-key="' +
           key +
-          '" onclick="sintesiApriInVistaGlobale(' +
+          '" onclick="sintesiToggleDettaglio(\'' +
+          key +
+          "'," +
           c.id +
           "," +
           a.id +
           ')"' +
           ' title="' +
-          escAttr(
-            c.nome +
-              " · " +
-              a.nome +
-              " — " +
-              st.label +
-              "\n→ Apri in Vista Globale",
-          ) +
+          escAttr(c.nome + " · " + a.nome + " — " + st.label) +
           (isHidden ? " (nascosto dal filtro)" : "") +
           '">' +
           cellContent +
@@ -386,7 +374,15 @@ function renderSintesiTabella() {
       "</tbody></table></div>";
   }
 
-  container.innerHTML = headerCard + legend + bodyHtml;
+  container.innerHTML =
+    headerCard + legend + bodyHtml + '<div id="sint-dettaglio"></div>';
+
+  if (state.sintesiActiveCellKey) {
+    var parts = state.sintesiActiveCellKey.split("|");
+    _renderSintesiDettaglio(parseInt(parts[0]), parseInt(parts[1]));
+  }
 }
 
-window.renderSintesiTabella = renderSintesiTabella;
+// ═══════════════════════════════════════════════════════════════
+// DETTAGLIO PERIODI
+// ═══════════════════════════════════════════════════════════════

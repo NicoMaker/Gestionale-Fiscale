@@ -1,5 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// GLOBALE-TABELLA.JS — Render tabella con pillole cliccabili
+// GLOBALE-TABELLA.JS — Helper periodi ordinati, render tabella completo,
+//                      esposizioni globali
+// Dipende da: globale-filtri.js
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// RENDER TABELLA COMPLETO (UNICA VERSIONE CANONICA)
 // ═══════════════════════════════════════════════════════════════
 
 function renderGlobaleTabella(rawData) {
@@ -10,6 +15,7 @@ function renderGlobaleTabella(rawData) {
     ? filtroClienteStatoEl.value
     : "";
 
+  // ⬇️ RIMOSSO searchTerm (non più presente)
   var selectedClienteIds =
     state.globaleSelectedClienti && state.globaleSelectedClienti.length
       ? state.globaleSelectedClienti.map(function (id) {
@@ -25,6 +31,7 @@ function renderGlobaleTabella(rawData) {
       selectedClienteIds.indexOf(r.cliente_id) === -1
     )
       continue;
+    // ⬇️ RIMOSSO il filtro per searchTerm
     data.push(r);
   }
 
@@ -54,6 +61,9 @@ function renderGlobaleTabella(rawData) {
     adpFiltroAttivi = [state.globalePreFiltroAdp];
   }
 
+  // ⭐ FIX: applica davvero il filtro "adempimenti" selezionato nel select
+  // sopra la tabella (prima veniva letto solo per mostrare i badge, senza
+  // filtrare i dati).
   if (adpFiltroAttivi.length > 0) {
     var adpFiltroSet = {};
     for (var afIdx = 0; afIdx < adpFiltroAttivi.length; afIdx++) {
@@ -116,6 +126,8 @@ function renderGlobaleTabella(rawData) {
     }
   }
 
+  // ⬇️ RIMOSSO searchBadge
+
   var navAdpHtml = "";
   if (adpFiltroAttivi.length > 0) {
     navAdpHtml =
@@ -165,7 +177,12 @@ function renderGlobaleTabella(rawData) {
       "</div>";
   }
 
-  // RAGGRUPPA
+  // NOTA: headerCard viene costruito più avanti (dopo il ciclo di raggruppamento
+  // e filtro), così i numeri Totale/Comp./Da fare/In corso/Progresso riflettono
+  // esattamente ciò che è filtrato/visibile in tabella, non i totali grezzi
+  // restituiti dal server prima dei filtri locali (tipologia, stato cliente).
+
+  // RAGGRUPPA PER ADEMPIMENTO E CLIENTE
   var grouped = {};
   for (var idxData = 0; idxData < data.length; idxData++) {
     var rowData = data[idxData];
@@ -173,10 +190,8 @@ function renderGlobaleTabella(rawData) {
     var adpKey = rowData.adempimento_nome;
     if (!grouped[adpKey]) {
       grouped[adpKey] = {
-        id: rowData.id_adempimento,
         nome: rowData.adempimento_nome,
         codice: rowData.adempimento_codice,
-        scadenza_tipo: rowData.scadenza_tipo,
         clienti: {},
       };
     }
@@ -208,6 +223,10 @@ function renderGlobaleTabella(rawData) {
     return a.nome.localeCompare(b.nome, "it", { sensitivity: "base" });
   });
 
+  // ── Totali "visibili": calcolati SOLO sui clienti/periodi che superano
+  // tutti i filtri (cliente selezionato, stato cliente, tipologia) — così
+  // il riquadro Totale/Comp./Da fare/In corso/Progresso in alto rispecchia
+  // esattamente quello che si vede in tabella, invece dei totali grezzi.
   var visTotale = 0,
     visComp = 0,
     visDaF = 0,
@@ -290,38 +309,45 @@ function renderGlobaleTabella(rawData) {
     var totG = allRows.length;
     var pG = totG > 0 ? Math.round((compG / totG) * 100) : 0;
 
-    // ── Colonne del gruppo: SEMPRE tutte le colonne previste dal tipo ──
-    var colsGrp = [];
-    if (g.scadenza_tipo === "mensile") {
-      colsGrp = [
-        "Gen",
-        "Feb",
-        "Mar",
-        "Apr",
-        "Mag",
-        "Giu",
-        "Lug",
-        "Ago",
-        "Set",
-        "Ott",
-        "Nov",
-        "Dic",
-      ];
-    } else if (g.scadenza_tipo === "trimestrale") {
-      colsGrp = ["T1", "T2", "T3", "T4"];
-    } else if (g.scadenza_tipo === "semestrale") {
-      colsGrp = ["S1", "S2"];
-    } else {
-      colsGrp = ["Ann."];
-    }
-    // Aggiungi eventuali chiavi fuori standard
+    // ── Colonne del gruppo (unione ordinata dei periodi di TUTTI i clienti:
+    //    Gen..Dic / T1..T4 / S1,S2 / Ann.) — così ogni adempimento ha la sua
+    //    scheda "foglio di calcolo": clienti in riga, periodi in colonna. ──
+    var COL_ORDER = [
+      "Gen",
+      "Feb",
+      "Mar",
+      "Apr",
+      "Mag",
+      "Giu",
+      "Lug",
+      "Ago",
+      "Set",
+      "Ott",
+      "Nov",
+      "Dic",
+      "T1",
+      "T2",
+      "T3",
+      "T4",
+      "S1",
+      "S2",
+      "Ann.",
+    ];
     var colSetGrp = {};
-    for (var csIdx = 0; csIdx < clientiFiltrati.length; csIdx++) {
-      var csPer = clientiFiltrati[csIdx].periodi;
-      for (var csP = 0; csP < csPer.length; csP++) {
-        colSetGrp[getPeriodoShort(csPer[csP])] = true;
+    for (
+      var colScanIdx = 0;
+      colScanIdx < clientiFiltrati.length;
+      colScanIdx++
+    ) {
+      var colScanPeriodi = clientiFiltrati[colScanIdx].periodi;
+      for (var colScanP = 0; colScanP < colScanPeriodi.length; colScanP++) {
+        colSetGrp[getPeriodoShort(colScanPeriodi[colScanP])] = true;
       }
     }
+    var colsGrp = COL_ORDER.filter(function (k) {
+      return colSetGrp[k];
+    });
+    // fallback: eventuali chiavi periodo non previste nell'ordine standard
     for (var k2 in colSetGrp) {
       if (colSetGrp.hasOwnProperty(k2) && colsGrp.indexOf(k2) === -1)
         colsGrp.push(k2);
@@ -379,68 +405,18 @@ function renderGlobaleTabella(rawData) {
       var classBadgesHtml = _renderGlobaleClienteClassBadges(client);
       var sottotipoLabel = client.sottotipologia_nome || "";
 
-      // Mappa periodo-chiave → pill HTML
+      // Mappa periodo-chiave → pill HTML, per posizionare ogni pillola
+      // nella colonna corretta della riga di questo cliente.
       var pillByCol = {};
-      var rowIdByCol = {};
       for (var mpIdx = 0; mpIdx < client.periodi.length; mpIdx++) {
         var mpR = client.periodi[mpIdx];
-        var mpKey = getPeriodoShort(mpR);
-        pillByCol[mpKey] = renderPeriodoPill(mpR);
-        rowIdByCol[mpKey] = mpR.id;
+        pillByCol[getPeriodoShort(mpR)] = renderPeriodoPill(mpR);
       }
 
-      // ⭐ Genera celle: pillola cliccabile o bottone "+" se vuota
       var rigaCelleHtml = "";
       for (var cc = 0; cc < colsGrp.length; cc++) {
-        var colKey = colsGrp[cc];
-        var pillCell = pillByCol[colKey];
-        var rowIdCell = rowIdByCol[colKey];
-
-        // Highlight se arrivo dalla Sintesi
-        var isHighlight =
-          state._sintesi_highlight &&
-          state._sintesi_highlight.clienteId === client.id &&
-          state._sintesi_highlight.adempimentoId === g.id;
-
-        var cellClass = "gxlv-td";
-        var cellExtraStyle = isHighlight
-          ? ' style="animation:gxlvHighlight 2.2s ease-out"'
-          : "";
-
-        if (pillCell) {
-          // ⭐ Pillola già cliccabile di suo (renderPeriodoPill la rende tale)
-          //    Non serve wrapper, ma se vogliamo un click che va dritto al modale
-          //    possiamo forzare l'onclick sulla pillola stessa.
-          cellHtml = '<div class="gxlv-periodo-wrapper">' + pillCell + "</div>";
-        } else {
-          // Cella vuota → bottone "+" per creare
-          cellClass += " gxlv-td-empty";
-          cellHtml =
-            '<button class="gxlv-edit-btn gxlv-edit-btn-create" onclick="event.stopPropagation(); openAddAdpForPeriod(' +
-            client.id +
-            "," +
-            g.id +
-            ",'" +
-            colKey +
-            "'," +
-            state.anno +
-            ')" title="Crea ' +
-            colKey +
-            " per " +
-            escAttr(client.nome) +
-            '">+ ' +
-            colKey +
-            "</button>";
-        }
-
-        rigaCelleHtml +=
-          '<td class="' +
-          cellClass +
-          '"' +
-          cellExtraStyle +
-          ">" +
-          cellHtml +
-          "</td>";
+        var pillCell = pillByCol[colsGrp[cc]];
+        rigaCelleHtml += '<td class="gxlv-td">' + (pillCell || "") + "</td>";
       }
 
       var bandFillGrp = cFilIdx % 2 === 1 ? " gxlv-band" : "";
@@ -573,6 +549,7 @@ function renderGlobaleTabella(rawData) {
     '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px">' +
     filtroClienteStatoBadge +
     clienteSelBadge +
+    // ⬇️ RIMOSSO searchBadge
     "</div>" +
     "</div>" +
     "</div>" +
@@ -626,9 +603,6 @@ function renderGlobaleTabella(rawData) {
   if (state.globalePreFiltroAdp) {
     state.globalePreFiltroAdp = "";
   }
-
-  // Reset highlight dopo il render
-  state._sintesi_highlight = null;
 
   if (typeof _pillBulkAttivo !== "undefined" && _pillBulkAttivo) {
     _renderBarraBulkPill();
