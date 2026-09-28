@@ -1,3 +1,7 @@
+// ═══════════════════════════════════════════════════════════════
+// GLOBALE-FILTRI-APPLY.JS — Applica filtri, header, helper
+// ═══════════════════════════════════════════════════════════════
+
 function applyGlobaleFiltriLocali() {
   if (state.scadGlobale) renderGlobaleTabella(state.scadGlobale);
 }
@@ -12,10 +16,6 @@ function resetGlobaleClienteSel() {
     if (el._ssRefresh) el._ssRefresh();
   }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER HEADER CON FILTRO ADEMPIMENTO
-// ═══════════════════════════════════════════════════════════════
 
 function renderGlobaleHeader() {
   var st = state.globaleStats;
@@ -124,10 +124,6 @@ function navigaAdempimento(direzione) {
   if (adpSel._ssRefresh) adpSel._ssRefresh();
   applyGlobaleFiltri();
 }
-
-// ═══════════════════════════════════════════════════════════════
-// HELPER INTERNO: costruisce l'HTML dei periodi ordinati per un cliente
-// ═══════════════════════════════════════════════════════════════
 
 function _buildPeriodiOrdinatiHtml(periodi) {
   var periodiOrdinati = periodi.slice().sort(function (a, b) {

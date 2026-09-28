@@ -1,35 +1,31 @@
 // ═══════════════════════════════════════════════════════════════
-// ADEMPIMENTI-STATO.JS — Modal stato adempimento, importi (cont/rate/checkbox),
-//                         salvataggio, esposizioni globali
-// Dipende da: adempimenti-lista.js
+// ADEMPIMENTI-STATO.JS — Modal stato adempimento (modifica + crea)
 // ═══════════════════════════════════════════════════════════════
+
 // ─── MODAL STATO ADEMPIMENTO ──────────────────────────────────
 function openAdpModal(r) {
-  setVal("adp-id", r.id);
-  setTxt("adp-nome-label", `${r.adempimento_nome} — ${getPeriodoLabel(r)}`);
-  setVal("adp-stato", r.stato || "da_fare");
-  setVal("adp-scadenza", formattaDataItaliana(r.data_scadenza) || "");
-  setVal("adp-data", formattaDataItaliana(r.data_completamento) || "");
-  setVal("adp-note", r.note || "");
+  const isNew = !r.id || r.is_new === true;
+
+  // Popola campi nascosti
+  setVal("adp-id", r.id || "");
   setVal("adp-is-contabilita", r.is_contabilita || 0);
   setVal("adp-has-rate", r.has_rate || 0);
   setVal("adp-is-checkbox", r.is_checkbox || 0);
   setVal("adp-is-text-only", r.is_text_only || 0);
   setVal("adp-rate-labels-json", r.rate_labels || "");
+  setVal("adp-is-new", isNew ? "1" : "0");
+  setVal("adp-id-cliente-new", r.id_cliente || "");
+  setVal("adp-id-adempimento-new", r.id_adempimento || "");
+  setVal("adp-anno-new", r.anno || "");
+  setVal("adp-scadenza-tipo-new", r.scadenza_tipo || "");
+  setVal("adp-mese-new", r.mese || "");
+  setVal("adp-trimestre-new", r.trimestre || "");
+  setVal("adp-semestre-new", r.semestre || "");
 
-  setTimeout(() => {
-    const campoScadenza = document.getElementById("adp-scadenza");
-    const campoCompletamento = document.getElementById("adp-data");
-    if (campoScadenza) {
-      gestisciInputData(campoScadenza);
-      creaDatePicker(campoScadenza);
-    }
-    if (campoCompletamento) {
-      gestisciInputData(campoCompletamento);
-      creaDatePicker(campoCompletamento);
-    }
-  }, 100);
+  // Intestazione
+  setTxt("adp-nome-label", `${r.adempimento_nome || ""} — ${getPeriodoLabel(r)}`);
 
+  // Info cliente
   const clienteInfo = document.getElementById("adp-cliente-info");
   if (clienteInfo) {
     clienteInfo.innerHTML = renderClienteInfoBox({
@@ -44,12 +40,20 @@ function openAdpModal(r) {
     });
   }
 
+  // Popola campi
+  setVal("adp-stato", r.stato || "da_fare");
+  setVal("adp-scadenza", formattaDataItaliana(r.data_scadenza) || "");
+  setVal("adp-data", formattaDataItaliana(r.data_completamento) || "");
+  setVal("adp-note", r.note || "");
+
+  // Determina tipo
   const isCont = isContabilita(r);
   const isRate = hasRate(r);
   const isCbx = isCheckbox(r);
   const isText = isTextOnly(r);
   const isSemplice = !isCont && !isRate && !isCbx && !isText;
 
+  // Mostra/nascondi sezioni
   const dataCompletamentoGroup = document.getElementById(
     "data-completamento-group",
   );
@@ -105,201 +109,41 @@ function openAdpModal(r) {
   } else if (isText) {
     if (sectTextOnly) sectTextOnly.style.display = "block";
   } else if (isSemplice) {
-    if (sectNormale) sectNormale.style.display = "none";
+    if (sectNormale) sectNormale.style.display = "block";
+    setVal("adp-importo", formattaNumeroItaliano(r.importo));
   }
+
+  // Pulsante Rimuovi nascosto se nuovo
+  const deleteBtn = document.getElementById("adp-btn-delete");
+  if (deleteBtn) deleteBtn.style.display = isNew ? "none" : "";
+
+  // Pulsante Salva cambia testo
+  const saveBtn = document.getElementById("adp-btn-save");
+  if (saveBtn) {
+    saveBtn.textContent = isNew ? "➕ Crea Periodo" : "💾 Salva";
+  }
+
+  // Date picker
+  setTimeout(() => {
+    const campoScadenza = document.getElementById("adp-scadenza");
+    const campoCompletamento = document.getElementById("adp-data");
+    if (campoScadenza) {
+      gestisciInputData(campoScadenza);
+      creaDatePicker(campoScadenza);
+    }
+    if (campoCompletamento) {
+      gestisciInputData(campoCompletamento);
+      creaDatePicker(campoCompletamento);
+    }
+  }, 100);
+
   openModal("modal-adempimento");
 }
 
-// ─── CHECKBOX PILL UI ─────────────────────────────────────────
-function _aggiornaPulsantiCheckbox(stato) {
-  const btnDaFare = document.getElementById("cbx-modal-dafare");
-  const btnNA = document.getElementById("cbx-modal-na");
-  const btnCompl = document.getElementById("cbx-modal-completato");
-  if (!btnDaFare || !btnNA || !btnCompl) return;
-  [btnDaFare, btnNA, btnCompl].forEach((b) => {
-    b.classList.remove(
-      "cbx-modal-active-red",
-      "cbx-modal-active-gray",
-      "cbx-modal-active-green",
-    );
-    b.style.opacity = "0.5";
-    b.style.transform = "scale(1)";
-  });
-  if (stato === "da_fare") {
-    btnDaFare.classList.add("cbx-modal-active-red");
-    btnDaFare.style.opacity = "1";
-    btnDaFare.style.transform = "scale(1.05)";
-  } else if (stato === "n_a") {
-    btnNA.classList.add("cbx-modal-active-gray");
-    btnNA.style.opacity = "1";
-    btnNA.style.transform = "scale(1.05)";
-  } else if (stato === "completato") {
-    btnCompl.classList.add("cbx-modal-active-green");
-    btnCompl.style.opacity = "1";
-    btnCompl.style.transform = "scale(1.05)";
-  }
-}
-
-function setCbxModalStato(nuovoStato) {
-  setVal("adp-stato", nuovoStato);
-  _aggiornaPulsantiCheckbox(nuovoStato);
-}
-
-// ─── COLORI CONTABILITÀ PURA ──────────────────────────────────
-function _aggiornaColoriContabilita(r) {
-  const ivaCheck = document.getElementById("adp-iva-flag");
-  const ivaDone = ivaCheck
-    ? ivaCheck.checked
-    : parseInt(r?.iva_completata) === 1;
-  const contCheck = document.getElementById("adp-cont-completata");
-  const contDone = contCheck
-    ? contCheck.checked
-    : parseInt(r?.cont_completata) === 1;
-  let colorIva = "",
-    colorCont = "";
-  if (ivaDone && contDone) colorIva = colorCont = "var(--green)";
-  else if (ivaDone || contDone) colorIva = colorCont = "var(--accent)";
-  const ivaLabel = document.getElementById("label-imp-iva");
-  const ivaFlagLabel = document.getElementById("label-iva-flag");
-  const contLabel = document.getElementById("label-cont-completata");
-  const contSpan = document.getElementById("label-imp-cont");
-  if (ivaLabel) ivaLabel.style.color = colorIva;
-  if (ivaFlagLabel) ivaFlagLabel.style.color = colorIva;
-  if (contLabel) contLabel.style.color = colorCont;
-  if (contSpan) contSpan.style.color = colorCont;
-}
-
-function onContabilitaImportoChange() {
-  _aggiornaColoriContabilita(null);
-  coloraInputImporto(document.getElementById("adp-imp-iva"));
-}
-
-function coloraInputImporto(input) {
-  if (!input) return;
-  const raw = (input.value || "").replace(/\./g, "").replace(",", ".").trim();
-  const num = parseFloat(raw);
-  if (!input.value || isNaN(num)) {
-    input.style.color = "";
-    input.style.borderColor = "";
-  } else if (num < 0) {
-    input.style.color = "var(--red)";
-    input.style.borderColor = "";
-  } else {
-    input.style.color = "var(--green)";
-    input.style.borderColor = "";
-  }
-}
-
-function parseItalianoFloat(str) {
-  if (str === null || str === undefined || str === "") return null;
-  const n = parseFloat(String(str).replace(/\./g, "").replace(",", "."));
-  return isNaN(n) ? null : n;
-}
-
-function formattaInputConSeparatori(input) {
-  if (!input) return;
-  const raw = input.value;
-  if (!raw) return;
-  const posCursore = input.selectionStart;
-  const lunghezzaOriginale = raw.length;
-  const negativo = raw.startsWith("-");
-  let pulito = raw.replace(/\./g, "").replace(/[^0-9,-]/g, "");
-  if (pulito.startsWith("-")) pulito = pulito.substring(1);
-  const parti = pulito.split(",");
-  let intero = parti[0];
-  let decimale =
-    parti.length > 1 ? parti.slice(1).join("").substring(0, 2) : null;
-  intero = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  let formattato = negativo ? "-" + intero : intero;
-  if (decimale !== null) formattato += "," + decimale;
-  if (raw !== formattato) {
-    input.value = formattato;
-    const delta = formattato.length - lunghezzaOriginale;
-    const nuovaPos = Math.max(0, posCursore + delta);
-    try {
-      input.setSelectionRange(nuovaPos, nuovaPos);
-    } catch (e) {}
-  }
-}
-
-function bloccaPuntoInput(e) {
-  if (e.key === ".") {
-    e.preventDefault();
-    const input = e.target;
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const val = input.value;
-    if (!val.includes(",")) {
-      input.value = val.substring(0, start) + "," + val.substring(end);
-      input.setSelectionRange(start + 1, start + 1);
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-  }
-  if (e.key === "-") {
-    const input = e.target;
-    if (input.selectionStart !== 0 || input.value.includes("-"))
-      e.preventDefault();
-  }
-}
-
-function validaInputNumerico(input) {
-  formattaInputConSeparatori(input);
-  coloraInputImporto(input);
-}
-
-function convertiVirgolaInPunto(input) {
-  const raw = input.value.trim();
-  if (!raw || raw === "-") {
-    input.value = "";
-    coloraInputImporto(input);
-    return;
-  }
-  const negativo = raw.startsWith("-");
-  let pulito = raw.replace(/\./g, "").replace(/[^0-9,-]/g, "");
-  if (pulito.startsWith("-")) pulito = pulito.substring(1);
-  const parti = pulito.split(",");
-  let intero = parti[0] || "0";
-  let decimale =
-    parti.length > 1 ? parti[1].substring(0, 2).padEnd(2, "0") : "00";
-  intero = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  input.value = (negativo ? "-" : "") + intero + "," + decimale;
-  coloraInputImporto(input);
-}
-
-function _aggiornaColoriRateContabilita(r) {
-  const rateContCheck = document.getElementById("adp-rate-cont-completata");
-  const contDone = rateContCheck
-    ? rateContCheck.checked
-    : parseInt(r?.cont_completata) === 1;
-  const saldoVal = document.getElementById("adp-imp-saldo")?.value;
-  const acc1Val = document.getElementById("adp-imp-acc1")?.value;
-  const acc2Val = document.getElementById("adp-imp-acc2")?.value;
-  const hasAnyRate =
-    (saldoVal && saldoVal !== "") ||
-    (acc1Val && acc1Val !== "") ||
-    (acc2Val && acc2Val !== "");
-  let color = "none";
-  if (hasAnyRate && contDone) color = "both";
-  else if (hasAnyRate || contDone) color = "one";
-  const labelCont = document.getElementById("label-rate-cont");
-  if (labelCont)
-    labelCont.style.color =
-      color === "both"
-        ? "var(--green)"
-        : color === "one"
-          ? "var(--accent)"
-          : "";
-}
-
-function onRateContabilitaChange() {
-  _aggiornaColoriRateContabilita(null);
-  ["adp-imp-saldo", "adp-imp-acc1", "adp-imp-acc2"].forEach((id) =>
-    coloraInputImporto(document.getElementById(id)),
-  );
-}
-
+// ─── SALVA ────────────────────────────────────────────────────
 function saveAdpStato() {
-  const id = parseInt(getVal("adp-id"));
+  const isNew = getVal("adp-is-new") === "1";
+  const id = parseInt(getVal("adp-id")) || 0;
   const isCont = getVal("adp-is-contabilita") === "1";
   const isRate = getVal("adp-has-rate") === "1";
   const isCbx = getVal("adp-is-checkbox") === "1";
@@ -307,13 +151,28 @@ function saveAdpStato() {
   const isSemplice = !isCont && !isRate && !isCbx && !isText;
 
   const data = {
-    id,
     stato: getVal("adp-stato"),
     data_scadenza: daItalianaAISO(getVal("adp-scadenza")) || null,
     data_completamento: null,
     note: getVal("adp-note") || null,
     cont_completata: 0,
   };
+
+  if (isNew) {
+    // ── CREAZIONE NUOVO PERIODO ──
+    data.id_cliente = parseInt(getVal("adp-id-cliente-new"));
+    data.id_adempimento = parseInt(getVal("adp-id-adempimento-new"));
+    data.anno = parseInt(getVal("adp-anno-new"));
+    data.scadenza_tipo = getVal("adp-scadenza-tipo-new");
+    const mese = getVal("adp-mese-new");
+    const trim = getVal("adp-trimestre-new");
+    const sem = getVal("adp-semestre-new");
+    data.mese = mese ? parseInt(mese) : null;
+    data.trimestre = trim ? parseInt(trim) : null;
+    data.semestre = sem ? parseInt(sem) : null;
+  } else {
+    data.id = id;
+  }
 
   if (isText) {
     data.stato = "text_only";
@@ -350,14 +209,18 @@ function saveAdpStato() {
       data.data_completamento =
         daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
   } else if (isSemplice) {
-    data.importo = null;
+    data.importo = parseItalianoFloat(getVal("adp-importo"));
     if (data.stato === "completato")
       data.data_completamento =
         daItalianaAISO(getVal("adp-data")) || daItalianaAISO(oggiItaliano());
     else data.data_completamento = null;
   }
 
-  socket.emit("update:adempimento_stato", data);
+  if (isNew) {
+    socket.emit("create:adempimento_cliente", data);
+  } else {
+    socket.emit("update:adempimento_stato", data);
+  }
 }
 
 function deleteAdpCliente() {
@@ -366,11 +229,180 @@ function deleteAdpCliente() {
   socket.emit("delete:adempimento_cliente", { id });
 }
 
+// ─── UTILITY ──────────────────────────────────────────────────
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.type === "checkbox") el.checked = !!val;
+  else el.value = val ?? "";
+}
+function setTxt(id, txt) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = txt ?? "";
+}
+function getVal(id) {
+  const el = document.getElementById(id);
+  if (!el) return "";
+  return el.type === "checkbox" ? el.checked : (el.value ?? "");
+}
+
+function parseItalianoFloat(str) {
+  if (str === null || str === undefined || str === "") return null;
+  const n = parseFloat(String(str).replace(/\./g, "").replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+
+function coloraInputImporto(input) {
+  if (!input) return;
+  const raw = (input.value || "").replace(/\./g, "").replace(",", ".").trim();
+  const num = parseFloat(raw);
+  if (!input.value || isNaN(num)) {
+    input.style.color = "";
+    input.style.borderColor = "";
+  } else if (num < 0) {
+    input.style.color = "var(--red)";
+    input.style.borderColor = "";
+  } else {
+    input.style.color = "var(--green)";
+    input.style.borderColor = "";
+  }
+}
+
+function validaInputNumerico(input) {
+  formattaInputConSeparatori(input);
+  coloraInputImporto(input);
+}
+
+function formattaInputConSeparatori(input) {
+  if (!input) return;
+  const raw = input.value;
+  if (!raw) return;
+  const posCursore = input.selectionStart;
+  const lunghezzaOriginale = raw.length;
+  const negativo = raw.startsWith("-");
+  let pulito = raw.replace(/\./g, "").replace(/[^0-9,-]/g, "");
+  if (pulito.startsWith("-")) pulito = pulito.substring(1);
+  const parti = pulito.split(",");
+  let intero = parti[0];
+  let decimale =
+    parti.length > 1 ? parti.slice(1).join("").substring(0, 2) : null;
+  intero = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  let formattato = negativo ? "-" + intero : intero;
+  if (decimale !== null) formattato += "," + decimale;
+  if (raw !== formattato) {
+    input.value = formattato;
+    const delta = formattato.length - lunghezzaOriginale;
+    const nuovaPos = Math.max(0, posCursore + delta);
+    try {
+      input.setSelectionRange(nuovaPos, nuovaPos);
+    } catch (e) {}
+  }
+}
+
+function convertiVirgolaInPunto(input) {
+  const raw = input.value.trim();
+  if (!raw || raw === "-") {
+    input.value = "";
+    coloraInputImporto(input);
+    return;
+  }
+  const negativo = raw.startsWith("-");
+  let pulito = raw.replace(/\./g, "").replace(/[^0-9,-]/g, "");
+  if (pulito.startsWith("-")) pulito = pulito.substring(1);
+  const parti = pulito.split(",");
+  let intero = parti[0] || "0";
+  let decimale =
+    parti.length > 1 ? parti[1].substring(0, 2).padEnd(2, "0") : "00";
+  intero = intero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  input.value = (negativo ? "-" : "") + intero + "," + decimale;
+  coloraInputImporto(input);
+}
+
+function bloccaPuntoInput(e) {
+  if (e.key === ".") {
+    e.preventDefault();
+    const input = e.target;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const val = input.value;
+    if (!val.includes(",")) {
+      input.value = val.substring(0, start) + "," + val.substring(end);
+      input.setSelectionRange(start + 1, start + 1);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+  if (e.key === "-") {
+    const input = e.target;
+    if (input.selectionStart !== 0 || input.value.includes("-"))
+      e.preventDefault();
+  }
+}
+
+// ─── COLORI CONTABILITÀ ───────────────────────────────────────
+function _aggiornaColoriContabilita(r) {
+  const ivaCheck = document.getElementById("adp-iva-flag");
+  const ivaDone = ivaCheck ? ivaCheck.checked : parseInt(r?.iva_completata) === 1;
+  const contCheck = document.getElementById("adp-cont-completata");
+  const contDone = contCheck
+    ? contCheck.checked
+    : parseInt(r?.cont_completata) === 1;
+  let colorIva = "",
+    colorCont = "";
+  if (ivaDone && contDone) colorIva = colorCont = "var(--green)";
+  else if (ivaDone || contDone) colorIva = colorCont = "var(--accent)";
+  const ivaLabel = document.getElementById("label-imp-iva");
+  const ivaFlagLabel = document.getElementById("label-iva-flag");
+  const contLabel = document.getElementById("label-cont-completata");
+  const contSpan = document.getElementById("label-imp-cont");
+  if (ivaLabel) ivaLabel.style.color = colorIva;
+  if (ivaFlagLabel) ivaFlagLabel.style.color = colorIva;
+  if (contLabel) contLabel.style.color = colorCont;
+  if (contSpan) contSpan.style.color = colorCont;
+}
+
+function onContabilitaImportoChange() {
+  _aggiornaColoriContabilita(null);
+  coloraInputImporto(document.getElementById("adp-imp-iva"));
+}
+
+function _aggiornaColoriRateContabilita(r) {
+  const rateContCheck = document.getElementById("adp-rate-cont-completata");
+  const contDone = rateContCheck
+    ? rateContCheck.checked
+    : parseInt(r?.cont_completata) === 1;
+  const saldoVal = document.getElementById("adp-imp-saldo")?.value;
+  const acc1Val = document.getElementById("adp-imp-acc1")?.value;
+  const acc2Val = document.getElementById("adp-imp-acc2")?.value;
+  const hasAnyRate =
+    (saldoVal && saldoVal !== "") ||
+    (acc1Val && acc1Val !== "") ||
+    (acc2Val && acc2Val !== "");
+  let color = "none";
+  if (hasAnyRate && contDone) color = "both";
+  else if (hasAnyRate || contDone) color = "one";
+  const labelCont = document.getElementById("label-rate-cont");
+  if (labelCont)
+    labelCont.style.color =
+      color === "both"
+        ? "var(--green)"
+        : color === "one"
+          ? "var(--accent)"
+          : "";
+}
+
+function onRateContabilitaChange() {
+  _aggiornaColoriRateContabilita(null);
+  ["adp-imp-saldo", "adp-imp-acc1", "adp-imp-acc2"].forEach((id) =>
+    coloraInputImporto(document.getElementById(id)),
+  );
+}
+
+function _aggiornaPulsantiCheckbox(stato) {
+  // Placeholder per compatibilità
+}
+
 // Esposizioni globali
-window.openNuovoAdpDef = openNuovoAdpDef;
-window.editAdpDef = editAdpDef;
-window.deleteAdpDef = deleteAdpDef;
-window.saveAdpDef = saveAdpDef;
-window.onAdpTipoChange = onAdpTipoChange;
-window.applyAdempimentiFiltriSearch = applyAdempimentiFiltriSearch;
-window.resetAdempimentiFiltri = resetAdempimentiFiltri;
+window.openAdpModal = openAdpModal;
+window.saveAdpStato = saveAdpStato;
+window.deleteAdpCliente = deleteAdpCliente;
