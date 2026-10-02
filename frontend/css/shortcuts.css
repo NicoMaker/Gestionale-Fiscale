@@ -1,0 +1,55 @@
+/* ═══ SCORCIATOIE DA TASTIERA — guida in-app, riga evidenziata, suggerimento "g" ═══ */
+.kb-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; cursor: pointer;
+  border: 1px solid var(--b0); border-radius: 999px;
+  background: var(--s1); color: var(--t2);
+  font: 500 13px var(--sans); transition: border-color 0.2s, color 0.2s;
+}
+.kb-trigger:hover { border-color: var(--accent); color: var(--t0); }
+.kb-trigger kbd, .kb-guida kbd, .kb-hint kbd {
+  display: inline-block; min-width: 20px; text-align: center;
+  padding: 1px 7px; border-radius: 6px; font: 600 12px var(--mono, monospace);
+  background: var(--s0); border: 1px solid var(--b1); border-bottom-width: 2px; color: var(--t1, var(--t0));
+}
+
+/* riga/scheda evidenziata con j / k */
+.kb-focus { outline: 2px solid var(--accent); outline-offset: -2px; background: var(--accent-d) !important; border-radius: 6px; }
+
+/* suggerimento dopo "g" */
+.kb-hint {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  z-index: 950; max-width: min(900px, 94vw);
+  padding: 10px 16px; border-radius: 14px; font-size: 13px; line-height: 1.9;
+  background: var(--s0); color: var(--t0); border: 1px solid var(--b0);
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.5);
+}
+.kb-hint[hidden], .kb-overlay[hidden] { display: none; }
+
+/* guida */
+.kb-overlay {
+  position: fixed; inset: 0; z-index: 960; display: grid; place-items: center;
+  padding: 3vh 12px; background: rgba(14, 10, 40, 0.55); backdrop-filter: blur(8px);
+}
+.kb-guida {
+  width: min(760px, 100%); max-height: 94vh; display: flex; flex-direction: column;
+  background: var(--s0); color: var(--t0); border: 1px solid var(--b0);
+  border-radius: 22px; box-shadow: 0 40px 90px -20px rgba(0, 0, 0, 0.5); overflow: hidden;
+}
+.kb-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid var(--b0); }
+.kb-head h2 { margin: 0; font-size: 18px; }
+.kb-x { cursor: pointer; border: 1px solid var(--b1); background: var(--s1); color: var(--t2); border-radius: 8px; padding: 3px 10px; font: 600 12px var(--sans); }
+.kb-body { overflow: auto; padding: 8px 22px 18px; }
+.kb-sec { margin: 14px 0; }
+.kb-sec h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--t2); }
+.kb-cur { padding: 4px 14px 10px; border-radius: 14px; background: var(--accent-d); }
+.kb-guida table { width: 100%; border-collapse: collapse; }
+.kb-guida td { padding: 5px 8px; border-bottom: 1px solid var(--b0); font-size: 13.5px; vertical-align: top; }
+.kb-guida td:first-child { white-space: nowrap; width: 38%; }
+.kb-or { color: var(--t2); font-size: 11px; margin: 0 2px; }
+.kb-nav { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px 14px; font-size: 13.5px; }
+.kb-guida details { margin: 4px 0; border: 1px solid var(--b0); border-radius: 10px; padding: 4px 12px; }
+.kb-guida summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+.kb-note { font-size: 12.5px; color: var(--t2); }
+@media print { .kb-trigger, .kb-hint, .kb-overlay { display: none !important; } .kb-focus { outline: none; background: none !important; } }
+@media (max-width: 700px) { .kb-trigger { display: none; } }
