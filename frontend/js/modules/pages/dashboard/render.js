@@ -442,7 +442,7 @@ function updateDashboardContent(stats) {
       '</span><span class="ds-lbl">✓</span></div>' +
       '<div class="dash-stat-chip" style="color:var(--red)"><span class="ds-num">' +
       adpItem.da_fare +
-      '</span><span class="ds-lbl">⭕</span></div>' +
+      '</span><span class="ds-lbl">☐</span></div>' +
       (iC > 0
         ? '<div class="dash-stat-chip" style="color:var(--yellow)"><span class="ds-num">' +
           iC +

@@ -17,7 +17,7 @@ function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute("content", theme === "dark" ? "#0b0f19" : "#f8fafc");
+    metaTheme.setAttribute("content", theme === "dark" ? "#0b0d16" : "#f6f7fb");
   }
   _updateToggleUI(theme);
 }

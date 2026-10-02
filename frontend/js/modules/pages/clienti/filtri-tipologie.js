@@ -315,7 +315,7 @@ function renderTipologieFiltroPanel() {
         <span class="tip-gruppo-badge" style="background:${tip.color}22;color:${tip.color};border-color:${tip.color}44">${tip.icon} ${tipCod}</span>
         <span class="tip-gruppo-desc">${tip.desc}</span>
         <span class="tip-gruppo-selall" style="color:${tip.color}" title="Seleziona/deseleziona tutto ${tipCod}">
-          ${allSelected ? "✦ tutti" : someSelected ? "◐ parz." : "○ nessuno"}
+          ${allSelected ? "✦ tutti" : someSelected ? "◐ parz." : "☐ nessuno"}
         </span>
       </div>
       <div class="tip-percorsi-grid">`;

@@ -5,7 +5,7 @@
 var _SINT_STATO_INFO = {
   completato: { icon: "✅", label: "Completato", color: "var(--green)" },
   in_corso: { icon: "🔄", label: "In corso", color: "var(--yellow)" },
-  da_fare: { icon: "⭕", label: "Da fare", color: "var(--red)" },
+  da_fare: { icon: "☐", label: "Da fare", color: "var(--red)" },
   n_a: { icon: "➖", label: "N/A", color: "var(--t3)" },
   text_only: { icon: "📝", label: "Testo", color: "var(--purple)" },
 };

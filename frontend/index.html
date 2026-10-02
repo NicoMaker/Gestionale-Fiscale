@@ -8,10 +8,10 @@
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#f7f5f1" />
+    <meta name="theme-color" content="#f6f7fb" />
     <title>Studio Fiscale — Gestionale</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <script src="/socket.io/socket.io.js"></script>
@@ -45,6 +45,8 @@
     <link rel="stylesheet" href="css/excel-theme.css" />
     <!-- CSS — v3: "Ledger Pro", vetro, profondità, micro-interazioni -->
     <link rel="stylesheet" href="css/v3-premium.css" />
+    <!-- CSS — Modern 2026: design system finale -->
+    <link rel="stylesheet" href="css/modern-2026.css" />
   </head>
   <body>
     <!-- ═══ SIDEBAR ═════════════════════════════════════════ -->
@@ -407,10 +409,10 @@
         <div class="form-group" id="stato-group">
           <label>Stato</label>
           <select class="select" id="adp-stato">
-            <option value="da_fare">⭕ Da fare</option>
-            <option value="in_corso">🔄 In corso</option>
-            <option value="completato">✅ Completato</option>
-            <option value="n_a">➖ N/A</option>
+            <option value="da_fare">Da fare</option>
+            <option value="in_corso">In corso</option>
+            <option value="completato">Completato</option>
+            <option value="n_a">N/A</option>
           </select>
         </div>
         <div class="form-row">
@@ -1589,6 +1591,11 @@
               <option value="media" selected>🟡 Media</option>
               <option value="alta">🔴 Alta</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label>Stato</label>
+            <input type="hidden" id="appunto-completato" value="0" />
+            <div class="st-seg" id="appunto-stato-seg"></div>
           </div>
         </div>
         <div class="modal-actions">

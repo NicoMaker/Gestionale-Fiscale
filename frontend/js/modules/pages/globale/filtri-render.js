@@ -420,11 +420,11 @@ function renderGlobalePage() {
     "</select>" +
     '<select class="select" id="glob-filtro-adp" multiple style="width:210px;font-size:13px" onchange="applyGlobaleFiltri()" title="Filtra per uno o più tipi di adempimento" data-placeholder="📋 Tutti adempimenti">' +
     "</select>" +
-    '<select class="select" id="glob-filtro-stato" multiple style="width:200px;font-size:13px" onchange="applyGlobaleFiltri()" data-placeholder="🔵 Tutti gli stati">' +
-    '<option value="da_fare">⭕ Da fare</option>' +
-    '<option value="in_corso">🔄 In corso</option>' +
-    '<option value="completato">✅ Completato</option>' +
-    '<option value="n_a">➖ N/A</option>' +
+    '<select class="select" id="glob-filtro-stato" multiple style="width:200px;font-size:13px" onchange="applyGlobaleFiltri()" data-placeholder="Tutti gli stati">' +
+    '<option value="da_fare">Da fare</option>' +
+    '<option value="in_corso">In corso</option>' +
+    '<option value="completato">Completato</option>' +
+    '<option value="n_a">N/A</option>' +
     "</select>" +
     '<button class="btn btn-sm btn-primary" onclick="resetGlobaleFiltri()" title="Azzera tutti i filtri" style="font-size:13px">⟳ Tutti</button>' +
     '<button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️ Stampa</button>';

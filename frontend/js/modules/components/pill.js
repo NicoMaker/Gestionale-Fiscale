@@ -145,7 +145,7 @@ function renderPeriodoPill(r) {
     const filled = [sNum, a1Num, a2Num].filter(
       (v) => v !== null && v !== 0,
     ).length;
-    statoIcon = filled >= 3 ? "✅" : filled >= 1 ? "🔄" : "⭕";
+    statoIcon = filled >= 3 ? "✅" : filled >= 1 ? "🔄" : "";
     statoLabel =
       filled >= 3
         ? "Tutte le rate"
@@ -155,7 +155,7 @@ function renderPeriodoPill(r) {
   } else {
     statoIcon =
       stato === "da_fare"
-        ? "⭕"
+        ? ""
         : stato === "in_corso"
           ? "🔄"
           : stato === "completato"

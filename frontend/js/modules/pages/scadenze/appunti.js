@@ -9,6 +9,30 @@ let appuntiFilter = {
   id_cliente: "",
 };
 
+// ─── ICONE STATO (SVG) ────────────────────────────────────────
+function appuntoStatoIcon(done, size) {
+  size = size || 24;
+  return done
+    ? `<span class="st-tile st-done" style="--s:${size}px" title="Completato"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>`
+    : `<span class="st-tile st-todo" style="--s:${size}px" title="Da fare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" stroke-dasharray="2.6 3.2"/><path d="M12 7.5V12l3 2"/></svg></span>`;
+}
+
+function setAppuntoStato(v) {
+  v = v ? 1 : 0;
+  const hid = document.getElementById("appunto-completato");
+  if (hid) hid.value = v;
+  const seg = document.getElementById("appunto-stato-seg");
+  if (!seg) return;
+  seg.innerHTML = [0, 1]
+    .map(
+      (x) =>
+        `<button type="button" class="st-opt ${x === v ? "on on-" + x : ""}" onclick="setAppuntoStato(${x})">${appuntoStatoIcon(x === 1, 20)}<span>${x ? "Completato" : "Da fare"}</span></button>`,
+    )
+    .join("");
+}
+window.setAppuntoStato = setAppuntoStato;
+window.appuntoStatoIcon = appuntoStatoIcon;
+
 function renderAppuntiPage() {
   console.log("📝 renderAppuntiPage chiamata");
   const content = document.getElementById("content");
@@ -51,8 +75,8 @@ function renderAppuntiTopbar() {
     </div>
     <select class="select" id="appunti-filtro-completato" onchange="filterAppunti()" style="width:130px">
       <option value="">📋 Tutti</option>
-      <option value="0">⭕ Da fare</option>
-      <option value="1">✅ Completati</option>
+      <option value="0">Da fare</option>
+      <option value="1">Completati</option>
     </select>
     <select class="select" id="appunti-filtro-priorita" onchange="filterAppunti()" style="width:130px">
       <option value="tutte">🏷️ Tutte priorità</option>
@@ -106,8 +130,7 @@ function renderAppuntiTabella(appunti) {
       </td>
       <td style="padding:12px 16px">
         <div style="display:flex;align-items:center;gap:8px">
-          <!-- ⬇️ MODIFICA QUI: da fare → ⭕, completato → ✅ -->
-          <span style="font-size:18px">${a.completato ? "✅" : "⭕"}</span>
+          ${appuntoStatoIcon(a.completato, 26)}
           <div>
             <div style="font-weight:700">${escAttr(a.titolo)}</div>
             <div style="font-size:12px;color:var(--text3);margin-top:2px">${a.contenuto ? (a.contenuto.length > 60 ? a.contenuto.substring(0, 60) + "..." : a.contenuto) : ""}</div>
@@ -119,7 +142,7 @@ function renderAppuntiTabella(appunti) {
       <td style="padding:12px 16px;font-family:var(--mono);font-size:12px">${a.data_scadenza ? formattaDataItaliana(a.data_scadenza) : "—"}</td>
       <td class="no-print" style="padding:12px 16px;white-space:nowrap" onclick="event.stopPropagation()">
         <div style="display:flex;gap:5px;flex-wrap:wrap">
-          <button class="btn btn-xs btn-success" onclick="toggleAppuntoCompletato(${a.id}, ${!a.completato})" title="${a.completato ? "Segna da fare" : "Segna completato"}">${a.completato ? "⭕" : "✅"}</button>
+          <button class="btn btn-xs btn-success" onclick="toggleAppuntoCompletato(${a.id}, ${!a.completato})" title="${a.completato ? "Segna da fare" : "Segna completato"}"><span class="st-act">${appuntoStatoIcon(!a.completato, 18)}</span></button>
           <button class="btn btn-xs btn-secondary" onclick="openAppunto(${a.id})" title="Modifica">✏️</button>
           ${a.id_cliente ? `<button class="btn btn-xs" onclick="event.stopPropagation();editCliente(${a.id_cliente})" title="Modifica cliente" style="border:1px solid var(--accent);color:var(--accent);background:transparent">👤 Cliente</button>` : ""}
           <button class="btn btn-xs btn-danger" onclick="deleteAppunto(${a.id})" title="Elimina">🗑️</button>
@@ -298,6 +321,7 @@ function openNuovoAppunto() {
   document.getElementById("appunto-cliente").value = "";
   document.getElementById("appunto-scadenza").value = "";
   document.getElementById("appunto-priorita").value = "media";
+  setAppuntoStato(0);
 
   const clienteSel = document.getElementById("appunto-cliente");
   const clienteSearch = document.getElementById("appunto-cliente-search");
@@ -348,6 +372,7 @@ function openAppunto(id) {
       formattaDataItaliana(data.data_scadenza) || "";
     document.getElementById("appunto-priorita").value =
       data.priorita || "media";
+    setAppuntoStato(data.completato);
 
     const clienteSel = document.getElementById("appunto-cliente");
     const clienteSearch = document.getElementById("appunto-cliente-search");
@@ -396,7 +421,9 @@ function saveAppunto() {
     data_scadenza:
       daItalianaAISO(document.getElementById("appunto-scadenza").value) || null,
     priorita: document.getElementById("appunto-priorita").value,
-    completato: 0,
+    completato: parseInt(
+      document.getElementById("appunto-completato")?.value || "0",
+    ),
   };
   if (!data.titolo) {
     showNotif("Il titolo è obbligatorio", "error");

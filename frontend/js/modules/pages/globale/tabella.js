@@ -78,7 +78,7 @@ function renderGlobaleTabella(rawData) {
     con_in_corso: "🔄 Con almeno 1 in corso",
     senza_in_corso: "✅ Senza in corso",
     tutti_completati: "🏆 Tutto completato",
-    con_da_fare: "⭕ Con almeno 1 da fare",
+    con_da_fare: "Con almeno 1 da fare",
     solo_da_fare: "🚨 Solo da fare",
     non_completati: "⚠️ Non al 100%",
     con_na: "➖ Con almeno 1 N/A",
@@ -393,7 +393,7 @@ function renderGlobaleTabella(rawData) {
           "</span>";
       if (daFC > 0)
         situazioneBadges +=
-          '<span style="font-size:10px;color:var(--red);background:color-mix(in srgb, var(--red) 7%, transparent);border:1px solid color-mix(in srgb, var(--red) 20%, transparent);border-radius:10px;padding:1px 6px">⭕ ' +
+          '<span style="font-size:10px;color:var(--red);background:color-mix(in srgb, var(--red) 7%, transparent);border:1px solid color-mix(in srgb, var(--red) 20%, transparent);border-radius:10px;padding:1px 6px">' +
           daFC +
           "</span>";
       if (naC > 0)

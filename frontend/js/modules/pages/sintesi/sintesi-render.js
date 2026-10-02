@@ -165,8 +165,8 @@ function renderSintesiTabella() {
     '<div class="gpc-stats">' +
     _sintStatBoxHtml("done", doneCells, "var(--green)", "✅ Fatti") +
     _sintStatBoxHtml("partial", partialCells, "var(--yellow)", "🔄 Parziali") +
-    _sintStatBoxHtml("todo", todoCells, "var(--red)", "⭕ Da fare") +
-    _sintStatBoxHtml("na", naCells, "var(--t3)", "➖ N/A") +
+    _sintStatBoxHtml("todo", todoCells, "var(--red)", "Da fare") +
+    _sintStatBoxHtml("na", naCells, "var(--t3)", "N/A") +
     "</div>" +
     "</div>" +
     '<div style="font-size:11px;color:var(--t3);margin-top:8px">📖 Filtri stato: mostrano le celle che corrispondono allo stato selezionato. Le altre celle sono nascoste.</div>' +
@@ -193,10 +193,10 @@ function renderSintesiTabella() {
 
   var legend =
     '<div class="sint-legend">' +
-    _sintLegendItemHtml("done", "✅ Completato per tutti i periodi") +
+    _sintLegendItemHtml("done", "Completato per tutti i periodi") +
     _sintLegendItemHtml("partial", "🔄 Parzialmente completato") +
-    _sintLegendItemHtml("todo", "⭕ Da fare / non iniziato") +
-    _sintLegendItemHtml("na", "➖ N/A — non applicato") +
+    _sintLegendItemHtml("todo", "Da fare / non iniziato") +
+    _sintLegendItemHtml("na", "N/A — non applicato") +
     (statoFiltriAttivi.length > 0
       ? '<button type="button" class="sint-legend-clear" onclick="resetSintesiStatoFiltro()">✕ Rimuovi filtro stato</button>'
       : "") +

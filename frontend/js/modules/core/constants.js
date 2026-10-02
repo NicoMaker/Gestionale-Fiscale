@@ -33,10 +33,10 @@ const MESI_SHORT = [
 ];
 
 const STATI = {
-  da_fare: "⭕ Da fare",
-  in_corso: "🔄 In corso",
-  completato: "✅ Completato",
-  n_a: "➖ N/A",
+  da_fare: "Da fare",
+  in_corso: "In corso",
+  completato: "Completato",
+  n_a: "N/A",
   text_only: "📝 Testo",
 };
 

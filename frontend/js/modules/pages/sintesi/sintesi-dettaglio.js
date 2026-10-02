@@ -491,7 +491,7 @@ function _generaFinestraStampa() {
               : st.kind === "partial"
                 ? "◐"
                 : st.kind === "todo"
-                  ? "○"
+                  ? "☐"
                   : "—";
           htmlParts.push(
             '<td class="bg-' +
@@ -515,7 +515,7 @@ function _generaFinestraStampa() {
       '<div class="legend">' +
         '<span><span class="sw" style="background:#1e8e5a"></span>✔ Completato</span>' +
         '<span><span class="sw" style="background:#b8860b"></span>◐ In corso</span>' +
-        '<span><span class="sw" style="background:#c0392b"></span>○ Da fare</span>' +
+        '<span><span class="sw" style="background:#c0392b"></span>Da fare</span>' +
         '<span><span class="sw" style="background:#6b7280"></span>— N/A</span>' +
         "</div>",
     );

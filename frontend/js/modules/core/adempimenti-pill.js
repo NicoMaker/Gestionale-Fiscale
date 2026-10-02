@@ -47,9 +47,7 @@ function toggleAdpCompletato(event, id) {
   };
   socket.emit("update:adempimento_stato", data);
   showNotif(
-    nuovoStato === "completato"
-      ? "✅ Completato!"
-      : "⭕ Ripristinato a Da fare",
+    nuovoStato === "completato" ? "Completato!" : "Ripristinato a Da fare",
     "success",
   );
 }
@@ -84,8 +82,8 @@ function setCbxStato(event, id, nuovoStato) {
   socket.emit("update:adempimento_stato", data);
   const icons = {
     completato: "✅ Fatto!",
-    n_a: "➖ N/A",
-    da_fare: "☐ Da fare",
+    n_a: "N/A",
+    da_fare: "Da fare",
   };
   showNotif(icons[nuovoStato] || "Aggiornato", "success");
 }
