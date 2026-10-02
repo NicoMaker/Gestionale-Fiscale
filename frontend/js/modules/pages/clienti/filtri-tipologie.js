@@ -191,8 +191,7 @@ function caricaFiltriDaStorage() {
     const saved = localStorage.getItem(_STORAGE_KEYS.FILTRI);
     if (saved) {
       const filtriData = JSON.parse(saved);
-      _activeFiltroKeys = new Set(filtriData.keys || []);
-      _filtroManualeNessuno = filtriData.nessuno || false;
+      // Le chiavi filtro NON vengono ripristinate: all'ingresso è sempre "tutti"
       _tipFiltroPanelOpen = filtriData.pannelloAperto || false;
       return true;
     }
@@ -202,25 +201,32 @@ function caricaFiltriDaStorage() {
   return false;
 }
 
-// ─── INIT FILTRO: carica da storage o seleziona tutto ────────────────────────────
+// ─── INIT FILTRO: ad ogni caricamento/ingresso parte SEMPRE con tutto selezionato ──
+// Le chiavi salvate in localStorage vengono ignorate (si legge solo lo stato
+// del pannello aperto/chiuso). Le selezioni fatte durante la sessione restano
+// valide finché non si ricarica la pagina.
+let _filtriInizializzati = false;
+
 function initializeTipologieFilter() {
-  const hasLoaded = caricaFiltriDaStorage();
-  if (!hasLoaded) {
-    // Se non ci sono filtri salvati, seleziona tutto
-    _filtroManualeNessuno = false;
-    _activeFiltroKeys = new Set(_getAllKeys());
-  } else {
-    // Also ensure we have all keys even if loaded from storage
-    const allKeys = _getAllKeys();
-    if (
-      _activeFiltroKeys.size === 0 ||
-      (_activeFiltroKeys.size === 1 && _filtroManualeNessuno)
-    ) {
-      // If filters are empty or only "nessuno", select all
-      _filtroManualeNessuno = false;
-      _activeFiltroKeys = new Set(allKeys);
-      salvaFiltriSuStorage(); // Save the corrected state
+  const allKeys = _getAllKeys();
+
+  if (!_filtriInizializzati) {
+    // Recupera solo lo stato del pannello (aperto/chiuso)
+    caricaFiltriDaStorage();
+    if (allKeys.length === 0) {
+      // Config JSON non ancora caricata: riproverà alla prossima chiamata
+      return;
     }
+    _filtroManualeNessuno = false;
+    _activeFiltroKeys = new Set(allKeys);
+    _filtriInizializzati = true;
+    salvaFiltriSuStorage(); // allinea lo storage allo stato "tutti"
+  } else if (
+    !_filtroManualeNessuno &&
+    _activeFiltroKeys.size === 0 &&
+    allKeys.length > 0
+  ) {
+    _activeFiltroKeys = new Set(allKeys);
   }
   _syncGlobalFiltroKeys();
 }

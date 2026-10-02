@@ -103,7 +103,10 @@ function resetClientiFiltri() {
   }
   const annoSelect = document.getElementById("filter-anno");
   if (annoSelect) annoSelect.value = new Date().getFullYear();
-  initializeTipologieFilter();
+  // Reset esplicito: riporta tutti i filtri su "selezionato"
+  _filtroManualeNessuno = false;
+  _activeFiltroKeys = new Set(_getAllKeys());
+  _syncGlobalFiltroKeys();
   _refreshTipFiltroPanel();
   salvaFiltriSuStorage(); // Salva il reset
   if (typeof socket !== "undefined")
