@@ -77,7 +77,10 @@
   transform: scale(0.94);
 }
 
-/* ── Pagina Scorciatoie ── */
+/* ═══════════════════════════════════════════════════════════════ */
+/* PAGINA SCORCIATOIE                                              */
+/* ═══════════════════════════════════════════════════════════════ */
+
 .sc-page kbd {
   display: inline-block;
   min-width: 20px;
@@ -183,9 +186,254 @@
   }
 }
 
-/* ── Stampa: tutto in bianco/nero, 2 colonne, nessun elemento tagliato ── */
+/* ═══════════════════════════════════════════════════════════════ */
+/* FILTRI — ricerca + chip categoria                               */
+/* ═══════════════════════════════════════════════════════════════ */
+
+.sc-filtri {
+  background: var(--s0);
+  border: 1px solid var(--b0);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.sc-filtri-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.sc-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.sc-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 34px 9px 12px;
+  border: 1px solid var(--b1);
+  border-radius: 10px;
+  background: var(--s1, var(--s0));
+  color: var(--t0);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.sc-search-input::placeholder {
+  color: var(--t2);
+  opacity: 0.7;
+}
+
+.sc-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-d);
+}
+
+.sc-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--s2, var(--s1));
+  color: var(--t2);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: inherit;
+}
+
+.sc-search-clear:hover {
+  background: var(--red-d, rgba(220, 38, 38, 0.12));
+  color: var(--red, #dc2626);
+}
+
+.sc-chip-reset {
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--b1);
+  background: transparent;
+  color: var(--t2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+  white-space: nowrap;
+  height: 36px;
+}
+
+.sc-chip-reset:hover {
+  background: var(--s1);
+  color: var(--t0);
+}
+
+.sc-chip-reset-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-d);
+}
+
+.sc-chip-reset-on:hover {
+  background: var(--accent-d);
+  color: var(--accent);
+}
+
+.sc-filtri-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.sc-filtri-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--t2);
+  margin-right: 4px;
+}
+
+.sc-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--b1);
+  background: var(--s1, transparent);
+  color: var(--t2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.sc-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sc-chip-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.sc-chip-on:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  opacity: 0.9;
+}
+
+.sc-filtri-info {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--t2);
+}
+
+.sc-filtri-info strong {
+  color: var(--t0);
+}
+
+.sc-empty-filtri {
+  text-align: center;
+  padding: 50px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.sc-empty-filtri p {
+  font-size: 15px;
+  color: var(--t2);
+  margin: 0;
+}
+
+/* Dark mode — chip e search */
+[data-theme="dark"] .sc-search-input {
+  background: var(--s1) !important;
+  color: var(--t0) !important;
+  border-color: var(--b1) !important;
+}
+
+[data-theme="dark"] .sc-chip {
+  background: var(--s1);
+  border-color: var(--b1);
+  color: var(--t2);
+}
+
+[data-theme="dark"] .sc-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+[data-theme="dark"] .sc-chip-on,
+[data-theme="dark"] .sc-chip-on:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+[data-theme="dark"] .sc-chip-reset {
+  border-color: var(--b1);
+  color: var(--t2);
+}
+
+[data-theme="dark"] .sc-chip-reset:hover {
+  background: var(--s1);
+  color: var(--t0);
+}
+
+[data-theme="dark"] .sc-chip-reset-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-d);
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* STAMPA                                                          */
+/* ═══════════════════════════════════════════════════════════════ */
+
 @media print {
   .topbar-stack {
+    display: none !important;
+  }
+  .sc-filtri,
+  .sc-search-wrap,
+  .sc-search-input,
+  .sc-search-clear,
+  .sc-chip,
+  .sc-chip-reset,
+  .sc-filtri-cats,
+  .sc-filtri-lbl,
+  .no-print {
     display: none !important;
   }
   .sc-page,
