@@ -14,7 +14,9 @@
     azione("💾", "Scarica DB (backup)", () =>
       document.getElementById("btn-scarica-db")?.click(),
     ),
-    azione("⌨️", "Guida tasti della pagina", () => window.apriGuidaTastiera?.()),
+    azione("⌨️", "Guida tasti della pagina", () =>
+      window.apriGuidaTastiera?.(),
+    ),
     azione("🌓", "Tema chiaro / scuro", () => window.toggleTheme?.()),
   );
   const ov = document.createElement("div");

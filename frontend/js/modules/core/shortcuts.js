@@ -303,10 +303,8 @@
       }
       return false;
     };
-  const apriFn =
-    (fn) =>
-    () =>
-      typeof window[fn] === "function" ? (window[fn](), true) : false;
+  const apriFn = (fn) => () =>
+    typeof window[fn] === "function" ? (window[fn](), true) : false;
 
   const anno = (fn) => [
     { key: "[", label: "Anno precedente", run: act(`${fn}(-1)`) },
@@ -531,13 +529,21 @@
           label: "Filtro tipologie",
           run: act("toggleGlobTipFiltroPanel"),
         },
-        { key: "l", label: "Scegli i clienti", run: apriSel("glob-sel-cliente") },
+        {
+          key: "l",
+          label: "Scegli i clienti",
+          run: apriSel("glob-sel-cliente"),
+        },
         {
           key: "a",
           label: "Scegli gli adempimenti",
           run: apriSel("glob-filtro-adp"),
         },
-        { key: "u", label: "Filtra per stato", run: apriSel("glob-filtro-stato") },
+        {
+          key: "u",
+          label: "Filtra per stato",
+          run: apriSel("glob-filtro-stato"),
+        },
         {
           key: "r",
           label: "Ripristina i filtri",
@@ -570,7 +576,11 @@
           label: "Ripristina i filtri",
           run: act("resetSintesiFiltri"),
         },
-        { key: "l", label: "Scegli il cliente", run: apriSel("sint-filtro-cliente") },
+        {
+          key: "l",
+          label: "Scegli il cliente",
+          run: apriSel("sint-filtro-cliente"),
+        },
         {
           key: "a",
           label: "Scegli gli adempimenti",
@@ -664,8 +674,16 @@
           label: "Filtra per stato (da fare / completate)",
           run: apriSel("appunti-filtro-completato"),
         },
-        { key: "p", label: "Filtra per priorità", run: apriSel("appunti-filtro-priorita") },
-        { key: "l", label: "Filtra per cliente", run: apriSel("appunti-filtro-cliente") },
+        {
+          key: "p",
+          label: "Filtra per priorità",
+          run: apriSel("appunti-filtro-priorita"),
+        },
+        {
+          key: "l",
+          label: "Filtra per cliente",
+          run: apriSel("appunti-filtro-cliente"),
+        },
         {
           key: "Canc",
           label: "Elimina la scadenza evidenziata (o le selezionate)",
@@ -1111,7 +1129,8 @@
     t.className = "kb-trigger theme-top no-print";
     t.setAttribute("aria-label", "Tema chiaro / scuro");
     const aggiorna = () => {
-      const scuro = document.documentElement.getAttribute("data-theme") === "dark";
+      const scuro =
+        document.documentElement.getAttribute("data-theme") === "dark";
       t.innerHTML = scuro ? "☀️ <span>Chiaro</span>" : "🌙 <span>Scuro</span>";
       t.title = scuro ? "Passa al tema chiaro (t)" : "Passa al tema scuro (t)";
     };

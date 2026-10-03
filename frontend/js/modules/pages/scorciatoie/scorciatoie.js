@@ -7,9 +7,16 @@
   "use strict";
 
   const ICONE = {
-    dashboard: "📊", clienti: "👥", scadenzario: "📅",
-    scadenzario_globale: "🌐", sintesi: "🗓️", adempimenti: "📋",
-    tipologie: "🏷️", appunti: "📆", pagina_bianca: "📝", cestino: "🗑️",
+    dashboard: "📊",
+    clienti: "👥",
+    scadenzario: "📅",
+    scadenzario_globale: "🌐",
+    sintesi: "🗓️",
+    adempimenti: "📋",
+    tipologie: "🏷️",
+    appunti: "📆",
+    pagina_bianca: "📝",
+    cestino: "🗑️",
     scorciatoie: "⌨️",
   };
 
@@ -26,7 +33,10 @@
 
   const tabella = (arr) =>
     `<table class="sc-table"><tbody>${arr
-      .map((t) => `<tr><td class="sc-k">${kbd(t.key)}</td><td>${t.label}</td></tr>`)
+      .map(
+        (t) =>
+          `<tr><td class="sc-k">${kbd(t.key)}</td><td>${t.label}</td></tr>`,
+      )
       .join("")}</tbody></table>`;
 
   const sezione = (icona, titolo, corpo, extra = "") =>
@@ -34,14 +44,19 @@
 
   function costruisci() {
     const R = window.GF_SHORTCUTS;
-    if (!R) return `<div class="empty"><p>Registro scorciatoie non caricato.</p></div>`;
+    if (!R)
+      return `<div class="empty"><p>Registro scorciatoie non caricato.</p></div>`;
     const { PAGINE, GLOBALI, MODAL, NAV, LISTA_COMUNE } = R;
 
     const palette = [
       { key: "Ctrl K / ⌘ K", label: "Apre la ricerca rapida «Vai a…»" },
       { key: "↑ / ↓", label: "Scorre le pagine nell'elenco" },
       { key: "Invio", label: "Apre la pagina evidenziata" },
-      { key: "Esc", label: "Chiude la ricerca (oppure clic sul tasto Esc con il mouse, o fuori dalla finestra)" },
+      {
+        key: "Esc",
+        label:
+          "Chiude la ricerca (oppure clic sul tasto Esc con il mouse, o fuori dalla finestra)",
+      },
     ];
 
     const nav = `<div class="sc-nav">${NAV.map(
