@@ -4,6 +4,20 @@
 
 const socket = io();
 
+let _avvioScadenzeFatto = false;
+function avviaOAggiorna(tentativi = 0) {
+  if (typeof renderPage !== "function") {
+    if (tentativi < 100) setTimeout(() => avviaOAggiorna(tentativi + 1), 50);
+    return;
+  }
+  if (!_avvioScadenzeFatto) {
+    _avvioScadenzeFatto = true;
+    renderPage("appunti");
+  } else if (typeof refreshPage === "function") {
+    refreshPage();
+  }
+}
+
 // ─── CONNESSIONE ──────────────────────────────────────────────
 socket.on("connect", () => {
   const el = document.getElementById("conn-status");
@@ -18,12 +32,9 @@ socket.on("connect", () => {
   // All'avvio si apre UNA sola volta la pagina Scadenze Studio.
   // Alle riconnessioni successive (rete assente, riavvio server) NON si cambia
   // pagina: si aggiorna solo quella in cui si sta lavorando.
-  if (!window._avvioScadenzeFatto) {
-    window._avvioScadenzeFatto = true;
-    renderPage("appunti");
-  } else if (typeof refreshPage === "function") {
-    refreshPage();
-  }
+  // NB: socket.js è caricato PRIMA di nav.js/script.js, quindi alla prima
+  // connessione renderPage può non essere ancora definita: si attende.
+  avviaOAggiorna();
 });
 
 socket.on("disconnect", () => {
