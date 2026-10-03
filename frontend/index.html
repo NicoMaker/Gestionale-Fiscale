@@ -49,6 +49,7 @@
     <link rel="stylesheet" href="css/modern-2026.css" />
     <link rel="stylesheet" href="css/aurora.css" />
     <link rel="stylesheet" href="css/shortcuts.css" />
+    <link rel="stylesheet" href="css/scorciatoie.css" />
   </head>
   <body>
     <!-- ═══ SIDEBAR ═════════════════════════════════════════ -->
@@ -106,6 +107,11 @@
           <span class="nav-label">Cestino</span>
         </div>
         <div class="nav-sep"></div>
+        <div class="nav-item" data-page="scorciatoie">
+          <span class="nav-icon nav-icon-emoji">⌨️</span>
+          <span class="nav-label">Scorciatoie</span>
+        </div>
+        <div class="nav-sep"></div>
         <div class="nav-item" id="btn-scarica-db" style="cursor: pointer">
           <span class="nav-icon nav-icon-emoji">💾</span>
           <span class="nav-label">Scarica DB</span>
@@ -129,10 +135,12 @@
 
     <!-- ═══ MAIN ─────────────────────────────────────────── -->
     <main class="main">
-      <div class="topbar">
-        <div class="topbar-title">
-          <span class="topbar-title-icon" id="page-title-icon">📊</span>
-          <span id="page-title">Dashboard</span>
+      <div class="topbar-stack">
+        <div class="topbar">
+          <div class="topbar-title">
+            <span class="topbar-title-icon" id="page-title-icon">📊</span>
+            <span id="page-title">Dashboard</span>
+          </div>
         </div>
         <div class="topbar-actions" id="topbar-actions"></div>
       </div>
@@ -1672,6 +1680,7 @@
     <script src="js/modules/network/nav.js"></script>
     <script src="js/modules/pages/cestino/cestino-render.js"></script>
     <script src="js/modules/pages/cestino/cestino-azioni.js"></script>
+    <script src="js/modules/pages/scorciatoie/scorciatoie.js"></script>
     <script src="js/modules/network/bottom-nav.js"></script>
     <script src="js/script.js"></script>
   </body>

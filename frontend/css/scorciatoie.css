@@ -1,0 +1,110 @@
+/* ═══ PAGINA SCORCIATOIE + BARRA SUPERIORE (filtri su riga a parte) ═══ */
+
+/* ── Barra: titolo + Vai a… + ⌨ nella barra; i filtri vanno a capo SOTTO, senza barra ── */
+.topbar-stack { position: sticky; top: 0; z-index: 30; flex-shrink: 0; }
+.topbar-stack > .topbar {
+  position: relative; top: auto; height: auto;
+  min-height: var(--topbar-h); flex-wrap: nowrap;
+}
+.topbar-stack > .topbar .topbar-title { margin-right: auto; }
+.topbar-stack > .topbar-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  height: auto; overflow: visible;
+  margin: 0 20px; padding: 10px 4px 6px;
+  background: none; border: 0; box-shadow: none;
+}
+.topbar-stack > .topbar-actions:empty { display: none; }
+.topbar-actions select,
+.topbar-actions input:not([type=checkbox]):not([type=radio]) {
+  height: 36px; box-sizing: border-box; margin: 0;
+}
+[data-theme="dark"] .topbar-actions select,
+[data-theme="dark"] .topbar-actions .select,
+[data-theme="dark"] .topbar-actions input {
+  background: var(--s1) !important; color: var(--t0) !important;
+  border-color: var(--b1) !important;
+}
+@media (max-width: 768px) {
+  .topbar-stack > .topbar-actions {
+    margin: 0 10px; padding: 8px 2px 4px; flex-wrap: nowrap;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .topbar-stack > .topbar-actions::-webkit-scrollbar { display: none; }
+}
+
+/* ── Esc cliccabile nella palette ── */
+.cmdk-esc {
+  cursor: pointer; font: inherit; color: inherit;
+  transition: border-color .15s, color .15s, transform .1s;
+}
+.cmdk-esc:hover { border-color: var(--accent); color: var(--accent); }
+.cmdk-esc:active { transform: scale(.94); }
+
+/* ── Pagina Scorciatoie ── */
+.sc-page kbd {
+  display: inline-block; min-width: 20px; text-align: center;
+  padding: 1px 7px; border-radius: 6px;
+  font: 600 12px var(--mono, monospace);
+  background: var(--s0); border: 1px solid var(--b1);
+  border-bottom-width: 2px; color: var(--t1, var(--t0));
+}
+.sc-print-title { display: none; }
+.sc-hero {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px 22px; margin-bottom: 18px; border-radius: 18px;
+  background: var(--accent-d); border: 1px solid var(--b0);
+}
+.sc-hero h2 { margin: 0 0 4px; font-size: 18px; }
+.sc-hero p { margin: 0; color: var(--t2); font-size: 13.5px; line-height: 1.8; }
+.sc-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+}
+.sc-card {
+  background: var(--s0); border: 1px solid var(--b0); border-radius: 16px;
+  padding: 14px 18px 12px; break-inside: avoid; page-break-inside: avoid;
+}
+.sc-card h3 {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 8px;
+  font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--t2);
+}
+.sc-ico { font-size: 16px; }
+.sc-table { width: 100%; border-collapse: collapse; }
+.sc-table td {
+  padding: 5px 6px; border-bottom: 1px solid var(--b0);
+  font-size: 13.5px; vertical-align: top;
+}
+.sc-table tr:last-child td { border-bottom: 0; }
+.sc-k { white-space: nowrap; width: 38%; }
+.sc-or { color: var(--t2); font-size: 11px; margin: 0 2px; }
+.sc-nav {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px 12px; font-size: 13.5px;
+}
+.sc-note { font-size: 12.5px; color: var(--t2); margin: 8px 0 0; }
+@media (max-width: 700px) {
+  .sc-grid { grid-template-columns: 1fr; }
+  .sc-hero { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── Stampa: tutto in bianco/nero, 2 colonne, nessun elemento tagliato ── */
+@media print {
+  .topbar-stack { display: none !important; }
+  .sc-page, .sc-page * {
+    color: #000 !important; background: transparent !important;
+    box-shadow: none !important;
+  }
+  .sc-print-title {
+    display: block; font-size: 20px; font-weight: 700;
+    margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid #000;
+  }
+  .sc-grid { display: block; column-count: 2; column-gap: 18px; }
+  .sc-card {
+    display: inline-block; width: 100%; margin: 0 0 12px;
+    border: 1px solid #000 !important; border-radius: 6px; padding: 8px 10px;
+  }
+  .sc-table td { font-size: 11px; padding: 3px 4px; border-bottom: 1px solid #bbb !important; }
+  .sc-page kbd { border: 1px solid #000 !important; font-size: 10.5px; padding: 0 5px; }
+  .sc-nav { grid-template-columns: 1fr 1fr; font-size: 11px; }
+  .sc-note { font-size: 10.5px; }
+}

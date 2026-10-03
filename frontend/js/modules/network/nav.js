@@ -16,6 +16,7 @@ const PAGE_ICONS = {
   appunti: "📆",
   pagina_bianca: "📝",
   cestino: "🗑️",
+  scorciatoie: "⌨️",
 };
 
 function setPageTitleIcon(page) {

@@ -12,7 +12,7 @@
   ov.className = "cmdk-overlay";
   ov.hidden = true;
   ov.innerHTML = `<div class="cmdk" role="dialog" aria-label="Vai a…">
-    <div class="cmdk-head"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Vai a una pagina…"/><kbd>Esc</kbd></div>
+    <div class="cmdk-head"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Vai a una pagina…"/><kbd class="cmdk-esc" role="button" tabindex="0" title="Chiudi (Esc)">Esc</kbd></div>
     <ul class="cmdk-list"></ul>
     <div class="cmdk-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> naviga</span><span><kbd>↵</kbd> apri</span></div></div>`;
   document.body.appendChild(ov);
@@ -70,6 +70,20 @@
     if (li) vai(mostrate[li.dataset.n]);
   });
   ov.addEventListener("mousedown", (e) => e.target === ov && chiudi());
+  // Clic con il mouse sul tasto "Esc" → chiude la ricerca
+  const escBtn = ov.querySelector(".cmdk-esc");
+  escBtn.addEventListener("mousedown", (e) => e.preventDefault());
+  escBtn.addEventListener("click", chiudi);
+  escBtn.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") chiudi();
+  });
+  // Esc da tastiera chiude anche se il focus non è nel campo
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !ov.hidden) {
+      e.preventDefault();
+      chiudi();
+    }
+  });
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
       e.preventDefault();
@@ -81,8 +95,8 @@
   trigger.className = "cmdk-trigger";
   trigger.type = "button";
   trigger.setAttribute("aria-label", "Vai a…");
-  trigger.innerHTML = "<span>Vai a…</span><kbd>Ctrl K</kbd>";
+  trigger.innerHTML = `<span>Vai a…</span><kbd>${/Mac|iPhone|iPad/.test(navigator.platform || "") ? "⌘ K" : "Ctrl K"}</kbd>`;
   trigger.onclick = apri;
   const barra = document.querySelector(".topbar");
-  barra?.insertBefore(trigger, document.getElementById("topbar-actions"));
+  barra?.appendChild(trigger);
 })();

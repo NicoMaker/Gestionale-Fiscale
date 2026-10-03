@@ -188,6 +188,7 @@
     ["p", "appunti", "Scadenze Studio"],
     ["n", "pagina_bianca", "Note"],
     ["x", "cestino", "Cestino"],
+    ["k", "scorciatoie", "Scorciatoie"],
   ];
 
   const cercaCampo = () =>
@@ -649,6 +650,17 @@
         },
       ],
     },
+    scorciatoie: {
+      titolo: "Scorciatoie",
+      tasti: [
+        {
+          key: "Shift P",
+          label: "Stampa l'elenco delle scorciatoie",
+          run: () => window.print(),
+          shift: true,
+        },
+      ],
+    },
     cestino: {
       titolo: "Cestino",
       lista: true,
@@ -988,7 +1000,7 @@
     b.setAttribute("aria-label", "Guida tasti da tastiera");
     b.innerHTML = "⌨️ <kbd>?</kbd>";
     b.onclick = apriGuida;
-    barra.insertBefore(b, $("#topbar-actions"));
+    barra.appendChild(b);
   }
 
   window.GF_SHORTCUTS = { PAGINE, GLOBALI, MODAL, NAV, LISTA_COMUNE };

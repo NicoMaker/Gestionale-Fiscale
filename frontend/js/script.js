@@ -58,6 +58,7 @@ function renderPage(page) {
     appunti: "Scadenze Studio",
     pagina_bianca: "Note",
     cestino: "Cestino",
+    scorciatoie: "Scorciatoie da tastiera",
   };
   document.getElementById("page-title").textContent = titles[page] || page;
   if (typeof setPageTitleIcon === "function") setPageTitleIcon(page);
@@ -123,6 +124,8 @@ function renderPage(page) {
       document.getElementById("content").innerHTML =
         `<div class="empty"><div class="empty-icon">❌</div><p>Errore: modulo pagina bianca non caricato</p><button class="btn btn-primary" onclick="location.reload()">⟳ Ricarica</button></div>`;
     }
+  } else if (page === "scorciatoie") {
+    if (typeof renderScorciatoiePage === "function") renderScorciatoiePage();
   } else if (page === "cestino") {
     document.getElementById("topbar-actions").innerHTML = "";
     if (typeof renderCestinoPage === "function") {
