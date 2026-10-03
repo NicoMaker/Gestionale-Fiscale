@@ -721,15 +721,30 @@
       lista: true,
       tasti: [
         { key: "n", label: "Nuova nota", run: act("openPaginaBiancaEditor") },
+        // ✅ FIX: chiamata diretta a setPaginaBiancaTipo per evitare che
+        // `call()` clicchi sempre il primo pulsante "Studio" trovato nel DOM
+        // (bug: il tasto 2 non riusciva mai a passare a "cliente").
         {
           key: "1",
           label: "Note dello studio",
-          run: call("setPaginaBiancaTipo", "studio"),
+          run: () => {
+            if (typeof window.setPaginaBiancaTipo === "function") {
+              window.setPaginaBiancaTipo("studio");
+              return true;
+            }
+            return false;
+          },
         },
         {
           key: "2",
           label: "Note dei clienti",
-          run: call("setPaginaBiancaTipo", "cliente"),
+          run: () => {
+            if (typeof window.setPaginaBiancaTipo === "function") {
+              window.setPaginaBiancaTipo("cliente");
+              return true;
+            }
+            return false;
+          },
         },
         {
           key: "l",
