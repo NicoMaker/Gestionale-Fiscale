@@ -75,9 +75,7 @@ function stampaPaginaBianca() {
   const clienteNome =
     (paginaBiancaFilter.id_cliente || []).length > 0 && state.clienti
       ? state.clienti
-          .filter((c) =>
-            paginaBiancaFilter.id_cliente.includes(String(c.id)),
-          )
+          .filter((c) => paginaBiancaFilter.id_cliente.includes(String(c.id)))
           .map((c) => c.nome)
           .join(", ")
       : "";
