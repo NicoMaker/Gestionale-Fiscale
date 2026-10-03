@@ -280,6 +280,34 @@
     },
   ];
 
+  // Apre un filtro (menu a tendina ricercabile o select normale) dato l'id
+  const apriSel =
+    (...ids) =>
+    () => {
+      for (const id of ids) {
+        const sel = document.getElementById(id);
+        if (!sel) continue;
+        const t = sel.parentElement?.querySelector(".ss-trigger");
+        if (t && visible(t)) {
+          t.click();
+          t.focus?.();
+          return true;
+        }
+        if (visible(sel)) {
+          sel.focus();
+          try {
+            sel.showPicker?.();
+          } catch (_) {}
+          return true;
+        }
+      }
+      return false;
+    };
+  const apriFn =
+    (fn) =>
+    () =>
+      typeof window[fn] === "function" ? (window[fn](), true) : false;
+
   const anno = (fn) => [
     { key: "[", label: "Anno precedente", run: act(`${fn}(-1)`) },
     { key: "]", label: "Anno successivo", run: act(`${fn}(1)`) },
@@ -316,6 +344,11 @@
           run: act("toggleDashTipFiltroPanel"),
         },
         { key: "r", label: "Ripristina i filtri", run: act("resetDashFiltri") },
+        {
+          key: "p",
+          label: "Nuovo adempimento personalizzato",
+          run: apriFn("openAdempimentoPersonalizzatoFromDashboard"),
+        },
         {
           key: "o",
           label: "Apri la selezione in Vista Globale",
@@ -372,6 +405,17 @@
           run: rigaAzione("openPaginaBiancaPerCliente"),
         },
         {
+          key: "i",
+          label: "Scheda di dettaglio del cliente evidenziato",
+          run: rigaAzione("showClienteDettaglio"),
+        },
+        {
+          key: "Shift C",
+          label: "Copia la configurazione dei clienti da un anno all'altro",
+          run: call("openCopiaConfigTutti"),
+          shift: true,
+        },
+        {
           key: "Canc",
           label: "Elimina il cliente evidenziato (o i selezionati)",
           run: () =>
@@ -422,6 +466,33 @@
         },
         { key: "e", label: "Modifica il cliente", run: act("editCliente") },
         {
+          key: "w",
+          label: "Genera gli adempimenti mancanti del cliente",
+          run: call("generaScadenzario"),
+        },
+        {
+          key: "Shift G",
+          label: "Genera lo scadenzario per tutti i clienti",
+          run: call("openGeneraTutti"),
+          shift: true,
+        },
+        {
+          key: "p",
+          label: "Crea un adempimento personalizzato",
+          run: call("openAdempimentoPersonalizzato"),
+        },
+        {
+          key: "i",
+          label: "Applica adempimenti esistenti a più clienti",
+          run: call("openApplicaAdempimenti"),
+        },
+        {
+          key: "Shift C",
+          label: "Copia la configurazione del cliente da un anno all'altro",
+          run: call("openCopiaConfig"),
+          shift: true,
+        },
+        {
           key: "m",
           label: "Note del cliente",
           run: act("openPaginaBiancaPerCliente"),
@@ -460,6 +531,13 @@
           label: "Filtro tipologie",
           run: act("toggleGlobTipFiltroPanel"),
         },
+        { key: "l", label: "Scegli i clienti", run: apriSel("glob-sel-cliente") },
+        {
+          key: "a",
+          label: "Scegli gli adempimenti",
+          run: apriSel("glob-filtro-adp"),
+        },
+        { key: "u", label: "Filtra per stato", run: apriSel("glob-filtro-stato") },
         {
           key: "r",
           label: "Ripristina i filtri",
@@ -491,6 +569,17 @@
           key: "r",
           label: "Ripristina i filtri",
           run: act("resetSintesiFiltri"),
+        },
+        { key: "l", label: "Scegli il cliente", run: apriSel("sint-filtro-cliente") },
+        {
+          key: "a",
+          label: "Scegli gli adempimenti",
+          run: apriSel("sint-filtro-adp"),
+        },
+        {
+          key: "u",
+          label: "Scegli le tipologie di cliente",
+          run: apriSel("sint-filtro-tipo-utente"),
         },
         {
           key: "Shift P",
@@ -571,6 +660,13 @@
           run: rigaApri,
         },
         {
+          key: "s",
+          label: "Filtra per stato (da fare / completate)",
+          run: apriSel("appunti-filtro-completato"),
+        },
+        { key: "p", label: "Filtra per priorità", run: apriSel("appunti-filtro-priorita") },
+        { key: "l", label: "Filtra per cliente", run: apriSel("appunti-filtro-cliente") },
+        {
           key: "Canc",
           label: "Elimina la scadenza evidenziata (o le selezionate)",
           run: () =>
@@ -616,6 +712,11 @@
           key: "2",
           label: "Note dei clienti",
           run: call("setPaginaBiancaTipo", "cliente"),
+        },
+        {
+          key: "l",
+          label: "Filtra per cliente",
+          run: apriSel("pb-filtro-cliente-select", "pb-filtro-cliente"),
         },
         {
           key: "e",
@@ -1001,6 +1102,26 @@
     b.innerHTML = "⌨️ <kbd>?</kbd>";
     b.onclick = apriGuida;
     barra.appendChild(b);
+  }
+
+  // Pulsante tema chiaro/scuro nella barra superiore (dopo ⌨)
+  if (barra) {
+    const t = document.createElement("button");
+    t.type = "button";
+    t.className = "kb-trigger theme-top no-print";
+    t.setAttribute("aria-label", "Tema chiaro / scuro");
+    const aggiorna = () => {
+      const scuro = document.documentElement.getAttribute("data-theme") === "dark";
+      t.innerHTML = scuro ? "☀️ <span>Chiaro</span>" : "🌙 <span>Scuro</span>";
+      t.title = scuro ? "Passa al tema chiaro (t)" : "Passa al tema scuro (t)";
+    };
+    t.onclick = () => window.toggleTheme?.();
+    new MutationObserver(aggiorna).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    aggiorna();
+    barra.appendChild(t);
   }
 
   window.GF_SHORTCUTS = { PAGINE, GLOBALI, MODAL, NAV, LISTA_COMUNE };

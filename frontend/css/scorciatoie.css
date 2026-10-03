@@ -108,3 +108,9 @@
   .sc-nav { grid-template-columns: 1fr 1fr; font-size: 11px; }
   .sc-note { font-size: 10.5px; }
 }
+
+/* ── Pulsante tema nella barra: visibile anche su mobile (solo icona) ── */
+@media (max-width: 700px) {
+  .kb-trigger.theme-top { display: inline-flex; padding: 8px 10px; }
+  .kb-trigger.theme-top span { display: none; }
+}
