@@ -986,8 +986,7 @@
       (e.ctrlKey && e.altKey) ||
       (isMac && e.altKey && !e.ctrlKey && !e.metaKey);
     const carattere = e.key.length === 1 && !/[a-z0-9]/i.test(e.key);
-    const mod =
-      (e.ctrlKey || e.metaKey || e.altKey) && !(altGr && carattere);
+    const mod = (e.ctrlKey || e.metaKey || e.altKey) && !(altGr && carattere);
     if (mod) return; // le combinazioni sono gestite altrove (palette, cronologia, browser)
 
     // Sequenza "g" + lettera
