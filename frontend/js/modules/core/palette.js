@@ -8,6 +8,15 @@
         el.querySelector(".nav-label")?.textContent.trim() || el.dataset.page,
     }),
   );
+  // Azioni rapide (non sono pagine): compaiono nell'elenco insieme alle pagine
+  const azione = (icona, label, fn) => ({ el: { click: fn }, icona, label });
+  voci.push(
+    azione("💾", "Scarica DB (backup)", () =>
+      document.getElementById("btn-scarica-db")?.click(),
+    ),
+    azione("⌨️", "Guida tasti della pagina", () => window.apriGuidaTastiera?.()),
+    azione("🌓", "Tema chiaro / scuro", () => window.toggleTheme?.()),
+  );
   const ov = document.createElement("div");
   ov.className = "cmdk-overlay";
   ov.hidden = true;
@@ -36,7 +45,7 @@
     const q = input.value.trim().toLowerCase();
     mostrate = voci
       .filter((v) => !q || v.label.toLowerCase().includes(q))
-      .slice(0, 12);
+      .slice(0, 20);
     idx = 0;
     disegna();
   };
