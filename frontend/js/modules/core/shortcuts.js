@@ -227,7 +227,12 @@
     {
       key: "b",
       label: "Scarica il database (backup)",
-      run: () => $("#btn-scarica-db")?.click() ?? false,
+      run: () => {
+        const b = $("#btn-scarica-db");
+        if (!b) return false;
+        b.click();
+        return true;
+      },
     },
     { key: "Esc", label: "Chiude finestra, pannello o selezione", info: true },
     {
@@ -880,7 +885,8 @@
     if (m) return e.shiftKey && e.key.toLowerCase() === m[1].toLowerCase();
     if (NOMI[spec]) return NOMI[spec].includes(e.key);
     if (spec.length === 1) {
-      if (/[a-z]/i.test(spec)) return !e.shiftKey && e.key === spec;
+      if (/[a-z]/i.test(spec))
+        return !e.shiftKey && e.key.toLowerCase() === spec.toLowerCase();
       return e.key === spec;
     }
     return false;
@@ -972,7 +978,16 @@
       return;
     }
 
-    const mod = e.ctrlKey || e.metaKey || e.altKey;
+    // AltGr (Windows/Linux) arriva come Ctrl+Alt, Option (Mac) come Alt: se produce
+    // un carattere stampabile non alfanumerico (es. "[" e "]" sulla tastiera
+    // italiana) non è una vera combinazione e deve funzionare come tasto normale.
+    const altGr =
+      (e.getModifierState && e.getModifierState("AltGraph")) ||
+      (e.ctrlKey && e.altKey) ||
+      (isMac && e.altKey && !e.ctrlKey && !e.metaKey);
+    const carattere = e.key.length === 1 && !/[a-z0-9]/i.test(e.key);
+    const mod =
+      (e.ctrlKey || e.metaKey || e.altKey) && !(altGr && carattere);
     if (mod) return; // le combinazioni sono gestite altrove (palette, cronologia, browser)
 
     // Sequenza "g" + lettera
@@ -1023,7 +1038,7 @@
 
     if (isTyping(e.target)) return;
 
-    if (e.key === "g" && !e.shiftKey) {
+    if (e.key.toLowerCase() === "g" && !e.shiftKey) {
       e.preventDefault();
       mostraHint(
         "<b>g</b> poi: " +
@@ -1044,7 +1059,7 @@
     }
     // Globali semplici
     for (const t of GLOBALI) {
-      if (t.run && t.key === e.key) {
+      if (t.run && combacia(t.key, e)) {
         if (t.run() !== false) e.preventDefault();
         return;
       }

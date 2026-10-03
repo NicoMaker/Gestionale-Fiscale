@@ -83,6 +83,10 @@ window.clearDashAdpSelezione = clearDashAdpSelezione;
 window.apriVistaGlobaleDaSelezione = apriVistaGlobaleDaSelezione;
 window.onDashFiltroStatoAdp = onDashFiltroStatoAdp;
 window.resetDashFiltri = resetDashFiltri;
+// Il pulsante "Tutti" e il tasto u chiamavano setDashCat('tutti'), mai definita.
+window.setDashCat = function (cat) {
+  if (!cat || cat === "tutti") resetDashFiltri();
+};
 window.onDashAdpSearch = onDashAdpSearch;
 window.toggleDashTipFiltroPanel = toggleDashTipFiltroPanel;
 window.closeDashTipFiltroPanel = closeDashTipFiltroPanel;

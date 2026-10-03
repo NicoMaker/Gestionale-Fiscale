@@ -15,7 +15,15 @@ socket.on("connect", () => {
   }
   if (text) text.textContent = "Online";
   socket.emit("get:tipologie");
-  renderPage("appunti");
+  // All'avvio si apre UNA sola volta la pagina Scadenze Studio.
+  // Alle riconnessioni successive (rete assente, riavvio server) NON si cambia
+  // pagina: si aggiorna solo quella in cui si sta lavorando.
+  if (!window._avvioScadenzeFatto) {
+    window._avvioScadenzeFatto = true;
+    renderPage("appunti");
+  } else if (typeof refreshPage === "function") {
+    refreshPage();
+  }
 });
 
 socket.on("disconnect", () => {
