@@ -44,7 +44,11 @@ function renderSintesiTabella() {
   var searchTerm = (getSharedClienteSearch() || "").toLowerCase();
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
-    if (_sintesiClienteFiltro && c.id !== _sintesiClienteFiltro) return false;
+    if (
+      _sintesiClienteFiltro.length > 0 &&
+      _sintesiClienteFiltro.indexOf(c.id) === -1
+    )
+      return false;
     // FILTRO MULTI‑TIPO: se l'array non è vuoto, il cliente deve avere un codice incluso
     if (
       _sintesiTipiUtenteFiltro.length > 0 &&

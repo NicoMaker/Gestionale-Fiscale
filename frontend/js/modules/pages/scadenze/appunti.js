@@ -6,7 +6,7 @@ let appuntiFilter = {
   search: "",
   completato: "",
   priorita: "tutte",
-  id_cliente: "",
+  id_cliente: [], // array di id cliente (multi‑select)
 };
 
 // ─── ICONE STATO (SVG) ────────────────────────────────────────
@@ -75,8 +75,8 @@ function renderAppuntiTopbar() {
     </div>
     <select class="select" id="appunti-filtro-completato" onchange="filterAppunti()" style="width:130px">
       <option value="">📋 Tutti</option>
-      <option value="0">Da fare</option>
-      <option value="1">Completati</option>
+      <option value="0">☐ Da fare</option>
+      <option value="1">✅ Completati</option>
     </select>
     <select class="select" id="appunti-filtro-priorita" onchange="filterAppunti()" style="width:130px">
       <option value="tutte">🏷️ Tutte priorità</option>
@@ -84,19 +84,22 @@ function renderAppuntiTopbar() {
       <option value="media">🟡 Media</option>
       <option value="bassa">🟢 Bassa</option>
     </select>
-    <div style="display:flex;flex-direction:column;gap:3px;min-width:200px">
-      <input class="input" id="appunti-search-cliente" placeholder="🔍 Cerca cliente..." oninput="filterAppuntiClientiSelect()" style="font-size:13px;padding:6px 10px">
-      <select class="select" id="appunti-filtro-cliente" onchange="filterAppunti()" style="margin-top:0">
-        <option value="">👥 Tutti i clienti</option>
-        ${state.clienti.map((c) => `<option value="${c.id}">${escAttr(c.nome)}</option>`).join("")}
-      </select>      
-    </div>
+    <select class="select topbar-select" id="appunti-filtro-cliente" multiple onchange="filterAppunti()" title="Filtra per uno o più clienti" style="min-width:200px;max-width:260px" data-placeholder="👥 Tutti i clienti">
+      ${state.clienti.map((c) => `<option value="${c.id}" ${(appuntiFilter.id_cliente || []).includes(String(c.id)) ? "selected" : ""}>${escAttr(c.nome)}</option>`).join("")}
+    </select>
     <button class="btn btn-primary" onclick="openNuovoAppunto()">+ Scadenza</button>
     <button class="btn btn-print btn-sm" onclick="window.print()">🖨️</button>
 
     <br />
     <br />
   `;
+
+  if (typeof initSearchableMultiSelect === "function") {
+    initSearchableMultiSelect("appunti-filtro-cliente", {
+      showSearch: true,
+      placeholder: "👥 Tutti i clienti",
+    });
+  }
 }
 
 function renderAppuntiTabella(appunti) {
@@ -306,8 +309,10 @@ function filterAppunti() {
     document.getElementById("appunti-filtro-completato")?.value || "";
   const priorita =
     document.getElementById("appunti-filtro-priorita")?.value || "tutte";
-  const id_cliente =
-    document.getElementById("appunti-filtro-cliente")?.value || "";
+  const clienteSel = document.getElementById("appunti-filtro-cliente");
+  const id_cliente = clienteSel
+    ? Array.from(clienteSel.selectedOptions || []).map((o) => o.value)
+    : [];
   appuntiFilter = { search, completato, priorita, id_cliente };
   socket.emit("get:appunti", appuntiFilter);
 }

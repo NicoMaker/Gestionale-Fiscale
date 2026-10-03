@@ -8,7 +8,7 @@
 
 let paginaBiancaFilter = {
   tipo: "studio",
-  id_cliente: "",
+  id_cliente: [], // array di id cliente (multi‑select)
   search: "",
 };
 
@@ -44,7 +44,7 @@ function cleanupPaginaBianca() {
 
   paginaBiancaFilter = {
     tipo: "studio",
-    id_cliente: "",
+    id_cliente: [],
     search: "",
   };
   paginaBiancaCurrentEntry = null;
@@ -73,12 +73,17 @@ function stampaPaginaBianca() {
       ? "🏢 Appunti Studio"
       : "👤 Appunti Clienti";
   const clienteNome =
-    paginaBiancaFilter.id_cliente && state.clienti
-      ? state.clienti.find((c) => c.id == paginaBiancaFilter.id_cliente)?.nome
+    (paginaBiancaFilter.id_cliente || []).length > 0 && state.clienti
+      ? state.clienti
+          .filter((c) =>
+            paginaBiancaFilter.id_cliente.includes(String(c.id)),
+          )
+          .map((c) => c.nome)
+          .join(", ")
       : "";
   const filtroInfo =
     paginaBiancaFilter.tipo === "cliente" && clienteNome
-      ? ` - Cliente: ${clienteNome}`
+      ? ` - Clienti: ${clienteNome}`
       : paginaBiancaFilter.tipo === "cliente"
         ? " - Tutti i clienti"
         : "";
@@ -367,45 +372,44 @@ function onPaginaBiancaClientiSearch() {
 function onPaginaBiancaClienteSelectChange() {
   const select = document.getElementById("pb-filtro-cliente-select");
   if (select) {
-    paginaBiancaFilter.id_cliente = select.value;
+    paginaBiancaFilter.id_cliente = Array.from(
+      select.selectedOptions || [],
+    ).map((o) => o.value);
     loadPaginaBiancaAppunti();
+  }
+}
+
+function pbClienteSelectHtml() {
+  const ids = paginaBiancaFilter.id_cliente || [];
+  return `
+    <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Clienti</label>
+    <div style="position: relative;">
+      <select id="pb-filtro-cliente-select" class="select topbar-select" multiple style="margin-top: 0px; min-width: 260px; max-width: 360px;" onchange="onPaginaBiancaClienteSelectChange()" title="Filtra per uno o più clienti" data-placeholder="👥 Tutti i clienti">
+        ${(state.clienti || [])
+          .map(
+            (c) =>
+              `<option value="${c.id}" ${ids.includes(String(c.id)) ? "selected" : ""}>${escAttr(c.nome)} (${c.tipologia_codice || "-"})</option>`,
+          )
+          .join("")}
+      </select>
+    </div>
+  `;
+}
+
+function initPbClienteMultiSelect() {
+  if (typeof initSearchableMultiSelect === "function") {
+    initSearchableMultiSelect("pb-filtro-cliente-select", {
+      showSearch: true,
+      placeholder: "👥 Tutti i clienti",
+    });
   }
 }
 
 function renderClientiSelectWithSearch() {
   const wrapper = document.getElementById("pb-cliente-select-wrapper");
   if (!wrapper || !state.clienti) return;
-
-  const currentValue = paginaBiancaFilter.id_cliente;
-
-  wrapper.innerHTML = `
-    <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cliente</label>
-    <div style="position: relative;">
-      <input type="text" 
-        id="pb-cliente-search-input" 
-        class="input" 
-        placeholder="🔍 Cerca cliente..." 
-        style="margin-bottom: 4px; padding: 8px 12px; font-size: 13px;"
-        oninput="onPaginaBiancaClientiSearch()"
-        value="${escAttr(paginaBiancaClientiSearchTerm)}">
-      <select id="pb-filtro-cliente-select" class="select" style="margin-top: 0px;" onchange="onPaginaBiancaClienteSelectChange()">
-        <option value="">-- Tutti i clienti --</option>
-        ${state.clienti
-          .map(
-            (c) => `
-          <option value="${c.id}" ${currentValue == c.id ? "selected" : ""}>
-            ${escAttr(c.nome)} (${c.tipologia_codice || "-"})
-          </option>
-        `,
-          )
-          .join("")}
-      </select>
-    </div>
-  `;
-
-  if (paginaBiancaClientiSearchTerm) {
-    filterClientiSelect(paginaBiancaClientiSearchTerm);
-  }
+  wrapper.innerHTML = pbClienteSelectHtml();
+  initPbClienteMultiSelect();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -476,28 +480,7 @@ function renderPaginaBiancaPage() {
   // Costruisci l'HTML del filtro clienti con ricerca
   const clientiFilterHtml = `
     <div id="pb-cliente-select-wrapper" style="min-width: 260px; ${paginaBiancaFilter.tipo !== "cliente" ? "display: none;" : ""}">
-      <label style="font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase;">Cliente</label>
-      <div style="position: relative;">
-        <input type="text" 
-          id="pb-cliente-search-input" 
-          class="input" 
-          placeholder="🔍 Cerca cliente..." 
-          style="margin-bottom: 4px; padding: 8px 12px; font-size: 13px;"
-          oninput="onPaginaBiancaClientiSearch()"
-          value="${escAttr(paginaBiancaClientiSearchTerm)}">
-        <select id="pb-filtro-cliente-select" class="select" style="margin-top: 0px;" onchange="onPaginaBiancaClienteSelectChange()">
-          <option value="">-- Tutti i clienti --</option>
-          ${state.clienti
-            .map(
-              (c) => `
-            <option value="${c.id}" ${paginaBiancaFilter.id_cliente == c.id ? "selected" : ""}>
-              ${escAttr(c.nome)} (${c.tipologia_codice || "-"})
-            </option>
-          `,
-            )
-            .join("")}
-        </select>
-      </div>
+      ${pbClienteSelectHtml()}
     </div>
   `;
 
@@ -543,11 +526,7 @@ function renderPaginaBiancaPage() {
     </div>
   `;
 
-  if (paginaBiancaClientiSearchTerm && paginaBiancaFilter.tipo === "cliente") {
-    setTimeout(() => {
-      filterClientiSelect(paginaBiancaClientiSearchTerm);
-    }, 50);
-  }
+  initPbClienteMultiSelect();
 
   loadPaginaBiancaAppunti();
 }
@@ -555,7 +534,7 @@ function renderPaginaBiancaPage() {
 function setPaginaBiancaTipo(tipo) {
   paginaBiancaFilter.tipo = tipo;
   if (tipo === "studio") {
-    paginaBiancaFilter.id_cliente = "";
+    paginaBiancaFilter.id_cliente = [];
     paginaBiancaClientiSearchTerm = "";
   } else {
     paginaBiancaClientiSearchTerm = "";
@@ -566,7 +545,9 @@ function setPaginaBiancaTipo(tipo) {
 function filterPaginaBianca() {
   const clienteSelect = document.getElementById("pb-filtro-cliente-select");
   if (clienteSelect) {
-    paginaBiancaFilter.id_cliente = clienteSelect.value;
+    paginaBiancaFilter.id_cliente = Array.from(
+      clienteSelect.selectedOptions || [],
+    ).map((o) => o.value);
   }
   const searchInput = document.getElementById("pb-search-input");
   if (searchInput) {
@@ -582,7 +563,7 @@ const debounceFilterPaginaBianca = debounce(() => {
 function resetPaginaBiancaFiltri() {
   paginaBiancaFilter = {
     tipo: "studio",
-    id_cliente: "",
+    id_cliente: [],
     search: "",
   };
   paginaBiancaClientiSearchTerm = "";

@@ -112,18 +112,19 @@ function showPaginaBiancaModal() {
   const clienteGroupReset = document.getElementById("pb-cliente-group");
   if (clienteGroupReset) clienteGroupReset.style.display = "none";
 
-  if (paginaBiancaFilter.tipo === "cliente" && paginaBiancaFilter.id_cliente) {
+  const pbIdsFiltro = paginaBiancaFilter.id_cliente || [];
+  if (paginaBiancaFilter.tipo === "cliente" && pbIdsFiltro.length === 1) {
     if (radioCliente) radioCliente.checked = true;
     document.getElementById("pb-cliente-group").style.display = "block";
     setTimeout(() => {
-      if (clienteSelect) clienteSelect.value = paginaBiancaFilter.id_cliente;
+      if (clienteSelect) clienteSelect.value = pbIdsFiltro[0];
       filterModalClientiSelect();
     }, 50);
     document.getElementById("pb-modal-title").textContent =
       "✏️ Nuova Nota Cliente";
   } else if (
     paginaBiancaFilter.tipo === "cliente" &&
-    !paginaBiancaFilter.id_cliente
+    pbIdsFiltro.length !== 1
   ) {
     if (radioCliente) radioCliente.checked = true;
     document.getElementById("pb-cliente-group").style.display = "block";
@@ -228,7 +229,7 @@ function deletePaginaBiancaAppunto(id) {
 function openPaginaBiancaPerCliente(clienteId, clienteNome) {
   paginaBiancaFilter = {
     tipo: "cliente",
-    id_cliente: String(clienteId),
+    id_cliente: [String(clienteId)],
     search: "",
   };
   paginaBiancaClientiSearchTerm = "";

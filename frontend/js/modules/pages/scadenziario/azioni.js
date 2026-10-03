@@ -394,15 +394,15 @@ function updatePeriodoOptions() {
   let opts = "";
   if (tipo === "mensile")
     opts = MESI.map(
-      (m, i) => `<option value="mese:${i + 1}">${m}</option>`,
+      (m, i) => `<option value="mese:${i + 1}">📌 ${m}</option>`,
     ).join("");
   else if (tipo === "trimestrale")
     opts = [1, 2, 3, 4]
-      .map((t) => `<option value="trim:${t}">${t}° Trimestre</option>`)
+      .map((t) => `<option value="trim:${t}">🗓️ ${t}° Trimestre</option>`)
       .join("");
   else if (tipo === "semestrale")
-    opts = `<option value="sem:1">1° Semestre</option><option value="sem:2">2° Semestre</option>`;
-  else opts = `<option value="annuale">Annuale</option>`;
+    opts = `<option value="sem:1">📆 1° Semestre</option><option value="sem:2">📆 2° Semestre</option>`;
+  else opts = `<option value="annuale">📅 Annuale</option>`;
   perSel.innerHTML = opts;
 }
 

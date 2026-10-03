@@ -10,8 +10,8 @@ var _SINT_STATO_INFO = {
   text_only: { icon: "📝", label: "Testo", color: "var(--purple)" },
 };
 
-// Stato per il filtro clienti
-var _sintesiClienteFiltro = null;
+// Stato per il filtro clienti → array di id (multi‑select)
+var _sintesiClienteFiltro = [];
 
 // Stato per il filtro tipo utente (PF / SP / SC / ASS) → ora array per multi‑select
 var _sintesiTipiUtenteFiltro = [];
@@ -82,7 +82,7 @@ function _renderSintesiTopbar() {
   var topbar = document.getElementById("topbar-actions");
   if (!topbar) return;
 
-  var clientiOpts = '<option value="">-- Tutti i clienti --</option>';
+  var clientiOpts = "";
   if (state.clienti) {
     var sorted = state.clienti.slice().sort(function (a, b) {
       return (a.nome || "").localeCompare(b.nome || "", "it", {
@@ -91,7 +91,8 @@ function _renderSintesiTopbar() {
     });
     sorted.forEach(function (c) {
       if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return;
-      var selected = _sintesiClienteFiltro === c.id ? "selected" : "";
+      var selected =
+        _sintesiClienteFiltro.indexOf(c.id) !== -1 ? "selected" : "";
       clientiOpts +=
         '<option value="' +
         c.id +
@@ -129,7 +130,7 @@ function _renderSintesiTopbar() {
     "</span>" +
     '<button onclick="changeAnnoSintesi(1)" title="Anno successivo">&#9654;</button>' +
     "</div>" +
-    '<select class="select topbar-select" id="sint-filtro-cliente" onchange="onSintesiClienteChange()" title="Filtra per cliente" style="min-width:180px;max-width:250px">' +
+    '<select class="select topbar-select" id="sint-filtro-cliente" multiple onchange="onSintesiClienteChange()" title="Filtra per uno o più clienti" style="min-width:180px;max-width:250px" data-placeholder="👥 Tutti i clienti">' +
     clientiOpts +
     "</select>" +
     '<select class="select" id="sint-filtro-adp" multiple style="width:210px;font-size:13px" onchange="applySintesiFiltriAdp()" title="Filtra per uno o più adempimenti" data-placeholder="📋 Tutti adempimenti">' +
@@ -143,7 +144,10 @@ function _renderSintesiTopbar() {
 
   if (typeof initSearchableSelect === "function") {
     setTimeout(function () {
-      initSearchableSelect("sint-filtro-cliente");
+      initSearchableMultiSelect("sint-filtro-cliente", {
+        showSearch: true,
+        placeholder: "👥 Tutti i clienti",
+      });
     }, 50);
   }
 
@@ -158,8 +162,11 @@ function _renderSintesiTopbar() {
 function onSintesiClienteChange() {
   var sel = document.getElementById("sint-filtro-cliente");
   if (!sel) return;
-  var val = sel.value;
-  _sintesiClienteFiltro = val ? parseInt(val) : null;
+  _sintesiClienteFiltro = Array.from(sel.selectedOptions || []).map(
+    function (o) {
+      return parseInt(o.value);
+    },
+  );
   renderSintesiTabella();
 }
 window.onSintesiClienteChange = onSintesiClienteChange;
@@ -316,10 +323,12 @@ function resetSintesiFiltri() {
   }
   var clienteSel = document.getElementById("sint-filtro-cliente");
   if (clienteSel) {
-    clienteSel.value = "";
+    Array.from(clienteSel.options).forEach(function (o) {
+      o.selected = false;
+    });
     if (clienteSel._ssRefresh) clienteSel._ssRefresh();
   }
-  _sintesiClienteFiltro = null;
+  _sintesiClienteFiltro = [];
   // RESET del multi‑select tipo utente
   var tipoSel = document.getElementById("sint-filtro-tipo-utente");
   if (tipoSel) {

@@ -142,10 +142,10 @@ function renderScadenzarioSelect(clienti) {
     </select>
     <!-- ⭐ FILTRO STATO CON SEARCHABLE MULTISELECT -->
     <select class="select topbar-select" id="scad-filtro-stato" multiple onchange="applyScadFiltri()" style="min-width:160px;max-width:200px" data-placeholder="📋 Tutti gli stati">
-      <option value="da_fare">Da fare</option>
-      <option value="in_corso">In corso</option>
-      <option value="completato">Completato</option>
-      <option value="n_a">N/A</option>
+      <option value="da_fare">☐ Da fare</option>
+      <option value="in_corso">🔄 In corso</option>
+      <option value="completato">✅ Completato</option>
+      <option value="n_a">➖ N/A</option>
     </select>
     `;
 

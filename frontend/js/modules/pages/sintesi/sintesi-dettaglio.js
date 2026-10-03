@@ -223,8 +223,11 @@ function _generaFinestraStampa() {
     : [];
 
   var clienteSel = document.getElementById("sint-filtro-cliente");
-  var filtroClienteId =
-    clienteSel && clienteSel.value ? parseInt(clienteSel.value) : null;
+  var filtroClienteIds = clienteSel
+    ? Array.from(clienteSel.selectedOptions || []).map(function (o) {
+        return parseInt(o.value);
+      })
+    : [];
 
   // FILTRO TIPO UTENTE (multi‑select)
   var tipoSel = document.getElementById("sint-filtro-tipo-utente");
@@ -239,7 +242,8 @@ function _generaFinestraStampa() {
   // ---- 2. Filtra clienti (attivi, search, cliente specifico, tipi utente) ----
   var clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
-    if (filtroClienteId && c.id !== filtroClienteId) return false;
+    if (filtroClienteIds.length > 0 && filtroClienteIds.indexOf(c.id) === -1)
+      return false;
     if (
       filtroTipiUtente.length > 0 &&
       !filtroTipiUtente.includes(c.tipologia_codice)

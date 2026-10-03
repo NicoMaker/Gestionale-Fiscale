@@ -419,10 +419,10 @@
         <div class="form-group" id="stato-group">
           <label>Stato</label>
           <select class="select" id="adp-stato">
-            <option value="da_fare">Da fare</option>
-            <option value="in_corso">In corso</option>
-            <option value="completato">Completato</option>
-            <option value="n_a">N/A</option>
+            <option value="da_fare">☐ Da fare</option>
+            <option value="in_corso">🔄 In corso</option>
+            <option value="completato">✅ Completato</option>
+            <option value="n_a">➖ N/A</option>
           </select>
         </div>
         <div class="form-row">
@@ -688,10 +688,10 @@
           <div class="form-group">
             <label>Tipo Scadenza *</label>
             <select class="select" id="adp-def-scadenza">
-              <option value="annuale">Annuale (1×/anno)</option>
-              <option value="semestrale">Semestrale (2×/anno)</option>
-              <option value="trimestrale">Trimestrale (4×/anno)</option>
-              <option value="mensile">Mensile (12×/anno)</option>
+              <option value="annuale">📅 Annuale (1×/anno)</option>
+              <option value="semestrale">📆 Semestrale (2×/anno)</option>
+              <option value="trimestrale">🗓️ Trimestrale (4×/anno)</option>
+              <option value="mensile">📌 Mensile (12×/anno)</option>
             </select>
           </div>
         </div>
@@ -996,10 +996,10 @@
         <div class="form-group">
           <label>Tipo Scadenza</label>
           <select class="input" id="custom-adp-scadenza-tipo">
-            <option value="annuale">Annuale</option>
-            <option value="semestrale">Semestrale</option>
-            <option value="trimestrale">Trimestrale</option>
-            <option value="mensile">Mensile</option>
+            <option value="annuale">📅 Annuale</option>
+            <option value="semestrale">📆 Semestrale</option>
+            <option value="trimestrale">🗓️ Trimestrale</option>
+            <option value="mensile">📌 Mensile</option>
           </select>
         </div>
         <div class="form-group">
@@ -1048,9 +1048,9 @@
             id="custom-adp-genera-per"
             onchange="toggleClienteSelect()"
           >
-            <option value="">Non generare ora</option>
-            <option value="tutti">Tutti i clienti attivi</option>
-            <option value="selezionati">Cliente specifico</option>
+            <option value="">🚫 Non generare ora</option>
+            <option value="tutti">👥 Tutti i clienti attivi</option>
+            <option value="selezionati">👤 Cliente specifico</option>
           </select>
         </div>
         <div

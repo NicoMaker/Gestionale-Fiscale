@@ -578,7 +578,7 @@
         },
         {
           key: "l",
-          label: "Scegli il cliente",
+          label: "Scegli i clienti",
           run: apriSel("sint-filtro-cliente"),
         },
         {

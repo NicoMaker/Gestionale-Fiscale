@@ -19,9 +19,16 @@ function getAppunti(filtri = {}) {
     sql += ` AND (a.titolo LIKE ? OR a.contenuto LIKE ?)`;
     params.push(`%${filtri.search}%`, `%${filtri.search}%`);
   }
-  if (filtri.id_cliente && filtri.id_cliente !== "") {
-    sql += ` AND a.id_cliente = ?`;
-    params.push(parseInt(filtri.id_cliente));
+  // id_cliente può essere un singolo id oppure un array di id (multi‑select)
+  const idClienti = (
+    Array.isArray(filtri.id_cliente) ? filtri.id_cliente : [filtri.id_cliente]
+  )
+    .filter((v) => v !== undefined && v !== null && v !== "")
+    .map((v) => parseInt(v))
+    .filter((v) => !isNaN(v));
+  if (idClienti.length > 0) {
+    sql += ` AND a.id_cliente IN (${idClienti.map(() => "?").join(",")})`;
+    params.push(...idClienti);
   }
   if (filtri.completato !== undefined && filtri.completato !== "") {
     sql += ` AND a.completato = ?`;

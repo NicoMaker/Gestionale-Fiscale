@@ -20,9 +20,16 @@ function getPaginaBianca(filtri = {}) {
     params.push(filtri.tipo);
   }
 
-  if (filtri.id_cliente && filtri.id_cliente !== "") {
-    sql += ` AND pb.id_cliente = ?`;
-    params.push(parseInt(filtri.id_cliente));
+  // id_cliente può essere un singolo id oppure un array di id (multi‑select)
+  const idClienti = (
+    Array.isArray(filtri.id_cliente) ? filtri.id_cliente : [filtri.id_cliente]
+  )
+    .filter((v) => v !== undefined && v !== null && v !== "")
+    .map((v) => parseInt(v))
+    .filter((v) => !isNaN(v));
+  if (idClienti.length > 0) {
+    sql += ` AND pb.id_cliente IN (${idClienti.map(() => "?").join(",")})`;
+    params.push(...idClienti);
   }
 
   if (filtri.search && filtri.search.trim()) {

@@ -72,11 +72,11 @@ function buildDashboardShell(stats) {
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:1">
           <div class="dash-filtri-bar" style="display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap">
             <select class="select" id="dash-filtro-stato-adp" style="width:170px;font-size:13px" onchange="onDashFiltroStatoAdp()">
-              <option value="">Tutti gli stati</option>
-              <option value="da_fare">Da fare</option>
-              <option value="in_corso">In corso</option>
-              <option value="completato">Completato</option>
-              <option value="n_a">N/A</option>
+              <option value="">📋 Tutti gli stati</option>
+              <option value="da_fare">☐ Da fare</option>
+              <option value="in_corso">🔄 In corso</option>
+              <option value="completato">✅ Completato</option>
+              <option value="n_a">➖ N/A</option>
             </select>
             <div class="search-wrap" style="width:220px">
               <span class="search-icon">🔍</span>
