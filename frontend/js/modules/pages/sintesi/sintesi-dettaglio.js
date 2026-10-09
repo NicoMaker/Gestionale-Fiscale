@@ -2,6 +2,92 @@
 // SINTESI-DETTAGLIO.JS — Pannello di dettaglio periodi + stampa
 // ═══════════════════════════════════════════════════════════════
 
+// Ricorda quale periodo si sta modificando, così dopo il salvataggio
+// lo scroll torna esattamente su quella riga (e la evidenzia).
+function sintesiEditPeriodo(id) {
+  state.sintesiEditedPeriodoId = id;
+  var r = typeof _rowStore !== "undefined" ? _rowStore[id] : null;
+  state.sintesiEditedCellKey = r
+    ? r.cliente_id + "|" + r.id_adempimento
+    : state.sintesiActiveCellKey;
+  state.sintesiFocusCellKey = state.sintesiEditedCellKey;
+  _sintesiWatchModal();
+  openAdpById(id);
+}
+window.sintesiEditPeriodo = sintesiEditPeriodo;
+
+// Quando il modal di modifica si chiude (salva, chiudi, clic fuori, ESC)
+// apre/lascia aperto il dettaglio sotto sulla cella appena modificata.
+var _sintesiModalObs = null;
+function _sintesiWatchModal() {
+  if (_sintesiModalObs) return;
+  var modal = document.getElementById("modal-adempimento");
+  if (!modal) return;
+  _sintesiModalObs = new MutationObserver(function () {
+    if (modal.classList.contains("open")) return;
+    var key = state.sintesiEditedCellKey;
+    if (!key || state.page !== "sintesi") return;
+    state.sintesiEditedCellKey = null;
+    state.sintesiActiveCellKey = key;
+    renderSintesiTabella();
+    sintesiFocusTabellaCella(key);
+    setTimeout(function () {
+      if (!sintesiScrollToEdited(false)) {
+        var panel = document.getElementById("sint-dettaglio");
+        if (panel) panel.scrollIntoView({ block: "nearest" });
+      }
+    }, 50);
+  });
+  _sintesiModalObs.observe(modal, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+}
+
+// Posiziona lo scroll INTERNO della tabella (verticale e orizzontale) in
+// modo che la cella/riga del cliente modificato sia al centro.
+function sintesiFocusTabellaCella(key) {
+  if (!key) return;
+  var wrap = document.querySelector(".sint-table-wrap");
+  var cell = document.querySelector('.sint-cell[data-key="' + key + '"]');
+  if (!wrap || !cell) return;
+  var w = wrap.getBoundingClientRect();
+  var c = cell.getBoundingClientRect();
+  wrap.scrollTop += c.top - w.top - (wrap.clientHeight - c.height) / 2;
+  wrap.scrollLeft += c.left - w.left - (wrap.clientWidth - c.width) / 2;
+}
+window.sintesiFocusTabellaCella = sintesiFocusTabellaCella;
+
+function sintesiScrollToEdited(consuma) {
+  var id = state.sintesiEditedPeriodoId;
+  if (!id) return false;
+  var row = document.querySelector(
+    '.sint-dett-table tr[data-pid="' + id + '"]',
+  );
+  if (!row) return false;
+  row.scrollIntoView({ behavior: "auto", block: "nearest" });
+  row.classList.add("flash");
+  setTimeout(function () {
+    row.classList.remove("flash");
+  }, 1200);
+  if (consuma) state.sintesiEditedPeriodoId = null;
+  return true;
+}
+window.sintesiScrollToEdited = sintesiScrollToEdited;
+
+// Chiamata alla chiusura del modal: riporta la vista sulla riga modificata
+function sintesiRiportaAlDettaglio() {
+  if (state.page !== "sintesi" || !state.sintesiActiveCellKey) return;
+  setTimeout(function () {
+    if (!sintesiScrollToEdited(false)) {
+      var panel = document.getElementById("sint-dettaglio");
+      if (panel && panel.innerHTML)
+        panel.scrollIntoView({ behavior: "auto", block: "nearest" });
+    }
+  }, 150);
+}
+window.sintesiRiportaAlDettaglio = sintesiRiportaAlDettaglio;
+
 function sintesiToggleDettaglio(key, clienteId, adempimentoId) {
   state.sintesiActiveCellKey = state.sintesiActiveCellKey === key ? null : key;
   renderSintesiTabella();
@@ -121,6 +207,8 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
       rowsHtml +=
         '<tr data-pidx="' +
         idx +
+        '" data-pid="' +
+        p.id +
         '"><td>' +
         escAttr(periodoLabel) +
         '</td><td><span style="color:' +
@@ -137,7 +225,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
           : "—") +
         '</td><td style="text-align:center;white-space:nowrap">' +
         '<button class="btn btn-xs btn-secondary sint-dett-edit-btn" ' +
-        'onclick="event.stopPropagation(); openAdpById(' +
+        'onclick="event.stopPropagation(); sintesiEditPeriodo(' +
         p.id +
         ')" ' +
         'title="Modifica questo periodo" ' +

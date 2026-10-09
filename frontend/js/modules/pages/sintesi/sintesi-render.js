@@ -378,12 +378,43 @@ function renderSintesiTabella() {
       "</tbody></table></div>";
   }
 
+  // Salva la posizione di scroll PRIMA di rigenerare l'HTML: dopo una
+  // modifica (salvataggio dal modal) la tabella viene ridisegnata e il
+  // browser altrimenti riporta la pagina in cima, facendo perdere il
+  // pannello di dettaglio aperto.
+  var _prevScrollTop = container.scrollTop;
+  var _prevWinY = window.scrollY || 0;
+  var _prevWrap = container.querySelector(".sint-table-wrap");
+  var _prevScrollLeft = _prevWrap ? _prevWrap.scrollLeft : 0;
+  var _prevWrapTop = _prevWrap ? _prevWrap.scrollTop : 0;
+
   container.innerHTML =
     headerCard + legend + bodyHtml + '<div id="sint-dettaglio"></div>';
 
   if (state.sintesiActiveCellKey) {
     var parts = state.sintesiActiveCellKey.split("|");
     _renderSintesiDettaglio(parseInt(parts[0]), parseInt(parts[1]));
+  }
+
+  // Ripristina la posizione: si resta sull'adempimento modificato
+  var _newWrap = container.querySelector(".sint-table-wrap");
+  if (_newWrap) {
+    _newWrap.scrollLeft = _prevScrollLeft;
+    _newWrap.scrollTop = _prevWrapTop;
+  }
+  container.scrollTop = _prevScrollTop;
+  if (_prevWinY) window.scrollTo(window.scrollX || 0, _prevWinY);
+
+  // Dopo il ridisegno (salvataggio): la tabella si posiziona sulla riga
+  // del cliente modificato e il dettaglio evidenzia il periodo modificato
+  if (
+    state.sintesiEditedPeriodoId &&
+    typeof sintesiScrollToEdited === "function"
+  ) {
+    if (typeof sintesiFocusTabellaCella === "function")
+      sintesiFocusTabellaCella(state.sintesiFocusCellKey);
+    state.sintesiFocusCellKey = null;
+    sintesiScrollToEdited(true);
   }
 }
 

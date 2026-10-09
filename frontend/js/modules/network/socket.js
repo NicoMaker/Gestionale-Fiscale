@@ -430,6 +430,9 @@ socket.on("res:copia:tutti", ({ success, error, copiati }) => {
 socket.on("res:update:adempimento_stato", ({ success, error }) => {
   if (success) {
     closeModal("modal-adempimento");
+    // Sintesi: resta aperto sul dettaglio dell'adempimento appena modificato
+    if (typeof sintesiRiportaAlDettaglio === "function")
+      sintesiRiportaAlDettaglio();
     if (state.page === "scadenzario") loadScadenzario();
     if (state.page === "scadenzario_globale") loadGlobale();
     if (state.page === "dashboard")
