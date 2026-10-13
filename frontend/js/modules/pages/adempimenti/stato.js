@@ -77,6 +77,10 @@ function openAdpModal(r) {
     if (sectCont) sectCont.style.display = "block";
     setVal("adp-imp-iva", formattaNumeroItaliano(r.importo_iva));
     setVal("adp-imp-cont", formattaNumeroItaliano(r.importo_contabilita));
+    // FIX: ricalcola il colore in base al segno del valore appena caricato
+    // (prima restava il colore inline dell'apertura precedente)
+    coloraInputImporto(document.getElementById("adp-imp-iva"));
+    coloraInputImporto(document.getElementById("adp-imp-cont"));
     const contCheck = document.getElementById("adp-cont-completata");
     if (contCheck) contCheck.checked = parseInt(r.cont_completata) === 1;
     const ivaFlagCheck = document.getElementById("adp-iva-flag");
@@ -87,6 +91,9 @@ function openAdpModal(r) {
     setVal("adp-imp-saldo", formattaNumeroItaliano(r.importo_saldo));
     setVal("adp-imp-acc1", formattaNumeroItaliano(r.importo_acconto1));
     setVal("adp-imp-acc2", formattaNumeroItaliano(r.importo_acconto2));
+    ["adp-imp-saldo", "adp-imp-acc1", "adp-imp-acc2"].forEach((id) =>
+      coloraInputImporto(document.getElementById(id)),
+    );
     let lb = ["Saldo", "1° Acconto", "2° Acconto"];
     try {
       if (r.rate_labels) lb = JSON.parse(r.rate_labels);
@@ -172,22 +179,6 @@ function _aggiornaColoriContabilita(r) {
 function onContabilitaImportoChange() {
   _aggiornaColoriContabilita(null);
   coloraInputImporto(document.getElementById("adp-imp-iva"));
-}
-
-function coloraInputImporto(input) {
-  if (!input) return;
-  const raw = (input.value || "").replace(/\./g, "").replace(",", ".").trim();
-  const num = parseFloat(raw);
-  if (!input.value || isNaN(num)) {
-    input.style.color = "";
-    input.style.borderColor = "";
-  } else if (num < 0) {
-    input.style.color = "var(--red)";
-    input.style.borderColor = "";
-  } else {
-    input.style.color = "var(--green)";
-    input.style.borderColor = "";
-  }
 }
 
 function parseItalianoFloat(str) {
