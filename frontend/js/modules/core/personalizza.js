@@ -281,17 +281,37 @@
     ],
     // Valgono solo con il pannello aperto
     pannello: [
-      { key: `1 … ${NUM_MAX}`, label: `Applica un tema pronto (${elencoTemi})` },
+      {
+        key: `1 … ${NUM_MAX}`,
+        label: `Applica un tema pronto (${elencoTemi})`,
+      },
       { key: "← / →", label: "Tema pronto precedente / successivo" },
-      { key: "c", label: "Vai ai colori: il cursore va sul codice del colore accento" },
-      { key: "#rrggbb", label: "Nei campi colore scrivi il codice (es. #1e3a5f): si applica subito" },
-      { key: "m", label: "Vai alle misure (poi ← / → cambiano il valore, Home / End min e max)" },
+      {
+        key: "c",
+        label: "Vai ai colori: il cursore va sul codice del colore accento",
+      },
+      {
+        key: "#rrggbb",
+        label:
+          "Nei campi colore scrivi il codice (es. #1e3a5f): si applica subito",
+      },
+      {
+        key: "m",
+        label:
+          "Vai alle misure (poi ← / → cambiano il valore, Home / End min e max)",
+      },
       { key: "f", label: "Vai alla scelta del font" },
       { key: "Tab / Shift Tab", label: "Scorri colori, misure e opzioni" },
-      { key: "r", label: "Ripristina tutto ai valori originali (chiede conferma)" },
+      {
+        key: "r",
+        label: "Ripristina tutto ai valori originali (chiede conferma)",
+      },
       { key: "e", label: "Esporta il tema in un file" },
       { key: "i", label: "Importa un tema da file" },
-      { key: "Esc", label: "Chiude il pannello (in un campo di testo: esce dal campo)" },
+      {
+        key: "Esc",
+        label: "Chiude il pannello (in un campo di testo: esce dal campo)",
+      },
     ],
   };
 
@@ -302,8 +322,7 @@
 
   // ─── STATO ───────────────────────────────────────────────────
   function stato0() {
-    const colori = () =>
-      COLOR_KEYS.reduce((o, k) => ((o[k] = null), o), {});
+    const colori = () => COLOR_KEYS.reduce((o, k) => ((o[k] = null), o), {});
     return {
       v: 1,
       preset: "default",
@@ -344,8 +363,7 @@
     const peggio = (t) => Math.min(contrasto(t, a), contrasto(t, a2));
     return peggio("#ffffff") >= peggio("#0b0d16") ? "#ffffff" : "#0b0d16";
   }
-  const mix = (a, pa, b) =>
-    `color-mix(in srgb, ${a} ${pa}%, ${b})`;
+  const mix = (a, pa, b) => `color-mix(in srgb, ${a} ${pa}%, ${b})`;
 
   // ─── SANITIZZAZIONE (localStorage e import: mai fidarsi) ─────
   const clamp = (n, [lo, hi]) => Math.min(hi, Math.max(lo, n));
@@ -353,7 +371,10 @@
   function sanifica(raw) {
     const s = stato0();
     if (!raw || typeof raw !== "object") return s;
-    if (typeof raw.preset === "string" && (raw.preset in PRESETS || raw.preset === "custom"))
+    if (
+      typeof raw.preset === "string" &&
+      (raw.preset in PRESETS || raw.preset === "custom")
+    )
       s.preset = raw.preset;
     ["light", "dark"].forEach((m) => {
       COLOR_KEYS.forEach((k) => {
@@ -429,10 +450,7 @@
       const S = c.s0 || d.s0;
       const T = c.t0 || d.t0;
       if (c.bg) {
-        v.push(
-          `--bg:${c.bg}`,
-          `--glass-bg:${mix(c.bg, 80, "transparent")}`,
-        );
+        v.push(`--bg:${c.bg}`, `--glass-bg:${mix(c.bg, 80, "transparent")}`);
       }
       if (c.s0) v.push(`--s0:${S}`);
       v.push(
@@ -480,7 +498,8 @@
       root.push(`--sans:${FONTS[state.font].css}`);
 
     // Larghezza sidebar e altezza topbar
-    if (m.sidebar !== MISURE_DEF.sidebar) root.push(`--sidebar-w:${m.sidebar}px`);
+    if (m.sidebar !== MISURE_DEF.sidebar)
+      root.push(`--sidebar-w:${m.sidebar}px`);
     if (m.topbar !== MISURE_DEF.topbar) root.push(`--topbar-h:${m.topbar}px`);
 
     // Arrotondamento (scala tutti i raggi)
@@ -510,7 +529,9 @@
         ["select", 12],
         ["textarea", 12],
       ];
-      fissi.forEach(([sel, n]) => rules.push(`html ${sel}{border-radius:${px(n)}}`));
+      fissi.forEach(([sel, n]) =>
+        rules.push(`html ${sel}{border-radius:${px(n)}}`),
+      );
     }
 
     // Densità tabelle
@@ -602,7 +623,10 @@
   ];
 
   const esc = (s) =>
-    String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    String(s).replace(
+      /[&<>"]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+    );
 
   // "Shift Tab" → <kbd>Shift</kbd> <kbd>Tab</kbd>; "a / b" → a oppure b
   function kbdHtml(k) {
@@ -715,7 +739,10 @@
         <summary>⌨️ Comandi da tastiera</summary>
         <table>${TASTI.ovunque
           .concat(TASTI.pannello)
-          .map((t) => `<tr><td>${kbdHtml(t.key)}</td><td>${esc(t.label)}</td></tr>`)
+          .map(
+            (t) =>
+              `<tr><td>${kbdHtml(t.key)}</td><td>${esc(t.label)}</td></tr>`,
+          )
           .join("")}</table>
         <button type="button" class="pz-btn" data-pz="guida">Apri la guida completa (?)</button>
       </details>
@@ -784,7 +811,7 @@
     panel.querySelectorAll(".pz-preset").forEach((b) => {
       const id = b.dataset.preset;
       const p = PRESETS[id];
-      const col = (p[mo] || DEF[mo]);
+      const col = p[mo] || DEF[mo];
       const sw = b.querySelector(".pz-sw");
       sw.style.background = `linear-gradient(135deg, ${col.accent} 0 50%, ${col.accent2 || col.accent} 50% 100%)`;
       sw.style.borderColor = col.bg || DEF[mo].bg;
@@ -812,8 +839,11 @@
         state[modo()][k] = v;
         state.preset = "custom";
         panel.querySelector(`#pz-c-${k}`).value = v;
-        panel.querySelector(`[data-reset-color="${k}"]`).style.visibility = "visible";
-        panel.querySelectorAll(".pz-preset.on").forEach((b) => b.classList.remove("on"));
+        panel.querySelector(`[data-reset-color="${k}"]`).style.visibility =
+          "visible";
+        panel
+          .querySelectorAll(".pz-preset.on")
+          .forEach((b) => b.classList.remove("on"));
         applica();
         salva();
       } else {
@@ -829,13 +859,18 @@
       state.preset = "custom";
       applica();
       // aggiorno solo i pulsanti reset/preset senza toccare il color picker in uso
-      panel.querySelector(`[data-reset-color="${t.dataset.color}"]`).style.visibility = "visible";
-      panel.querySelectorAll(".pz-preset.on").forEach((b) => b.classList.remove("on"));
+      panel.querySelector(
+        `[data-reset-color="${t.dataset.color}"]`,
+      ).style.visibility = "visible";
+      panel
+        .querySelectorAll(".pz-preset.on")
+        .forEach((b) => b.classList.remove("on"));
       salva();
     } else if (t.dataset.misura) {
       state.misure[t.dataset.misura] = Number(t.value);
       const unit = SLIDERS_UI.find((x) => x[0] === t.dataset.misura)[2];
-      panel.querySelector(`#pz-o-${t.dataset.misura}`).textContent = t.value + unit;
+      panel.querySelector(`#pz-o-${t.dataset.misura}`).textContent =
+        t.value + unit;
       applica();
       salva();
     }
@@ -977,7 +1012,11 @@
   // suoi tasti hanno la precedenza su quelli delle pagine (es. "e", "r").
   function scrivendo(t) {
     if (!t) return false;
-    if (t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)
+    if (
+      t.tagName === "TEXTAREA" ||
+      t.tagName === "SELECT" ||
+      t.isContentEditable
+    )
       return true;
     return (
       t.tagName === "INPUT" &&
@@ -1017,7 +1056,10 @@
       return applicaPreset(PRESET_IDS[n - 1]);
     }
     // ← / → cambiano tema, tranne sugli slider dove regolano il valore
-    if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !(t && t.type === "range")) {
+    if (
+      (e.key === "ArrowLeft" || e.key === "ArrowRight") &&
+      !(t && t.type === "range")
+    ) {
       fatto();
       return temaRelativo(e.key === "ArrowRight" ? 1 : -1);
     }
@@ -1060,7 +1102,11 @@
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         toggle();
-        if (window.mobileSidebar && window.mobileSidebar.isOpen && window.mobileSidebar.isOpen())
+        if (
+          window.mobileSidebar &&
+          window.mobileSidebar.isOpen &&
+          window.mobileSidebar.isOpen()
+        )
           window.mobileSidebar.close();
       });
     }
