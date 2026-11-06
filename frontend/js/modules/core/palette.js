@@ -18,6 +18,9 @@
       window.apriGuidaTastiera?.(),
     ),
     azione("🌓", "Tema chiaro / scuro", () => window.toggleTheme?.()),
+    azione("🎨", "Personalizza aspetto (colori e misure)", () =>
+      window.apriPersonalizza?.(),
+    ),
   );
   const ov = document.createElement("div");
   ov.className = "cmdk-overlay";

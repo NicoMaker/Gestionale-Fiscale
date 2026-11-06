@@ -1,0 +1,381 @@
+/* ═══════════════════════════════════════════════════════════════
+   PERSONALIZZA — pannello laterale "Personalizza aspetto"
+   Usa solo i token esistenti, quindi segue tema chiaro/scuro e
+   anche i colori scelti dall'utente.
+   ═══════════════════════════════════════════════════════════════ */
+.pz-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(380px, 100%);
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  background: var(--s0);
+  color: var(--t0);
+  border-left: 1px solid var(--b1);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(100%);
+  transition: transform 0.22s var(--ease, ease);
+  font-family: var(--sans);
+}
+.pz-panel[hidden] {
+  display: none;
+}
+.pz-panel.open {
+  transform: none;
+}
+
+.pz-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--b0);
+}
+.pz-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.pz-close {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--t2);
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.pz-close:hover {
+  background: var(--s2);
+  color: var(--t0);
+}
+
+.pz-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 18px 18px;
+}
+.pz-sec {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--b0);
+}
+.pz-sec:last-child {
+  border-bottom: 0;
+}
+.pz-sec h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--t0);
+}
+.pz-modo {
+  font-weight: 500;
+  color: var(--t2);
+}
+.pz-hint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--t2);
+}
+
+/* Temi pronti */
+.pz-presets {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.pz-preset {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  text-align: left;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--t1);
+  background: var(--s1);
+  border: 1px solid var(--b0);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.pz-preset:hover {
+  border-color: var(--b2);
+}
+.pz-preset.on {
+  border-color: var(--accent);
+  background: var(--accent-d);
+  color: var(--t0);
+  font-weight: 600;
+}
+.pz-sw {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+/* Righe */
+.pz-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.pz-row label,
+.pz-lbl {
+  flex: 1;
+  font-size: 13px;
+  color: var(--t1);
+}
+.pz-row input[type="color"] {
+  flex: none;
+  width: 44px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--b1);
+  border-radius: var(--r-xs);
+  background: var(--s1);
+  cursor: pointer;
+}
+.pz-mini {
+  appearance: none;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--t2);
+  cursor: pointer;
+}
+.pz-mini:hover {
+  background: var(--s2);
+  color: var(--t0);
+}
+.pz-row select {
+  flex: none;
+  max-width: 190px;
+}
+
+/* Slider */
+.pz-row-range {
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.pz-row-range output {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--t2);
+}
+.pz-row-range input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+/* Segmentato */
+.pz-seg {
+  display: inline-flex;
+  border: 1px solid var(--b1);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.pz-seg button {
+  appearance: none;
+  border: 0;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--t1);
+  background: var(--s1);
+  cursor: pointer;
+}
+.pz-seg button + button {
+  border-left: 1px solid var(--b1);
+}
+.pz-seg button.on {
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+}
+.pz-row-seg {
+  flex-wrap: wrap;
+}
+
+/* Checkbox */
+.pz-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--t1);
+  cursor: pointer;
+}
+.pz-check input {
+  accent-color: var(--accent);
+}
+
+/* Pulsanti */
+.pz-btn {
+  appearance: none;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--t0);
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.pz-btn:hover {
+  border-color: var(--accent);
+}
+.pz-danger {
+  color: var(--red);
+}
+
+.pz-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--b0);
+  background: var(--s0);
+}
+.pz-foot .pz-danger {
+  margin-right: auto;
+}
+
+.pz-panel :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .pz-panel {
+    width: 100%;
+    border-left: 0;
+  }
+  .pz-presets {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Campo codice colore (#rrggbb) ─────────────────────────── */
+.pz-hex {
+  flex: none;
+  width: 84px;
+  padding: 5px 7px;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--t0);
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-xs);
+  text-transform: lowercase;
+}
+.pz-hex:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.pz-hex.pz-bad {
+  border-color: var(--red);
+  background: var(--red-d);
+}
+
+/* ── Numero scorciatoia sui temi pronti ────────────────────── */
+.pz-preset {
+  position: relative;
+}
+.pz-preset-name {
+  flex: 1;
+}
+.pz-num {
+  flex: none;
+  min-width: 18px;
+  padding: 1px 5px;
+  font: inherit;
+  font-size: 11px;
+  text-align: center;
+  color: var(--t2);
+  background: var(--s0);
+  border: 1px solid var(--b1);
+  border-bottom-width: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* ── Promemoria comandi da tastiera ────────────────────────── */
+.pz-keys {
+  border-top: 1px solid var(--b0);
+  padding: 10px 18px;
+  font-size: 12.5px;
+}
+.pz-keys summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--t1);
+}
+.pz-keys[open] {
+  max-height: 38vh;
+  overflow-y: auto;
+}
+.pz-keys table {
+  width: 100%;
+  margin: 8px 0 10px;
+  border-collapse: collapse;
+}
+.pz-keys td {
+  padding: 4px 6px 4px 0;
+  border: 0;
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--t1);
+  background: none;
+}
+.pz-keys td:first-child {
+  white-space: nowrap;
+}
+.pz-keys kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--t0);
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-bottom-width: 2px;
+  border-radius: var(--r-xs);
+}
+.pz-or {
+  font-size: 11px;
+  color: var(--t3);
+}
+
+/* ── Messaggio di stato (letto anche dagli screen reader) ──── */
+.pz-status {
+  min-height: 0;
+  padding: 0 18px;
+  font-size: 12px;
+  color: var(--accent);
+}
+.pz-status:not(:empty) {
+  padding-top: 8px;
+  min-height: 1em;
+}
+
+/* ── Sottotitolo nella guida tasti (?) ─────────────────────── */
+.kb-sub {
+  margin: 12px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t1);
+}

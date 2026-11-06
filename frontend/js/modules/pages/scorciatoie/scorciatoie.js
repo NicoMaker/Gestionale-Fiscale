@@ -32,6 +32,7 @@
     { id: "palette", label: "🔎 Ricerca rapida", icona: "🔎" },
     { id: "globali", label: "🌍 Ovunque", icona: "🌍" },
     { id: "nav", label: "🧭 Vai a… (g + lettera)", icona: "🧭" },
+    { id: "aspetto", label: "🎨 Aspetto e colori", icona: "🎨" },
     { id: "modal", label: "🪟 Nelle finestre (modal)", icona: "🪟" },
   ];
 
@@ -74,7 +75,7 @@
         errore: true,
         sezioni: [],
       };
-    const { PAGINE, GLOBALI, MODAL, NAV, LISTA_COMUNE } = R;
+    const { PAGINE, GLOBALI, MODAL, NAV, LISTA_COMUNE, ASPETTO } = R;
 
     const palette = [
       { key: "Ctrl K / ⌘ K", label: "Apre la ricerca rapida «Vai a…»" },
@@ -114,6 +115,21 @@
       titolo: "Vai a… (g + lettera)",
       tasti: navTasti,
     });
+
+    if (ASPETTO && ASPETTO.pannello && ASPETTO.pannello.length) {
+      sezioni.push({
+        id: "aspetto",
+        icona: "🎨",
+        titolo: "Aspetto e colori",
+        tasti: ASPETTO.ovunque,
+      });
+      sezioni.push({
+        id: "aspetto",
+        icona: "🎨",
+        titolo: "Pannello «Personalizza aspetto» aperto",
+        tasti: ASPETTO.pannello,
+      });
+    }
 
     sezioni.push({
       id: "modal",
@@ -296,7 +312,8 @@
         <div>
           <h2>Tutti i tasti, in un solo posto</h2>
           <p>Premi <kbd>Ctrl</kbd> <kbd>K</kbd> per cercare una pagina, <kbd>?</kbd> per la guida
-          della pagina in cui sei, <kbd>Esc</kbd> per chiudere. Stampa questo foglio con
+          della pagina in cui sei, <kbd>D</kbd> per scegliere temi, colori e misure,
+          <kbd>Esc</kbd> per chiudere. Stampa questo foglio con
           <kbd>Shift</kbd> <kbd>P</kbd>.</p>
         </div>
       </div>`;

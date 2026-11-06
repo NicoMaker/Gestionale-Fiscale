@@ -225,6 +225,11 @@
     },
     { key: "t", label: "Tema chiaro / scuro", run: call("toggleTheme") },
     {
+      key: "d",
+      label: "Personalizza aspetto: temi, colori e misure (pannello)",
+      run: call("togglePersonalizza"),
+    },
+    {
       key: "b",
       label: "Scarica il database (backup)",
       run: () => {
@@ -241,6 +246,12 @@
       info: true,
     },
   ];
+
+  // Tasti del pannello "Personalizza aspetto" (definiti in personalizza.js)
+  const ASPETTO = (window.GF_PERSONALIZZA && window.GF_PERSONALIZZA.TASTI) || {
+    ovunque: [],
+    pannello: [],
+  };
 
   const MODAL = [
     {
@@ -1107,6 +1118,12 @@
       <div class="kb-body">
         ${corrente}
         <section class="kb-sec"><h3>Ovunque</h3><table>${righeHtml(GLOBALI)}</table></section>
+        ${
+          ASPETTO.pannello.length
+            ? `<section class="kb-sec"><h3>🎨 Aspetto e colori</h3><table>${righeHtml(ASPETTO.ovunque)}</table>
+               <h4 class="kb-sub">Con il pannello «Personalizza aspetto» aperto</h4><table>${righeHtml(ASPETTO.pannello)}</table></section>`
+            : ""
+        }
         ${nav}
         <section class="kb-sec"><h3>Nelle finestre (modal)</h3><table>${righeHtml(MODAL)}</table></section>
         <section class="kb-sec"><h3>Tutte le altre pagine</h3>${altre}</section>
@@ -1172,5 +1189,5 @@
     barra.appendChild(t);
   }
 
-  window.GF_SHORTCUTS = { PAGINE, GLOBALI, MODAL, NAV, LISTA_COMUNE };
+  window.GF_SHORTCUTS = { PAGINE, GLOBALI, MODAL, NAV, LISTA_COMUNE, ASPETTO };
 })();
