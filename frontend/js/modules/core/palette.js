@@ -28,8 +28,10 @@
     azione("🖌️", "Paletta: tutti i colori in uso", () =>
       window.GF_AZIONI?.paletta(),
     ),
-    azione("📖", "Guida completa alla personalizzazione", () =>
-      window.open("guida.html", "_blank", "noopener"),
+    azione("📖", "Guida del programma (PDF)", () =>
+      window.apriGuida
+        ? window.apriGuida()
+        : window.open("/manuale-utente-gestionale.pdf", "_blank", "noopener"),
     ),
   );
   const ov = document.createElement("div");

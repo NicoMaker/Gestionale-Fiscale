@@ -23,6 +23,23 @@ function createApp() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
+  // Guida del programma: il PDF sta nella radice del progetto (fuori da
+  // frontend/), quindi lo servo con una route dedicata. Va PRIMA dei file
+  // statici e del catch-all SPA, che altrimenti risponderebbe con index.html.
+  const guidaPdf = path.join(__dirname, "../../manuale-utente-gestionale.pdf");
+  app.get("/manuale-utente-gestionale.pdf", (req, res, next) => {
+    res.sendFile(
+      guidaPdf,
+      {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": 'inline; filename="manuale-utente-gestionale.pdf"',
+        },
+      },
+      (err) => err && next(err),
+    );
+  });
+
   // File statici del frontend (../../frontend rispetto a backend/src)
   app.use(express.static(path.join(__dirname, "../../frontend")));
 

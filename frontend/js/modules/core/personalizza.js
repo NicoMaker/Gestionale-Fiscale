@@ -52,6 +52,7 @@
   const COLOR_KEYS = Object.keys(DEF.light);
 
   const MISURE_DEF = {
+    testo: 100, // % dimensione di TUTTO il testo (vedi testo.js)
     zoom: 100, // % scala interfaccia
     sidebar: 252, // px
     topbar: 64, // px
@@ -66,6 +67,7 @@
     maxW: 1680, // px larghezza massima contenuto (2400 = nessun limite)
   };
   const MISURE_RANGE = {
+    testo: [80, 160],
     zoom: [85, 130],
     sidebar: [200, 340],
     topbar: [48, 96],
@@ -650,6 +652,9 @@
     if (FONTS[state.font] && FONTS[state.font].css)
       root.push(`--sans:${FONTS[state.font].css}`);
 
+    // Dimensione del testo: variabile usata da testo.js (calc(Npx * var(--gf-txt)))
+    if (m.testo !== MISURE_DEF.testo) root.push(`--gf-txt:${m.testo / 100}`);
+
     // Larghezza sidebar e altezza topbar
     if (m.sidebar !== MISURE_DEF.sidebar)
       root.push(`--sidebar-w:${m.sidebar}px`);
@@ -695,7 +700,7 @@
         X = m.cellX,
         F = m.tFont;
       rules.push(
-        `html tbody td{padding:${Y}px ${X}px;font-size:${F}px}`,
+        `html tbody td{padding:${Y}px ${X}px;font-size:calc(${F}px * var(--gf-txt,1))}`,
         `html thead th{padding:${Math.max(3, Y - 1)}px ${X}px}`,
         `html .gxlv-td{padding:${r1(Y * 0.5)}px ${r1(X * 0.5)}px}`,
         `html .gxlv-td-cliente{padding:${r1(Y * 0.85)}px ${r1(X * 0.85)}px}`,
@@ -706,7 +711,7 @@
     }
     if (m.headFont !== D0.headFont)
       rules.push(
-        `html thead th,html .gxlv-th,html .sint-table thead th{font-size:${m.headFont}px}`,
+        `html thead th,html .gxlv-th,html .sint-table thead th{font-size:calc(${m.headFont}px * var(--gf-txt,1))}`,
       );
     // Margini della pagina e larghezza massima del contenuto
     if (m.pageX || m.pageY) {
@@ -761,6 +766,9 @@
       document.head.appendChild(el);
     }
     el.textContent = buildCss();
+    // Testo diverso dal 100%: attivo il ridimensionamento globale (testo.js)
+    if (state.misure.testo !== MISURE_DEF.testo && window.GF_TESTO)
+      window.GF_TESTO.attiva();
 
     // Colore della barra del browser (mobile)
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -807,7 +815,8 @@
   const COLORI_UI = COLORI_TEMA_UI.concat(COLORI_STATO_UI);
 
   const SLIDERS_UI = [
-    ["zoom", "Scala interfaccia", "%", 5],
+    ["testo", "Dimensione del testo (tutta l'app)", "%", 5],
+    ["zoom", "Scala interfaccia (testo e spazi)", "%", 5],
     ["sidebar", "Larghezza menu laterale", "px", 4],
     ["topbar", "Altezza barra superiore", "px", 2],
     ["radius", "Arrotondamento angoli", "%", 10],
@@ -923,7 +932,7 @@
         <button type="button" data-vai="mix">Mescola</button>
         <button type="button" data-vai="colori">Colori</button>
         <button type="button" data-vai="stato">Stato</button>
-        <button type="button" data-vai="misure">Misure</button>
+        <button type="button" data-vai="misure">Testo e misure</button>
         <button type="button" data-vai="tabelle">Tabelle</button>
         <button type="button" data-vai="font">Font</button>
         <button type="button" data-vai="effetti">Effetti</button>
@@ -956,6 +965,15 @@
 
         <section class="pz-sec" id="pz-sec-misure">
           <h3>Misure dell'interfaccia</h3>
+          <div class="pz-row pz-row-seg">
+            <span class="pz-lbl">Testo rapido</span>
+            <span class="pz-seg">
+              <button type="button" data-testo="90">Piccolo</button>
+              <button type="button" data-testo="100">Normale</button>
+              <button type="button" data-testo="120">Grande</button>
+              <button type="button" data-testo="140">Enorme</button>
+            </span>
+          </div>
           ${slidersHtml}
         </section>
 
@@ -1000,7 +1018,7 @@
           )
           .join("")}</table>
         <button type="button" class="pz-btn" data-pz="guida">Guida tasti (?)</button>
-        <button type="button" class="pz-btn" data-pz="manuale">📖 Guida completa</button>
+        <button type="button" class="pz-btn" data-pz="manuale">📖 Guida del programma (PDF)</button>
       </details>
       <div class="pz-status" id="pz-status" role="status" aria-live="polite"></div>
       <footer class="pz-foot">
@@ -1095,6 +1113,11 @@
     set("#pz-griglia", state.effetti.griglia);
     set("#pz-leggibile", state.effetti.leggibile);
 
+    panel.querySelectorAll("[data-testo]").forEach((b) => {
+      const on = Number(b.dataset.testo) === state.misure.testo;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on);
+    });
     panel.querySelectorAll("[data-densita]").forEach((b) => {
       const on = b.dataset.densita === state.misure.densita;
       b.classList.toggle("on", on);
@@ -1226,6 +1249,10 @@
       state.preset = "custom";
       return aggiorna();
     }
+    if (b.dataset.testo) {
+      state.misure.testo = Number(b.dataset.testo);
+      return aggiorna();
+    }
     if (b.dataset.densita) {
       Object.assign(state.misure, DENS_VAL[b.dataset.densita], {
         densita: b.dataset.densita,
@@ -1244,7 +1271,7 @@
       case "guida":
         return window.apriGuidaTastiera && window.apriGuidaTastiera();
       case "manuale":
-        return window.open("guida.html", "_blank", "noopener");
+        return apriGuidaPdf();
       case "home":
         chiudi();
         return window.GF_AZIONI && window.GF_AZIONI.home();
@@ -1266,6 +1293,12 @@
       case "importa":
         return panel.querySelector("#pz-file").click();
     }
+  }
+
+  // Guida del programma: manuale-utente-gestionale.pdf (radice del progetto)
+  function apriGuidaPdf() {
+    if (window.apriGuida) return window.apriGuida();
+    window.open("/manuale-utente-gestionale.pdf", "_blank", "noopener");
   }
 
   function ripristinaTutto() {
@@ -1483,7 +1516,7 @@
   // API per Leggenda / Paletta / guida
   Object.assign(window.GF_PERSONALIZZA, {
     stato: () => state,
-    applica, // riapplica i colori (usato da guida.html quando cambia il tema)
+    applica, // riapplica i colori (usato dalle pagine esterne quando cambia il tema)
     // Colore effettivo di ogni chiave nel tema attivo (scelto da te oppure di default)
     effettivi: () => {
       const o = {};
