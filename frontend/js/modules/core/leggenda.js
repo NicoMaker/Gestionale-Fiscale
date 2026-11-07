@@ -38,7 +38,10 @@
   function parseCol(str) {
     let m = String(str).match(/rgba?\(([^)]+)\)/);
     if (m) {
-      const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+      const p = m[1]
+        .split(/[ ,/]+/)
+        .filter(Boolean)
+        .map(Number);
       return p.slice(0, 3).map(Math.round);
     }
     m = String(str).match(/color\(srgb\s+([\d.\s-]+)/);
@@ -216,9 +219,14 @@
     const card = ([chiave, v, nome, desc]) => {
       const hex = (v && varHex(v)) || (chiave && eff[chiave]) || null;
       const bg = hex || "transparent";
-      const r = hex && s0 && v !== "--bg" && v !== "--s0" ? contrasto(hex, s0) : null;
-      const rt = r ? `<span class="gf-cr ${r >= 4.5 ? "ok" : r >= 3 ? "mid" : "bad"}">${r.toFixed(1)}:1</span>` : "";
-      const act = chiave ? "✏️ clic per modificare" : "clic per copiare il codice";
+      const r =
+        hex && s0 && v !== "--bg" && v !== "--s0" ? contrasto(hex, s0) : null;
+      const rt = r
+        ? `<span class="gf-cr ${r >= 4.5 ? "ok" : r >= 3 ? "mid" : "bad"}">${r.toFixed(1)}:1</span>`
+        : "";
+      const act = chiave
+        ? "✏️ clic per modificare"
+        : "clic per copiare il codice";
       return `<button type="button" class="gf-sw" data-k="${chiave || ""}" data-hex="${hex || ""}" title="${act}">
         <span class="gf-sw-c" style="background:${bg}"></span>
         <span class="gf-sw-t"><b>${esc(nome)}</b><small>${esc(desc)}</small></span>
@@ -286,12 +294,12 @@
         e.stopImmediatePropagation();
       };
       const k = e.key.toLowerCase();
-      if (e.key === "Escape") return fatto(), chiudi();
+      if (e.key === "Escape") return (fatto(), chiudi());
       if (k === "1" || (e.key === "ArrowLeft" && tab === "paletta"))
-        return fatto(), mostra("leggenda");
+        return (fatto(), mostra("leggenda"));
       if (k === "2" || (e.key === "ArrowRight" && tab === "leggenda"))
-        return fatto(), mostra("paletta");
-      if (k === "h") return fatto(), home();
+        return (fatto(), mostra("paletta"));
+      if (k === "h") return (fatto(), home());
       if (k === "e") {
         fatto();
         chiudi();

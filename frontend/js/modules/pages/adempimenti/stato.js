@@ -275,11 +275,7 @@ function _aggiornaColoriRateContabilita(r) {
   const labelCont = document.getElementById("label-rate-cont");
   if (labelCont)
     labelCont.style.color =
-      color === "both"
-        ? "var(--green)"
-        : color === "one"
-          ? "var(--blue)"
-          : "";
+      color === "both" ? "var(--green)" : color === "one" ? "var(--blue)" : "";
 }
 
 function onRateContabilitaChange() {

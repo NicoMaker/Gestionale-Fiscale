@@ -107,15 +107,51 @@
 
   // Font aggiuntivi (caricati da Google Fonts solo quando li scegli)
   Object.assign(FONTS, {
-    nunito: { label: "Nunito (morbido)", css: '"Nunito", system-ui, sans-serif', gf: "Nunito:wght@400;600;700;800" },
-    dmsans: { label: "DM Sans (pulito)", css: '"DM Sans", system-ui, sans-serif', gf: "DM+Sans:wght@400;500;600;700" },
-    plex: { label: "IBM Plex Sans (tecnico)", css: '"IBM Plex Sans", system-ui, sans-serif', gf: "IBM+Plex+Sans:wght@400;500;600;700" },
-    spacegrotesk: { label: "Space Grotesk (moderno)", css: '"Space Grotesk", system-ui, sans-serif', gf: "Space+Grotesk:wght@400;500;600;700" },
-    poppins: { label: "Poppins (rotondo)", css: '"Poppins", system-ui, sans-serif', gf: "Poppins:wght@400;500;600;700" },
-    lora: { label: "Lora (elegante, con grazie)", css: '"Lora", Georgia, serif', gf: "Lora:wght@400;500;600;700" },
-    merriweather: { label: "Merriweather (lettura)", css: '"Merriweather", Georgia, serif', gf: "Merriweather:wght@400;700" },
-    sourceserif: { label: "Source Serif (editoriale)", css: '"Source Serif 4", Georgia, serif', gf: "Source+Serif+4:wght@400;600;700" },
-    playfair: { label: "Playfair (titoli eleganti)", css: '"Playfair Display", Georgia, serif', gf: "Playfair+Display:wght@400;600;700" },
+    nunito: {
+      label: "Nunito (morbido)",
+      css: '"Nunito", system-ui, sans-serif',
+      gf: "Nunito:wght@400;600;700;800",
+    },
+    dmsans: {
+      label: "DM Sans (pulito)",
+      css: '"DM Sans", system-ui, sans-serif',
+      gf: "DM+Sans:wght@400;500;600;700",
+    },
+    plex: {
+      label: "IBM Plex Sans (tecnico)",
+      css: '"IBM Plex Sans", system-ui, sans-serif',
+      gf: "IBM+Plex+Sans:wght@400;500;600;700",
+    },
+    spacegrotesk: {
+      label: "Space Grotesk (moderno)",
+      css: '"Space Grotesk", system-ui, sans-serif',
+      gf: "Space+Grotesk:wght@400;500;600;700",
+    },
+    poppins: {
+      label: "Poppins (rotondo)",
+      css: '"Poppins", system-ui, sans-serif',
+      gf: "Poppins:wght@400;500;600;700",
+    },
+    lora: {
+      label: "Lora (elegante, con grazie)",
+      css: '"Lora", Georgia, serif',
+      gf: "Lora:wght@400;500;600;700",
+    },
+    merriweather: {
+      label: "Merriweather (lettura)",
+      css: '"Merriweather", Georgia, serif',
+      gf: "Merriweather:wght@400;700",
+    },
+    sourceserif: {
+      label: "Source Serif (editoriale)",
+      css: '"Source Serif 4", Georgia, serif',
+      gf: "Source+Serif+4:wght@400;600;700",
+    },
+    playfair: {
+      label: "Playfair (titoli eleganti)",
+      css: '"Playfair Display", Georgia, serif',
+      gf: "Playfair+Display:wght@400;600;700",
+    },
   });
   const _fontCaricati = new Set();
   function caricaFont(id) {
@@ -124,7 +160,8 @@
     _fontCaricati.add(id);
     const l = document.createElement("link");
     l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=" + f.gf + "&display=swap";
+    l.href =
+      "https://fonts.googleapis.com/css2?family=" + f.gf + "&display=swap";
     document.head.appendChild(l);
   }
 
@@ -355,8 +392,14 @@
           "Vai alle misure (poi ← / → cambiano il valore, Home / End min e max)",
       },
       { key: "f", label: "Vai alla scelta del font" },
-      { key: "x", label: "Vai a «Mescola»: accento, sfondo e font da temi diversi" },
-      { key: "b", label: "Vai alle misure di tabelle e spazi (righe, celle, margini)" },
+      {
+        key: "x",
+        label: "Vai a «Mescola»: accento, sfondo e font da temi diversi",
+      },
+      {
+        key: "b",
+        label: "Vai alle misure di tabelle e spazi (righe, celle, margini)",
+      },
       { key: "s", label: "Vai ai colori di stato (verde, rosso, blu…)" },
       { key: "h", label: "Chiude il pannello e torna alla Home" },
       { key: "l / o", label: "Apre la Leggenda / la Paletta dei colori" },
@@ -389,7 +432,13 @@
       dark: colori(),
       misure: { ...MISURE_DEF },
       font: "default",
-      effetti: { aurora: true, animazioni: true, leggibile: true, zebra: false, griglia: false },
+      effetti: {
+        aurora: true,
+        animazioni: true,
+        leggibile: true,
+        zebra: false,
+        griglia: false,
+      },
     };
   }
 
@@ -425,18 +474,22 @@
   const mix = (a, pa, b) => `color-mix(in srgb, ${a} ${pa}%, ${b})`;
   // Sposta un colore verso nero/bianco finché si legge (contrasto ≥ min) su tutti i fondi
   function mescolaHex(a, b, t) {
-    const A = rgb(a), B = rgb(b);
+    const A = rgb(a),
+      B = rgb(b);
     return (
       "#" +
       A.map((v, i) =>
-        Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0"),
+        Math.round(v + (B[i] - v) * t)
+          .toString(16)
+          .padStart(2, "0"),
       ).join("")
     );
   }
   function rendiLeggibile(col, fondi, min) {
     if (!isHex(col) || fondi.some((f) => !isHex(f))) return col;
     if (fondi.every((f) => contrasto(col, f) >= min)) return col;
-    const chiaro = fondi.reduce((s, f) => s + luminanza(f), 0) / fondi.length > 0.4;
+    const chiaro =
+      fondi.reduce((s, f) => s + luminanza(f), 0) / fondi.length > 0.4;
     const verso = chiaro ? "#000000" : "#ffffff";
     for (let t = 0.04; t <= 1.001; t += 0.04) {
       const r = mescolaHex(col, verso, t);
@@ -851,7 +904,8 @@
     const fontHtml = Object.entries(FONTS)
       .map(([id, f]) => `<option value="${id}">${esc(f.label)}</option>`)
       .join("");
-    const mixOpt = `<option value="">— nessuno (resta com'è) —</option>` +
+    const mixOpt =
+      `<option value="">— nessuno (resta com'è) —</option>` +
       Object.entries(PRESETS)
         .map(([id, p]) => `<option value="${id}">${esc(p.label)}</option>`)
         .join("");
@@ -999,7 +1053,10 @@
 
     ALL_SLIDERS.forEach(([k]) => {
       panel.querySelector(`#pz-m-${k}`).value = state.misure[k];
-      panel.querySelector(`#pz-o-${k}`).textContent = fmtMis(k, state.misure[k]);
+      panel.querySelector(`#pz-o-${k}`).textContent = fmtMis(
+        k,
+        state.misure[k],
+      );
     });
 
     // Contrasto di ogni colore (lettura: ≥ 4.5 ottimo, ≥ 3 sufficiente per elementi grandi)
