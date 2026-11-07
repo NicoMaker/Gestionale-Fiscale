@@ -48,7 +48,9 @@
           if (mf) n = mf[1];
         }
         if (n !== null) {
-          const imp = r.style.getPropertyPriority("font-size") ? "!important" : "";
+          const imp = r.style.getPropertyPriority("font-size")
+            ? "!important"
+            : "";
           out.push(`${r.selectorText}{font-size:${scala(n)}${imp}}`);
         }
         continue;
@@ -59,7 +61,9 @@
         leggiRegole(r.cssRules, dentro);
         if (dentro.length) {
           const nome = r.type === 4 ? "media" : "supports";
-          out.push(`@${nome} ${r.conditionText || (r.media && r.media.mediaText) || ""}{${dentro.join("")}}`);
+          out.push(
+            `@${nome} ${r.conditionText || (r.media && r.media.mediaText) || ""}{${dentro.join("")}}`,
+          );
         }
         continue;
       }

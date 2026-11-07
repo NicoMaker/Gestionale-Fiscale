@@ -33,7 +33,8 @@ function createApp() {
       {
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": 'inline; filename="manuale-utente-gestionale.pdf"',
+          "Content-Disposition":
+            'inline; filename="manuale-utente-gestionale.pdf"',
         },
       },
       (err) => err && next(err),

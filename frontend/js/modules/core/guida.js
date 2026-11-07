@@ -14,9 +14,10 @@
   // stesso zoom (#zoom=… è riconosciuto da Chrome, Edge e Firefox).
   function urlConZoom() {
     try {
-      const t = window.GF_PERSONALIZZA && window.GF_PERSONALIZZA.stato
-        ? window.GF_PERSONALIZZA.stato().misure.testo
-        : 100;
+      const t =
+        window.GF_PERSONALIZZA && window.GF_PERSONALIZZA.stato
+          ? window.GF_PERSONALIZZA.stato().misure.testo
+          : 100;
       return t && t !== 100 ? `${URL_GUIDA}#zoom=${t}` : URL_GUIDA;
     } catch (_) {
       return URL_GUIDA;
