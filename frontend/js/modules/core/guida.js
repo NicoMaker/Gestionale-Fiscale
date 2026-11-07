@@ -14,30 +14,45 @@
   // stesso zoom (#zoom=… è riconosciuto da Chrome, Edge e Firefox).
   function urlConZoom() {
     try {
-      const t = window.GF_PERSONALIZZA.stato().misure.testo;
+      const t = window.GF_PERSONALIZZA && window.GF_PERSONALIZZA.stato
+        ? window.GF_PERSONALIZZA.stato().misure.testo
+        : 100;
       return t && t !== 100 ? `${URL_GUIDA}#zoom=${t}` : URL_GUIDA;
     } catch (_) {
       return URL_GUIDA;
     }
   }
 
+  // Apre SEMPRE in una nuova scheda usando un <a target="_blank">.
+  // Questo metodo non viene mai bloccato come popup dai browser.
   function apriGuida() {
     const url = urlConZoom();
-    const w = window.open(url, "_blank", "noopener");
-    // popup bloccato: apro nella stessa scheda
-    if (!w) window.location.href = url;
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+
+    // Rimuove l'elemento dopo che il browser ha gestito il click
+    setTimeout(() => a.remove(), 0);
   }
   window.apriGuida = apriGuida;
 
   document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("btn-guida");
     if (!btn) return;
-    const vai = () => {
+
+    const vai = (e) => {
+      if (e) e.preventDefault();
       apriGuida();
       // su mobile richiude il menu laterale
       const ms = window.mobileSidebar;
       if (ms && ms.isOpen && ms.isOpen()) ms.close();
     };
+
     btn.addEventListener("click", vai);
     // accessibilità: Invio / Spazio come un vero bottone
     btn.addEventListener("keydown", (e) => {
