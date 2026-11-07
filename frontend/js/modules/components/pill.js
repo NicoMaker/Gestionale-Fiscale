@@ -16,7 +16,7 @@ function getPillColor(r, stato) {
     const hasIva = parseInt(r.iva_completata) === 1;
     const contDone = parseInt(r.cont_completata) === 1;
     if (hasIva && contDone) return "var(--green)";
-    if (hasIva || contDone) return "var(--accent)";
+    if (hasIva || contDone) return "var(--blue)";
     return "var(--red)";
   }
   if (hasRate(r)) {
@@ -38,7 +38,7 @@ function getPillColor(r, stato) {
     const contDone = parseInt(r.cont_completata) === 1;
     const hasAnyRate = filled >= 1;
     if (hasAnyRate && contDone) return "var(--green)";
-    if (hasAnyRate || contDone) return "var(--accent)";
+    if (hasAnyRate || contDone) return "var(--blue)";
     return "var(--red)";
   }
   // Solo scadenza — usa isSoloScadenzaScaduto che legge OGGI globale
@@ -229,7 +229,7 @@ function _buildContabilitaLabel(r, pillColor) {
   if (hasIva && contDone) {
     cIva = cCont = "var(--green)";
   } else if (hasIva || contDone) {
-    cIva = cCont = "var(--accent)";
+    cIva = cCont = "var(--blue)";
   } else {
     cIva = cCont = "var(--red)";
   }
@@ -272,7 +272,7 @@ function _buildRateLabel(r, pillColor) {
   if (allDone && contDone) {
     cRate = cCont = "var(--green)";
   } else if (hasAnyRate || contDone) {
-    cRate = cCont = "var(--accent)";
+    cRate = cCont = "var(--blue)";
   } else {
     cRate = cCont = "var(--red)";
   }

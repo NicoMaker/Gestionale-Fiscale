@@ -189,6 +189,10 @@
     ["n", "pagina_bianca", "Note"],
     ["x", "cestino", "Cestino"],
     ["k", "scorciatoie", "Scorciatoie"],
+    // Voci speciali: "@nome" non è una pagina ma un'azione (vedi leggenda.js)
+    ["h", "dashboard", "🏠 Home"],
+    ["l", "@leggenda", "Leggenda colori"],
+    ["o", "@paletta", "Paletta colori"],
   ];
 
   const cercaCampo = () =>
@@ -1006,7 +1010,8 @@
       finisciG();
       if (voce) {
         e.preventDefault();
-        $(`.nav-item[data-page="${voce[1]}"]`)?.click();
+        if (voce[1][0] === "@") window.GF_AZIONI?.[voce[1].slice(1)]?.();
+        else $(`.nav-item[data-page="${voce[1]}"]`)?.click();
       }
       return;
     }

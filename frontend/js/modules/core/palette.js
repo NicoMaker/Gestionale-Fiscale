@@ -21,6 +21,16 @@
     azione("🎨", "Personalizza aspetto (colori e misure)", () =>
       window.apriPersonalizza?.(),
     ),
+    azione("🏠", "Home (torna alla Dashboard)", () => window.GF_AZIONI?.home()),
+    azione("🌈", "Leggenda: cosa significa ogni colore", () =>
+      window.GF_AZIONI?.leggenda(),
+    ),
+    azione("🖌️", "Paletta: tutti i colori in uso", () =>
+      window.GF_AZIONI?.paletta(),
+    ),
+    azione("📖", "Guida completa alla personalizzazione", () =>
+      window.open("guida.html", "_blank", "noopener"),
+    ),
   );
   const ov = document.createElement("div");
   ov.className = "cmdk-overlay";

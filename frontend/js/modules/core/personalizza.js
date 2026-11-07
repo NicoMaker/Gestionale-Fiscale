@@ -27,6 +27,9 @@
       green: "#12805c",
       red: "#d92d3a",
       yellow: "#b7791f",
+      blue: "#2563eb",
+      orange: "#d9650b",
+      purple: "#7c3aed",
     },
     dark: {
       accent: "#818cf8",
@@ -37,8 +40,15 @@
       green: "#34d399",
       red: "#f87171",
       yellow: "#fbbf24",
+      blue: "#60a5fa",
+      orange: "#fb923c",
+      purple: "#a78bfa",
     },
   };
+  // Colori del TEMA (cambiano con i temi) e colori di STATO (restano uguali
+  // in ogni tema: verde = fatto, rosso = da fare, blu = parziale, ecc.)
+  const TEMA_KEYS = ["accent", "accent2", "bg", "s0", "t0"];
+  const STATO_KEYS = ["green", "red", "blue", "yellow", "orange", "purple"];
   const COLOR_KEYS = Object.keys(DEF.light);
 
   const MISURE_DEF = {
@@ -47,12 +57,32 @@
     topbar: 64, // px
     radius: 100, // % arrotondamento
     densita: "normale", // compatta | normale | comoda
+    cellY: 12, // px spazio sopra/sotto il testo nelle celle
+    cellX: 14, // px spazio a sinistra/destra nelle celle
+    tFont: 13.5, // px testo delle tabelle
+    headFont: 11, // px intestazioni delle tabelle
+    pageX: 0, // px margine laterale pagina (0 = automatico)
+    pageY: 0, // px margine alto/basso pagina (0 = automatico)
+    maxW: 1680, // px larghezza massima contenuto (2400 = nessun limite)
   };
   const MISURE_RANGE = {
     zoom: [85, 130],
     sidebar: [200, 340],
     topbar: [48, 96],
     radius: [0, 200],
+    cellY: [2, 36],
+    cellX: [4, 40],
+    tFont: [10, 20],
+    headFont: [9, 16],
+    pageX: [0, 80],
+    pageY: [0, 80],
+    maxW: [960, 2400],
+  };
+  // Valori delle 3 densità (bottoni «Compatta / Normale / Comoda»)
+  const DENS_VAL = {
+    compatta: { cellY: 5, cellX: 10, tFont: 12.5, headFont: 10 },
+    normale: { cellY: 12, cellX: 14, tFont: 13.5, headFont: 11 },
+    comoda: { cellY: 18, cellX: 18, tFont: 15, headFont: 12 },
   };
 
   const FONTS = {
@@ -75,7 +105,28 @@
     },
   };
 
-  const DENSITA = { compatta: 6, normale: null, comoda: 18 };
+  // Font aggiuntivi (caricati da Google Fonts solo quando li scegli)
+  Object.assign(FONTS, {
+    nunito: { label: "Nunito (morbido)", css: '"Nunito", system-ui, sans-serif', gf: "Nunito:wght@400;600;700;800" },
+    dmsans: { label: "DM Sans (pulito)", css: '"DM Sans", system-ui, sans-serif', gf: "DM+Sans:wght@400;500;600;700" },
+    plex: { label: "IBM Plex Sans (tecnico)", css: '"IBM Plex Sans", system-ui, sans-serif', gf: "IBM+Plex+Sans:wght@400;500;600;700" },
+    spacegrotesk: { label: "Space Grotesk (moderno)", css: '"Space Grotesk", system-ui, sans-serif', gf: "Space+Grotesk:wght@400;500;600;700" },
+    poppins: { label: "Poppins (rotondo)", css: '"Poppins", system-ui, sans-serif', gf: "Poppins:wght@400;500;600;700" },
+    lora: { label: "Lora (elegante, con grazie)", css: '"Lora", Georgia, serif', gf: "Lora:wght@400;500;600;700" },
+    merriweather: { label: "Merriweather (lettura)", css: '"Merriweather", Georgia, serif', gf: "Merriweather:wght@400;700" },
+    sourceserif: { label: "Source Serif (editoriale)", css: '"Source Serif 4", Georgia, serif', gf: "Source+Serif+4:wght@400;600;700" },
+    playfair: { label: "Playfair (titoli eleganti)", css: '"Playfair Display", Georgia, serif', gf: "Playfair+Display:wght@400;600;700" },
+  });
+  const _fontCaricati = new Set();
+  function caricaFont(id) {
+    const f = FONTS[id];
+    if (!f || !f.gf || _fontCaricati.has(id)) return;
+    _fontCaricati.add(id);
+    const l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=" + f.gf + "&display=swap";
+    document.head.appendChild(l);
+  }
 
   // ─── TEMI PRONTI ─────────────────────────────────────────────
   // Ogni tema definisce accent, accent2, bg, s0, t0 per chiaro e scuro.
@@ -253,6 +304,9 @@
     },
   };
 
+  // Temi aggiuntivi (js/modules/core/temi-extra.js)
+  Object.assign(PRESETS, window.GF_TEMI_EXTRA || {});
+
   // ─── TASTI DA TASTIERA (fonte unica) ─────────────────────────
   // Questo elenco alimenta: il promemoria nel pannello, la guida in-app
   // (? / F1) e la pagina "Scorciatoie". I tasti reali sono gestiti più sotto.
@@ -301,6 +355,11 @@
           "Vai alle misure (poi ← / → cambiano il valore, Home / End min e max)",
       },
       { key: "f", label: "Vai alla scelta del font" },
+      { key: "x", label: "Vai a «Mescola»: accento, sfondo e font da temi diversi" },
+      { key: "b", label: "Vai alle misure di tabelle e spazi (righe, celle, margini)" },
+      { key: "s", label: "Vai ai colori di stato (verde, rosso, blu…)" },
+      { key: "h", label: "Chiude il pannello e torna alla Home" },
+      { key: "l / o", label: "Apre la Leggenda / la Paletta dei colori" },
       { key: "Tab / Shift Tab", label: "Scorri colori, misure e opzioni" },
       {
         key: "r",
@@ -330,7 +389,7 @@
       dark: colori(),
       misure: { ...MISURE_DEF },
       font: "default",
-      effetti: { aurora: true, animazioni: true },
+      effetti: { aurora: true, animazioni: true, leggibile: true, zebra: false, griglia: false },
     };
   }
 
@@ -364,6 +423,27 @@
     return peggio("#ffffff") >= peggio("#0b0d16") ? "#ffffff" : "#0b0d16";
   }
   const mix = (a, pa, b) => `color-mix(in srgb, ${a} ${pa}%, ${b})`;
+  // Sposta un colore verso nero/bianco finché si legge (contrasto ≥ min) su tutti i fondi
+  function mescolaHex(a, b, t) {
+    const A = rgb(a), B = rgb(b);
+    return (
+      "#" +
+      A.map((v, i) =>
+        Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0"),
+      ).join("")
+    );
+  }
+  function rendiLeggibile(col, fondi, min) {
+    if (!isHex(col) || fondi.some((f) => !isHex(f))) return col;
+    if (fondi.every((f) => contrasto(col, f) >= min)) return col;
+    const chiaro = fondi.reduce((s, f) => s + luminanza(f), 0) / fondi.length > 0.4;
+    const verso = chiaro ? "#000000" : "#ffffff";
+    for (let t = 0.04; t <= 1.001; t += 0.04) {
+      const r = mescolaHex(col, verso, t);
+      if (fondi.every((f) => contrasto(r, f) >= min)) return r;
+    }
+    return verso;
+  }
 
   // ─── SANITIZZAZIONE (localStorage e import: mai fidarsi) ─────
   const clamp = (n, [lo, hi]) => Math.min(hi, Math.max(lo, n));
@@ -386,14 +466,18 @@
     Object.keys(MISURE_RANGE).forEach((k) => {
       const n = Number(mi[k]);
       s.misure[k] = Number.isFinite(n)
-        ? Math.round(clamp(n, MISURE_RANGE[k]))
+        ? Math.round(clamp(n, MISURE_RANGE[k]) * 2) / 2
         : MISURE_DEF[k];
     });
-    if (mi.densita in DENSITA) s.misure.densita = mi.densita;
+    if (mi.densita in DENS_VAL || mi.densita === "custom")
+      s.misure.densita = mi.densita;
     if (raw.font in FONTS) s.font = raw.font;
     if (raw.effetti && typeof raw.effetti === "object") {
       s.effetti.aurora = raw.effetti.aurora !== false;
       s.effetti.animazioni = raw.effetti.animazioni !== false;
+      s.effetti.leggibile = raw.effetti.leggibile !== false;
+      s.effetti.zebra = raw.effetti.zebra === true;
+      s.effetti.griglia = raw.effetti.griglia === true;
     }
     return s;
   }
@@ -425,8 +509,13 @@
 
     // Accento + sfumatura
     if (c.accent || c.accent2) {
-      const a = c.accent || d.accent;
-      const a2 = c.accent2 || d.accent2;
+      let a = c.accent || d.accent;
+      let a2 = c.accent2 || d.accent2;
+      if (state.effetti.leggibile) {
+        const f = [c.bg || d.bg, c.s0 || d.s0];
+        a = rendiLeggibile(a, f, 4.5);
+        a2 = rendiLeggibile(a2, f, 3);
+      }
       v.push(
         `--accent:${a}`,
         `--accent-hov:${mix(a, 82, dark ? "white" : "black")}`,
@@ -445,38 +534,49 @@
       );
     }
 
-    // Sfondo / schede / bordi
-    if (c.bg || c.s0) {
+    // Sfondo / schede / bordi / testo
+    if (c.bg || c.s0 || c.t0) {
+      const B = c.bg || d.bg;
       const S = c.s0 || d.s0;
-      const T = c.t0 || d.t0;
-      if (c.bg) {
-        v.push(`--bg:${c.bg}`, `--glass-bg:${mix(c.bg, 80, "transparent")}`);
+      let T = c.t0 || d.t0;
+      let testoCorretto = false;
+      // Leggibilità: se il testo non si legge sullo sfondo scelto, lo correggo
+      if (state.effetti.leggibile) {
+        const T2 = rendiLeggibile(T, [B, S], 4.5);
+        if (T2 !== T) {
+          T = T2;
+          testoCorretto = true;
+        }
       }
+      if (c.bg)
+        v.push(`--bg:${c.bg}`, `--glass-bg:${mix(c.bg, 80, "transparent")}`);
       if (c.s0) v.push(`--s0:${S}`);
-      v.push(
-        `--s1:${mix(S, 95, T)}`,
-        `--s2:${mix(S, 90, T)}`,
-        `--s3:${mix(S, 84, T)}`,
-        `--b0:${mix(S, 89, T)}`,
-        `--b1:${mix(S, 80, T)}`,
-        `--b2:${mix(S, 58, T)}`,
-      );
+      if (c.bg || c.s0)
+        v.push(
+          `--s1:${mix(S, 95, T)}`,
+          `--s2:${mix(S, 90, T)}`,
+          `--s3:${mix(S, 84, T)}`,
+          `--b0:${mix(S, 89, T)}`,
+          `--b1:${mix(S, 80, T)}`,
+          `--b2:${mix(S, 58, T)}`,
+        );
+      if (c.t0 || testoCorretto)
+        v.push(
+          `--t0:${T}`,
+          `--t1:${mix(T, 86, S)}`,
+          `--t2:${mix(T, 64, S)}`,
+          `--t3:${mix(T, 46, S)}`,
+        );
     }
 
-    // Testo
-    if (c.t0) {
-      const S = c.s0 || d.s0;
-      v.push(
-        `--t0:${c.t0}`,
-        `--t1:${mix(c.t0, 86, S)}`,
-        `--t2:${mix(c.t0, 64, S)}`,
-        `--t3:${mix(c.t0, 46, S)}`,
-      );
-    }
-
-    // Colori semantici
-    ["green", "red", "yellow"].forEach((k) => {
-      if (c[k]) v.push(`--${k}:${c[k]}`, `--${k}-d:${rgba(c[k], 0.12)}`);
+    // Colori di STATO (verde, rosso, blu, giallo, arancio, viola):
+    // non cambiano con i temi, solo se li modifichi tu.
+    STATO_KEYS.forEach((k) => {
+      if (!c[k]) return;
+      let col = c[k];
+      if (state.effetti.leggibile)
+        col = rendiLeggibile(col, [c.s0 || d.s0, c.bg || d.bg], 3.2);
+      v.push(`--${k}:${col}`, `--${k}-d:${rgba(col, 0.12)}`);
     });
 
     if (!v.length && !extra.length) return "";
@@ -534,14 +634,45 @@
       );
     }
 
-    // Densità tabelle
-    const pad = DENSITA[m.densita];
-    if (pad != null) {
+    // Tabelle: spazi e dimensione del testo (solo le misure cambiate)
+    const D0 = MISURE_DEF;
+    const r1 = (n) => Math.round(n * 10) / 10;
+    if (m.cellY !== D0.cellY || m.cellX !== D0.cellX || m.tFont !== D0.tFont) {
+      const Y = m.cellY,
+        X = m.cellX,
+        F = m.tFont;
       rules.push(
-        `html tbody td{padding-top:${pad}px;padding-bottom:${pad}px}`,
-        `html thead th{padding-top:${Math.max(4, pad - 2)}px;padding-bottom:${Math.max(4, pad - 2)}px}`,
+        `html tbody td{padding:${Y}px ${X}px;font-size:${F}px}`,
+        `html thead th{padding:${Math.max(3, Y - 1)}px ${X}px}`,
+        `html .gxlv-td{padding:${r1(Y * 0.5)}px ${r1(X * 0.5)}px}`,
+        `html .gxlv-td-cliente{padding:${r1(Y * 0.85)}px ${r1(X * 0.85)}px}`,
+        `html .gxlv-th{padding:${r1(Y * 0.75)}px ${r1(X * 0.7)}px}`,
+        `html .sint-table .sint-td{padding:${r1(Y / 3)}px ${r1(X / 3)}px}`,
+        `html .sint-table .sint-td-cliente{padding:${r1(Y * 0.65)}px ${r1(X * 0.85)}px}`,
       );
     }
+    if (m.headFont !== D0.headFont)
+      rules.push(
+        `html thead th,html .gxlv-th,html .sint-table thead th{font-size:${m.headFont}px}`,
+      );
+    // Margini della pagina e larghezza massima del contenuto
+    if (m.pageX || m.pageY) {
+      const py = m.pageY ? m.pageY + "px" : "clamp(14px, 2.4vw, 32px)";
+      const px = m.pageX ? m.pageX + "px" : "clamp(14px, 2.4vw, 32px)";
+      rules.push(`html .content{padding:${py} ${px}}`);
+    }
+    if (m.maxW !== D0.maxW)
+      rules.push(
+        `html .content{max-width:${m.maxW >= 2400 ? "none" : m.maxW + "px"}}`,
+      );
+    if (state.effetti.zebra)
+      rules.push(
+        "html tbody tr:nth-child(even):not(:hover){background:color-mix(in srgb, var(--t0) 4%, transparent)}",
+      );
+    if (state.effetti.griglia)
+      rules.push(
+        "html tbody td,html thead th{border-right:1px solid var(--b1);border-bottom:1px solid var(--b1)}",
+      );
 
     // Effetti
     if (!state.effetti.aurora)
@@ -569,6 +700,7 @@
   }
 
   function applica() {
+    caricaFont(state.font);
     let el = document.getElementById(STYLE_ID);
     if (!el) {
       el = document.createElement("style");
@@ -604,16 +736,22 @@
   let panel = null;
   let aperto = false; // stato logico: vero da subito dopo apri(), falso subito dopo chiudi()
 
-  const COLORI_UI = [
+  const COLORI_TEMA_UI = [
     ["accent", "Accento"],
     ["accent2", "Accento secondario (sfumatura)"],
     ["bg", "Sfondo pagina"],
     ["s0", "Schede e pannelli"],
     ["t0", "Testo"],
-    ["green", "Successo"],
-    ["red", "Errore"],
-    ["yellow", "Avviso"],
   ];
+  const COLORI_STATO_UI = [
+    ["green", "🟢 Verde · completato, successo"],
+    ["red", "🔴 Rosso · da fare, errore"],
+    ["blue", "🔵 Blu · parziale, in lavorazione"],
+    ["yellow", "🟡 Giallo · in corso, avviso"],
+    ["orange", "🟠 Arancio · scaduto"],
+    ["purple", "🟣 Viola · solo testo"],
+  ];
+  const COLORI_UI = COLORI_TEMA_UI.concat(COLORI_STATO_UI);
 
   const SLIDERS_UI = [
     ["zoom", "Scala interfaccia", "%", 5],
@@ -621,6 +759,22 @@
     ["topbar", "Altezza barra superiore", "px", 2],
     ["radius", "Arrotondamento angoli", "%", 10],
   ];
+  const SLIDERS_TAB_UI = [
+    ["cellY", "Altezza righe (spazio sopra e sotto)", "px", 1],
+    ["cellX", "Spazio nelle celle (sinistra e destra)", "px", 1],
+    ["tFont", "Grandezza testo delle tabelle", "px", 0.5],
+    ["headFont", "Grandezza testo intestazioni", "px", 0.5],
+    ["pageY", "Margine pagina in alto e in basso", "px", 2],
+    ["pageX", "Margine pagina a destra e a sinistra", "px", 2],
+    ["maxW", "Larghezza massima del contenuto", "px", 20],
+  ];
+  const ALL_SLIDERS = SLIDERS_UI.concat(SLIDERS_TAB_UI);
+  const fmtMis = (k, v) =>
+    (k === "pageX" || k === "pageY") && !v
+      ? "auto"
+      : k === "maxW" && v >= 2400
+        ? "illimitata"
+        : v + ALL_SLIDERS.find((x) => x[0] === k)[2];
 
   const esc = (s) =>
     String(s).replace(
@@ -670,69 +824,116 @@
       )
       .join("");
 
-    const coloriHtml = COLORI_UI.map(
-      ([k, label]) => `
+    const rigaColore = ([k, label]) => `
         <div class="pz-row">
-          <label for="pz-h-${k}">${esc(label)}</label>
+          <label for="pz-h-${k}">${esc(label)}<small class="pz-cr" id="pz-cr-${k}"></small></label>
           <input type="text" id="pz-h-${k}" class="pz-hex" data-hex="${k}"
             maxlength="7" spellcheck="false" autocomplete="off"
             aria-label="Codice colore ${esc(label)}" />
           <input type="color" id="pz-c-${k}" data-color="${k}"
             aria-label="Selettore colore ${esc(label)}" />
           <button type="button" class="pz-mini" data-reset-color="${k}" title="Ripristina">↺</button>
-        </div>`,
-    ).join("");
+        </div>`;
+    const coloriHtml = COLORI_TEMA_UI.map(rigaColore).join("");
+    const statoHtml = COLORI_STATO_UI.map(rigaColore).join("");
 
-    const slidersHtml = SLIDERS_UI.map(
-      ([k, label, unit]) => `
+    const sliderRiga = ([k, label]) => `
         <div class="pz-row pz-row-range">
           <label for="pz-m-${k}">${esc(label)}</label>
           <output id="pz-o-${k}"></output>
           <input type="range" id="pz-m-${k}" data-misura="${k}"
             min="${MISURE_RANGE[k][0]}" max="${MISURE_RANGE[k][1]}"
-            step="${SLIDERS_UI.find((x) => x[0] === k)[3]}" />
-        </div>`,
-    ).join("");
+            step="${ALL_SLIDERS.find((x) => x[0] === k)[3]}" />
+        </div>`;
+    const slidersHtml = SLIDERS_UI.map(sliderRiga).join("");
+    const slidersTabHtml = SLIDERS_TAB_UI.map(sliderRiga).join("");
 
     const fontHtml = Object.entries(FONTS)
       .map(([id, f]) => `<option value="${id}">${esc(f.label)}</option>`)
       .join("");
+    const mixOpt = `<option value="">— nessuno (resta com'è) —</option>` +
+      Object.entries(PRESETS)
+        .map(([id, p]) => `<option value="${id}">${esc(p.label)}</option>`)
+        .join("");
 
     panel.innerHTML = `
       <header class="pz-head">
         <h2>🎨 Personalizza aspetto</h2>
-        <button type="button" class="pz-close" data-pz="chiudi" aria-label="Chiudi">✕</button>
+        <span class="pz-head-btns">
+          <button type="button" class="pz-close" data-pz="home" title="Torna alla Home (h)" aria-label="Torna alla Home">🏠</button>
+          <button type="button" class="pz-close" data-pz="chiudi" aria-label="Chiudi">✕</button>
+        </span>
       </header>
+      <nav class="pz-nav" aria-label="Sezioni del pannello">
+        <button type="button" data-vai="temi">Temi</button>
+        <button type="button" data-vai="mix">Mescola</button>
+        <button type="button" data-vai="colori">Colori</button>
+        <button type="button" data-vai="stato">Stato</button>
+        <button type="button" data-vai="misure">Misure</button>
+        <button type="button" data-vai="tabelle">Tabelle</button>
+        <button type="button" data-vai="font">Font</button>
+        <button type="button" data-vai="effetti">Effetti</button>
+      </nav>
       <div class="pz-body">
-        <section class="pz-sec">
-          <h3>Temi pronti</h3>
+        <section class="pz-sec" id="pz-sec-temi">
+          <h3>Temi pronti <span class="pz-modo">· ${PRESET_IDS.length} temi, ognuno con versione chiara e scura</span></h3>
           <div class="pz-presets">${presetsHtml}</div>
         </section>
 
-        <section class="pz-sec">
-          <h3>Colori <span class="pz-modo" id="pz-modo"></span></h3>
-          <p class="pz-hint">Le modifiche valgono per il tema attivo. Per l'altro tema usa il pulsante qui sotto.</p>
+        <section class="pz-sec" id="pz-sec-mix">
+          <h3>🧪 Mescola temi</h3>
+          <p class="pz-hint">Prendi l'accento da un tema e lo sfondo con il testo da un altro. Il carattere si sceglie a parte (sezione Font) e non cambia con i temi.</p>
+          <div class="pz-row"><label for="pz-mix-acc">Accento da</label><select id="pz-mix-acc">${mixOpt}</select></div>
+          <div class="pz-row"><label for="pz-mix-sfo">Sfondo e testo da</label><select id="pz-mix-sfo">${mixOpt}</select></div>
+        </section>
+
+        <section class="pz-sec" id="pz-sec-colori">
+          <h3>Colori del tema <span class="pz-modo" id="pz-modo"></span></h3>
+          <p class="pz-hint">Scrivi il codice (es. <b>#1e3a5f</b>) oppure usa il selettore: si applica subito a tutta l'app. Valgono per il tema attivo; per l'altro usa il pulsante.</p>
           <button type="button" class="pz-btn" data-pz="cambia-tema">🌓 Passa a tema <span id="pz-altro"></span></button>
           ${coloriHtml}
         </section>
 
-        <section class="pz-sec">
-          <h3>Misure</h3>
+        <section class="pz-sec" id="pz-sec-stato">
+          <h3>Colori di stato</h3>
+          <p class="pz-hint">Verde, rosso, blu… <b>restano uguali in ogni tema</b>: cambiando tema non si confondono mai. Puoi comunque cambiarli qui.</p>
+          ${statoHtml}
+        </section>
+
+        <section class="pz-sec" id="pz-sec-misure">
+          <h3>Misure dell'interfaccia</h3>
           ${slidersHtml}
         </section>
 
-        <section class="pz-sec">
+        <section class="pz-sec" id="pz-sec-tabelle">
+          <h3>Tabelle e spazi</h3>
+          <div class="pz-row pz-row-seg">
+            <span class="pz-lbl">Densità rapida</span>
+            <span class="pz-seg">
+              <button type="button" data-densita="compatta">Compatta</button>
+              <button type="button" data-densita="normale">Normale</button>
+              <button type="button" data-densita="comoda">Comoda</button>
+            </span>
+          </div>
+          ${slidersTabHtml}
+          <label class="pz-check"><input type="checkbox" id="pz-zebra" /> Righe a strisce (zebra)</label>
+          <label class="pz-check"><input type="checkbox" id="pz-griglia" /> Griglia completa tra le celle</label>
+        </section>
+
+        <section class="pz-sec" id="pz-sec-font">
           <h3>Carattere</h3>
           <div class="pz-row">
             <label for="pz-font">Font dell'interfaccia</label>
             <select id="pz-font">${fontHtml}</select>
           </div>
+          <div class="pz-row"><button type="button" class="pz-btn" data-pz="font-tema" id="pz-font-tema">🔤 Usa il font consigliato dal tema</button></div>
         </section>
 
-        <section class="pz-sec">
-          <h3>Effetti</h3>
+        <section class="pz-sec" id="pz-sec-effetti">
+          <h3>Effetti e leggibilità</h3>
           <label class="pz-check"><input type="checkbox" id="pz-aurora" /> Sfondo sfumato (aurora)</label>
           <label class="pz-check"><input type="checkbox" id="pz-anim" /> Animazioni e transizioni</label>
+          <label class="pz-check"><input type="checkbox" id="pz-leggibile" /> Correggi in automatico i colori poco leggibili</label>
         </section>
       </div>
       <details class="pz-keys">
@@ -744,11 +945,14 @@
               `<tr><td>${kbdHtml(t.key)}</td><td>${esc(t.label)}</td></tr>`,
           )
           .join("")}</table>
-        <button type="button" class="pz-btn" data-pz="guida">Apri la guida completa (?)</button>
+        <button type="button" class="pz-btn" data-pz="guida">Guida tasti (?)</button>
+        <button type="button" class="pz-btn" data-pz="manuale">📖 Guida completa</button>
       </details>
       <div class="pz-status" id="pz-status" role="status" aria-live="polite"></div>
       <footer class="pz-foot">
         <button type="button" class="pz-btn pz-danger" data-pz="reset">Ripristina tutto</button>
+        <button type="button" class="pz-btn" data-pz="leggenda">Leggenda</button>
+        <button type="button" class="pz-btn" data-pz="paletta">Paletta</button>
         <button type="button" class="pz-btn" data-pz="esporta">Esporta</button>
         <button type="button" class="pz-btn" data-pz="importa">Importa</button>
         <input type="file" id="pz-file" accept="application/json,.json" hidden />
@@ -793,10 +997,46 @@
         : "hidden";
     });
 
-    SLIDERS_UI.forEach(([k, , unit]) => {
+    ALL_SLIDERS.forEach(([k]) => {
       panel.querySelector(`#pz-m-${k}`).value = state.misure[k];
-      panel.querySelector(`#pz-o-${k}`).textContent = state.misure[k] + unit;
+      panel.querySelector(`#pz-o-${k}`).textContent = fmtMis(k, state.misure[k]);
     });
+
+    // Contrasto di ogni colore (lettura: ≥ 4.5 ottimo, ≥ 3 sufficiente per elementi grandi)
+    const eff = (k) => c[k] || d[k];
+    const fondoS = eff("s0");
+    COLORI_UI.forEach(([k]) => {
+      const el = panel.querySelector(`#pz-cr-${k}`);
+      if (!el) return;
+      if (k === "bg" || k === "s0") {
+        el.textContent = "";
+        return;
+      }
+      const rif = k === "accent2" ? 3 : STATO_KEYS.includes(k) ? 3.2 : 4.5;
+      const r = contrasto(eff(k), k === "t0" ? fondoS : fondoS);
+      const ok = r >= rif;
+      el.className = "pz-cr " + (ok ? "ok" : "bad");
+      el.textContent = ok
+        ? `leggibilità ${r.toFixed(1)}:1 ✓`
+        : `⚠ poco leggibile ${r.toFixed(1)}:1` +
+          (state.effetti.leggibile ? " · corretto in automatico" : "");
+    });
+    const tema = PRESETS[state.preset];
+    const bf = panel.querySelector("#pz-font-tema");
+    if (bf) {
+      bf.disabled = !(tema && tema.font);
+      bf.textContent =
+        tema && tema.font
+          ? `🔤 Usa il font del tema: ${FONTS[tema.font].label}`
+          : "🔤 Questo tema non ha un font consigliato";
+    }
+    const set = (id, v) => {
+      const e = panel.querySelector(id);
+      if (e) e.checked = v;
+    };
+    set("#pz-zebra", state.effetti.zebra);
+    set("#pz-griglia", state.effetti.griglia);
+    set("#pz-leggibile", state.effetti.leggibile);
 
     panel.querySelectorAll("[data-densita]").forEach((b) => {
       const on = b.dataset.densita === state.misure.densita;
@@ -868,9 +1108,16 @@
       salva();
     } else if (t.dataset.misura) {
       state.misure[t.dataset.misura] = Number(t.value);
-      const unit = SLIDERS_UI.find((x) => x[0] === t.dataset.misura)[2];
-      panel.querySelector(`#pz-o-${t.dataset.misura}`).textContent =
-        t.value + unit;
+      if (["cellY", "cellX", "tFont", "headFont"].includes(t.dataset.misura)) {
+        state.misure.densita = "custom";
+        panel
+          .querySelectorAll("[data-densita]")
+          .forEach((b) => b.classList.remove("on"));
+      }
+      panel.querySelector(`#pz-o-${t.dataset.misura}`).textContent = fmtMis(
+        t.dataset.misura,
+        Number(t.value),
+      );
       applica();
       salva();
     }
@@ -891,6 +1138,20 @@
     } else if (t.id === "pz-anim") {
       state.effetti.animazioni = t.checked;
       aggiorna();
+    } else if (t.id === "pz-zebra") {
+      state.effetti.zebra = t.checked;
+      aggiorna();
+    } else if (t.id === "pz-griglia") {
+      state.effetti.griglia = t.checked;
+      aggiorna();
+    } else if (t.id === "pz-leggibile") {
+      state.effetti.leggibile = t.checked;
+      aggiorna();
+    } else if (t.id === "pz-mix-acc" || t.id === "pz-mix-sfo") {
+      applicaMix(
+        panel.querySelector("#pz-mix-acc").value,
+        panel.querySelector("#pz-mix-sfo").value,
+      );
     } else if (t.id === "pz-file") {
       importaFile(t.files && t.files[0]);
       t.value = "";
@@ -909,9 +1170,12 @@
       return aggiorna();
     }
     if (b.dataset.densita) {
-      state.misure.densita = b.dataset.densita;
+      Object.assign(state.misure, DENS_VAL[b.dataset.densita], {
+        densita: b.dataset.densita,
+      });
       return aggiorna();
     }
+    if (b.dataset.vai) return vaiSezione(b.dataset.vai);
     switch (b.dataset.pz) {
       case "chiudi":
         return chiudi();
@@ -922,6 +1186,24 @@
         return ripristinaTutto();
       case "guida":
         return window.apriGuidaTastiera && window.apriGuidaTastiera();
+      case "manuale":
+        return window.open("guida.html", "_blank", "noopener");
+      case "home":
+        chiudi();
+        return window.GF_AZIONI && window.GF_AZIONI.home();
+      case "leggenda":
+        return window.GF_AZIONI && window.GF_AZIONI.leggenda();
+      case "paletta":
+        return window.GF_AZIONI && window.GF_AZIONI.paletta();
+      case "font-tema": {
+        const t = PRESETS[state.preset];
+        if (t && t.font) {
+          state.font = t.font;
+          aggiorna();
+          annuncia(`Font: ${FONTS[t.font].label}`);
+        }
+        return;
+      }
       case "esporta":
         return esporta();
       case "importa":
@@ -941,12 +1223,42 @@
     const p = PRESETS[id];
     if (!p) return;
     ["light", "dark"].forEach((m) => {
-      COLOR_KEYS.forEach((k) => (state[m][k] = null));
-      if (p[m]) Object.assign(state[m], p[m]);
+      TEMA_KEYS.forEach((k) => (state[m][k] = null));
+      if (p[m]) TEMA_KEYS.forEach((k) => p[m][k] && (state[m][k] = p[m][k]));
     });
     state.preset = id;
     aggiorna();
     annuncia(`Tema: ${p.label}`);
+  }
+
+  // Mescola: accento da un tema, sfondo + testo da un altro
+  function applicaMix(accId, sfoId) {
+    if (!accId && !sfoId) return;
+    ["light", "dark"].forEach((m) => {
+      const val = (id) => (PRESETS[id] && PRESETS[id][m]) || DEF[m];
+      if (accId) {
+        const a = val(accId);
+        state[m].accent = a.accent;
+        state[m].accent2 = a.accent2;
+      }
+      if (sfoId) {
+        const b = val(sfoId);
+        state[m].bg = b.bg;
+        state[m].s0 = b.s0;
+        state[m].t0 = b.t0;
+      }
+    });
+    state.preset = "custom";
+    aggiorna();
+    annuncia("Temi mescolati");
+  }
+
+  function vaiSezione(id) {
+    const sec = panel && panel.querySelector(`#pz-sec-${id}`);
+    if (!sec) return;
+    sec.scrollIntoView({ block: "start", behavior: "smooth" });
+    const f = sec.querySelector("input:not([type=hidden]),select,button");
+    if (f) f.focus({ preventScroll: true });
   }
 
   function temaRelativo(delta) {
@@ -1080,6 +1392,25 @@
       case "f":
         fatto();
         return vai("#pz-font");
+      case "x":
+        fatto();
+        return vai("#pz-mix-acc");
+      case "b":
+        fatto();
+        return vai("#pz-m-cellY");
+      case "s":
+        fatto();
+        return vai("#pz-h-green");
+      case "h":
+        fatto();
+        chiudi();
+        return window.GF_AZIONI && window.GF_AZIONI.home();
+      case "l":
+        fatto();
+        return window.GF_AZIONI && window.GF_AZIONI.leggenda();
+      case "o":
+        fatto();
+        return window.GF_AZIONI && window.GF_AZIONI.paletta();
       case "r":
         fatto();
         return ripristinaTutto();
@@ -1092,6 +1423,27 @@
     }
   });
 
+  // API per Leggenda / Paletta / guida
+  Object.assign(window.GF_PERSONALIZZA, {
+    stato: () => state,
+    applica, // riapplica i colori (usato da guida.html quando cambia il tema)
+    // Colore effettivo di ogni chiave nel tema attivo (scelto da te oppure di default)
+    effettivi: () => {
+      const o = {};
+      COLOR_KEYS.forEach((k) => (o[k] = state[modo()][k] || DEF[modo()][k]));
+      return o;
+    },
+    modo,
+    contrasto,
+    apriColore: (k) => {
+      apri();
+      requestAnimationFrame(() => vai(`#pz-h-${k}`));
+    },
+    apriSezione: (id) => {
+      apri();
+      requestAnimationFrame(() => vaiSezione(id));
+    },
+  });
   window.apriPersonalizza = apri;
   window.chiudiPersonalizza = chiudi;
   window.togglePersonalizza = toggle;

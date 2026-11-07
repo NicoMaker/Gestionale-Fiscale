@@ -91,7 +91,7 @@
     const navTasti = NAV.map((n) => ({
       key: `g ${n[0]}`,
       label: `Vai a ${n[2]}`,
-    })).concat([{ key: "g k", label: "Vai a Scorciatoie" }]);
+    }));
 
     const sezioni = [];
 

@@ -165,7 +165,7 @@ function _aggiornaColoriContabilita(r) {
   let colorIva = "",
     colorCont = "";
   if (ivaDone && contDone) colorIva = colorCont = "var(--green)";
-  else if (ivaDone || contDone) colorIva = colorCont = "var(--accent)";
+  else if (ivaDone || contDone) colorIva = colorCont = "var(--blue)";
   const ivaLabel = document.getElementById("label-imp-iva");
   const ivaFlagLabel = document.getElementById("label-iva-flag");
   const contLabel = document.getElementById("label-cont-completata");
@@ -278,7 +278,7 @@ function _aggiornaColoriRateContabilita(r) {
       color === "both"
         ? "var(--green)"
         : color === "one"
-          ? "var(--accent)"
+          ? "var(--blue)"
           : "";
 }
 
