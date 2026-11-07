@@ -105,6 +105,7 @@
             <button type="button" role="tab" data-tab="leggenda"><kbd>1</kbd> 🌈 Leggenda</button>
             <button type="button" role="tab" data-tab="paletta"><kbd>2</kbd> 🖌️ Paletta</button>
           </div>
+          ${window.GF_PERSONALIZZA?.testoHtml?.() || ""}
           <button type="button" class="gf-x" data-az="chiudi" aria-label="Chiudi">Esc</button>
         </header>
         <div class="gf-body" tabindex="-1"></div>

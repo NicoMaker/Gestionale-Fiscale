@@ -10,10 +10,22 @@
 
   const URL_GUIDA = "/manuale-utente-gestionale.pdf";
 
+  // Se hai ingrandito il testo (Personalizza → Testo), il PDF si apre con lo
+  // stesso zoom (#zoom=… è riconosciuto da Chrome, Edge e Firefox).
+  function urlConZoom() {
+    try {
+      const t = window.GF_PERSONALIZZA.stato().misure.testo;
+      return t && t !== 100 ? `${URL_GUIDA}#zoom=${t}` : URL_GUIDA;
+    } catch (_) {
+      return URL_GUIDA;
+    }
+  }
+
   function apriGuida() {
-    const w = window.open(URL_GUIDA, "_blank", "noopener");
+    const url = urlConZoom();
+    const w = window.open(url, "_blank", "noopener");
     // popup bloccato: apro nella stessa scheda
-    if (!w) window.location.href = URL_GUIDA;
+    if (!w) window.location.href = url;
   }
   window.apriGuida = apriGuida;
 

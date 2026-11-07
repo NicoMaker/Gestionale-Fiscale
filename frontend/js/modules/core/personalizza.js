@@ -766,6 +766,9 @@
       document.head.appendChild(el);
     }
     el.textContent = buildCss();
+    document
+      .querySelectorAll(".gf-az-val")
+      .forEach((o) => (o.textContent = state.misure.testo + "%"));
     // Testo diverso dal 100%: attivo il ridimensionamento globale (testo.js)
     if (state.misure.testo !== MISURE_DEF.testo && window.GF_TESTO)
       window.GF_TESTO.attiva();
@@ -922,6 +925,7 @@
     panel.innerHTML = `
       <header class="pz-head">
         <h2>🎨 Personalizza aspetto</h2>
+        ${testoHtml()}
         <span class="pz-head-btns">
           <button type="button" class="pz-close" data-pz="home" title="Torna alla Home (h)" aria-label="Torna alla Home">🏠</button>
           <button type="button" class="pz-close" data-pz="chiudi" aria-label="Chiudi">✕</button>
@@ -1301,6 +1305,31 @@
     window.open("/manuale-utente-gestionale.pdf", "_blank", "noopener");
   }
 
+  // ─── CONTROLLO RAPIDO DEL TESTO (A− / 100% / A+) ─────────────
+  // Appare nell'intestazione di Personalizza, Guida tasti e Colori:
+  // si può ingrandire il testo senza uscire da quelle finestre.
+  function impostaTesto(n) {
+    const [lo, hi] = MISURE_RANGE.testo;
+    state.misure.testo = Math.round(clamp(n, [lo, hi]) / 5) * 5;
+    aggiorna();
+  }
+  function testoHtml() {
+    return `<span class="gf-az" role="group" aria-label="Dimensione del testo">
+      <button type="button" data-gf-az="meno" title="Riduci il testo" aria-label="Riduci il testo">A−</button>
+      <button type="button" class="gf-az-val" data-gf-az="reset" title="Torna al 100%" aria-label="Dimensione testo, clic per tornare al 100%">${state.misure.testo}%</button>
+      <button type="button" data-gf-az="piu" title="Ingrandisci il testo" aria-label="Ingrandisci il testo">A+</button>
+    </span>`;
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest && e.target.closest("[data-gf-az]");
+    if (!b) return;
+    e.preventDefault();
+    const a = b.dataset.gfAz;
+    if (a === "meno") impostaTesto(state.misure.testo - 10);
+    else if (a === "piu") impostaTesto(state.misure.testo + 10);
+    else impostaTesto(MISURE_DEF.testo);
+  });
+
   function ripristinaTutto() {
     if (confirm("Ripristinare colori, misure e font ai valori originali?")) {
       state = stato0();
@@ -1516,6 +1545,8 @@
   // API per Leggenda / Paletta / guida
   Object.assign(window.GF_PERSONALIZZA, {
     stato: () => state,
+    testoHtml,
+    impostaTesto,
     applica, // riapplica i colori (usato dalle pagine esterne quando cambia il tema)
     // Colore effettivo di ogni chiave nel tema attivo (scelto da te oppure di default)
     effettivi: () => {

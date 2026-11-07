@@ -379,3 +379,60 @@
   font-weight: 600;
   color: var(--t1);
 }
+
+
+/* ═══ Controllo rapido del testo: A− / 100% / A+ ═══ */
+.gf-az {
+  display: inline-flex;
+  flex: none;
+  align-items: stretch;
+  border: 1px solid var(--b1);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--s1);
+}
+.gf-az button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--t1);
+  font: 700 13px var(--sans);
+  padding: 5px 9px;
+  min-width: 34px;
+  cursor: pointer;
+}
+.gf-az button + button {
+  border-left: 1px solid var(--b1);
+}
+.gf-az button:hover {
+  background: var(--accent-d);
+  color: var(--accent);
+}
+.gf-az .gf-az-val {
+  font-weight: 600;
+  font-size: 12px;
+  min-width: 48px;
+  font-variant-numeric: tabular-nums;
+}
+.gf-az button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.pz-head {
+  flex-wrap: wrap;
+}
+
+/* Le finestre si allargano insieme al testo, così non va a capo male */
+html .pz-panel {
+  width: min(calc(380px * var(--gf-txt, 1)), 100%);
+}
+html .kb-guida {
+  width: min(calc(760px * var(--gf-txt, 1)), 100%);
+}
+html .gf-card {
+  width: min(calc(780px * var(--gf-txt, 1)), 100%);
+}
+.kb-head .gf-az {
+  margin-left: auto;
+  margin-right: 10px;
+}

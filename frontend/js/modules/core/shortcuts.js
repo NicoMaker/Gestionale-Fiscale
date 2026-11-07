@@ -1119,7 +1119,7 @@
       )
       .join("");
     return `<div class="kb-guida" role="dialog" aria-label="Guida tasti da tastiera">
-      <div class="kb-head"><h2>⌨️ Tasti da tastiera</h2><button type="button" class="kb-x" aria-label="Chiudi">Esc</button></div>
+      <div class="kb-head"><h2>⌨️ Tasti da tastiera</h2>${window.GF_PERSONALIZZA?.testoHtml?.() || ""}<button type="button" class="kb-x" aria-label="Chiudi">Esc</button></div>
       <div class="kb-body">
         ${corrente}
         <section class="kb-sec"><h3>Ovunque</h3><table>${righeHtml(GLOBALI)}</table></section>
