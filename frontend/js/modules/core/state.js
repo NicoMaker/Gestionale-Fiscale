@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const state = {
-  page: "appunti",
+  page: "funzioni",
   tipologie: [],
   clienti: [],
   adempimenti: [],

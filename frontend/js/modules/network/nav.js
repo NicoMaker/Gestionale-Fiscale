@@ -6,6 +6,7 @@
 // Stessa icona usata nella voce di navbar corrispondente (data-page),
 // mostrata al posto della "ƒx" fissa nel titolo della topbar.
 const PAGE_ICONS = {
+  funzioni: "🧭",
   dashboard: "📊",
   clienti: "👥",
   scadenzario: "📅",
@@ -81,6 +82,7 @@ function renderPage(page) {
   }
 
   const titles = {
+    funzioni: "Centro funzioni",
     dashboard: "Dashboard",
     clienti: "Clienti",
     scadenzario: "Scadenzario Cliente",
@@ -99,7 +101,9 @@ function renderPage(page) {
     );
   });
 
-  if (page === "dashboard") {
+  if (page === "funzioni") {
+    renderFunzioniPage();
+  } else if (page === "dashboard") {
     document.getElementById("topbar-actions").innerHTML =
       `<div class="year-sel"><button onclick="changeAnno(-1)" title="Anno precedente">&#9664;</button><span class="year-num">${state.anno}</span><button onclick="changeAnno(1)" title="Anno successivo">&#9654;</button></div><button class="btn btn-sm" style="background:var(--accent-d);color:var(--accent);border:1px solid rgba(91,141,246,0.3);font-size:13px" onclick="setDashCat('tutti')" title="Mostra tutti">📋 Tutti</button><button class="btn btn-cyan btn-sm no-print" onclick="openCopiaTutti()" style="font-size:13px">📋 Copia</button><button class="btn btn-print btn-sm" onclick="window.print()" style="font-size:13px">🖨️</button>`;
     socket.emit("get:stats", { anno: state.anno });
@@ -156,6 +160,8 @@ function changeAnno(d) {
   if (state.page === "dashboard") {
     state._dashRendered = false;
     socket.emit("get:stats", { anno: state.anno });
+  } else if (state.page === "funzioni" && typeof renderFunzioniPage === "function") {
+    renderFunzioniPage();
   }
 }
 

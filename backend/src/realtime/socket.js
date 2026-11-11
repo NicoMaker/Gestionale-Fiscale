@@ -8,6 +8,7 @@ const registerApplicaController = require("../controllers/applicaController");
 const registerAppuntiController = require("../controllers/appuntiController");
 const registerPaginaBiancaController = require("../controllers/paginaBiancaController");
 const registerCestinoController = require("../controllers/cestinoController");
+const registerFunzioniController = require("../controllers/funzioniController");
 
 /**
  * Configura Socket.IO: ad ogni connessione registra tutti i controller di
@@ -29,6 +30,7 @@ module.exports = function setupSocketHandlers(io) {
     registerAppuntiController(io, socket);
     registerPaginaBiancaController(io, socket);
     registerCestinoController(io, socket);
+    registerFunzioniController(io, socket);
 
     socket.on("disconnect", () => {
       console.log(`❌ Client disconnesso: ${socket.id}`);
