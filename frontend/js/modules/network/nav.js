@@ -160,7 +160,10 @@ function changeAnno(d) {
   if (state.page === "dashboard") {
     state._dashRendered = false;
     socket.emit("get:stats", { anno: state.anno });
-  } else if (state.page === "funzioni" && typeof renderFunzioniPage === "function") {
+  } else if (
+    state.page === "funzioni" &&
+    typeof renderFunzioniPage === "function"
+  ) {
     renderFunzioniPage();
   }
 }

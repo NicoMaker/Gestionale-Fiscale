@@ -66,7 +66,9 @@ function getFunzioni(anno) {
     [anno, anno],
   );
 
-  const appuntiAperti = conta(`SELECT COUNT(*) AS c FROM appunti WHERE completato = 0`);
+  const appuntiAperti = conta(
+    `SELECT COUNT(*) AS c FROM appunti WHERE completato = 0`,
+  );
   const appuntiScaduti = conta(
     `SELECT COUNT(*) AS c FROM appunti
      WHERE completato = 0 AND data_scadenza IS NOT NULL AND data_scadenza <> ''
@@ -116,8 +118,12 @@ function getFunzioni(anno) {
     },
     note: {
       totale: conta(`SELECT COUNT(*) AS c FROM pagina_bianca`),
-      studio: conta(`SELECT COUNT(*) AS c FROM pagina_bianca WHERE tipo = 'studio'`),
-      cliente: conta(`SELECT COUNT(*) AS c FROM pagina_bianca WHERE tipo = 'cliente'`),
+      studio: conta(
+        `SELECT COUNT(*) AS c FROM pagina_bianca WHERE tipo = 'studio'`,
+      ),
+      cliente: conta(
+        `SELECT COUNT(*) AS c FROM pagina_bianca WHERE tipo = 'cliente'`,
+      ),
     },
     cestino: { totale: conta(`SELECT COUNT(*) AS c FROM cestino`) },
   };
