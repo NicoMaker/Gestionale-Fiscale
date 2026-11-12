@@ -191,7 +191,6 @@
     ["k", "scorciatoie", "Scorciatoie"],
     // Voci speciali: "@nome" non è una pagina ma un'azione (vedi leggenda.js)
     ["h", "dashboard", "🏠 Home"],
-    ["f", "funzioni", "Centro funzioni"],
     ["l", "@leggenda", "Leggenda colori"],
     ["o", "@paletta", "Paletta colori"],
   ];
@@ -333,10 +332,6 @@
   ];
 
   const PAGINE = {
-    funzioni: {
-      titolo: "Centro funzioni",
-      tasti: [...anno("changeAnno")],
-    },
     dashboard: {
       titolo: "Dashboard",
       tasti: [

@@ -12,7 +12,7 @@ function avviaOAggiorna(tentativi = 0) {
   }
   if (!_avvioScadenzeFatto) {
     _avvioScadenzeFatto = true;
-    renderPage("funzioni");
+    renderPage("appunti");
   } else if (typeof refreshPage === "function") {
     refreshPage();
   }
@@ -29,7 +29,7 @@ socket.on("connect", () => {
   }
   if (text) text.textContent = "Online";
   socket.emit("get:tipologie");
-  // All'avvio si apre UNA sola volta la pagina Centro funzioni.
+  // All'avvio si apre UNA sola volta la pagina Scadenze Studio.
   // Alle riconnessioni successive (rete assente, riavvio server) NON si cambia
   // pagina: si aggiorna solo quella in cui si sta lavorando.
   // NB: socket.js è caricato PRIMA di nav.js/script.js, quindi alla prima
