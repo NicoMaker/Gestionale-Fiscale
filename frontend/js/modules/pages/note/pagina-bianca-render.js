@@ -114,6 +114,15 @@ function stampaPaginaBianca() {
       <meta charset="UTF-8">
       <title>Stampa - ${titoloPagina}</title>
       <style>
+        @page {
+          margin: 12mm 12mm 16mm;
+          @bottom-right {
+            content: "Pagina " counter(page) " di " counter(pages);
+            font-family: Arial, sans-serif;
+            font-size: 9px;
+            color: #555;
+          }
+        }
         * {
           margin: 0;
           padding: 0;

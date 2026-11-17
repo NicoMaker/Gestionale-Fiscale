@@ -419,7 +419,9 @@ function _generaFinestraStampa() {
       state.anno +
       "</title><style>",
   );
-  htmlParts.push("@page{size:landscape;margin:10mm}");
+  htmlParts.push(
+    '@page{size:landscape;margin:10mm 10mm 14mm;@bottom-right{content:"Pagina " counter(page) " di " counter(pages);font-family:Arial,sans-serif;font-size:9px;color:#555}}',
+  );
   htmlParts.push(
     "*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;padding:0;margin:0;color:#1a2233}",
   );
