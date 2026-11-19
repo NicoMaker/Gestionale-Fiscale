@@ -152,7 +152,7 @@ function renderScadenzarioSelect(clienti) {
   initSearchableSelect("sel-cliente");
 
   // Inizializza i multiselect
-  var statoSelect = document.getElementById("scad-filtro-stato");
+  const statoSelect = document.getElementById("scad-filtro-stato");
   if (statoSelect && !statoSelect.dataset.ssinit) {
     initSearchableMultiSelect("scad-filtro-stato");
   }

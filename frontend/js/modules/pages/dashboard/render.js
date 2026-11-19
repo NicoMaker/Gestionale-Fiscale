@@ -14,8 +14,8 @@
 // Un MutationObserver intercetta ogni re-render del pannello (causato dai
 // toggle di clienti.js) e aggiorna i contatori + le card della dashboard.
 
-var _dashTipFiltroPanelOpen = false;
-var _dashFiltroObserver = null; // MutationObserver attivo
+let _dashTipFiltroPanelOpen = false;
+let _dashFiltroObserver = null; // MutationObserver attivo
 
 // ─── CONDIVISIONE STORAGE CON CLIENTI.JS ─────────────────────
 // Usa le stesse funzioni di storage definite in clienti.js
@@ -34,7 +34,7 @@ if (typeof socket !== "undefined") {
   });
   socket.on("res:applica:adempimenti_a_clienti", function (data) {
     if (data.success) {
-      var msg =
+      let msg =
         "✅ Applicati " +
         data.inseriti +
         " adempimenti a " +
@@ -52,7 +52,7 @@ if (typeof socket !== "undefined") {
 
   socket.on("res:elimina:adempimenti_a_clienti", function (data) {
     if (data.success) {
-      var msg =
+      let msg =
         "🗑️ Eliminati " +
         data.eliminati +
         " record da " +
@@ -101,10 +101,10 @@ window._refreshDashTipFiltroPanel = _refreshDashTipFiltroPanel;
 // Consolidate qui per evitare duplicazioni tra i file.
 // ═══════════════════════════════════════════════════════════════
 function _aggiornaDashPanelVisibility() {
-  var container = document.getElementById("dash-tip-filtro-container");
+  const container = document.getElementById("dash-tip-filtro-container");
   if (!container) return;
   container.style.display = _dashTipFiltroPanelOpen ? "block" : "none";
-  var btn = document.getElementById("dash-tip-filtro-toggle-btn");
+  const btn = document.getElementById("dash-tip-filtro-toggle-btn");
   if (btn) {
     btn.innerHTML = _dashTipFiltroPanelOpen
       ? '<button class="btn btn-xs btn-secondary" onclick="closeDashTipFiltroPanel(event)">✕ Chiudi</button>'
@@ -112,18 +112,18 @@ function _aggiornaDashPanelVisibility() {
   }
 }
 function _aggiornaDashTipFiltroCounter() {
-  var badge = document.getElementById("dash-tip-filtro-count");
-  var warning = document.getElementById("dash-tip-filtro-warning");
+  const badge = document.getElementById("dash-tip-filtro-count");
+  const warning = document.getElementById("dash-tip-filtro-warning");
   if (!badge) return;
 
-  var keys =
+  const keys =
     typeof _getActiveFiltroKeys === "function"
       ? _getActiveFiltroKeys()
       : new Set();
-  var allKeys =
+  const allKeys =
     typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
-  var isNone = window._filtroManualeNessuno || keys.size === 0;
-  var isAll = !isNone && keys.size === allKeys.length;
+  const isNone = window._filtroManualeNessuno || keys.size === 0;
+  const isAll = !isNone && keys.size === allKeys.length;
 
   if (isNone) {
     badge.textContent = "0";
@@ -153,7 +153,7 @@ function _getStorageKeys() {
   };
 }
 function _refreshDashTipFiltroPanel() {
-  var container = document.getElementById("dash-tip-filtro-container");
+  const container = document.getElementById("dash-tip-filtro-container");
   if (!container) return;
   if (typeof renderTipologieFiltroPanel !== "function") return;
 
@@ -162,7 +162,7 @@ function _refreshDashTipFiltroPanel() {
     _dashFiltroObserver = null;
   }
 
-  var tmp = document.createElement("div");
+  const tmp = document.createElement("div");
   tmp.innerHTML = renderTipologieFiltroPanel();
   container.innerHTML = "";
   container.appendChild(tmp.firstChild);
@@ -171,9 +171,9 @@ function _refreshDashTipFiltroPanel() {
   _aggiornaDashTipFiltroCounter();
 }
 function _renderDashMultiselBar() {
-  var bar = document.getElementById("dash-multisel-bar");
+  const bar = document.getElementById("dash-multisel-bar");
   if (!bar) return;
-  var sel = _getDashSelezionati();
+  const sel = _getDashSelezionati();
   if (sel.size === 0) {
     bar.classList.remove("is-visible");
     bar.innerHTML = "";
@@ -213,7 +213,7 @@ function _salvaFiltriDashboardSuStorage() {
 }
 function adempimentoPassaFiltroStato(a, ss) {
   if (!ss) return true;
-  var inCorso = a.totale - a.completati - a.da_fare - (a.na || 0);
+  const inCorso = a.totale - a.completati - a.da_fare - (a.na || 0);
   if (ss === "da_fare") return a.da_fare > 0;
   if (ss === "in_corso") return inCorso > 0;
   if (ss === "completato") return a.completati > 0;
@@ -221,7 +221,7 @@ function adempimentoPassaFiltroStato(a, ss) {
   return true;
 }
 function apriVistaGlobaleDaSelezione() {
-  var sel = Array.from(_getDashSelezionati());
+  const sel = Array.from(_getDashSelezionati());
   if (sel.length === 0) return;
   goVistaGlobaleAdp(sel);
 }
@@ -230,20 +230,20 @@ function clearDashAdpSelezione() {
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
 function clientePassaFiltroTipologieDashboard(adempimento) {
-  var keys =
+  const keys =
     typeof _getActiveFiltroKeys === "function"
       ? _getActiveFiltroKeys()
       : new Set();
-  var allKeys =
+  const allKeys =
     typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
-  var isNone = window._filtroManualeNessuno;
-  var isAll = !isNone && keys.size === allKeys.length;
+  const isNone = window._filtroManualeNessuno;
+  const isAll = !isNone && keys.size === allKeys.length;
 
   if (keys.size === 0 || isAll) return true;
   if (isNone) return false;
 
   if (adempimento.cliente_tipologia_codice) {
-    var tipCod = adempimento.cliente_tipologia_codice;
+    const tipCod = adempimento.cliente_tipologia_codice;
     return Array.from(keys).some(function (key) {
       return key.split("|")[0] === tipCod;
     });
@@ -260,13 +260,13 @@ function closeDashTipFiltroPanel(event) {
   _aggiornaDashPanelVisibility();
 }
 function goVistaGlobaleAdp(nomi) {
-  var lista = Array.isArray(nomi) ? nomi : [nomi];
+  const lista = Array.isArray(nomi) ? nomi : [nomi];
   state.globalePreFiltroAdp = lista.length === 1 ? lista[0] : "";
   state.globalePreFiltroAdpMulti = lista;
   document.querySelectorAll(".nav-item").forEach(function (x) {
     x.classList.remove("active");
   });
-  var nav = document.querySelector('[data-page="scadenzario_globale"]');
+  const nav = document.querySelector('[data-page="scadenzario_globale"]');
   if (nav) nav.classList.add("active");
   state.dashSearch = "";
   state.dashFiltroStatoAdp = "";
@@ -277,7 +277,7 @@ function onDashAdpSearch(val) {
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
 function onDashFiltroStatoAdp() {
-  var el = document.getElementById("dash-filtro-stato-adp");
+  const el = document.getElementById("dash-filtro-stato-adp");
   state.dashFiltroStatoAdp = el ? el.value : "";
   if (state.dashStats) updateDashboardContent(state.dashStats);
 }
@@ -294,9 +294,9 @@ function resetDashFiltri() {
   state.dashSearch = "";
   state.dashFiltroStatoAdp = "";
   if (state.dashAdpSelezionati) state.dashAdpSelezionati.clear();
-  var searchEl = document.getElementById("dash-adp-search");
+  const searchEl = document.getElementById("dash-adp-search");
   if (searchEl) searchEl.value = "";
-  var statoEl = document.getElementById("dash-filtro-stato-adp");
+  const statoEl = document.getElementById("dash-filtro-stato-adp");
   if (statoEl) statoEl.value = "";
   if (typeof initializeTipologieFilter === "function")
     initializeTipologieFilter();
@@ -306,7 +306,7 @@ function resetDashFiltri() {
 }
 function toggleDashAdpCard(nome, event) {
   if (event) event.stopPropagation();
-  var sel = _getDashSelezionati();
+  const sel = _getDashSelezionati();
   if (sel.has(nome)) sel.delete(nome);
   else sel.add(nome);
   if (state.dashStats) updateDashboardContent(state.dashStats);
@@ -322,12 +322,12 @@ function toggleDashTipFiltroPanel(event) {
   if (_dashTipFiltroPanelOpen) _refreshDashTipFiltroPanel();
 }
 function updateDashboardContent(stats) {
-  var allAdp = stats.adempimentiStats || [];
-  var sq = (state.dashSearch || "").toLowerCase();
-  var ss = state.dashFiltroStatoAdp || "";
-  var _annoDash = state.anno || new Date().getFullYear();
+  const allAdp = stats.adempimentiStats || [];
+  const sq = (state.dashSearch || "").toLowerCase();
+  const ss = state.dashFiltroStatoAdp || "";
+  const _annoDash = state.anno || new Date().getFullYear();
 
-  var adpVis = allAdp.filter(function (a) {
+  const adpVis = allAdp.filter(function (a) {
     if (a.anno_validita != null && Number(a.anno_validita) !== _annoDash)
       return false;
     if (
@@ -341,7 +341,7 @@ function updateDashboardContent(stats) {
     return true;
   });
 
-  var fT = 0,
+  let fT = 0,
     fC = 0,
     fD = 0,
     fI = 0;
@@ -351,10 +351,10 @@ function updateDashboardContent(stats) {
     fD += aa.da_fare;
     fI += Math.max(0, aa.totale - aa.completati - aa.da_fare - (aa.na || 0));
   });
-  var fP = fT > 0 ? Math.round((fC / fT) * 100) : 0;
-  var isF = sq !== "" || ss !== "";
+  const fP = fT > 0 ? Math.round((fC / fT) * 100) : 0;
+  const isF = sq !== "" || ss !== "";
 
-  var lblTot = document.getElementById("ds-lbl-tot");
+  const lblTot = document.getElementById("ds-lbl-tot");
   if (lblTot)
     lblTot.innerHTML =
       "Adempimenti " +
@@ -362,20 +362,20 @@ function updateDashboardContent(stats) {
       (isF
         ? ' <span style="font-size:10px;color:var(--yellow)">(filtro)</span>'
         : "");
-  var totEl = document.getElementById("ds-tot");
+  const totEl = document.getElementById("ds-tot");
   if (totEl) totEl.textContent = fT;
-  var compEl = document.getElementById("ds-comp");
+  const compEl = document.getElementById("ds-comp");
   if (compEl) compEl.textContent = fC;
-  var dafareEl = document.getElementById("ds-dafare");
+  const dafareEl = document.getElementById("ds-dafare");
   if (dafareEl) dafareEl.textContent = fD;
-  var incorsoEl = document.getElementById("ds-incorso");
+  const incorsoEl = document.getElementById("ds-incorso");
   if (incorsoEl) incorsoEl.textContent = fI;
-  var percEl = document.getElementById("ds-perc");
+  const percEl = document.getElementById("ds-perc");
   if (percEl) percEl.textContent = fP + "%";
-  var progEl = document.getElementById("ds-prog");
+  const progEl = document.getElementById("ds-prog");
   if (progEl) progEl.style.width = fP + "%";
 
-  var titleEl = document.getElementById("dash-adp-count-title");
+  const titleEl = document.getElementById("dash-adp-count-title");
   if (titleEl)
     titleEl.innerHTML =
       "Adempimenti " +
@@ -386,7 +386,7 @@ function updateDashboardContent(stats) {
       allAdp.length +
       "</span>";
 
-  var grid = document.getElementById("dash-adp-grid");
+  const grid = document.getElementById("dash-adp-grid");
   if (!grid) return;
 
   if (adpVis.length === 0) {
@@ -396,20 +396,20 @@ function updateDashboardContent(stats) {
     return;
   }
 
-  var html = "";
-  var dashSel = _getDashSelezionati();
+  let html = "";
+  const dashSel = _getDashSelezionati();
   adpVis.forEach(function (adpItem) {
-    var p =
+    const p =
       adpItem.totale > 0
         ? Math.round((adpItem.completati / adpItem.totale) * 100)
         : 0;
-    var iC = Math.max(
+    const iC = Math.max(
       0,
       adpItem.totale - adpItem.completati - adpItem.da_fare - (adpItem.na || 0),
     );
-    var pgColor =
+    const pgColor =
       p === 100 ? "var(--green)" : p > 50 ? "var(--yellow)" : "var(--red)";
-    var isSel = dashSel.has(adpItem.nome);
+    const isSel = dashSel.has(adpItem.nome);
     html +=
       '<div class="dash-adp-card' +
       (isSel ? " is-selected" : "") +

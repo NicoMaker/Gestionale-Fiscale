@@ -6,7 +6,7 @@
 // GLOBALE.JS — Vista Globale scadenzario tutti i clienti
 // ═══════════════════════════════════════════════════════════════
 
-var _globTipFiltroPanelOpen = false;
+let _globTipFiltroPanelOpen = false;
 
 // ─── CONDIVISIONE STORAGE CON CLIENTI.JS ─────────────────────
 function _getGlobStorageKeys() {
@@ -57,20 +57,20 @@ function _caricaFiltriGlobaleDaStorage() {
 }
 
 function calcolaGlobaleStats(data) {
-  var totale = data.length;
-  var comp = 0,
+  const totale = data.length;
+  let comp = 0,
     daF = 0,
     inC = 0;
-  for (var i = 0; i < data.length; i++) {
-    var r = data[i];
+  for (let i = 0; i < data.length; i++) {
+    const r = data[i];
     if (r.stato === "completato") comp++;
     else if (r.stato === "da_fare") daF++;
     else if (r.stato === "in_corso") inC++;
   }
-  var clientiSet = {},
+  const clientiSet = {},
     adpSet = {};
-  for (var j = 0; j < data.length; j++) {
-    var row = data[j];
+  for (let j = 0; j < data.length; j++) {
+    const row = data[j];
     clientiSet[row.cliente_id] = true;
     adpSet[row.adempimento_nome] = true;
   }
@@ -136,13 +136,13 @@ function closeGlobTipFiltroPanel(event) {
 }
 
 function _aggiornaGlobPanelVisibility() {
-  var container = document.getElementById("glob-tip-filtro-container");
+  const container = document.getElementById("glob-tip-filtro-container");
   if (!container) return;
   container.style.display = _globTipFiltroPanelOpen ? "block" : "none";
   container.onclick = function (e) {
     e.stopPropagation();
   };
-  var btn = document.getElementById("glob-tip-filtro-toggle-btn");
+  const btn = document.getElementById("glob-tip-filtro-toggle-btn");
   if (btn) {
     btn.innerHTML = _globTipFiltroPanelOpen
       ? '<button class="btn btn-xs btn-secondary" onclick="closeGlobTipFiltroPanel(event)">✕ Chiudi</button>'
@@ -151,13 +151,13 @@ function _aggiornaGlobPanelVisibility() {
 }
 
 function _aggiornaGlobTipFiltroCounter() {
-  var badge = document.getElementById("glob-tip-filtro-count");
+  const badge = document.getElementById("glob-tip-filtro-count");
   if (!badge) return;
-  var keys = _getActiveFiltroKeys();
-  var allKeys =
+  const keys = _getActiveFiltroKeys();
+  const allKeys =
     typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
-  var isNone = _isManualNessuno() || keys.size === 0;
-  var isAll = !isNone && keys.size === allKeys.length;
+  const isNone = _isManualNessuno() || keys.size === 0;
+  const isAll = !isNone && keys.size === allKeys.length;
   if (isNone) {
     badge.textContent = "0";
     badge.style.display = "inline-flex";
@@ -173,10 +173,10 @@ function _aggiornaGlobTipFiltroCounter() {
 }
 
 function _refreshGlobTipFiltroPanel() {
-  var container = document.getElementById("glob-tip-filtro-container");
+  const container = document.getElementById("glob-tip-filtro-container");
   if (!container || !_globTipFiltroPanelOpen) return;
   if (typeof renderTipologieFiltroPanel === "function") {
-    var tmp = document.createElement("div");
+    const tmp = document.createElement("div");
     tmp.innerHTML = renderTipologieFiltroPanel();
     container.innerHTML = "";
     container.appendChild(tmp.firstChild);
@@ -186,9 +186,9 @@ function _refreshGlobTipFiltroPanel() {
 }
 
 function clientePassaFiltroTipologie(c) {
-  var activeFiltroKeys = _getActiveFiltroKeys();
-  var isNone = _isManualNessuno();
-  var allKeys =
+  const activeFiltroKeys = _getActiveFiltroKeys();
+  const isNone = _isManualNessuno();
+  const allKeys =
     typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
 
   if (
@@ -201,33 +201,33 @@ function clientePassaFiltroTipologie(c) {
   if (isNone) {
     return false;
   }
-  var tipCod = c.tipologia_codice || "";
-  var col2DbToLabel = window.COL2_DB_TO_LABEL || {
+  const tipCod = c.tipologia_codice || "";
+  const col2DbToLabel = window.COL2_DB_TO_LABEL || {
     privato: "Privato",
     ditta: "Ditta Individuale",
     socio: "Socio",
     professionista: "Professionista",
   };
-  var col3DbToLabel = window.COL3_DB_TO_LABEL || {
+  const col3DbToLabel = window.COL3_DB_TO_LABEL || {
     ordinario: "Ordinario",
     ordinaria: "Ordinaria",
     semplificato: "Semplificato",
     semplificata: "Semplificata",
     forfettario: "Forfettario",
   };
-  var col2Raw = (c.col2 || "").toLowerCase();
-  var col3Raw = (c.col3 || "").toLowerCase();
-  var col2Display = col2DbToLabel[col2Raw] || "";
-  var col3Display = col3DbToLabel[col3Raw] || "";
-  var per = c.periodicita || "";
-  var keysArray = Array.from(activeFiltroKeys);
-  for (var i = 0; i < keysArray.length; i++) {
-    var key = keysArray[i];
-    var parts = key.split("|");
-    var kTip = parts[0];
-    var kCol2 = parts[1] || "";
-    var kCol3 = parts[2] || "";
-    var kPer = parts[3] || "";
+  const col2Raw = (c.col2 || "").toLowerCase();
+  const col3Raw = (c.col3 || "").toLowerCase();
+  const col2Display = col2DbToLabel[col2Raw] || "";
+  const col3Display = col3DbToLabel[col3Raw] || "";
+  const per = c.periodicita || "";
+  const keysArray = Array.from(activeFiltroKeys);
+  for (let i = 0; i < keysArray.length; i++) {
+    const key = keysArray[i];
+    const parts = key.split("|");
+    const kTip = parts[0];
+    const kCol2 = parts[1] || "";
+    const kCol3 = parts[2] || "";
+    const kPer = parts[3] || "";
     if (kTip !== tipCod) continue;
     if (kCol2 && kCol2 !== col2Display && kCol2.toLowerCase() !== col2Raw)
       continue;
@@ -241,14 +241,14 @@ function clientePassaFiltroTipologie(c) {
 
 function clientePassaFiltroStato(periodi, filtroClienteStato) {
   if (!filtroClienteStato) return true;
-  var hasInCorso = false,
+  let hasInCorso = false,
     hasDaFare = false,
     hasCompletato = false,
     hasNA = false;
-  var tuttiComp = true,
+  let tuttiComp = true,
     nessunAvanz = true;
-  for (var i = 0; i < periodi.length; i++) {
-    var stato = periodi[i].stato;
+  for (let i = 0; i < periodi.length; i++) {
+    const stato = periodi[i].stato;
     if (stato === "in_corso") hasInCorso = true;
     if (stato === "da_fare") hasDaFare = true;
     if (stato === "completato") hasCompletato = true;
@@ -277,20 +277,20 @@ function clientePassaFiltroStato(periodi, filtroClienteStato) {
 }
 
 function _getCol2DisplayMap() {
-  var cfg = _globCfg();
-  var map = {};
-  var percorsi = cfg.percorsi || {};
-  var keys = Object.keys(percorsi);
-  for (var k = 0; k < keys.length; k++) {
-    var arr = percorsi[keys[k]];
-    for (var i = 0; i < arr.length; i++) {
-      var p = arr[i];
+  const cfg = _globCfg();
+  const map = {};
+  const percorsi = cfg.percorsi || {};
+  const keys = Object.keys(percorsi);
+  for (let k = 0; k < keys.length; k++) {
+    const arr = percorsi[keys[k]];
+    for (let i = 0; i < arr.length; i++) {
+      const p = arr[i];
       if (!p.col2Label) continue;
-      var db =
+      const db =
         p.col2Label === "Ditta Individuale"
           ? "ditta"
           : p.col2Label.toLowerCase();
-      var short =
+      const short =
         p.col2Label === "Ditta Individuale"
           ? "Ditta Ind."
           : p.col2Label === "Professionista"
@@ -303,17 +303,17 @@ function _getCol2DisplayMap() {
 }
 
 function _getCol3DisplayMap() {
-  var cfg = _globCfg();
-  var map = {};
-  var percorsi = cfg.percorsi || {};
-  var keys = Object.keys(percorsi);
-  for (var k = 0; k < keys.length; k++) {
-    var arr = percorsi[keys[k]];
-    for (var i = 0; i < arr.length; i++) {
-      var p = arr[i];
+  const cfg = _globCfg();
+  const map = {};
+  const percorsi = cfg.percorsi || {};
+  const keys = Object.keys(percorsi);
+  for (let k = 0; k < keys.length; k++) {
+    const arr = percorsi[keys[k]];
+    for (let i = 0; i < arr.length; i++) {
+      const p = arr[i];
       if (!p.col3Label) continue;
-      var db = p.col3Label.toLowerCase();
-      var short =
+      const db = p.col3Label.toLowerCase();
+      const short =
         p.col3Label.indexOf("Ordin") === 0
           ? "Ord."
           : p.col3Label.indexOf("Sempl") === 0
@@ -328,12 +328,12 @@ function _getCol3DisplayMap() {
 }
 
 function _renderGlobaleClienteClassBadges(c) {
-  var cfg = _globCfg();
-  var col2Map = _getCol2DisplayMap();
-  var col3Map = _getCol3DisplayMap();
-  var tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
-  var perAll = (cfg.periodicitaIva || []).concat(cfg.periodicitaAnnuale || []);
-  var badges =
+  const cfg = _globCfg();
+  const col2Map = _getCol2DisplayMap();
+  const col3Map = _getCol3DisplayMap();
+  const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
+  const perAll = (cfg.periodicitaIva || []).concat(cfg.periodicitaAnnuale || []);
+  let badges =
     '<span class="badge b-' +
     (c.tipologia_codice || "").toLowerCase() +
     '" style="font-size:11px" title="' +
@@ -352,8 +352,8 @@ function _renderGlobaleClienteClassBadges(c) {
       (col3Map[c.col3] || c.col3) +
       "</span>";
   if (c.periodicita && c.col2 !== "privato") {
-    var perObj = null;
-    for (var i = 0; i < perAll.length; i++) {
+    let perObj = null;
+    for (let i = 0; i < perAll.length; i++) {
       if (perAll[i].value === c.periodicita) {
         perObj = perAll[i];
         break;
@@ -382,7 +382,7 @@ function escapeHtmlForSelect(str) {
 // ═══════════════════════════════════════════════════════════════
 
 function renderGlobalePage() {
-  var activeFiltroKeys = _getActiveFiltroKeys();
+  const activeFiltroKeys = _getActiveFiltroKeys();
   if (
     activeFiltroKeys.size === 0 &&
     !_isManualNessuno() &&
@@ -436,12 +436,12 @@ function renderGlobalePage() {
     populateGlobaleClienti();
 
     // === AGGIUNTO LISTENER MANUALE PER STATO (in caso di eventi persi) ===
-    var statoSelect = document.getElementById("glob-filtro-stato");
+    const statoSelect = document.getElementById("glob-filtro-stato");
     if (statoSelect) {
       statoSelect.addEventListener("change", applyGlobaleFiltri);
     }
 
-    var preFiltroMulti =
+    const preFiltroMulti =
       state.globalePreFiltroAdpMulti && state.globalePreFiltroAdpMulti.length
         ? state.globalePreFiltroAdpMulti
         : state.globalePreFiltroAdp && state.globalePreFiltroAdp !== ""
@@ -460,8 +460,8 @@ function renderGlobalePage() {
 
 function changeAnnoGlobale(d) {
   state.anno += d;
-  var yearNums = document.querySelectorAll(".year-num");
-  for (var i = 0; i < yearNums.length; i++)
+  const yearNums = document.querySelectorAll(".year-num");
+  for (let i = 0; i < yearNums.length; i++)
     yearNums[i].textContent = state.anno;
   loadGlobale();
 }
@@ -481,12 +481,12 @@ function populateGlobaleClienti() {
 }
 
 function renderGlobaleClientiSelect() {
-  var clienteSel = document.getElementById("glob-sel-cliente");
+  const clienteSel = document.getElementById("glob-sel-cliente");
   if (!clienteSel) return;
-  var currentValues = (state.globaleSelectedClienti || []).map(String);
-  var opts = (state.clienti || [])
+  const currentValues = (state.globaleSelectedClienti || []).map(String);
+  const opts = (state.clienti || [])
     .map(function (c) {
-      var isSel = currentValues.indexOf(String(c.id)) !== -1;
+      const isSel = currentValues.indexOf(String(c.id)) !== -1;
       return (
         '<option value="' +
         c.id +
@@ -512,8 +512,8 @@ function renderGlobaleClientiSelect() {
 }
 
 function onGlobaleClienteChange() {
-  var clienteSel = document.getElementById("glob-sel-cliente");
-  var clienteIds = clienteSel
+  const clienteSel = document.getElementById("glob-sel-cliente");
+  const clienteIds = clienteSel
     ? Array.from(clienteSel.selectedOptions || []).map(function (o) {
         return parseInt(o.value);
       })
@@ -529,10 +529,10 @@ function onGlobaleClienteChange() {
 
 // ─── CARICAMENTO DATI (SENZA FILTRO STATO) ───────────────────
 function loadGlobale() {
-  var filtri = {};
-  var adpSel = document.getElementById("glob-filtro-adp");
+  const filtri = {};
+  const adpSel = document.getElementById("glob-filtro-adp");
 
-  var adpValori = adpSel
+  const adpValori = adpSel
     ? Array.from(adpSel.selectedOptions || []).map(function (o) {
         return o.value;
       })
@@ -564,8 +564,8 @@ function applyGlobaleFiltri() {
   }
 
   // Leggi i valori selezionati dal select stato
-  var statoSelect = document.getElementById("glob-filtro-stato");
-  var statiSelezionati = [];
+  const statoSelect = document.getElementById("glob-filtro-stato");
+  let statiSelezionati = [];
   if (statoSelect) {
     // Forza il refresh se la libreria lo supporta
     if (statoSelect._ssRefresh) statoSelect._ssRefresh();
@@ -588,7 +588,7 @@ function applyGlobaleFiltri() {
     }
   }
 
-  var dataFiltrata = state.scadGlobale;
+  let dataFiltrata = state.scadGlobale;
   if (statiSelezionati.length > 0) {
     dataFiltrata = state.scadGlobale.filter(function (row) {
       return statiSelezionati.indexOf(row.stato) !== -1;
@@ -605,7 +605,7 @@ function applyGlobaleFiltri() {
 // ─── RESET COMPLETO (UNIFICATO) ──────────────────────────────
 function resetGlobaleFiltri() {
   // Reset stato
-  var statoSelect = document.getElementById("glob-filtro-stato");
+  const statoSelect = document.getElementById("glob-filtro-stato");
   if (statoSelect) {
     Array.from(statoSelect.options).forEach(function (o) {
       o.selected = false;
@@ -613,7 +613,7 @@ function resetGlobaleFiltri() {
     if (statoSelect._ssRefresh) statoSelect._ssRefresh();
   }
   // Reset adp
-  var adpSel = document.getElementById("glob-filtro-adp");
+  const adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
     Array.from(adpSel.options).forEach(function (o) {
       o.selected = false;
@@ -621,7 +621,7 @@ function resetGlobaleFiltri() {
     if (adpSel._ssRefresh) adpSel._ssRefresh();
   }
   // Reset clienti
-  var clienteSel = document.getElementById("glob-sel-cliente");
+  const clienteSel = document.getElementById("glob-sel-cliente");
   if (clienteSel) {
     Array.from(clienteSel.options).forEach(function (o) {
       o.selected = false;
@@ -638,7 +638,7 @@ function resetGlobaleFiltri() {
   loadGlobale();
 }
 
-var applyGlobaleFiltriDebounced = debounce(function () {
+const applyGlobaleFiltriDebounced = debounce(function () {
   state.globalePreFiltroAdp = "";
   applyGlobaleFiltri();
 }, 300);

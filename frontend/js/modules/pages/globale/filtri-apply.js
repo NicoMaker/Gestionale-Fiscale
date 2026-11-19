@@ -4,7 +4,7 @@ function applyGlobaleFiltriLocali() {
 
 function resetGlobaleClienteSel() {
   state.globaleSelectedClienti = [];
-  var el = document.getElementById("glob-sel-cliente");
+  const el = document.getElementById("glob-sel-cliente");
   if (el) {
     Array.from(el.options).forEach(function (o) {
       o.selected = false;
@@ -18,11 +18,11 @@ function resetGlobaleClienteSel() {
 // ═══════════════════════════════════════════════════════════════
 
 function renderGlobaleHeader() {
-  var st = state.globaleStats;
+  const st = state.globaleStats;
   if (!st) return;
-  var adpSel = document.getElementById("glob-filtro-adp");
+  const adpSel = document.getElementById("glob-filtro-adp");
   if (adpSel) {
-    var currentValues = new Set(
+    const currentValues = new Set(
       Array.from(adpSel.selectedOptions || []).map(function (o) {
         return o.value;
       }),
@@ -39,10 +39,10 @@ function renderGlobaleHeader() {
       });
     }
 
-    var adpList;
+    let adpList;
     if (state.adempimenti && state.adempimenti.length) {
-      var nomiSet = {};
-      var _annoGlob = state.anno || new Date().getFullYear();
+      const nomiSet = {};
+      const _annoGlob = state.anno || new Date().getFullYear();
       state.adempimenti.forEach(function (a) {
         if (!a || !a.nome) return;
         if (a.anno_validita != null && Number(a.anno_validita) !== _annoGlob)
@@ -65,10 +65,10 @@ function renderGlobaleHeader() {
       return a.localeCompare(b, "it", { sensitivity: "base" });
     });
 
-    var options = "";
-    for (var i = 0; i < adpList.length; i++) {
-      var adpName = adpList[i];
-      var selected = currentValues.has(adpName) ? " selected" : "";
+    let options = "";
+    for (let i = 0; i < adpList.length; i++) {
+      const adpName = adpList[i];
+      const selected = currentValues.has(adpName) ? " selected" : "";
       options +=
         '<option value="' +
         escapeHtmlForSelect(adpName) +
@@ -89,9 +89,9 @@ function renderGlobaleHeader() {
 }
 
 function _globToggleAdpFiltro(nome) {
-  var adpSel = document.getElementById("glob-filtro-adp");
+  const adpSel = document.getElementById("glob-filtro-adp");
   if (!adpSel) return;
-  var opt = Array.from(adpSel.options).find(function (o) {
+  const opt = Array.from(adpSel.options).find(function (o) {
     return o.value === nome;
   });
   if (opt) opt.selected = false;
@@ -101,20 +101,20 @@ function _globToggleAdpFiltro(nome) {
 window._globToggleAdpFiltro = _globToggleAdpFiltro;
 
 function navigaAdempimento(direzione) {
-  var adpSel = document.getElementById("glob-filtro-adp");
+  const adpSel = document.getElementById("glob-filtro-adp");
   if (!adpSel || !state.globaleStats) return;
-  var lista = Array.from(state.globaleStats.adempimenti);
+  const lista = Array.from(state.globaleStats.adempimenti);
   lista.sort(function (a, b) {
     return a.localeCompare(b, "it", { sensitivity: "base" });
   });
-  var currentSelected = Array.from(adpSel.selectedOptions || []).map(
+  const currentSelected = Array.from(adpSel.selectedOptions || []).map(
     function (o) {
       return o.value;
     },
   );
-  var current = currentSelected.length === 1 ? currentSelected[0] : "";
-  var idx = lista.indexOf(current);
-  var newIdx;
+  const current = currentSelected.length === 1 ? currentSelected[0] : "";
+  const idx = lista.indexOf(current);
+  let newIdx;
   if (direzione === -1) newIdx = idx <= 0 ? lista.length - 1 : idx - 1;
   else newIdx = idx >= lista.length - 1 || idx === -1 ? 0 : idx + 1;
 
@@ -130,10 +130,10 @@ function navigaAdempimento(direzione) {
 // ═══════════════════════════════════════════════════════════════
 
 function _buildPeriodiOrdinatiHtml(periodi) {
-  var periodiOrdinati = periodi.slice().sort(function (a, b) {
+  const periodiOrdinati = periodi.slice().sort(function (a, b) {
     if (a.data_scadenza && b.data_scadenza) {
-      var dateA = new Date(a.data_scadenza);
-      var dateB = new Date(b.data_scadenza);
+      const dateA = new Date(a.data_scadenza);
+      const dateB = new Date(b.data_scadenza);
       if (dateA - dateB !== 0) return dateA - dateB;
       return a.adempimento_nome.localeCompare(b.adempimento_nome, "it", {
         sensitivity: "base",
@@ -146,8 +146,8 @@ function _buildPeriodiOrdinatiHtml(periodi) {
     });
   });
 
-  var html = "";
-  for (var i = 0; i < periodiOrdinati.length; i++) {
+  let html = "";
+  for (let i = 0; i < periodiOrdinati.length; i++) {
     html += renderPeriodoPill(periodiOrdinati[i]);
   }
   return html;

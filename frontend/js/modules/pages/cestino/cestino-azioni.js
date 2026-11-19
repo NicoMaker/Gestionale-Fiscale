@@ -184,17 +184,17 @@ window.deselezionaTutti = deselezionaTutti;
 
 function selezionaTuttiDashAdpVisibili() {
   // Seleziona tutte le card attualmente visibili (dopo filtri stato/search)
-  var grid = document.getElementById("dash-adp-grid");
+  const grid = document.getElementById("dash-adp-grid");
   if (!grid) return;
-  var cardNomi = Array.from(grid.querySelectorAll(".dash-adp-card"))
+  const cardNomi = Array.from(grid.querySelectorAll(".dash-adp-card"))
     .map(function (card) {
       // Il nome è nel div .dash-adp-nome
-      var nomeEl = card.querySelector(".dash-adp-nome");
+      const nomeEl = card.querySelector(".dash-adp-nome");
       return nomeEl ? nomeEl.textContent.trim() : null;
     })
     .filter(Boolean);
 
-  var sel = _getDashSelezionati();
+  const sel = _getDashSelezionati();
   cardNomi.forEach(function (nome) {
     sel.add(nome);
   });
@@ -202,11 +202,6 @@ function selezionaTuttiDashAdpVisibili() {
 }
 
 // ─── FILTRI STATO / SEARCH ────────────────────────────────────
-
-// ─── PANNELLO TIPOLOGIE DASHBOARD ─────────────────────────────
-
-var _dashTipFiltroPanelOpen = false;
-var _dashFiltroObserver = null;
 
 // ─── FILTRO TIPOLOGIE SU ADEMPIMENTI ─────────────────────────
 
@@ -222,7 +217,7 @@ if (typeof socket !== "undefined") {
   });
   socket.on("res:applica:adempimenti_a_clienti", function (data) {
     if (data.success) {
-      var msg =
+      let msg =
         "✅ Applicati " +
         data.inseriti +
         " adempimenti a " +
@@ -240,7 +235,7 @@ if (typeof socket !== "undefined") {
 
   socket.on("res:elimina:adempimenti_a_clienti", function (data) {
     if (data.success) {
-      var msg =
+      let msg =
         "🗑️ Eliminati " +
         data.eliminati +
         " record da " +

@@ -82,12 +82,12 @@ window.getCurrentTheme = getCurrentTheme;
 initTheme();
 
 (function () {
-  var k = "gf_theme",
-    s = null;
+  const k = "gf_theme";
+  let s = null;
   try {
     s = localStorage.getItem(k);
   } catch (e) {}
-  var theme =
+  const theme =
     s === "light" || s === "dark"
       ? s
       : window.matchMedia &&

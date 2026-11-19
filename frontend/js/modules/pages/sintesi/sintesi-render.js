@@ -1,6 +1,6 @@
 function renderSintesiTabella() {
   if (state.page !== "sintesi") return;
-  var container = document.getElementById("content");
+  const container = document.getElementById("content");
   if (!container) return;
 
   if (!state.clienti || !state.adempimenti || !state.sintesiData) {
@@ -10,18 +10,18 @@ function renderSintesiTabella() {
   }
 
   // ─── Colonne (adempimenti) ───────────────────────────────────
-  var adpSel = document.getElementById("sint-filtro-adp");
-  var selectedIds = adpSel
+  const adpSel = document.getElementById("sint-filtro-adp");
+  const selectedIds = adpSel
     ? Array.from(adpSel.selectedOptions || []).map(function (o) {
         return parseInt(o.value);
       })
     : [];
-  var allDefs = (state.adempimenti || []).filter(function (a) {
+  const allDefs = (state.adempimenti || []).filter(function (a) {
     return (
       !a.anno_validita || parseInt(a.anno_validita) === parseInt(state.anno)
     );
   });
-  var columns = selectedIds.length
+  let columns = selectedIds.length
     ? allDefs.filter(function (a) {
         return selectedIds.indexOf(a.id) !== -1;
       })
@@ -33,16 +33,16 @@ function renderSintesiTabella() {
   });
 
   // ─── Build lookup ─────────────────────────────────────────────
-  var lookup = {};
+  const lookup = {};
   (state.sintesiData || []).forEach(function (r) {
-    var k = r.cliente_id + "|" + r.id_adempimento;
+    const k = r.cliente_id + "|" + r.id_adempimento;
     if (!lookup[k]) lookup[k] = [];
     lookup[k].push(r);
   });
 
   // ─── Righe (clienti) ──────────────────────────────────────────
-  var searchTerm = (getSharedClienteSearch() || "").toLowerCase();
-  var clienti = (state.clienti || []).filter(function (c) {
+  const searchTerm = (getSharedClienteSearch() || "").toLowerCase();
+  let clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
     if (
       _sintesiClienteFiltro.length > 0 &&
@@ -56,9 +56,9 @@ function renderSintesiTabella() {
     )
       return false;
     if (searchTerm) {
-      var nome = (c.nome || "").toLowerCase();
-      var cf = (c.codice_fiscale || "").toLowerCase();
-      var piva = (c.partita_iva || "").toLowerCase();
+      const nome = (c.nome || "").toLowerCase();
+      const cf = (c.codice_fiscale || "").toLowerCase();
+      const piva = (c.partita_iva || "").toLowerCase();
       if (
         nome.indexOf(searchTerm) === -1 &&
         cf.indexOf(searchTerm) === -1 &&
@@ -75,28 +75,28 @@ function renderSintesiTabella() {
   });
 
   // ─── Calcola stato per ogni cliente+adempimento ──────────────
-  var statiClienti = {};
-  var stats = { done: 0, partial: 0, todo: 0, na: 0 };
+  const statiClienti = {};
+  const stats = { done: 0, partial: 0, todo: 0, na: 0 };
 
   clienti.forEach(function (c) {
     statiClienti[c.id] = {};
     columns.forEach(function (a) {
-      var key = c.id + "|" + a.id;
-      var st = _sintesiStatoCella(lookup[key] || []);
+      const key = c.id + "|" + a.id;
+      const st = _sintesiStatoCella(lookup[key] || []);
       statiClienti[c.id][a.id] = st;
       stats[st.kind] = (stats[st.kind] || 0) + 1;
     });
   });
 
   // ─── FILTRO STATO: mostra clienti con ALMENO una cella corrispondente ──
-  var statoFiltriAttivi = _sintesiStatoFiltriAttivi();
-  var clientiVisibili = clienti;
+  const statoFiltriAttivi = _sintesiStatoFiltriAttivi();
+  let clientiVisibili = clienti;
 
   if (statoFiltriAttivi.length > 0) {
     clientiVisibili = clienti.filter(function (c) {
-      for (var j = 0; j < columns.length; j++) {
-        var a = columns[j];
-        var st = statiClienti[c.id][a.id];
+      for (let j = 0; j < columns.length; j++) {
+        const a = columns[j];
+        const st = statiClienti[c.id][a.id];
         if (st && statoFiltriAttivi.indexOf(st.kind) !== -1) {
           return true;
         }
@@ -106,24 +106,24 @@ function renderSintesiTabella() {
   }
 
   // ─── Calcola statistiche ──────────────────────────────────────
-  var doneCells = stats.done || 0;
-  var naCells = stats.na || 0;
-  var partialCells = stats.partial || 0;
-  var todoCells = stats.todo || 0;
+  const doneCells = stats.done || 0;
+  const naCells = stats.na || 0;
+  const partialCells = stats.partial || 0;
+  const todoCells = stats.todo || 0;
 
-  var baseCalc = doneCells + partialCells + todoCells;
-  var percCompletato =
+  const baseCalc = doneCells + partialCells + todoCells;
+  const percCompletato =
     baseCalc > 0 ? Math.round((doneCells / baseCalc) * 100) : 0;
 
-  var clientiCountLabel =
+  const clientiCountLabel =
     statoFiltriAttivi.length > 0 && clientiVisibili.length !== clienti.length
       ? clientiVisibili.length + " di " + clienti.length
       : String(clienti.length);
-  var clientiCountUnit = clienti.length === 1 ? "e" : "i";
+  const clientiCountUnit = clienti.length === 1 ? "e" : "i";
 
   // ─── Header ────────────────────────────────────────────────────
   function _sintStatBoxHtml(kind, count, color, iconaLabel) {
-    var active = _sintesiStatoFiltri[kind] || false;
+    const active = _sintesiStatoFiltri[kind] || false;
     return (
       '<button type="button" class="gpc-stat-btn' +
       (active ? " active" : "") +
@@ -144,7 +144,7 @@ function renderSintesiTabella() {
     );
   }
 
-  var headerCard =
+  const headerCard =
     '<div class="globale-preview-card">' +
     '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">' +
     '<div class="gpc-left">' +
@@ -178,7 +178,7 @@ function renderSintesiTabella() {
 
   // ─── Legenda ───────────────────────────────────────────────────
   function _sintLegendItemHtml(kind, label) {
-    var active = _sintesiStatoFiltri[kind] || false;
+    const active = _sintesiStatoFiltri[kind] || false;
     return (
       '<button type="button" class="sint-legend-item' +
       (active ? " active" : "") +
@@ -195,7 +195,7 @@ function renderSintesiTabella() {
     );
   }
 
-  var legend =
+  const legend =
     '<div class="sint-legend">' +
     _sintLegendItemHtml("done", "Completato per tutti i periodi") +
     _sintLegendItemHtml("partial", "🔄 Parzialmente completato") +
@@ -208,9 +208,9 @@ function renderSintesiTabella() {
     "</div>";
 
   // ─── Tabella ───────────────────────────────────────────────────
-  var bodyHtml = "";
+  let bodyHtml = "";
   if (!clientiVisibili.length || !columns.length) {
-    var msgVuoto = !columns.length
+    const msgVuoto = !columns.length
       ? "Nessun adempimento selezionato — usa il filtro in alto o clicca ⟳ Tutti"
       : statoFiltriAttivi.length > 0
         ? "Nessun cliente ha adempimenti nello stato selezionato per " +
@@ -228,7 +228,7 @@ function renderSintesiTabella() {
         : "") +
       "</div>";
   } else {
-    var theadCols = columns
+    const theadCols = columns
       .map(function (a) {
         return (
           '<th class="sint-th" title="' +
@@ -245,29 +245,29 @@ function renderSintesiTabella() {
       })
       .join("");
 
-    var rowsHtml = "";
-    for (var i = 0; i < clientiVisibili.length; i++) {
-      var c = clientiVisibili[i];
-      var tipColor =
+    let rowsHtml = "";
+    for (let i = 0; i < clientiVisibili.length; i++) {
+      const c = clientiVisibili[i];
+      const tipColor =
         c.tipologia_colore ||
         (typeof getTipologiaColor === "function"
           ? getTipologiaColor(c.tipologia_codice)
           : "#888");
-      var cellsHtml = "";
+      let cellsHtml = "";
 
-      for (var j = 0; j < columns.length; j++) {
-        var a = columns[j];
-        var key = c.id + "|" + a.id;
-        var st = statiClienti[c.id][a.id] || { kind: "na", label: "N/A" };
-        var isActive = state.sintesiActiveCellKey === key;
+      for (let j = 0; j < columns.length; j++) {
+        const a = columns[j];
+        const key = c.id + "|" + a.id;
+        const st = statiClienti[c.id][a.id] || { kind: "na", label: "N/A" };
+        const isActive = state.sintesiActiveCellKey === key;
 
         // Se ci sono filtri attivi, nascondi le celle che NON corrispondono
-        var isHidden =
+        const isHidden =
           statoFiltriAttivi.length > 0 &&
           statoFiltriAttivi.indexOf(st.kind) === -1;
 
-        var periodi = lookup[key] || [];
-        var sortedP = periodi.slice().sort(function (a, b) {
+        const periodi = lookup[key] || [];
+        const sortedP = periodi.slice().sort(function (a, b) {
           if (a.mese != null && b.mese != null) return a.mese - b.mese;
           if (a.trimestre != null && b.trimestre != null)
             return a.trimestre - b.trimestre;
@@ -276,15 +276,15 @@ function renderSintesiTabella() {
           return 0;
         });
 
-        var doneCount = 0;
-        var pillsHtml = sortedP
+        let doneCount = 0;
+        const pillsHtml = sortedP
           .map(function (p) {
-            var pStato = p.stato || "da_fare";
+            const pStato = p.stato || "da_fare";
             if (pStato === "completato") doneCount++;
-            var pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
-            var pShort =
+            const pInfo = _SINT_STATO_INFO[pStato] || _SINT_STATO_INFO.da_fare;
+            const pShort =
               typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
-            var bgColor =
+            const bgColor =
               pStato === "completato"
                 ? "var(--green)"
                 : pStato === "in_corso"
@@ -308,7 +308,7 @@ function renderSintesiTabella() {
           })
           .join("");
 
-        var cellContent;
+        let cellContent;
         if (periodi.length > 0) {
           cellContent =
             '<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center">' +
@@ -326,7 +326,7 @@ function renderSintesiTabella() {
               : "<span>—</span>";
         }
 
-        var cellClass = "sint-cell sint-cell-" + st.kind;
+        let cellClass = "sint-cell sint-cell-" + st.kind;
         if (isActive) cellClass += " active";
         if (isHidden) cellClass += " sint-cell-hidden";
 
@@ -382,22 +382,22 @@ function renderSintesiTabella() {
   // modifica (salvataggio dal modal) la tabella viene ridisegnata e il
   // browser altrimenti riporta la pagina in cima, facendo perdere il
   // pannello di dettaglio aperto.
-  var _prevScrollTop = container.scrollTop;
-  var _prevWinY = window.scrollY || 0;
-  var _prevWrap = container.querySelector(".sint-table-wrap");
-  var _prevScrollLeft = _prevWrap ? _prevWrap.scrollLeft : 0;
-  var _prevWrapTop = _prevWrap ? _prevWrap.scrollTop : 0;
+  const _prevScrollTop = container.scrollTop;
+  const _prevWinY = window.scrollY || 0;
+  const _prevWrap = container.querySelector(".sint-table-wrap");
+  const _prevScrollLeft = _prevWrap ? _prevWrap.scrollLeft : 0;
+  const _prevWrapTop = _prevWrap ? _prevWrap.scrollTop : 0;
 
   container.innerHTML =
     headerCard + legend + bodyHtml + '<div id="sint-dettaglio"></div>';
 
   if (state.sintesiActiveCellKey) {
-    var parts = state.sintesiActiveCellKey.split("|");
+    const parts = state.sintesiActiveCellKey.split("|");
     _renderSintesiDettaglio(parseInt(parts[0]), parseInt(parts[1]));
   }
 
   // Ripristina la posizione: si resta sull'adempimento modificato
-  var _newWrap = container.querySelector(".sint-table-wrap");
+  const _newWrap = container.querySelector(".sint-table-wrap");
   if (_newWrap) {
     _newWrap.scrollLeft = _prevScrollLeft;
     _newWrap.scrollTop = _prevWrapTop;

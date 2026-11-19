@@ -134,7 +134,7 @@ function caricaClientiSenzaAdempimenti() {
 }
 
 function renderClientiSenzaAdempimenti(clienti) {
-  var container = document.getElementById("clienti-senza-adp-list");
+  const container = document.getElementById("clienti-senza-adp-list");
   if (!container) return;
 
   if (!clienti || clienti.length === 0) {
@@ -147,7 +147,7 @@ function renderClientiSenzaAdempimenti(clienti) {
     return;
   }
 
-  var html =
+  let html =
     '<div style="display:flex;flex-direction:column;gap:12px">' +
     '<div style="font-size:13px;color:var(--orange);padding:8px 12px;background:color-mix(in srgb, var(--orange) 3%, transparent);border-radius:6px">' +
     "⚠️ " +
@@ -157,10 +157,10 @@ function renderClientiSenzaAdempimenti(clienti) {
     " clienti senza alcun adempimento</div>" +
     '<div style="display:flex;flex-direction:column;gap:8px">';
 
-  for (var i = 0; i < clienti.length; i++) {
-    var c = clienti[i];
-    var tipColor = c.tipologia_colore || "#5b8df6";
-    var avatar = getAvatar(c.nome);
+  for (let i = 0; i < clienti.length; i++) {
+    const c = clienti[i];
+    const tipColor = c.tipologia_colore || "#5b8df6";
+    const avatar = getAvatar(c.nome);
     html +=
       '<div class="cliente-senza-adp-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:12px 16px;gap:12px">' +
       '<div style="display:flex;align-items:center;gap:12px;flex:1">' +
@@ -190,9 +190,9 @@ function renderClientiSenzaAdempimenti(clienti) {
 }
 
 function goToClienteScadenzarioDiretto(clienteId) {
-  var cliente = null;
+  let cliente = null;
   if (state.clienti) {
-    for (var i = 0; i < state.clienti.length; i++) {
+    for (let i = 0; i < state.clienti.length; i++) {
       if (state.clienti[i].id === clienteId) {
         cliente = state.clienti[i];
         break;
@@ -204,7 +204,7 @@ function goToClienteScadenzarioDiretto(clienteId) {
     document.querySelectorAll(".nav-item").forEach(function (x) {
       x.classList.remove("active");
     });
-    var nav = document.querySelector('[data-page="scadenzario"]');
+    const nav = document.querySelector('[data-page="scadenzario"]');
     if (nav) nav.classList.add("active");
     renderPage("scadenzario");
   } else {
@@ -214,7 +214,7 @@ function goToClienteScadenzarioDiretto(clienteId) {
     document.querySelectorAll(".nav-item").forEach(function (x) {
       x.classList.remove("active");
     });
-    var nav2 = document.querySelector('[data-page="scadenzario"]');
+    const nav2 = document.querySelector('[data-page="scadenzario"]');
     if (nav2) nav2.classList.add("active");
     renderPage("scadenzario");
   }
@@ -223,12 +223,12 @@ function goToClienteScadenzarioDiretto(clienteId) {
 // ─── APPLICA ADEMPIMENTI ──────────────────────────────────────
 
 // ─── MODALITÀ: inserisci o elimina ───────────────────────────
-var _applicaModalita = null; // null = nessuna scelta, obbligatorio cliccare
+let _applicaModalita = null; // null = nessuna scelta, obbligatorio cliccare
 
 function setApplicaModalita(m) {
   _applicaModalita = m;
-  var btnIns = document.getElementById("applica-mode-inserisci");
-  var btnEl = document.getElementById("applica-mode-elimina");
+  const btnIns = document.getElementById("applica-mode-inserisci");
+  const btnEl = document.getElementById("applica-mode-elimina");
 
   // ⭐ Usa la classe "attivo" (già definita in CSS con stili !important)
   // invece di stili inline, che venivano sovrascritti dalla regola di base
@@ -237,7 +237,7 @@ function setApplicaModalita(m) {
   if (btnIns) btnIns.classList.toggle("attivo", m === "inserisci");
   if (btnEl) btnEl.classList.toggle("attivo", m === "elimina");
 
-  var btnApplica = document.getElementById("btn-esegui-applica");
+  const btnApplica = document.getElementById("btn-esegui-applica");
   if (btnApplica) {
     if (!m) {
       // Nessuna modalità scelta: bottone disabilitato e neutro
@@ -261,7 +261,7 @@ function setApplicaModalita(m) {
     }
   }
 
-  var infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
+  const infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
   if (infoBox) {
     if (!m) {
       infoBox.innerHTML =
@@ -291,7 +291,7 @@ function apriApplicaAdempimentiPerVuoti() {
   socket.emit("get:clienti_senza_adempimenti", { anno: state.anno });
   socket.once("res:clienti_senza_adempimenti", function (data) {
     if (data.success && data.data && data.data.length > 0) {
-      var clientiVuotiIds = data.data.map(function (c) {
+      const clientiVuotiIds = data.data.map(function (c) {
         return c.id;
       });
       // Ricarica sempre i dati freschi dal server (vedi openApplicaAdempimenti)
@@ -322,7 +322,7 @@ function apriModalConPreselezione(clientiVuotiIds) {
             if (clientiVuotiIds.indexOf(parseInt(cb.value)) !== -1)
               cb.checked = true;
           });
-        var infoBox = document.querySelector(
+        const infoBox = document.querySelector(
           "#modal-applica-adempimenti .infobox",
         );
         if (infoBox) {
@@ -362,7 +362,7 @@ function openApplicaAdempimenti() {
       renderApplicaClientiList();
     }
   });
-  var infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
+  const infoBox = document.querySelector("#modal-applica-adempimenti .infobox");
   if (infoBox) {
     infoBox.innerHTML =
       "✅ Seleziona <strong>uno o più adempimenti</strong> e <strong>uno o più clienti</strong>.<br>📌 Gli adempimenti già presenti vengono conservati.";
@@ -379,7 +379,7 @@ function openApplicaAdempimenti() {
 }
 
 function renderApplicaAdempimentiModal() {
-  var container = document.getElementById("applica-adp-list");
+  const container = document.getElementById("applica-adp-list");
   if (!container) return;
   if (!state.adempimenti || state.adempimenti.length === 0) {
     container.innerHTML =
@@ -387,24 +387,24 @@ function renderApplicaAdempimentiModal() {
     return;
   }
   // Mantieni selezioni precedenti durante il re-render (es. dopo ricerca)
-  var prevSelezionati = new Set(
+  const prevSelezionati = new Set(
     Array.from(document.querySelectorAll(".applica-adp-checkbox:checked")).map(
       function (cb) {
         return cb.value;
       },
     ),
   );
-  var q = (
+  const q = (
     document.getElementById("applica-adp-search")
       ? document.getElementById("applica-adp-search").value
       : ""
   )
     .toLowerCase()
     .trim();
-  var annoCorrente = parseInt(
+  const annoCorrente = parseInt(
     document.getElementById("applica-adempimenti-anno")?.value || state.anno,
   );
-  var adpOrdinati = state.adempimenti
+  const adpOrdinati = state.adempimenti
     .filter(function (a) {
       // Mostra solo adempimenti senza vincolo d'anno, o validi per l'anno scelto
       return (
@@ -414,7 +414,7 @@ function renderApplicaAdempimentiModal() {
     .sort(function (a, b) {
       return a.nome.localeCompare(b.nome);
     });
-  var adpFiltrati = q
+  const adpFiltrati = q
     ? adpOrdinati.filter(function (adp) {
         return (
           (adp.codice && adp.codice.toLowerCase().indexOf(q) !== -1) ||
@@ -431,9 +431,9 @@ function renderApplicaAdempimentiModal() {
     _aggiornaAdpSelezionaTuttiBtn();
     return;
   }
-  var html = '<div style="display:flex;flex-wrap:wrap">';
+  let html = '<div style="display:flex;flex-wrap:wrap">';
   adpFiltrati.forEach(function (adp) {
-    var isChecked = prevSelezionati.has(String(adp.id));
+    const isChecked = prevSelezionati.has(String(adp.id));
     html +=
       '<label class="flag-chip" style="margin:4px;padding:6px 12px;font-size:13px;width:calc(33% - 8px)">' +
       '<input type="checkbox" class="applica-adp-checkbox" value="' +
@@ -457,17 +457,17 @@ function filtraAdpApplica() {
 }
 
 // ─── STATO FILTRO TIPOLOGIA APPLICA ──────────────────────────
-var _applicaTipFiltro = new Set(); // vuoto = tutti
+let _applicaTipFiltro = new Set(); // vuoto = tutti
 
 function _getApplicaClientiFiltrati() {
-  var attiviCheck = document.getElementById("applica-clienti-solo-attivi");
-  var soloAttivi = !attiviCheck || attiviCheck.checked !== false;
-  var clientiFiltrati = (state.clienti || []).filter(function (c) {
+  const attiviCheck = document.getElementById("applica-clienti-solo-attivi");
+  const soloAttivi = !attiviCheck || attiviCheck.checked !== false;
+  let clientiFiltrati = (state.clienti || []).filter(function (c) {
     return !soloAttivi || c.attivo === 1;
   });
-  var searchInput = document.getElementById("applica-clienti-search");
+  const searchInput = document.getElementById("applica-clienti-search");
   if (searchInput && searchInput.value) {
-    var q = searchInput.value.toLowerCase();
+    const q = searchInput.value.toLowerCase();
     clientiFiltrati = clientiFiltrati.filter(function (c) {
       return (
         (c.nome && c.nome.toLowerCase().indexOf(q) !== -1) ||
@@ -482,15 +482,15 @@ function _getApplicaClientiFiltrati() {
 }
 
 function _renderApplicaTipFiltroPanel() {
-  var panel = document.getElementById("applica-tip-filtro-panel");
+  const panel = document.getElementById("applica-tip-filtro-panel");
   if (!panel) return;
 
-  var clientiFiltrati = _getApplicaClientiFiltrati();
-  var tipMap = {};
+  const clientiFiltrati = _getApplicaClientiFiltrati();
+  const tipMap = {};
   clientiFiltrati.forEach(function (c) {
-    var tc = c.tipologia_codice || "?";
+    const tc = c.tipologia_codice || "?";
     if (!tipMap[tc]) {
-      var info =
+      const info =
         (typeof TIPOLOGIE_INFO !== "undefined" && TIPOLOGIE_INFO[tc]) || {};
       tipMap[tc] = {
         color: c.tipologia_colore || info.color || "#5b8df6",
@@ -502,8 +502,8 @@ function _renderApplicaTipFiltroPanel() {
     tipMap[tc].count++;
   });
 
-  var tuttiActive = _applicaTipFiltro.size === 0;
-  var html =
+  const tuttiActive = _applicaTipFiltro.size === 0;
+  let html =
     '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px">' +
     '<span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">🏷️ Tipologia:</span>';
 
@@ -519,9 +519,9 @@ function _renderApplicaTipFiltroPanel() {
     ")</button>";
 
   Object.entries(tipMap).forEach(function (entry) {
-    var tc = entry[0],
+    const tc = entry[0],
       info = entry[1];
-    var isActive = _applicaTipFiltro.has(tc);
+    const isActive = _applicaTipFiltro.has(tc);
     html +=
       "<button onclick=\"event.stopPropagation();_applicaToggleTipFiltro('" +
       tc +
@@ -559,22 +559,22 @@ function _applicaToggleTipFiltro(tc) {
 }
 
 function _applicaSelezionaTipologia(tc) {
-  var clientiFiltrati = _getApplicaClientiFiltrati();
-  var daGestire = tc
+  const clientiFiltrati = _getApplicaClientiFiltrati();
+  const daGestire = tc
     ? clientiFiltrati.filter(function (c) {
         return c.tipologia_codice === tc;
       })
     : clientiFiltrati;
   // Controlla se tutti sono già selezionati → deseleziona, altrimenti seleziona
-  var ids = daGestire.map(function (c) {
+  const ids = daGestire.map(function (c) {
     return c.id;
   });
-  var checkboxes = Array.from(
+  const checkboxes = Array.from(
     document.querySelectorAll(".applica-cliente-checkbox"),
   ).filter(function (cb) {
     return ids.indexOf(parseInt(cb.value)) !== -1;
   });
-  var tuttiChecked =
+  const tuttiChecked =
     checkboxes.length > 0 &&
     checkboxes.every(function (cb) {
       return cb.checked;
@@ -590,14 +590,14 @@ function _applicaSelezionaTipologia(tc) {
 function _aggiornaBottoniGruppo() {
   // Aggiorna ogni bottone di gruppo in base allo stato attuale delle checkbox
   document.querySelectorAll("[data-gruppo-tc]").forEach(function (btn) {
-    var tc = btn.dataset.gruppoTc;
-    var checkboxes = Array.from(
+    const tc = btn.dataset.gruppoTc;
+    const checkboxes = Array.from(
       document.querySelectorAll(
         ".applica-cliente-checkbox[data-tc='" + tc + "']",
       ),
     );
     if (checkboxes.length === 0) return;
-    var tuttiChecked = checkboxes.every(function (cb) {
+    const tuttiChecked = checkboxes.every(function (cb) {
       return cb.checked;
     });
     btn.textContent = tuttiChecked
@@ -610,12 +610,12 @@ function _aggiornaBottoniGruppo() {
 }
 
 function _aggiornaApplicaSelezionaTuttiCounter() {
-  var tot = document.querySelectorAll(".applica-cliente-checkbox").length;
-  var checked = document.querySelectorAll(
+  const tot = document.querySelectorAll(".applica-cliente-checkbox").length;
+  const checked = document.querySelectorAll(
     ".applica-cliente-checkbox:checked",
   ).length;
-  var tuttiSelezionati = tot > 0 && checked === tot;
-  var btn = document.getElementById("applica-clienti-btn-seleziona-tutti");
+  const tuttiSelezionati = tot > 0 && checked === tot;
+  const btn = document.getElementById("applica-clienti-btn-seleziona-tutti");
   if (btn) {
     if (tuttiSelezionati) {
       btn.textContent = "☑️ Deseleziona tutti i clienti";
@@ -628,12 +628,12 @@ function _aggiornaApplicaSelezionaTuttiCounter() {
 }
 
 function _aggiornaAdpSelezionaTuttiBtn() {
-  var tot = document.querySelectorAll(".applica-adp-checkbox").length;
-  var checked = document.querySelectorAll(
+  const tot = document.querySelectorAll(".applica-adp-checkbox").length;
+  const checked = document.querySelectorAll(
     ".applica-adp-checkbox:checked",
   ).length;
-  var tuttiSelezionati = tot > 0 && checked === tot;
-  var btn = document.getElementById("applica-adp-btn-seleziona-tutti");
+  const tuttiSelezionati = tot > 0 && checked === tot;
+  const btn = document.getElementById("applica-adp-btn-seleziona-tutti");
   if (btn) {
     if (tuttiSelezionati) {
       btn.textContent = "☑️ Deseleziona tutti gli adempimenti";

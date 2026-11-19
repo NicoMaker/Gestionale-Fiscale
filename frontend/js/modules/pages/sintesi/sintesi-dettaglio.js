@@ -6,7 +6,7 @@
 // lo scroll torna esattamente su quella riga (e la evidenzia).
 function sintesiEditPeriodo(id) {
   state.sintesiEditedPeriodoId = id;
-  var r = typeof _rowStore !== "undefined" ? _rowStore[id] : null;
+  const r = typeof _rowStore !== "undefined" ? _rowStore[id] : null;
   state.sintesiEditedCellKey = r
     ? r.cliente_id + "|" + r.id_adempimento
     : state.sintesiActiveCellKey;
@@ -18,14 +18,14 @@ window.sintesiEditPeriodo = sintesiEditPeriodo;
 
 // Quando il modal di modifica si chiude (salva, chiudi, clic fuori, ESC)
 // apre/lascia aperto il dettaglio sotto sulla cella appena modificata.
-var _sintesiModalObs = null;
+let _sintesiModalObs = null;
 function _sintesiWatchModal() {
   if (_sintesiModalObs) return;
-  var modal = document.getElementById("modal-adempimento");
+  const modal = document.getElementById("modal-adempimento");
   if (!modal) return;
   _sintesiModalObs = new MutationObserver(function () {
     if (modal.classList.contains("open")) return;
-    var key = state.sintesiEditedCellKey;
+    const key = state.sintesiEditedCellKey;
     if (!key || state.page !== "sintesi") return;
     state.sintesiEditedCellKey = null;
     state.sintesiActiveCellKey = key;
@@ -33,7 +33,7 @@ function _sintesiWatchModal() {
     sintesiFocusTabellaCella(key);
     setTimeout(function () {
       if (!sintesiScrollToEdited(false)) {
-        var panel = document.getElementById("sint-dettaglio");
+        const panel = document.getElementById("sint-dettaglio");
         if (panel) panel.scrollIntoView({ block: "nearest" });
       }
     }, 50);
@@ -48,20 +48,20 @@ function _sintesiWatchModal() {
 // modo che la cella/riga del cliente modificato sia al centro.
 function sintesiFocusTabellaCella(key) {
   if (!key) return;
-  var wrap = document.querySelector(".sint-table-wrap");
-  var cell = document.querySelector('.sint-cell[data-key="' + key + '"]');
+  const wrap = document.querySelector(".sint-table-wrap");
+  const cell = document.querySelector('.sint-cell[data-key="' + key + '"]');
   if (!wrap || !cell) return;
-  var w = wrap.getBoundingClientRect();
-  var c = cell.getBoundingClientRect();
+  const w = wrap.getBoundingClientRect();
+  const c = cell.getBoundingClientRect();
   wrap.scrollTop += c.top - w.top - (wrap.clientHeight - c.height) / 2;
   wrap.scrollLeft += c.left - w.left - (wrap.clientWidth - c.width) / 2;
 }
 window.sintesiFocusTabellaCella = sintesiFocusTabellaCella;
 
 function sintesiScrollToEdited(consuma) {
-  var id = state.sintesiEditedPeriodoId;
+  const id = state.sintesiEditedPeriodoId;
   if (!id) return false;
-  var row = document.querySelector(
+  const row = document.querySelector(
     '.sint-dett-table tr[data-pid="' + id + '"]',
   );
   if (!row) return false;
@@ -80,7 +80,7 @@ function sintesiRiportaAlDettaglio() {
   if (state.page !== "sintesi" || !state.sintesiActiveCellKey) return;
   setTimeout(function () {
     if (!sintesiScrollToEdited(false)) {
-      var panel = document.getElementById("sint-dettaglio");
+      const panel = document.getElementById("sint-dettaglio");
       if (panel && panel.innerHTML)
         panel.scrollIntoView({ behavior: "auto", block: "nearest" });
     }
@@ -93,7 +93,7 @@ function sintesiToggleDettaglio(key, clienteId, adempimentoId) {
   renderSintesiTabella();
   if (state.sintesiActiveCellKey) {
     setTimeout(function () {
-      var panel = document.getElementById("sint-dettaglio");
+      const panel = document.getElementById("sint-dettaglio");
       if (panel) panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 30);
   }
@@ -102,7 +102,7 @@ window.sintesiToggleDettaglio = sintesiToggleDettaglio;
 
 function sintesiCloseDettaglio() {
   state.sintesiActiveCellKey = null;
-  var panel = document.getElementById("sint-dettaglio");
+  const panel = document.getElementById("sint-dettaglio");
   if (panel) {
     panel.style.display = "none";
     panel.innerHTML = "";
@@ -114,16 +114,16 @@ function sintesiCloseDettaglio() {
 window.sintesiCloseDettaglio = sintesiCloseDettaglio;
 
 function _renderSintesiDettaglio(clienteId, adempimentoId) {
-  var panel = document.getElementById("sint-dettaglio");
+  const panel = document.getElementById("sint-dettaglio");
   if (!panel) return;
 
-  var cliente = (state.clienti || []).find(function (c) {
+  const cliente = (state.clienti || []).find(function (c) {
     return c.id === clienteId;
   });
-  var adp = (state.adempimenti || []).find(function (a) {
+  const adp = (state.adempimenti || []).find(function (a) {
     return a.id === adempimentoId;
   });
-  var periodi = (state.sintesiData || []).filter(function (r) {
+  let periodi = (state.sintesiData || []).filter(function (r) {
     return r.cliente_id === clienteId && r.id_adempimento === adempimentoId;
   });
   periodi = _sintesiOrdinaPeriodi(periodi);
@@ -136,20 +136,20 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
     });
   }
 
-  var gridHtml = "";
-  var doneN = 0,
-    totN = periodi.length;
+  let gridHtml = "";
+  let doneN = 0;
+  const totN = periodi.length;
   if (periodi.length) {
-    var chips = periodi
+    const chips = periodi
       .map(function (p, idx) {
-        var stato = p.stato || "da_fare";
+        const stato = p.stato || "da_fare";
         if (stato === "completato") doneN++;
-        var info = _SINT_STATO_INFO[stato] || _SINT_STATO_INFO.da_fare;
-        var shortLabel =
+        const info = _SINT_STATO_INFO[stato] || _SINT_STATO_INFO.da_fare;
+        const shortLabel =
           typeof getPeriodoShort === "function" ? getPeriodoShort(p) : "-";
-        var fullLabel =
+        const fullLabel =
           typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
-        var tooltip =
+        const tooltip =
           fullLabel +
           " — " +
           info.label +
@@ -192,7 +192,7 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
       "</div>";
   }
 
-  var rowsHtml = "";
+  let rowsHtml = "";
   if (!periodi.length) {
     rowsHtml =
       '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:16px">➖ Adempimento non applicato / non generato per questo cliente nell\'anno ' +
@@ -200,9 +200,9 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
       "</td></tr>";
   } else {
     periodi.forEach(function (p, idx) {
-      var stato = p.stato || "da_fare";
-      var info = _SINT_STATO_INFO[stato] || _SINT_STATO_INFO.da_fare;
-      var periodoLabel =
+      const stato = p.stato || "da_fare";
+      const info = _SINT_STATO_INFO[stato] || _SINT_STATO_INFO.da_fare;
+      const periodoLabel =
         typeof getPeriodoLabel === "function" ? getPeriodoLabel(p) : "-";
       rowsHtml +=
         '<tr data-pidx="' +
@@ -260,13 +260,13 @@ function _renderSintesiDettaglio(clienteId, adempimentoId) {
   document.querySelectorAll(".sint-cell.active").forEach(function (el) {
     el.classList.remove("active");
   });
-  var key = clienteId + "|" + adempimentoId;
-  var cellEl = document.querySelector('.sint-cell[data-key="' + key + '"]');
+  const key = clienteId + "|" + adempimentoId;
+  const cellEl = document.querySelector('.sint-cell[data-key="' + key + '"]');
   if (cellEl) cellEl.classList.add("active");
 }
 
 function _sintesiDettScrollTo(idx) {
-  var row = document.querySelector(
+  const row = document.querySelector(
     '.sint-dett-table tr[data-pidx="' + idx + '"]',
   );
   if (!row) return;
@@ -283,7 +283,7 @@ window._sintesiDettScrollTo = _sintesiDettScrollTo;
 // ═══════════════════════════════════════════════════════════════
 
 function stampaSintesiCompleta() {
-  var data = _sintesiCache;
+  const data = _sintesiCache;
 
   if (!data.sintesiData || data.sintesiData.length === 0) {
     showNotif("⏳ Caricamento dati in corso...", "info");
@@ -303,32 +303,32 @@ function stampaSintesiCompleta() {
 
 function _generaFinestraStampa() {
   // ---- 1. Preleva tutti i filtri dalla UI ----
-  var adpSel = document.getElementById("sint-filtro-adp");
-  var selectedAdpIds = adpSel
+  const adpSel = document.getElementById("sint-filtro-adp");
+  const selectedAdpIds = adpSel
     ? Array.from(adpSel.selectedOptions || []).map(function (o) {
         return parseInt(o.value);
       })
     : [];
 
-  var clienteSel = document.getElementById("sint-filtro-cliente");
-  var filtroClienteIds = clienteSel
+  const clienteSel = document.getElementById("sint-filtro-cliente");
+  const filtroClienteIds = clienteSel
     ? Array.from(clienteSel.selectedOptions || []).map(function (o) {
         return parseInt(o.value);
       })
     : [];
 
   // FILTRO TIPO UTENTE (multi‑select)
-  var tipoSel = document.getElementById("sint-filtro-tipo-utente");
-  var filtroTipiUtente = tipoSel
+  const tipoSel = document.getElementById("sint-filtro-tipo-utente");
+  const filtroTipiUtente = tipoSel
     ? Array.from(tipoSel.selectedOptions || []).map(function (o) {
         return o.value;
       })
     : [];
 
-  var searchTerm = (getSharedClienteSearch() || "").toLowerCase();
+  const searchTerm = (getSharedClienteSearch() || "").toLowerCase();
 
   // ---- 2. Filtra clienti (attivi, search, cliente specifico, tipi utente) ----
-  var clienti = (state.clienti || []).filter(function (c) {
+  const clienti = (state.clienti || []).filter(function (c) {
     if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return false;
     if (filtroClienteIds.length > 0 && filtroClienteIds.indexOf(c.id) === -1)
       return false;
@@ -338,9 +338,9 @@ function _generaFinestraStampa() {
     )
       return false;
     if (searchTerm) {
-      var nome = (c.nome || "").toLowerCase();
-      var cf = (c.codice_fiscale || "").toLowerCase();
-      var piva = (c.partita_iva || "").toLowerCase();
+      const nome = (c.nome || "").toLowerCase();
+      const cf = (c.codice_fiscale || "").toLowerCase();
+      const piva = (c.partita_iva || "").toLowerCase();
       if (
         nome.indexOf(searchTerm) === -1 &&
         cf.indexOf(searchTerm) === -1 &&
@@ -357,12 +357,12 @@ function _generaFinestraStampa() {
   });
 
   // ---- 3. Filtra adempimenti (anno e selezione) ----
-  var allDefs = (state.adempimenti || []).filter(function (a) {
+  const allDefs = (state.adempimenti || []).filter(function (a) {
     return (
       !a.anno_validita || parseInt(a.anno_validita) === parseInt(state.anno)
     );
   });
-  var columns = selectedAdpIds.length
+  const columns = selectedAdpIds.length
     ? allDefs.filter(function (a) {
         return selectedAdpIds.indexOf(a.id) !== -1;
       })
@@ -374,24 +374,24 @@ function _generaFinestraStampa() {
   });
 
   // ---- 4. Build lookup periodi ----
-  var lookup = {};
+  const lookup = {};
   (state.sintesiData || []).forEach(function (r) {
-    var k = r.cliente_id + "|" + r.id_adempimento;
+    const k = r.cliente_id + "|" + r.id_adempimento;
     if (!lookup[k]) lookup[k] = [];
     lookup[k].push(r);
   });
 
   // ---- 5. Stato filtri cella ----
-  var statoFiltriAttivi = _sintesiStatoFiltriAttivi();
+  const statoFiltriAttivi = _sintesiStatoFiltriAttivi();
 
   // ---- 6. Per ogni cliente, costruisci la lista di adempimenti da mostrare ----
-  var clientiDaStampare = [];
+  const clientiDaStampare = [];
   clienti.forEach(function (cliente) {
-    var adempimentiCliente = [];
+    const adempimentiCliente = [];
     columns.forEach(function (adp) {
-      var key = cliente.id + "|" + adp.id;
-      var periodi = lookup[key] || [];
-      var st = _sintesiStatoCella(periodi);
+      const key = cliente.id + "|" + adp.id;
+      const periodi = lookup[key] || [];
+      const st = _sintesiStatoCella(periodi);
       if (
         statoFiltriAttivi.length > 0 &&
         statoFiltriAttivi.indexOf(st.kind) === -1
@@ -413,7 +413,7 @@ function _generaFinestraStampa() {
   });
 
   // ---- 7. Genera HTML per la stampa — VERO FOGLIO DI CALCOLO ----
-  var htmlParts = [];
+  const htmlParts = [];
   htmlParts.push(
     '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sintesi Adempimenti ' +
       state.anno +
@@ -518,7 +518,7 @@ function _generaFinestraStampa() {
     htmlParts.push("</tr></thead><tbody>");
 
     clientiDaStampare.forEach(function (item) {
-      var cliente = item.cliente;
+      const cliente = item.cliente;
       htmlParts.push("<tr>");
       htmlParts.push(
         '<td class="nome-cell">' +
@@ -530,19 +530,19 @@ function _generaFinestraStampa() {
             : "") +
           "</td>",
       );
-      var byAdpId = {};
+      const byAdpId = {};
       item.adempimenti.forEach(function (ai) {
         byAdpId[ai.adp.id] = ai;
       });
       columns.forEach(function (adp) {
-        var ai = byAdpId[adp.id];
+        const ai = byAdpId[adp.id];
         if (!ai) {
           htmlParts.push('<td class="bg-na">—</td>');
           return;
         }
-        var st = ai.stato;
+        const st = ai.stato;
         if (ai.periodi.length > 1) {
-          var sortedPer = ai.periodi.slice().sort(function (a, b) {
+          const sortedPer = ai.periodi.slice().sort(function (a, b) {
             if (a.mese != null && b.mese != null) return a.mese - b.mese;
             if (a.trimestre != null && b.trimestre != null)
               return a.trimestre - b.trimestre;
@@ -550,9 +550,9 @@ function _generaFinestraStampa() {
               return a.semestre - b.semestre;
             return 0;
           });
-          var chips = sortedPer
+          const chips = sortedPer
             .map(function (p) {
-              var pKind =
+              const pKind =
                 p.stato === "completato"
                   ? "done"
                   : p.stato === "in_corso"
@@ -560,7 +560,7 @@ function _generaFinestraStampa() {
                     : p.stato === "n_a"
                       ? "na"
                       : "todo";
-              var pShort =
+              const pShort =
                 typeof getPeriodoShort === "function"
                   ? getPeriodoShort(p)
                   : "-";
@@ -579,7 +579,7 @@ function _generaFinestraStampa() {
               "</div></td>",
           );
         } else {
-          var icon =
+          const icon =
             st.kind === "done"
               ? "✔"
               : st.kind === "partial"
@@ -627,16 +627,16 @@ function _generaFinestraStampa() {
     htmlParts.push("</div>");
   }
 
-  var html = htmlParts.join("");
+  const html = htmlParts.join("");
 
-  var iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.style.position = "absolute";
   iframe.style.width = "0";
   iframe.style.height = "0";
   iframe.style.border = "none";
   document.body.appendChild(iframe);
 
-  var doc = iframe.contentDocument || iframe.contentWindow.document;
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
   doc.open();
   doc.write(html);
   doc.close();

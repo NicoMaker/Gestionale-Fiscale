@@ -8,24 +8,24 @@
 // ═══════════════════════════════════════════════════════════════
 
 function renderGlobaleTabella(rawData) {
-  var filtroClienteStatoEl = document.getElementById(
+  const filtroClienteStatoEl = document.getElementById(
     "glob-filtro-cliente-stato",
   );
-  var filtroClienteStato = filtroClienteStatoEl
+  const filtroClienteStato = filtroClienteStatoEl
     ? filtroClienteStatoEl.value
     : "";
 
   // ⬇️ RIMOSSO searchTerm (non più presente)
-  var selectedClienteIds =
+  const selectedClienteIds =
     state.globaleSelectedClienti && state.globaleSelectedClienti.length
       ? state.globaleSelectedClienti.map(function (id) {
           return parseInt(id);
         })
       : [];
 
-  var data = [];
-  for (var i = 0; i < rawData.length; i++) {
-    var r = rawData[i];
+  let data = [];
+  for (let i = 0; i < rawData.length; i++) {
+    const r = rawData[i];
     if (
       selectedClienteIds.length &&
       selectedClienteIds.indexOf(r.cliente_id) === -1
@@ -35,19 +35,19 @@ function renderGlobaleTabella(rawData) {
     data.push(r);
   }
 
-  var activeFiltroKeys = _getActiveFiltroKeys();
-  var allKeysArr =
+  const activeFiltroKeys = _getActiveFiltroKeys();
+  const allKeysArr =
     typeof window._getAllKeys === "function" ? window._getAllKeys() : [];
-  var isNone = _isManualNessuno() || activeFiltroKeys.size === 0;
-  var isAll = !isNone && activeFiltroKeys.size === allKeysArr.length;
-  var tipFiltroIsNone = isNone;
-  var hasFiltroTipologie = !isAll;
+  const isNone = _isManualNessuno() || activeFiltroKeys.size === 0;
+  const isAll = !isNone && activeFiltroKeys.size === allKeysArr.length;
+  const tipFiltroIsNone = isNone;
+  const hasFiltroTipologie = !isAll;
 
-  var tipFiltroCountDisplay = isNone ? "0" : isAll ? "" : activeFiltroKeys.size;
-  var showTipBadge = isNone || (!isAll && activeFiltroKeys.size > 0);
+  const tipFiltroCountDisplay = isNone ? "0" : isAll ? "" : activeFiltroKeys.size;
+  const showTipBadge = isNone || (!isAll && activeFiltroKeys.size > 0);
 
-  var adpSel = document.getElementById("glob-filtro-adp");
-  var adpFiltroAttivi = adpSel
+  const adpSel = document.getElementById("glob-filtro-adp");
+  let adpFiltroAttivi = adpSel
     ? Array.from(adpSel.selectedOptions || []).map(function (o) {
         return o.value;
       })
@@ -65,8 +65,8 @@ function renderGlobaleTabella(rawData) {
   // sopra la tabella (prima veniva letto solo per mostrare i badge, senza
   // filtrare i dati).
   if (adpFiltroAttivi.length > 0) {
-    var adpFiltroSet = {};
-    for (var afIdx = 0; afIdx < adpFiltroAttivi.length; afIdx++) {
+    const adpFiltroSet = {};
+    for (let afIdx = 0; afIdx < adpFiltroAttivi.length; afIdx++) {
       adpFiltroSet[adpFiltroAttivi[afIdx]] = true;
     }
     data = data.filter(function (r) {
@@ -74,7 +74,7 @@ function renderGlobaleTabella(rawData) {
     });
   }
 
-  var filtroClienteStatoLabels = {
+  const filtroClienteStatoLabels = {
     con_in_corso: "🔄 Con almeno 1 in corso",
     senza_in_corso: "✅ Senza in corso",
     tutti_completati: "🏆 Tutto completato",
@@ -84,7 +84,7 @@ function renderGlobaleTabella(rawData) {
     con_na: "➖ Con almeno 1 N/A",
   };
 
-  var filtroClienteStatoBadge = "";
+  let filtroClienteStatoBadge = "";
   if (filtroClienteStato) {
     filtroClienteStatoBadge =
       '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;background:color-mix(in srgb, var(--yellow) 9%, transparent);border:1px solid color-mix(in srgb, var(--yellow) 27%, transparent);border-radius:20px;font-size:12px;color:var(--yellow)">' +
@@ -96,13 +96,13 @@ function renderGlobaleTabella(rawData) {
       "</div>";
   }
 
-  var clienteSelBadge = "";
+  let clienteSelBadge = "";
   if (selectedClienteIds.length && state.clienti) {
-    var clientiTrovati = state.clienti.filter(function (c) {
+    const clientiTrovati = state.clienti.filter(function (c) {
       return selectedClienteIds.indexOf(parseInt(c.id)) !== -1;
     });
     if (clientiTrovati.length) {
-      var clienteSelLabel =
+      const clienteSelLabel =
         clientiTrovati.length === 1
           ? escAttr(clientiTrovati[0].nome)
           : clientiTrovati.length +
@@ -128,7 +128,7 @@ function renderGlobaleTabella(rawData) {
 
   // ⬇️ RIMOSSO searchBadge
 
-  var navAdpHtml = "";
+  let navAdpHtml = "";
   if (adpFiltroAttivi.length > 0) {
     navAdpHtml =
       '<div class="glob-nav-adp" style="margin-top:14px;text-align:center;display:flex;flex-wrap:wrap;gap:6px;justify-content:center">' +
@@ -147,7 +147,7 @@ function renderGlobaleTabella(rawData) {
       "</div>";
   }
 
-  var tipFiltroHtml = "";
+  let tipFiltroHtml = "";
   if (typeof renderTipologieFiltroPanel === "function") {
     tipFiltroHtml =
       '<div class="glob-tip-filtro-wrap" style="margin-bottom:14px">' +
@@ -183,11 +183,11 @@ function renderGlobaleTabella(rawData) {
   // restituiti dal server prima dei filtri locali (tipologia, stato cliente).
 
   // RAGGRUPPA PER ADEMPIMENTO E CLIENTE
-  var grouped = {};
-  for (var idxData = 0; idxData < data.length; idxData++) {
-    var rowData = data[idxData];
+  const grouped = {};
+  for (let idxData = 0; idxData < data.length; idxData++) {
+    const rowData = data[idxData];
     storeRow(rowData);
-    var adpKey = rowData.adempimento_nome;
+    const adpKey = rowData.adempimento_nome;
     if (!grouped[adpKey]) {
       grouped[adpKey] = {
         nome: rowData.adempimento_nome,
@@ -195,8 +195,8 @@ function renderGlobaleTabella(rawData) {
         clienti: {},
       };
     }
-    var group = grouped[adpKey];
-    var cliKey = rowData.cliente_id;
+    const group = grouped[adpKey];
+    const cliKey = rowData.cliente_id;
     if (!group.clienti[cliKey]) {
       group.clienti[cliKey] = {
         id: rowData.cliente_id,
@@ -215,8 +215,8 @@ function renderGlobaleTabella(rawData) {
     group.clienti[cliKey].periodi.push(rowData);
   }
 
-  var gruppi = [];
-  for (var key in grouped) {
+  const gruppi = [];
+  for (const key in grouped) {
     if (grouped.hasOwnProperty(key)) gruppi.push(grouped[key]);
   }
   gruppi.sort(function (a, b) {
@@ -227,35 +227,35 @@ function renderGlobaleTabella(rawData) {
   // tutti i filtri (cliente selezionato, stato cliente, tipologia) — così
   // il riquadro Totale/Comp./Da fare/In corso/Progresso in alto rispecchia
   // esattamente quello che si vede in tabella, invece dei totali grezzi.
-  var visTotale = 0,
+  let visTotale = 0,
     visComp = 0,
     visDaF = 0,
     visInC = 0;
-  var visClientiSet = {},
+  const visClientiSet = {},
     visAdpSet = {};
 
-  var content = "";
-  for (var gIdx = 0; gIdx < gruppi.length; gIdx++) {
-    var g = gruppi[gIdx];
-    var clientiArray = [];
-    for (var cKey in g.clienti) {
+  let content = "";
+  for (let gIdx = 0; gIdx < gruppi.length; gIdx++) {
+    const g = gruppi[gIdx];
+    const clientiArray = [];
+    for (const cKey in g.clienti) {
       if (g.clienti.hasOwnProperty(cKey)) clientiArray.push(g.clienti[cKey]);
     }
 
-    var clientiFiltrati = [];
-    for (var cIdx = 0; cIdx < clientiArray.length; cIdx++) {
-      var c = clientiArray[cIdx];
+    const clientiFiltrati = [];
+    for (let cIdx = 0; cIdx < clientiArray.length; cIdx++) {
+      const c = clientiArray[cIdx];
       if (!clientePassaFiltroStato(c.periodi, filtroClienteStato)) continue;
       if (!clientePassaFiltroTipologie(c)) continue;
       clientiFiltrati.push(c);
     }
 
     if (clientiFiltrati.length > 0) visAdpSet[g.nome] = true;
-    for (var vIdx = 0; vIdx < clientiFiltrati.length; vIdx++) {
-      var vc = clientiFiltrati[vIdx];
+    for (let vIdx = 0; vIdx < clientiFiltrati.length; vIdx++) {
+      const vc = clientiFiltrati[vIdx];
       visClientiSet[vc.id] = true;
-      for (var vp = 0; vp < vc.periodi.length; vp++) {
-        var vStato = vc.periodi[vp].stato;
+      for (let vp = 0; vp < vc.periodi.length; vp++) {
+        const vStato = vc.periodi[vp].stato;
         visTotale++;
         if (vStato === "completato") visComp++;
         else if (vStato === "da_fare") visDaF++;
@@ -264,25 +264,25 @@ function renderGlobaleTabella(rawData) {
     }
 
     clientiFiltrati.sort(function (a, b) {
-      var primoA = a.periodi && a.periodi[0];
-      var isSemplice =
+      const primoA = a.periodi && a.periodi[0];
+      const isSemplice =
         primoA &&
         !parseInt(primoA.is_contabilita) &&
         !parseInt(primoA.has_rate) &&
         !parseInt(primoA.is_checkbox);
 
       if (isSemplice) {
-        var minDateA = null,
+        let minDateA = null,
           minDateB = null;
-        for (var pi = 0; pi < a.periodi.length; pi++) {
+        for (let pi = 0; pi < a.periodi.length; pi++) {
           if (a.periodi[pi].data_scadenza) {
-            var d = new Date(a.periodi[pi].data_scadenza);
+            const d = new Date(a.periodi[pi].data_scadenza);
             if (!minDateA || d < minDateA) minDateA = d;
           }
         }
-        for (var pj = 0; pj < b.periodi.length; pj++) {
+        for (let pj = 0; pj < b.periodi.length; pj++) {
           if (b.periodi[pj].data_scadenza) {
-            var d2 = new Date(b.periodi[pj].data_scadenza);
+            const d2 = new Date(b.periodi[pj].data_scadenza);
             if (!minDateB || d2 < minDateB) minDateB = d2;
           }
         }
@@ -296,23 +296,23 @@ function renderGlobaleTabella(rawData) {
 
     if (clientiFiltrati.length === 0) continue;
 
-    var allRows = [];
-    for (var cfIdx = 0; cfIdx < clientiFiltrati.length; cfIdx++) {
-      var periodi = clientiFiltrati[cfIdx].periodi;
-      for (var pIdx = 0; pIdx < periodi.length; pIdx++)
+    const allRows = [];
+    for (let cfIdx = 0; cfIdx < clientiFiltrati.length; cfIdx++) {
+      const periodi = clientiFiltrati[cfIdx].periodi;
+      for (let pIdx = 0; pIdx < periodi.length; pIdx++)
         allRows.push(periodi[pIdx]);
     }
-    var compG = 0;
-    for (var arIdx = 0; arIdx < allRows.length; arIdx++) {
+    let compG = 0;
+    for (let arIdx = 0; arIdx < allRows.length; arIdx++) {
       if (allRows[arIdx].stato === "completato") compG++;
     }
-    var totG = allRows.length;
-    var pG = totG > 0 ? Math.round((compG / totG) * 100) : 0;
+    const totG = allRows.length;
+    const pG = totG > 0 ? Math.round((compG / totG) * 100) : 0;
 
     // ── Colonne del gruppo (unione ordinata dei periodi di TUTTI i clienti:
     //    Gen..Dic / T1..T4 / S1,S2 / Ann.) — così ogni adempimento ha la sua
     //    scheda "foglio di calcolo": clienti in riga, periodi in colonna. ──
-    var COL_ORDER = [
+    const COL_ORDER = [
       "Gen",
       "Feb",
       "Mar",
@@ -333,54 +333,54 @@ function renderGlobaleTabella(rawData) {
       "S2",
       "Ann.",
     ];
-    var colSetGrp = {};
+    const colSetGrp = {};
     for (
-      var colScanIdx = 0;
+      let colScanIdx = 0;
       colScanIdx < clientiFiltrati.length;
       colScanIdx++
     ) {
-      var colScanPeriodi = clientiFiltrati[colScanIdx].periodi;
-      for (var colScanP = 0; colScanP < colScanPeriodi.length; colScanP++) {
+      const colScanPeriodi = clientiFiltrati[colScanIdx].periodi;
+      for (let colScanP = 0; colScanP < colScanPeriodi.length; colScanP++) {
         colSetGrp[getPeriodoShort(colScanPeriodi[colScanP])] = true;
       }
     }
-    var colsGrp = COL_ORDER.filter(function (k) {
+    const colsGrp = COL_ORDER.filter(function (k) {
       return colSetGrp[k];
     });
     // fallback: eventuali chiavi periodo non previste nell'ordine standard
-    for (var k2 in colSetGrp) {
+    for (const k2 in colSetGrp) {
       if (colSetGrp.hasOwnProperty(k2) && colsGrp.indexOf(k2) === -1)
         colsGrp.push(k2);
     }
 
-    var theadColsHtml = "";
-    for (var thc = 0; thc < colsGrp.length; thc++) {
+    let theadColsHtml = "";
+    for (let thc = 0; thc < colsGrp.length; thc++) {
       theadColsHtml += '<th class="gxlv-th">' + escAttr(colsGrp[thc]) + "</th>";
     }
 
-    var clientiHtml = "";
-    for (var cFilIdx = 0; cFilIdx < clientiFiltrati.length; cFilIdx++) {
-      var client = clientiFiltrati[cFilIdx];
-      var tipColor =
+    let clientiHtml = "";
+    for (let cFilIdx = 0; cFilIdx < clientiFiltrati.length; cFilIdx++) {
+      const client = clientiFiltrati[cFilIdx];
+      const tipColor =
         client.tipologia_colore || getTipologiaColor(client.tipologia_codice);
-      var avatar = getAvatar(client.nome);
-      var compC = 0,
+      const avatar = getAvatar(client.nome);
+      let compC = 0,
         inCC = 0,
         daFC = 0,
         naC = 0;
-      for (var perIdx = 0; perIdx < client.periodi.length; perIdx++) {
-        var statoPer = client.periodi[perIdx].stato;
+      for (let perIdx = 0; perIdx < client.periodi.length; perIdx++) {
+        const statoPer = client.periodi[perIdx].stato;
         if (statoPer === "completato") compC++;
         else if (statoPer === "in_corso") inCC++;
         else if (statoPer === "da_fare") daFC++;
         else if (statoPer === "n_a") naC++;
       }
-      var totC = client.periodi.length;
-      var pC = totC > 0 ? Math.round((compC / totC) * 100) : 0;
-      var pgColor =
+      const totC = client.periodi.length;
+      const pC = totC > 0 ? Math.round((compC / totC) * 100) : 0;
+      const pgColor =
         pC === 100 ? "var(--green)" : pC > 50 ? "var(--yellow)" : "var(--red)";
 
-      var situazioneBadges = "";
+      let situazioneBadges = "";
       if (compC > 0)
         situazioneBadges +=
           '<span style="font-size:10px;color:var(--green);background:color-mix(in srgb, var(--green) 7%, transparent);border:1px solid color-mix(in srgb, var(--green) 20%, transparent);border-radius:10px;padding:1px 6px">✅ ' +
@@ -402,24 +402,24 @@ function renderGlobaleTabella(rawData) {
           naC +
           "</span>";
 
-      var classBadgesHtml = _renderGlobaleClienteClassBadges(client);
-      var sottotipoLabel = client.sottotipologia_nome || "";
+      const classBadgesHtml = _renderGlobaleClienteClassBadges(client);
+      const sottotipoLabel = client.sottotipologia_nome || "";
 
       // Mappa periodo-chiave → pill HTML, per posizionare ogni pillola
       // nella colonna corretta della riga di questo cliente.
-      var pillByCol = {};
-      for (var mpIdx = 0; mpIdx < client.periodi.length; mpIdx++) {
-        var mpR = client.periodi[mpIdx];
+      const pillByCol = {};
+      for (let mpIdx = 0; mpIdx < client.periodi.length; mpIdx++) {
+        const mpR = client.periodi[mpIdx];
         pillByCol[getPeriodoShort(mpR)] = renderPeriodoPill(mpR);
       }
 
-      var rigaCelleHtml = "";
-      for (var cc = 0; cc < colsGrp.length; cc++) {
-        var pillCell = pillByCol[colsGrp[cc]];
+      let rigaCelleHtml = "";
+      for (let cc = 0; cc < colsGrp.length; cc++) {
+        const pillCell = pillByCol[colsGrp[cc]];
         rigaCelleHtml += '<td class="gxlv-td">' + (pillCell || "") + "</td>";
       }
 
-      var bandFillGrp = cFilIdx % 2 === 1 ? " gxlv-band" : "";
+      const bandFillGrp = cFilIdx % 2 === 1 ? " gxlv-band" : "";
 
       clientiHtml +=
         '<tr class="gxlv-tr' +
@@ -530,9 +530,9 @@ function renderGlobaleTabella(rawData) {
       "</div>";
   }
 
-  var visPerc = visTotale > 0 ? Math.round((visComp / visTotale) * 100) : 0;
+  const visPerc = visTotale > 0 ? Math.round((visComp / visTotale) * 100) : 0;
 
-  var headerCard =
+  const headerCard =
     '<div class="globale-preview-card">' +
     '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;width:100%">' +
     '<div class="gpc-left">' +
@@ -582,7 +582,7 @@ function renderGlobaleTabella(rawData) {
     tipFiltroHtml;
 
   if (!content) {
-    var msgVuoto = tipFiltroIsNone
+    const msgVuoto = tipFiltroIsNone
       ? "Nessun filtro tipologia selezionato — clicca <strong>✦ Tutti</strong> nel pannello Tipologie per vedere i clienti"
       : filtroClienteStato || hasFiltroTipologie || selectedClienteIds.length
         ? "Nessun cliente corrisponde ai filtri attivi per " + state.anno

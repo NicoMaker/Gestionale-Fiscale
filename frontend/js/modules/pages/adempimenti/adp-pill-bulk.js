@@ -20,9 +20,9 @@
 //  eliminaBulkPill()
 // ═══════════════════════════════════════════════════════════════
 
-var _pillBulkAttivo = false; // modalità selezione on/off
-var _pillBulkContesto = null; // 'scad' | 'globale'
-var _pillBulkSelezione = new Set(); // set di id (interi)
+let _pillBulkAttivo = false; // modalità selezione on/off
+let _pillBulkContesto = null; // 'scad' | 'globale'
+const _pillBulkSelezione = new Set(); // set di id (interi)
 
 // ── ATTIVA / DISATTIVA ─────────────────────────────────────────
 function attivaModalitaSelezione(contesto) {
@@ -55,7 +55,7 @@ function togglePillSelezionata(id) {
 
 function selezionaTuttePill() {
   document.querySelectorAll(".periodo-pill[data-id]").forEach(function (p) {
-    var id = parseInt(p.dataset.id);
+    const id = parseInt(p.dataset.id);
     if (id) _pillBulkSelezione.add(id);
   });
   _aggiornaBarraBulkPill();
@@ -70,13 +70,13 @@ function deselezionaTuttePill() {
 
 // ── ELIMINA ────────────────────────────────────────────────────
 function eliminaBulkPill() {
-  var ids = Array.from(_pillBulkSelezione);
+  const ids = Array.from(_pillBulkSelezione);
   if (!ids.length) {
     showNotif("Seleziona almeno un periodo", "error");
     return;
   }
 
-  var n = ids.length;
+  const n = ids.length;
   if (
     !confirm(
       "Eliminare " +
@@ -90,8 +90,8 @@ function eliminaBulkPill() {
   )
     return;
 
-  var idCliente = null;
-  var anno = state.anno;
+  let idCliente = null;
+  const anno = state.anno;
   if (_pillBulkContesto === "scad" && state.selectedCliente) {
     idCliente = state.selectedCliente.id;
   }
@@ -105,13 +105,13 @@ function eliminaBulkPill() {
 
 // ── RENDER BARRA AZIONI ────────────────────────────────────────
 function _renderBarraBulkPill() {
-  var esistente = document.getElementById("adp-pill-bulk-barra");
+  const esistente = document.getElementById("adp-pill-bulk-barra");
   if (esistente) {
     esistente.remove();
   }
   if (!_pillBulkAttivo) return;
 
-  var barra = document.createElement("div");
+  const barra = document.createElement("div");
   barra.id = "adp-pill-bulk-barra";
   barra.style.cssText = [
     "position:sticky",
@@ -141,10 +141,10 @@ function _renderBarraBulkPill() {
   ].join("");
 
   // Inserisci dopo l'header-card, prima del contenuto adempimenti
-  var content = document.getElementById("content");
+  const content = document.getElementById("content");
   if (!content) return;
 
-  var firstTableWrap = content.querySelector(".table-wrap, .adp-card");
+  const firstTableWrap = content.querySelector(".table-wrap, .adp-card");
   if (firstTableWrap && firstTableWrap.parentNode === content) {
     content.insertBefore(barra, firstTableWrap);
   } else if (firstTableWrap) {
@@ -156,13 +156,13 @@ function _renderBarraBulkPill() {
 
 function _aggiornaBarraBulkPill() {
   if (!_pillBulkAttivo) {
-    var b = document.getElementById("adp-pill-bulk-barra");
+    const b = document.getElementById("adp-pill-bulk-barra");
     if (b) b.remove();
     return;
   }
-  var n = _pillBulkSelezione.size;
-  var counter = document.getElementById("apb-counter");
-  var btnEl = document.getElementById("apb-btn-elimina");
+  const n = _pillBulkSelezione.size;
+  const counter = document.getElementById("apb-counter");
+  const btnEl = document.getElementById("apb-btn-elimina");
   if (counter) counter.textContent = n + " selezionat" + (n === 1 ? "o" : "i");
   if (btnEl) {
     btnEl.textContent = "🗑️ Elimina selezionati (" + n + ")";
@@ -175,8 +175,8 @@ function _aggiornaBarraBulkPill() {
 // ── AGGIORNA ASPETTO PILL ──────────────────────────────────────
 function _aggiornaPillBulkUI() {
   document.querySelectorAll(".periodo-pill[data-id]").forEach(function (p) {
-    var id = parseInt(p.dataset.id);
-    var cb = p.querySelector(".pill-bulk-cb");
+    const id = parseInt(p.dataset.id);
+    let cb = p.querySelector(".pill-bulk-cb");
 
     if (_pillBulkAttivo) {
       p.style.outline = _pillBulkSelezione.has(id)

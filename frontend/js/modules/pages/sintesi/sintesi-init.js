@@ -2,7 +2,7 @@
 // SINTESI.JS — Pagina "Sintesi Adempimenti": matrice CLIENTI × ADEMPIMENTI
 // ═══════════════════════════════════════════════════════════════
 
-var _SINT_STATO_INFO = {
+const _SINT_STATO_INFO = {
   completato: { icon: "✅", label: "Completato", color: "var(--green)" },
   in_corso: { icon: "🔄", label: "In corso", color: "var(--yellow)" },
   da_fare: { icon: "☐", label: "Da fare", color: "var(--red)" },
@@ -11,13 +11,13 @@ var _SINT_STATO_INFO = {
 };
 
 // Stato per il filtro clienti → array di id (multi‑select)
-var _sintesiClienteFiltro = [];
+let _sintesiClienteFiltro = [];
 
 // Stato per il filtro tipo utente (PF / SP / SC / ASS) → ora array per multi‑select
-var _sintesiTipiUtenteFiltro = [];
+let _sintesiTipiUtenteFiltro = [];
 
 // Stato per i filtri di stato (done, partial, todo, na)
-var _sintesiStatoFiltri = {
+let _sintesiStatoFiltri = {
   done: false,
   partial: false,
   todo: false,
@@ -25,7 +25,7 @@ var _sintesiStatoFiltri = {
 };
 
 // Cache per i dati della sintesi
-var _sintesiCache = {
+let _sintesiCache = {
   clienti: null,
   adempimenti: null,
   sintesiData: null,
@@ -79,19 +79,19 @@ function renderSintesiPage() {
 }
 
 function _renderSintesiTopbar() {
-  var topbar = document.getElementById("topbar-actions");
+  const topbar = document.getElementById("topbar-actions");
   if (!topbar) return;
 
-  var clientiOpts = "";
+  let clientiOpts = "";
   if (state.clienti) {
-    var sorted = state.clienti.slice().sort(function (a, b) {
+    const sorted = state.clienti.slice().sort(function (a, b) {
       return (a.nome || "").localeCompare(b.nome || "", "it", {
         sensitivity: "base",
       });
     });
     sorted.forEach(function (c) {
       if (c.attivo === 0 || c.attivo === "0" || c.attivo === false) return;
-      var selected =
+      const selected =
         _sintesiClienteFiltro.indexOf(c.id) !== -1 ? "selected" : "";
       clientiOpts +=
         '<option value="' +
@@ -106,15 +106,15 @@ function _renderSintesiTopbar() {
   }
 
   // Prepara le opzioni per il multi‑select dei tipi utente
-  var tipoOptions = [
+  const tipoOptions = [
     { value: "PF", label: "👤 PF – Persona Fisica" },
     { value: "SP", label: "🤝 SP – Soc. Persone" },
     { value: "SC", label: "🏢 SC – Soc. Capitali" },
     { value: "ASS", label: "🏛️ ASS – Associazione" },
   ];
-  var tipoOptsHtml = tipoOptions
+  const tipoOptsHtml = tipoOptions
     .map(function (t) {
-      var sel =
+      const sel =
         _sintesiTipiUtenteFiltro.indexOf(t.value) !== -1 ? " selected" : "";
       return (
         '<option value="' + t.value + '"' + sel + ">" + t.label + "</option>"
@@ -160,7 +160,7 @@ function _renderSintesiTopbar() {
 }
 
 function onSintesiClienteChange() {
-  var sel = document.getElementById("sint-filtro-cliente");
+  const sel = document.getElementById("sint-filtro-cliente");
   if (!sel) return;
   _sintesiClienteFiltro = Array.from(sel.selectedOptions || []).map(
     function (o) {
@@ -172,14 +172,14 @@ function onSintesiClienteChange() {
 window.onSintesiClienteChange = onSintesiClienteChange;
 
 function onSintesiTipoUtenteChange() {
-  var sel = document.getElementById("sint-filtro-tipo-utente");
+  const sel = document.getElementById("sint-filtro-tipo-utente");
   if (!sel) {
     _sintesiTipiUtenteFiltro = [];
     renderSintesiTabella();
     return;
   }
   // Leggi i valori selezionati (multi‑select)
-  var selected = Array.from(sel.selectedOptions || []).map(function (o) {
+  const selected = Array.from(sel.selectedOptions || []).map(function (o) {
     return o.value;
   });
   _sintesiTipiUtenteFiltro = selected;
@@ -194,8 +194,8 @@ window.applySintesiFiltriAdp = applySintesiFiltriAdp;
 
 function changeAnnoSintesi(d) {
   state.anno += d;
-  var yearNums = document.querySelectorAll(".year-num");
-  for (var i = 0; i < yearNums.length; i++)
+  const yearNums = document.querySelectorAll(".year-num");
+  for (let i = 0; i < yearNums.length; i++)
     yearNums[i].textContent = state.anno;
   state.sintesiActiveCellKey = null;
   _sintesiCache = {
@@ -261,13 +261,13 @@ function loadSintesi() {
 }
 
 function _popolaSintesiAdpSelect() {
-  var sel = document.getElementById("sint-filtro-adp");
+  const sel = document.getElementById("sint-filtro-adp");
   if (!sel) return;
-  var currentValues = {};
+  const currentValues = {};
   Array.from(sel.selectedOptions || []).forEach(function (o) {
     currentValues[o.value] = true;
   });
-  var list = (state.adempimenti || []).filter(function (a) {
+  let list = (state.adempimenti || []).filter(function (a) {
     return (
       !a.anno_validita || parseInt(a.anno_validita) === parseInt(state.anno)
     );
@@ -277,10 +277,10 @@ function _popolaSintesiAdpSelect() {
       sensitivity: "base",
     });
   });
-  var options = list
+  const options = list
     .map(function (a) {
-      var selAttr = currentValues[String(a.id)] ? " selected" : "";
-      var label = a.codice ? a.codice + " — " + a.nome : a.nome;
+      const selAttr = currentValues[String(a.id)] ? " selected" : "";
+      const label = a.codice ? a.codice + " — " + a.nome : a.nome;
       return (
         '<option value="' +
         a.id +
@@ -306,22 +306,22 @@ function onSintesiSearchInput(value) {
   applySintesiFiltriLocali();
 }
 
-var applySintesiFiltriLocali = debounce(function () {
+const applySintesiFiltriLocali = debounce(function () {
   renderSintesiTabella();
 }, 120);
 
 function resetSintesiFiltri() {
   setSharedClienteSearch("");
-  var searchEl = document.getElementById("sint-search-cliente");
+  const searchEl = document.getElementById("sint-search-cliente");
   if (searchEl) searchEl.value = "";
-  var adpSel = document.getElementById("sint-filtro-adp");
+  const adpSel = document.getElementById("sint-filtro-adp");
   if (adpSel) {
     Array.from(adpSel.options).forEach(function (o) {
       o.selected = false;
     });
     if (adpSel._ssRefresh) adpSel._ssRefresh();
   }
-  var clienteSel = document.getElementById("sint-filtro-cliente");
+  const clienteSel = document.getElementById("sint-filtro-cliente");
   if (clienteSel) {
     Array.from(clienteSel.options).forEach(function (o) {
       o.selected = false;
@@ -330,7 +330,7 @@ function resetSintesiFiltri() {
   }
   _sintesiClienteFiltro = [];
   // RESET del multi‑select tipo utente
-  var tipoSel = document.getElementById("sint-filtro-tipo-utente");
+  const tipoSel = document.getElementById("sint-filtro-tipo-utente");
   if (tipoSel) {
     Array.from(tipoSel.options).forEach(function (o) {
       o.selected = false;
@@ -383,15 +383,15 @@ function _sintesiStatoCella(periodi) {
   if (!periodi || periodi.length === 0) {
     return { kind: "na", label: "N/A" };
   }
-  var nonNA = periodi.filter(function (p) {
+  const nonNA = periodi.filter(function (p) {
     return p.stato !== "n_a";
   });
   if (nonNA.length === 0) {
     return { kind: "na", label: "N/A" };
   }
-  var doneCount = 0,
+  let doneCount = 0,
     avanzCount = 0;
-  for (var i = 0; i < nonNA.length; i++) {
+  for (let i = 0; i < nonNA.length; i++) {
     if (nonNA[i].stato === "completato") doneCount++;
     else if (nonNA[i].stato === "in_corso") avanzCount++;
   }

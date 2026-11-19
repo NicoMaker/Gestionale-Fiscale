@@ -23,7 +23,7 @@
 //  A) BULK-ROW MODE
 // ══════════════════════════════════════════════════════════════
 
-var _scadBulkMode = false;
+let _scadBulkMode = false;
 
 function toggleScadBulkMode() {
   _scadBulkMode = !_scadBulkMode;
@@ -31,8 +31,8 @@ function toggleScadBulkMode() {
 }
 
 function _aggiornaUIBulkMode() {
-  var btnToggle = document.getElementById("btn-scad-bulk-toggle");
-  var barraAzioni = document.getElementById("scad-bulk-barra");
+  const btnToggle = document.getElementById("btn-scad-bulk-toggle");
+  const barraAzioni = document.getElementById("scad-bulk-barra");
 
   if (btnToggle) {
     if (_scadBulkMode) {
@@ -65,8 +65,8 @@ function _aggiornaUIBulkMode() {
 }
 
 function toggleSelezionaTuttiBulk() {
-  var checkboxes = document.querySelectorAll(".scad-row-checkbox");
-  var tuttiChecked = Array.from(checkboxes).every(function (cb) {
+  const checkboxes = document.querySelectorAll(".scad-row-checkbox");
+  const tuttiChecked = Array.from(checkboxes).every(function (cb) {
     return cb.checked;
   });
   checkboxes.forEach(function (cb) {
@@ -76,9 +76,9 @@ function toggleSelezionaTuttiBulk() {
 }
 
 function _aggiornaBulkCounter() {
-  var n = document.querySelectorAll(".scad-row-checkbox:checked").length;
-  var btn = document.getElementById("btn-scad-bulk-elimina");
-  var counter = document.getElementById("scad-bulk-counter");
+  const n = document.querySelectorAll(".scad-row-checkbox:checked").length;
+  const btn = document.getElementById("btn-scad-bulk-elimina");
+  const counter = document.getElementById("scad-bulk-counter");
   if (counter) counter.textContent = n + " selezionat" + (n === 1 ? "o" : "i");
   if (btn) {
     btn.disabled = n === 0;
@@ -87,8 +87,8 @@ function _aggiornaBulkCounter() {
 }
 
 function eliminaBulkScadenzario() {
-  var checkboxes = document.querySelectorAll(".scad-row-checkbox:checked");
-  var ids = Array.from(checkboxes).map(function (cb) {
+  const checkboxes = document.querySelectorAll(".scad-row-checkbox:checked");
+  const ids = Array.from(checkboxes).map(function (cb) {
     return parseInt(cb.value);
   });
 
@@ -108,8 +108,8 @@ function eliminaBulkScadenzario() {
   )
     return;
 
-  var cliente = state.selectedCliente;
-  var anno = state.anno;
+  const cliente = state.selectedCliente;
+  const anno = state.anno;
 
   socket.emit("elimina:adempimenti_cliente_bulk", {
     ids_righe: ids,
@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // ─── PATCH renderScadenzarioTabella ──────────────────────────
 function patchScadBulk() {
-  var tabella = document.querySelector(
+  const tabella = document.querySelector(
     ".scad-table, #scad-tabella, table.adp-table",
   );
   if (!tabella) return;
@@ -162,9 +162,9 @@ function patchScadBulk() {
 }
 
 function _iniettaColonnaCheckbox(tabella) {
-  var thead = tabella.querySelector("thead tr");
+  const thead = tabella.querySelector("thead tr");
   if (thead) {
-    var th = document.createElement("th");
+    const th = document.createElement("th");
     th.className = "scad-bulk-checkbox-col";
     th.style.cssText = "width:36px;text-align:center;padding:4px;display:none";
     th.innerHTML =
@@ -173,8 +173,8 @@ function _iniettaColonnaCheckbox(tabella) {
   }
 
   tabella.querySelectorAll("tbody tr[data-id]").forEach(function (tr) {
-    var rigaId = tr.dataset.id;
-    var td = document.createElement("td");
+    const rigaId = tr.dataset.id;
+    const td = document.createElement("td");
     td.className = "scad-bulk-checkbox-col";
     td.style.cssText =
       "width:36px;text-align:center;padding:4px 8px;display:none;vertical-align:middle";
@@ -187,16 +187,16 @@ function _iniettaColonnaCheckbox(tabella) {
 }
 
 function _iniettaBarraAzioni() {
-  var vecchia = document.getElementById("scad-bulk-barra");
+  const vecchia = document.getElementById("scad-bulk-barra");
   if (vecchia) vecchia.remove();
 
-  var wrapper =
+  const wrapper =
     document.querySelector(
       ".scad-wrapper, #scad-content-wrapper, .content-inner",
     ) || document.getElementById("content");
   if (!wrapper) return;
 
-  var barra = document.createElement("div");
+  const barra = document.createElement("div");
   barra.id = "scad-bulk-barra";
   barra.style.cssText = [
     "display:none",
@@ -220,7 +220,7 @@ function _iniettaBarraAzioni() {
     '<button class="btn btn-sm btn-secondary" onclick="toggleScadBulkMode()" style="font-size:12px">✖ Annulla</button>',
   ].join("");
 
-  var tabella = document.querySelector(
+  const tabella = document.querySelector(
     ".scad-table, #scad-tabella, table.adp-table",
   );
   if (tabella && tabella.parentNode === wrapper) {
@@ -232,10 +232,10 @@ function _iniettaBarraAzioni() {
 
 function _iniettaBotoneTopbar() {
   if (document.getElementById("btn-scad-bulk-toggle")) return;
-  var topbarActions = document.getElementById("topbar-actions");
+  const topbarActions = document.getElementById("topbar-actions");
   if (!topbarActions) return;
 
-  var btn = document.createElement("button");
+  const btn = document.createElement("button");
   btn.id = "btn-scad-bulk-toggle";
   btn.className = "btn btn-sm no-print";
   btn.style.cssText =
@@ -250,17 +250,17 @@ function _iniettaBotoneTopbar() {
 // ══════════════════════════════════════════════════════════════
 
 // Stato corrente della tab attiva nella modale
-var _addAdpTabAttiva = null; // null = nessuna tab scelta, obbligatorio cliccare
+let _addAdpTabAttiva = null; // null = nessuna tab scelta, obbligatorio cliccare
 
 /**
  * Resetta la tab al suo stato neutro (nessuna selezione) — chiamata all'apertura modal
  */
 function resetAddAdpTab() {
   _addAdpTabAttiva = null;
-  var panelAdd = document.getElementById("tab-panel-aggiungi");
-  var panelDel = document.getElementById("tab-panel-elimina");
-  var btnAdd = document.getElementById("tab-add-adp-btn");
-  var btnDel = document.getElementById("tab-del-adp-btn");
+  const panelAdd = document.getElementById("tab-panel-aggiungi");
+  const panelDel = document.getElementById("tab-panel-elimina");
+  const btnAdd = document.getElementById("tab-add-adp-btn");
+  const btnDel = document.getElementById("tab-del-adp-btn");
   if (panelAdd) panelAdd.style.display = "none";
   if (panelDel) panelDel.style.display = "none";
   if (btnAdd) {
@@ -280,10 +280,10 @@ function resetAddAdpTab() {
 function switchAddAdpTab(tab) {
   _addAdpTabAttiva = tab;
 
-  var panelAdd = document.getElementById("tab-panel-aggiungi");
-  var panelDel = document.getElementById("tab-panel-elimina");
-  var btnAdd = document.getElementById("tab-add-adp-btn");
-  var btnDel = document.getElementById("tab-del-adp-btn");
+  const panelAdd = document.getElementById("tab-panel-aggiungi");
+  const panelDel = document.getElementById("tab-panel-elimina");
+  const btnAdd = document.getElementById("tab-add-adp-btn");
+  const btnDel = document.getElementById("tab-del-adp-btn");
 
   if (!panelAdd || !panelDel) return;
 
@@ -310,7 +310,7 @@ function switchAddAdpTab(tab) {
       btnDel.style.color = "#fff";
     }
     // Popola la lista "Elimina" ogni volta che si apre la tab
-    var delSearch = document.getElementById("del-adp-search");
+    const delSearch = document.getElementById("del-adp-search");
     if (delSearch) delSearch.value = "";
     popolaDelAdpList();
   }
@@ -321,7 +321,7 @@ function switchAddAdpTab(tab) {
  * il cliente + anno correntemente selezionati.
  */
 function filtraDelAdpList() {
-  var q = (document.getElementById("del-adp-search")?.value || "")
+  const q = (document.getElementById("del-adp-search")?.value || "")
     .toLowerCase()
     .trim();
   popolaDelAdpList(q);
@@ -329,28 +329,28 @@ function filtraDelAdpList() {
 
 function popolaDelAdpList(filtro) {
   filtro = filtro || "";
-  var container = document.getElementById("del-adp-list");
-  var annoInput = document.getElementById("del-adp-anno");
-  var avviso = document.getElementById("del-adp-avviso");
-  var btnElim = document.getElementById("btn-esegui-elimina-adp");
-  var chkTutti = document.getElementById("del-adp-seleziona-tutti");
+  const container = document.getElementById("del-adp-list");
+  const annoInput = document.getElementById("del-adp-anno");
+  const avviso = document.getElementById("del-adp-avviso");
+  const btnElim = document.getElementById("btn-esegui-elimina-adp");
+  const chkTutti = document.getElementById("del-adp-seleziona-tutti");
 
   if (!container) return;
 
   // Sincronizza l'anno con il campo "aggiungi"
-  var anno =
+  const anno =
     parseInt(document.getElementById("add-adp-anno")?.value) || state.anno;
   if (annoInput) annoInput.value = anno;
 
   // Recupera le righe dello scadenzario del cliente per l'anno
-  var righe = (state.scadenzario || []).filter(function (r) {
+  const righe = (state.scadenzario || []).filter(function (r) {
     return parseInt(r.anno) === anno;
   });
 
   // Raggruppa per id_adempimento: una checkbox per adempimento, non per periodo
-  var adpMap = {};
+  const adpMap = {};
   righe.forEach(function (r) {
-    var adpId = r.id_adempimento;
+    const adpId = r.id_adempimento;
     if (!adpMap[adpId]) {
       adpMap[adpId] = {
         id_adempimento: adpId,
@@ -362,7 +362,7 @@ function popolaDelAdpList(filtro) {
     adpMap[adpId].ids_righe.push(r.id);
   });
 
-  var adpList = Object.values(adpMap).sort(function (a, b) {
+  let adpList = Object.values(adpMap).sort(function (a, b) {
     return a.nome.localeCompare(b.nome);
   });
 
@@ -399,7 +399,7 @@ function popolaDelAdpList(filtro) {
 
   container.innerHTML = "";
   adpList.forEach(function (adp) {
-    var label = document.createElement("label");
+    const label = document.createElement("label");
     label.className = "flag-chip";
     label.style.cssText =
       "display:flex;align-items:center;gap:8px;padding:7px 10px;" +
@@ -451,9 +451,9 @@ function escapeHtml(str) {
 }
 
 function _aggiornaDelAdpCounter() {
-  var n = document.querySelectorAll(".del-adp-checkbox:checked").length;
-  var btn = document.getElementById("btn-esegui-elimina-adp");
-  var chk = document.getElementById("del-adp-seleziona-tutti");
+  const n = document.querySelectorAll(".del-adp-checkbox:checked").length;
+  const btn = document.getElementById("btn-esegui-elimina-adp");
+  const chk = document.getElementById("del-adp-seleziona-tutti");
 
   if (btn) {
     btn.disabled = n === 0;
@@ -461,7 +461,7 @@ function _aggiornaDelAdpCounter() {
   }
 
   if (chk) {
-    var tot = document.querySelectorAll(".del-adp-checkbox").length;
+    const tot = document.querySelectorAll(".del-adp-checkbox").length;
     chk.checked = tot > 0 && n === tot;
     chk.indeterminate = n > 0 && n < tot;
   }
@@ -471,13 +471,13 @@ function _aggiornaDelAdpCounter() {
  * Seleziona TUTTI gli adempimenti nella tab Elimina
  */
 function selezionaTuttiDelAdp() {
-  var checkboxes = document.querySelectorAll(".del-adp-checkbox");
+  const checkboxes = document.querySelectorAll(".del-adp-checkbox");
   checkboxes.forEach(function (cb) {
     cb.checked = true;
   });
   _aggiornaDelAdpCounter();
 
-  var chkAll = document.getElementById("del-adp-seleziona-tutti");
+  const chkAll = document.getElementById("del-adp-seleziona-tutti");
   if (chkAll) chkAll.checked = true;
 
   showNotif(
@@ -490,13 +490,13 @@ function selezionaTuttiDelAdp() {
  * Deseleziona TUTTI gli adempimenti nella tab Elimina
  */
 function deselezionaTuttiDelAdp() {
-  var checkboxes = document.querySelectorAll(".del-adp-checkbox");
+  const checkboxes = document.querySelectorAll(".del-adp-checkbox");
   checkboxes.forEach(function (cb) {
     cb.checked = false;
   });
   _aggiornaDelAdpCounter();
 
-  var chkAll = document.getElementById("del-adp-seleziona-tutti");
+  const chkAll = document.getElementById("del-adp-seleziona-tutti");
   if (chkAll) chkAll.checked = false;
 }
 
@@ -504,11 +504,11 @@ function deselezionaTuttiDelAdp() {
  * Toggle selezione tutti (usata dalla checkbox)
  */
 function toggleSelezionaTuttiDelAdp() {
-  var chkAll = document.getElementById("del-adp-seleziona-tutti");
+  const chkAll = document.getElementById("del-adp-seleziona-tutti");
   if (!chkAll) return;
 
-  var stato = chkAll.checked;
-  var checkboxes = document.querySelectorAll(".del-adp-checkbox");
+  const stato = chkAll.checked;
+  const checkboxes = document.querySelectorAll(".del-adp-checkbox");
 
   checkboxes.forEach(function (cb) {
     cb.checked = stato;
@@ -521,17 +521,17 @@ function toggleSelezionaTuttiDelAdp() {
  * Esegue l'eliminazione degli adempimenti selezionati nella tab "Elimina".
  */
 function eseguiEliminaAdpCliente() {
-  var checked = document.querySelectorAll(".del-adp-checkbox:checked");
+  const checked = document.querySelectorAll(".del-adp-checkbox:checked");
   if (checked.length === 0) {
     showNotif("Seleziona almeno un adempimento", "error");
     return;
   }
 
-  var ids_righe = [];
+  const ids_righe = [];
   checked.forEach(function (cb) {
-    var parts = cb.dataset.ids ? cb.dataset.ids.split(",") : [];
+    const parts = cb.dataset.ids ? cb.dataset.ids.split(",") : [];
     parts.forEach(function (id) {
-      var n = parseInt(id);
+      const n = parseInt(id);
       if (!isNaN(n)) ids_righe.push(n);
     });
   });
@@ -541,11 +541,11 @@ function eseguiEliminaAdpCliente() {
     return;
   }
 
-  var nAdp = checked.length;
-  var nPeriodi = ids_righe.length;
-  var anno =
+  const nAdp = checked.length;
+  const nPeriodi = ids_righe.length;
+  const anno =
     parseInt(document.getElementById("del-adp-anno")?.value) || state.anno;
-  var msg =
+  const msg =
     "Eliminerai " +
     nAdp +
     " adempiment" +
@@ -561,7 +561,7 @@ function eseguiEliminaAdpCliente() {
 
   if (!confirm(msg)) return;
 
-  var cliente = state.selectedCliente;
+  const cliente = state.selectedCliente;
 
   socket.emit("elimina:adempimenti_cliente_bulk", {
     ids_righe: ids_righe,
