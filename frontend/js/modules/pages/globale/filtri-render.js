@@ -332,7 +332,9 @@ function _renderGlobaleClienteClassBadges(c) {
   const col2Map = _getCol2DisplayMap();
   const col3Map = _getCol3DisplayMap();
   const tipColor = c.tipologia_colore || getTipologiaColor(c.tipologia_codice);
-  const perAll = (cfg.periodicitaIva || []).concat(cfg.periodicitaAnnuale || []);
+  const perAll = (cfg.periodicitaIva || []).concat(
+    cfg.periodicitaAnnuale || [],
+  );
   let badges =
     '<span class="badge b-' +
     (c.tipologia_codice || "").toLowerCase() +

@@ -43,7 +43,11 @@ function renderGlobaleTabella(rawData) {
   const tipFiltroIsNone = isNone;
   const hasFiltroTipologie = !isAll;
 
-  const tipFiltroCountDisplay = isNone ? "0" : isAll ? "" : activeFiltroKeys.size;
+  const tipFiltroCountDisplay = isNone
+    ? "0"
+    : isAll
+      ? ""
+      : activeFiltroKeys.size;
   const showTipBadge = isNone || (!isAll && activeFiltroKeys.size > 0);
 
   const adpSel = document.getElementById("glob-filtro-adp");
